@@ -1,7 +1,3 @@
-REPOSITORY MOVE ON 9/16/2015 AT 9PM CENTRAL US TIME TO: https://github.com/verivital/hyst
-This repository will at that point only continue to house private benchmarks and benchmark generators. The github repository will be made fully public in the coming months, but for now is a private account until we finish sorting out the licensing issues.
-
-
 HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models 
 http://verivital.com/hyst/
 
