@@ -11,6 +11,7 @@ public class SpaceExConfigValues
 	public String systemID;
 	public String outputFormat = "GEN";
 	public String scenario = "stc";
+	public boolean timeTriggered = false; // time-triggered support using "--map-zero-duration-jump-sets true"
 	
 	public SpaceExConfigValues copy()
 	{
@@ -23,6 +24,7 @@ public class SpaceExConfigValues
 		rv.systemID = systemID;
 		rv.outputFormat = outputFormat;
 		rv.scenario = scenario;
+		rv.timeTriggered = timeTriggered;
 		
 		return rv;
 	}

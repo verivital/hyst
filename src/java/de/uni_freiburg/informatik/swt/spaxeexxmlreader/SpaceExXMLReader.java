@@ -746,6 +746,9 @@ public class SpaceExXMLReader {
 							
 							mTarget.setMaxIterations(im);
 						}
+						else if (property.equals("map-zero-duration-jump-sets")) {
+							mTarget.setTimeTriggered(value.equals("true"));
+						}
 						else if (property.equals("initially")) {
 							Expression initialStates = FormulaParser.parseLoc(value);
 									

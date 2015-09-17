@@ -59,6 +59,10 @@ public class SpaceExDocument {
 	public void setMaxIterations(int maxIterations) {
 		mConfig.maxIterations = maxIterations;
 	}
+	
+	public void setTimeTriggered(boolean tt) {
+		mConfig.timeTriggered = tt;
+	}
 
 	public void setSystemID(String systemID) {
 		mConfig.systemID = systemID;
