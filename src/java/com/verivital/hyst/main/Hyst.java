@@ -1,6 +1,16 @@
 package com.verivital.hyst.main;
 
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -16,7 +26,6 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
-import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
@@ -34,15 +43,8 @@ import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 
 /**
  * Main start class for Hyst
