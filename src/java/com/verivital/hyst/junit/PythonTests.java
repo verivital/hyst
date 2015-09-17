@@ -14,6 +14,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.Interval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.HybridizeGridPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
@@ -23,6 +24,7 @@ public class PythonTests
 	@Test
 	public void testPythonFuncs()
 	{
+		Hyst.debugMode = true;
 		PythonBridge pb = new PythonBridge();
 		boolean runTests = true;
 
