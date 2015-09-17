@@ -187,11 +187,19 @@ def setup_env():
 def main():
     '''main entry point'''
     setup_env()
+    skipped_tool = False
+
+    for t in TOOLS:
+        if hypy.TOOLS[t['name']].tool_path == None:
+            skipped_tool = True
 
     files = get_files(MODELS_PATH)
 
     if parallel_run(files):
-        print "Done running all regression tests, success."
+        if skipped_tool == False:
+            print "Done running all regression tests, success."
+        else:
+            print "Regression test conversion passed, but some tools were not run."
         sys.exit(0)
     else:
         print "Error detected running regression tests."

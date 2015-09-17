@@ -43,6 +43,7 @@ def tool_main(tool_obj, extra_args=None):
     '''read tool parameters from argv and run
 
     extra_args is a list of (flag, help_text)
+    returns a value in RunCode.*
     '''
 
     parser = argparse.ArgumentParser(description='Run ' + tool_obj.tool_name)
@@ -60,6 +61,7 @@ def tool_main(tool_obj, extra_args=None):
         args.image = os.path.splitext(args.model)[0] + '.png'
 
     tool_obj.load_args(args)
+
     code = tool_obj.run()
 
     print "Exit code: " + str(code)
@@ -147,7 +149,7 @@ def get_env_var_path(basename, default_path):
     the environment variable is not defined. The environment variable that will be
     checked is basename.upper() + "_BIN"
 
-    Raises a RuntimeError if the final path doesn't exist
+    returns None if the final path doesn't exist
     '''
 
     var = basename.upper() + "_BIN"
@@ -158,7 +160,9 @@ def get_env_var_path(basename, default_path):
         rv = default_path
 
     if not os.path.exists(rv):
-        raise RuntimeError(basename + ' not found at path: ' + rv + '. Did you set ' + var + '?')
+        print basename + ' not found at path: ' + rv + '. Did you set ' + var + '? ',
+        print "Tool will be set as non-runnable."
+        rv = None
 
     return rv
 
@@ -167,7 +171,7 @@ class HybridTool(object):
     __metaclass__ = abc.ABCMeta
 
     tool_name = None
-    tool_path = None
+    tool_path = None # the path to the tool, None if tool cannot be found
 
     original_model_path = None
     image_path = None
@@ -199,9 +203,15 @@ class HybridTool(object):
 
     def run(self):
         '''runs the tool and visualization
+        if the tool cannot be run (tool_path == None), prints an error and returns RunCode.SKIP
 
         returns a value in RunCode.*
         '''
+
+        if self.tool_path == None:
+            var = self.tool_name.upper() + "_BIN"
+            print self.tool_name + ' cannot be run; skipping. Did you set ' + var + '?'
+            return RunCode.SKIP
 
         if not is_windows() and os.getpid() != os.getpgid(os.getpid()):
             os.setsid() # create a new session id for process group termination
