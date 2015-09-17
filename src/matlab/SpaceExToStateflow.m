@@ -31,8 +31,8 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
 
     %Ex: how to instantiate java objects into Matlab
     %add java library for spaceex parsing library (from spaceex2boogie)
-    javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
-    addpath(['..', filesep, 'lib', filesep]);
+    javaaddpath(['..', filesep, '..', filesep, 'lib', filesep, 'Hyst.jar']);
+    addpath(['..', filesep, '..', filesep, 'lib', filesep]);
     
     % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
     %javaaddpath(['..', filesep, 'lib', filesep, 'commons-cli-1.3.1.jar']);

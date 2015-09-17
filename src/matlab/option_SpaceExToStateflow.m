@@ -13,7 +13,7 @@ function [opt_xml, opt_cfg, opt_semantics, opt_flow, opt_guard, opt_invariant, o
     opt_guard = 0;
     opt_semantics = 0;
     opt_eager_violation = 0;
-    path_name = ['..', filesep, 'examples', filesep];
+    path_name = ['..', filesep, '..', filesep, 'examples', filesep];
     xml_name = '';
     cfg_name = '';
     for i_opt= 1: length(argument)
