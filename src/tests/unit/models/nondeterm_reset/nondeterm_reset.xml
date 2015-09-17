@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="dynamics">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="one" x="316.0" y="163.0" width="164.0" height="98.0">
+      <invariant>x &lt;= 5</invariant>
+      <flow>x' == 1 &amp; y' == 1</flow>
+    </location>
+    <location id="2" name="two" x="765.0" y="162.0" width="158.0" height="110.0">
+      <invariant>x &lt;= 10</invariant>
+      <flow>x' == 1 &amp; y' == 1</flow>
+    </location>
+    <transition source="1" target="2">
+      <guard>x &gt;= 5</guard>
+      <assignment>y' &gt;= 0 &amp;&amp; y' &lt;= 1</assignment>
+      <labelposition x="-44.0" y="-13.0" width="138.0" height="76.0" />
+    </transition>
+  </component>
+</sspaceex>
+

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="toy">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="loc1" x="467.0" y="203.5" width="379.0" height="124.0">
+      <invariant>t &lt;= tmax</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="system">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="toy" as="toy_1" x="426.0" y="42.0" width="136.0" height="86.0">
+      <map key="x">x</map>
+      <map key="t">t</map>
+      <map key="tmax">tmax</map>
+    </bind>
+  </component>
+</sspaceex>
+

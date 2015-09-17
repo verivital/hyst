@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="ofOnn">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="Tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="off" x="361.0" y="314.0" width="218.0" height="128.0">
+      <invariant>x &gt;= 18 &amp; 0 &lt;= t &amp; t &lt;= Tmax</invariant>
+      <flow>x' == -0.1 * x &amp; t' == 1</flow>
+    </location>
+    <location id="2" name="on" x="827.0" y="331.0" width="244.0" height="126.0">
+      <invariant>x &lt;= 29 &amp; 0&lt;= t &amp; t &lt;= Tmax</invariant>
+      <flow>x' == -0.1 * (x - 37) &amp; t' == 1</flow>
+    </location>
+    <transition source="1" target="2">
+      <guard>x &lt;= 18.1</guard>
+      <labelposition x="-31.0" y="3.0" width="76.0" height="50.0" />
+      <middlepoint x="579.0" y="381.5" />
+    </transition>
+    <transition source="2" target="1">
+      <guard>x &gt;= 29 </guard>
+      <labelposition x="-38.0" y="-52.0" width="78.0" height="50.0" />
+      <middlepoint x="591.0" y="261.5" />
+    </transition>
+  </component>
+  <component id="sys1">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="Tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="ofOnn" as="ofOnn_1" x="295.0" y="170.0" width="58.0" height="62.0">
+      <map key="x">x</map>
+      <map key="t">t</map>
+      <map key="Tmax">Tmax</map>
+    </bind>
+  </component>
+</sspaceex>
+

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="base">
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="select" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="up" type="label" local="false" />
+    <location id="1" name="mode1" x="280.0" y="226.0" width="132.0" height="84.0">
+      <invariant>select &lt;= 2</invariant>
+      <flow>y' == 0</flow>
+    </location>
+    <location id="2" name="mode2" x="643.0" y="227.0" width="186.0" height="86.0">
+      <invariant>2 &lt;= select &lt;= 3</invariant>
+      <flow>y' == (select-2)</flow>
+    </location>
+    <location id="3" name="choice" x="499.0" y="57.0" width="160.0" height="68.0">
+      <flow>false</flow>
+    </location>
+    <transition source="1" target="3">
+      <label>up</label>
+      <labelposition x="-47.0" y="-34.0" width="50.0" height="54.0" />
+    </transition>
+    <transition source="3" target="2">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="ticking" x="280.0" y="201.0">
+      <invariant>t &lt;= 14</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="selector">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="select" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="up" type="label" local="false" />
+    <location id="1" name="select1" x="280.0" y="168.0" width="156.0" height="118.0">
+      <invariant>t &lt;= 5</invariant>
+      <flow>select' == 0</flow>
+    </location>
+    <location id="2" name="select2" x="707.0" y="164.0">
+      <invariant>t &gt;= 5</invariant>
+      <flow>select' == 0</flow>
+    </location>
+    <transition source="1" target="2">
+      <label>up</label>
+      <guard>t &gt;= 5</guard>
+      <assignment>select := 2.5</assignment>
+      <labelposition x="-24.0" y="-3.0" width="98.0" height="56.0" />
+    </transition>
+  </component>
+  <component id="net">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="select" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="up" type="label" local="false" />
+    <bind component="timer" as="timer_1" x="286.0" y="300.0">
+      <map key="t">t</map>
+    </bind>
+    <bind component="base" as="base_1" x="288.0" y="40.0">
+      <map key="y">y</map>
+      <map key="select">select</map>
+      <map key="up">up</map>
+    </bind>
+    <bind component="selector" as="selector_1" x="287.0" y="170.0">
+      <map key="t">t</map>
+      <map key="select">select</map>
+      <map key="up">up</map>
+    </bind>
+  </component>
+</sspaceex>
+

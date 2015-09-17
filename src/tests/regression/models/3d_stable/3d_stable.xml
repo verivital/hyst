@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="main">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="z" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="l1" x="119.0" y="258.0" width="146.0" height="140.0">
+      <flow>x' == -9*(x - 2) - 7*(y + 2) + (z - 1) + 0.2*(x - 2) * (y + 2) + 0.1*(y + 2)*(z - 1) + 0.1*(x - 2)*(z - 1) + 0.5*(z - 1)*(z - 1) &amp;
+y' == 6*(x - 2) + 4*(y + 2) + z - 1 &amp;
+z' == 3*(x - 2) + 2*(y + 2) - 2.5*(z - 1)</flow>
+    </location>
+    <location id="2" name="l2" x="447.0" y="198.0" width="290.0" height="102.0">
+      <flow>x' == 2.2*x + 3.6*y + 3.9*z &amp;
+y' == 3*x + 2.4*y + 3.4*z - 0.01*x*x &amp;
+z' == -5*x - 5.4*y - 6.7*z</flow>
+    </location>
+    <transition source="1" target="2">
+      <labelposition x="-52.0" y="17.0" />
+	  <guard>1.7 &lt;= x &amp; x &lt;= 2.3  &amp;
+-2.3 &lt;= y &amp; y &lt;= -1.7  &amp;
+0.7 &lt;= z &amp; z &lt;= 1.3
+</guard>
+    </transition>
+  </component>
+  <component id="sys">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="z" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="main" as="main_1">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="z">z</map>
+    </bind>
+  </component>
+</sspaceex>
+

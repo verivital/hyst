@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="pll">
+    <param name="v_i" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v_p1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v_p" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="phi_v" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="phi_ref" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="jump" type="label" local="true" />
+    <param name="f_ref" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="f_0" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="N" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="K_i" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="K_p" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="C_i" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="C_p1" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="C_p3" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="R_p2" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="R_p3" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="t_d" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="Ii_up" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="Ii_dn" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="Ip_up" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="Ip_dn" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="omegai_l" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="omegai_u" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="omegap_l" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="omegap_u" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="up_1" x="694.0" y="165.0" width="230.0" height="76.0">
+      <invariant>v_i &gt;= omegai_l &amp; v_i &lt;= omegai_u &amp; v_p &gt;= omegap_l &amp; v_p &lt;= omegap_u &amp; phi_v &gt;= -3.14 &amp; phi_v &lt;= 2*3.14 &amp; phi_ref &gt;= 0 &amp; phi_ref &lt;= 2*3.14</invariant>
+      <flow>v_i' == Ii_up/C_i &amp; v_p1' == -1*( v_p1/C_p1)*(1/R_p2 + 1/R_p3) + v_p/(C_p1 * R_p3)+ Ip_up / C_p1 &amp; v_p' == v_p1/(C_p3*R_p3) - v_p/(C_p3 * R_p3) &amp; phi_v' == v_i*K_i/N + v_p * K_p/N + 2*3.14* f_0/N &amp; phi_ref' == 2*3.14*f_ref</flow>
+    </location>
+    <location id="2" name="both_0" x="298.0" y="165.0" width="226.0" height="80.0">
+      <invariant>v_i &gt;= omegai_l &amp; v_i &lt;= omegai_u &amp; v_p &gt;= omegap_l &amp; v_p &lt;= omegap_u &amp; phi_v &gt;= -3.14 &amp; phi_v &lt;= 2*3.14 &amp; phi_ref &gt;= 0 &amp; phi_ref &lt;= 2*3.14</invariant>
+      <flow>v_i' == 0 &amp; v_p1' == -1*( v_p1/C_p1)*(1/R_p2 + 1/R_p3) + v_p/(C_p1 * R_p3)+0 &amp; v_p' == v_p1/(C_p3*R_p3) - v_p/(C_p3 * R_p3) &amp; phi_v' == v_i*K_i/N + v_p * K_p/N + 2*3.14* f_0/N &amp; phi_ref' == 2*3.14*f_ref</flow>
+    </location>
+    <location id="3" name="dn_1" x="299.0" y="329.0" width="258.0" height="70.0">
+      <invariant>v_i &gt;= omegai_l &amp; v_i &lt;= omegai_u &amp; v_p &gt;= omegap_l &amp; v_p &lt;= omegap_u &amp; phi_v &gt;= -3.14 &amp; phi_v &lt;= 2*3.14 &amp; phi_ref &gt;= 0 &amp; phi_ref &lt;= 2*3.14</invariant>
+      <flow>v_i' == Ii_dn/C_i &amp; v_p1' == (- v_p1/C_p1)*(1/R_p2 + 1/R_p3) + v_p/(C_p1 * R_p3)+ Ip_dn/ C_p1 &amp; v_p' == v_p1/(C_p3*R_p3) - v_p/(C_p3 * R_p3) &amp; phi_v' == v_i*K_i/N + v_p * K_p/N + 2*3.14* f_0/N &amp; phi_ref' == 2*3.14*f_ref</flow>
+    </location>
+    <location id="4" name="both_1" x="695.0" y="329.0" width="226.0" height="66.0">
+      <invariant>v_i &gt;= omegai_l &amp; v_i &lt;= omegai_u &amp; v_p &gt;= omegap_l &amp; v_p &lt;= omegap_u &amp; phi_v &gt;= -3.14 &amp; phi_v &lt;= 2*3.14 &amp; phi_ref &gt;= 0 &amp; phi_ref &lt;= 2*3.14</invariant>
+      <flow>v_i' == (Ii_up+ Ii_dn)/C_i &amp; v_p1' == -1*( v_p1/C_p1)*(1/R_p2 + 1/R_p3) + v_p/(C_p1 * R_p3)+ (Ip_up + Ip_dn)/ C_p1 &amp; v_p' == v_p1/(C_p3*R_p3) - v_p/(C_p3 * R_p3) &amp; phi_v' == v_i*K_i/N + v_p * K_p/N + 2*3.14* f_0/N &amp; phi_ref' == 2*3.14*f_ref</flow>
+    </location>
+    <transition source="2" target="1" timedriven="false">
+      <label>jump</label>
+      <guard>phi_ref == 2*3.14</guard>
+      <assignment>t' == 0 &amp; v_i' == v_i &amp; v_p1' == v_p1 &amp; phi_v' == phi_v &amp; phi_ref' == phi_ref</assignment>
+      <labelposition x="-27.0" y="-64.0" width="126.0" height="64.0" />
+    </transition>
+    <transition source="2" target="3" timedriven="false">
+      <label>jump</label>
+      <guard>phi_v == 2*3.14</guard>
+      <assignment>t' == 0 &amp; v_i' == v_i &amp; v_p1' == v_p1 &amp; phi_v' == phi_v &amp; phi_ref' == phi_ref</assignment>
+      <labelposition x="-149.0" y="-21.0" width="142.0" height="64.0" />
+    </transition>
+    <transition source="1" target="4" timedriven="false">
+      <label>jump</label>
+      <guard>phi_v == 0</guard>
+      <assignment>t' == 0 &amp; v_i' == v_i &amp; v_p1' == v_p1 &amp; phi_v' == phi_v &amp; phi_ref' == phi_ref</assignment>
+      <labelposition x="7.0" y="-22.0" width="128.0" height="56.0" />
+    </transition>
+    <transition source="4" target="2" timedriven="false">
+      <label>jump</label>
+      <guard>t == t_d</guard>
+      <assignment>t' == 0 &amp; v_i' == v_i &amp; v_p1' == v_p1 &amp; phi_v' == phi_v &amp; phi_ref' == phi_ref</assignment>
+      <labelposition x="-34.0" y="-53.0" width="118.0" height="64.0" />
+    </transition>
+    <transition source="3" target="4" timedriven="false">
+      <label>jump</label>
+      <guard>phi_ref == 0</guard>
+      <assignment>t' == 0 &amp; v_i' == v_i &amp; v_p1' == v_p1 &amp; phi_v' == phi_v &amp; phi_ref' == phi_ref</assignment>
+      <labelposition x="-61.0" y="22.0" width="152.0" height="62.0" />
+    </transition>
+  </component>
+  <component id="sys1">
+    <param name="v_i" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v_p1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v_p" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="phi_v" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="phi_ref" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="f_ref" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="f_0" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="N" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="K_i" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="K_p" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="C_i" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="C_p1" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="C_p3" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="R_p2" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="R_p3" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="t_d" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="Ii_up" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="Ii_dn" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="Ip_up" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="Ip_dn" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="omegai_l" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="omegai_u" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="omegap_l" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="omegap_u" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="pll" as="pll_1" x="367.0" y="231.0">
+      <map key="v_i">v_i</map>
+      <map key="v_p1">v_p1</map>
+      <map key="v_p">v_p</map>
+      <map key="phi_v">phi_v</map>
+      <map key="phi_ref">phi_ref</map>
+      <map key="t">t</map>
+      <map key="f_ref">f_ref</map>
+      <map key="f_0">f_0</map>
+      <map key="N">N</map>
+      <map key="K_i">K_i</map>
+      <map key="K_p">K_p</map>
+      <map key="C_i">C_i</map>
+      <map key="C_p1">C_p1</map>
+      <map key="C_p3">C_p3</map>
+      <map key="R_p2">R_p2</map>
+      <map key="R_p3">R_p3</map>
+      <map key="t_d">t_d</map>
+      <map key="Ii_up">Ii_up</map>
+      <map key="Ii_dn">Ii_dn</map>
+      <map key="Ip_up">Ip_up</map>
+      <map key="Ip_dn">Ip_dn</map>
+      <map key="omegai_l">omegai_l</map>
+      <map key="omegai_u">omegai_u</map>
+      <map key="omegap_l">omegap_l</map>
+      <map key="omegap_u">omegap_u</map>
+    </bind>
+  </component>
+</sspaceex>
+

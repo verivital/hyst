@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="base">
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="select" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="table" x="450.0" y="144.0" width="254.0" height="86.0">
+      <flow>y' = lut([select], [0,0,1,1,0], [1,2,3,4,8])</flow>
+    </location>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="ticking" x="210.0" y="110.0">
+      <invariant>t &lt;= 14</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="net">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="timer" as="timer_1" x="269.0" y="201.0">
+      <map key="t">t</map>
+    </bind>
+    <bind component="base" as="base_1" x="288.0" y="40.0">
+      <map key="y">y</map>
+      <map key="select">t</map>
+    </bind>
+  </component>
+</sspaceex>
+

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!--
+This is a basic example to demonstrate the SpaceEx file format for the composition of
+two automata with HIOA parallel composition.
+Generic (template) models for a heater and a controller are declared as components.
+The temperature of the heater is a controlled (output) variable in the heater model
+and an uncontrolled (input) variable in the controller model.
+The two are instantiated as part of the "system" component, where the temperature
+variables of the two are "connected" by binding them to the same system variable.
+
+Heater and controller are interacting using synchronization labels, so the labels
+must be declared as non-local.
+
+In this model, the heater is unrestricted in the temperature range, so it has no
+invariant and no guards, it only determines the flow. 
+The controller forces transitions based on the value of the temperature, but is
+has no continuous variables by himself. So it has invariants and guards, but no
+flow or assignments.
+-->
+
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  
+  <component id="ControllerTemplate">
+    <param name="t" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="false" />
+    <param name="t_on" type="real" d1="1" d2="1" local="false" dynamics="const" />
+    <param name="t_off" type="real" d1="1" d2="1" local="false" dynamics="const" />
+    <param name="turn_on" type="label" local="false" />
+    <param name="turn_off" type="label" local="false" />
+    <location id="1" name="controller_off" x="67.0" y="171.0" width="100" height="80">
+      <note>Waiting for the temperature to rise.</note>
+      <invariant>t &lt;= t_on</invariant>
+    </location>
+    <location id="2" name="controller_on" x="308.0" y="170.0" width="100" height="80">
+      <note>Waiting for the temperature to fall.</note>
+      <invariant>t &gt;= t_off</invariant>
+    </location>
+    <transition source="1" target="2">
+      <note>When the temperature reaches the lower threshold, switch the heater on.</note>
+      <label>turn_on</label>
+      <guard>t &lt;= t_on</guard>
+      <labelposition x="0.0" y="-47.0" />
+      <middlepoint x="177.5" y="101.0" />
+    </transition>
+    <transition source="2" target="1">
+      <note>When the temperature reaches the upper threshold, switch the heater off.</note>
+      <label>turn_off</label>
+      <guard>t &gt;= t_off</guard>
+      <labelposition x="0.0" y="10.0" />
+      <middlepoint x="181.5" y="249.0" />
+    </transition>
+  </component>
+
+
+</sspaceex>
+

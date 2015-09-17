@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="havoc">
+    <param name="range" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="nondet" x="210.0" y="110.0" width="148.0" height="86.0">
+      <invariant>1 &lt;= range &lt;= 2</invariant>
+    </location>
+  </component>
+  <component id="dynamics">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="range" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="running" x="253.0" y="138.0" width="164.0" height="98.0">
+      <invariant>x &lt;= 5</invariant>
+      <flow>x' == 1 &amp; y' == 1 + range</flow>
+    </location>
+  </component>
+  <component id="sys">
+    <param name="range" type="real" local="true" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="havoc" as="havoc_1" x="236.0" y="48.0">
+      <map key="range">range</map>
+    </bind>
+    <bind component="dynamics" as="dynamics_1" x="236.0" y="155.0">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="range">range</map>
+    </bind>
+  </component>
+</sspaceex>
+

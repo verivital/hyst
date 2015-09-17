@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="template">
+    <param name="time" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="true" />
+	<param name="TimeMax" type="real" d1="1" d2="1" local="false" dynamics="const"/>
+	<param name="Der" type="real" d1="1" d2="1" local="false" dynamics="const"/>
+    <location id="1" name="on" x="303.0" y="189.0" width="100" height="80">
+      <flow>time' == Der</flow>
+    </location>
+  </component>
+
+  <component id="system">
+    <param name="t" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="true" />
+	<param name="Tmax" type="real" d1="1" d2="1" local="false" dynamics="const"/>
+	<param name="der" type="real" d1="1" d2="1" local="false" dynamics="const"/>
+
+	<bind component="template" as="instance" x="295.0" y="170.0" width="58.0" height="62.0">
+      <map key="time">t</map>
+      <map key="TimeMax">Tmax</map>
+	  <map key="Der">der</map>
+    </bind>
+  </component>
+</sspaceex>
+

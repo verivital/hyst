@@ -1,0 +1,6 @@
+Model from: R. FitzHugh. &quot;Impulses and physiological states in theoretical models of nerve membrane.&quot; Biophysical J, 1961.
+
+Found in: T. Dang and R. Testylier, &quot;Reachability analysis for polynomial dynamical systems using the Bernstein expansion.&quot; 
+Reliable Computing Journal, 2012
+
+same initial states too, although I did reach time 50 instead of 100 because there's really no interesting behavior after it starts cycling

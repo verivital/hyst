@@ -1,0 +1,12 @@
+HyST Developer Installation Instructions
+
+1) ANT setup in Eclipse
+
+http://help.eclipse.org/luna/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2FgettingStarted%2Fqs-81_basics.htm
+
+Problems I had to fix (getting JDK set up for ANT, a version problem for ANT with java 1.8, etc.):
+
+http://stackoverflow.com/questions/8400637/unable-to-find-a-javac-compiler
+
+http://stackoverflow.com/questions/20702626/javac1-8-class-not-found
+

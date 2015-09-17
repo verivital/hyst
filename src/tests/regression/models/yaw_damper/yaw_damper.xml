@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="init">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="w" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="flying" x="458.0" y="148.0" width="618.0" height="224.0">
+      <flow>x1' == -.0558*x1 -.9968*x2 + .0802*x3 + .0415*x4 + 0.00729 * 2.34 * x2 - 0.00729 * 2.34 * 0.2 * w &amp;&amp;
+x2' == .598*x1 -.115*x2 -.0318*x3 - 0.475 * 2.34 * x2 + 0.475 * 2.34 * 0.2 * w &amp;&amp;
+x3' == -3.05*x1 + .388*x2 -.4650*x3 + 0.153 * 2.34 * x2 - 0.153 * 2.34 * 0.2 * w &amp;&amp;
+x4' == 0.0805*x2+ x3 &amp;&amp;
+w' == x2 - 0.2 * w</flow>
+    </location>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="ticking" x="275.0" y="104.0">
+      <invariant>t &lt;= tmax</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="network">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="w" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="init" as="init_1" x="502.0" y="25.0">
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+      <map key="x3">x3</map>
+      <map key="x4">x4</map>
+      <map key="w">w</map>
+    </bind>
+    <bind component="timer" as="timer_1" x="501.0" y="230.0">
+      <map key="t">t</map>
+      <map key="tmax">tmax</map>
+    </bind>
+  </component>
+</sspaceex>
+

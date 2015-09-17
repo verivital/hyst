@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" math="SpaceEx" version="0.2">
+  <component id="pll_net">
+    <note>Created by Hyst v1.18
+Hybrid Automaton in SpaceEx
+Converted from file: pll.xml
+Command Line arguments: pll.xml -o /tmp/hypy_1433533050.03_87580982/tmp_spaceex_pll -spaceex -pass_sub_constants "" -pass_simplify ""</note>
+    <param d1="1" d2="1" dynamics="any" local="false" name="v_i" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="v_p1" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="v_p" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="phi_v" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="phi_ref" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="t" type="real"/>
+    <location id="1" name="up_1">
+      <invariant>v_i &gt;= 0 &amp;
+ v_i &lt;= 0.7 &amp;
+ v_p &gt;= -4 &amp;
+ v_p &lt;= 12 &amp;
+ phi_v &gt;= -3.14 &amp;
+ phi_v &lt;= 6.28 &amp;
+ phi_ref &gt;= 0 &amp;
+ phi_ref &lt;= 6.28</invariant>
+      <flow>v_i' == 404000 &amp;
+ v_p1' == -1 * v_p1 / 0.0000000000063 * 0.000145 + v_p / 0.0000000504 + 80158730.15873016 &amp;
+ v_p' == v_p1 / 0.000000016 - v_p / 0.000000016 &amp;
+ phi_v' == v_i * 200 / 1000 + v_p * 25 / 1000 + 169.1204 &amp;
+ phi_ref' == 169.56 &amp;
+ t' == 0</flow>
+    </location>
+    <location id="2" name="both_0">
+      <invariant>v_i &gt;= 0 &amp;
+ v_i &lt;= 0.7 &amp;
+ v_p &gt;= -4 &amp;
+ v_p &lt;= 12 &amp;
+ phi_v &gt;= -3.14 &amp;
+ phi_v &lt;= 6.28 &amp;
+ phi_ref &gt;= 0 &amp;
+ phi_ref &lt;= 6.28</invariant>
+      <flow>v_i' == 0 &amp;
+ v_p1' == -1 * v_p1 / 0.0000000000063 * 0.000145 + v_p / 0.0000000504 &amp;
+ v_p' == v_p1 / 0.000000016 - v_p / 0.000000016 &amp;
+ phi_v' == v_i * 200 / 1000 + v_p * 25 / 1000 + 169.1204 &amp;
+ phi_ref' == 169.56 &amp;
+ t' == 0</flow>
+    </location>
+    <location id="3" name="dn_1">
+      <invariant>v_i &gt;= 0 &amp;
+ v_i &lt;= 0.7 &amp;
+ v_p &gt;= -4 &amp;
+ v_p &lt;= 12 &amp;
+ phi_v &gt;= -3.14 &amp;
+ phi_v &lt;= 6.28 &amp;
+ phi_ref &gt;= 0 &amp;
+ phi_ref &lt;= 6.28</invariant>
+      <flow>v_i' == 396000 &amp;
+ v_p1' == -v_p1 / 0.0000000000063 * 0.000145 + v_p / 0.0000000504 + 78571428.57142857 &amp;
+ v_p' == v_p1 / 0.000000016 - v_p / 0.000000016 &amp;
+ phi_v' == v_i * 200 / 1000 + v_p * 25 / 1000 + 169.1204 &amp;
+ phi_ref' == 169.56 &amp;
+ t' == 0</flow>
+    </location>
+    <location id="4" name="both_1">
+      <invariant>v_i &gt;= 0 &amp;
+ v_i &lt;= 0.7 &amp;
+ v_p &gt;= -4 &amp;
+ v_p &lt;= 12 &amp;
+ phi_v &gt;= -3.14 &amp;
+ phi_v &lt;= 6.28 &amp;
+ phi_ref &gt;= 0 &amp;
+ phi_ref &lt;= 6.28</invariant>
+      <flow>v_i' == 799999.9999999999 &amp;
+ v_p1' == -1 * v_p1 / 0.0000000000063 * 0.000145 + v_p / 0.0000000504 + 158730158.73015872 &amp;
+ v_p' == v_p1 / 0.000000016 - v_p / 0.000000016 &amp;
+ phi_v' == v_i * 200 / 1000 + v_p * 25 / 1000 + 169.1204 &amp;
+ phi_ref' == 169.56 &amp;
+ t' == 0</flow>
+    </location>
+    <transition asap="false" bezier="false" source="1" target="4" timedriven="false">
+      <guard>phi_v == 0</guard>
+      <assignment>t' == 0</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>phi_ref == 6.28</guard>
+      <assignment>t' == 0</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="3" timedriven="false">
+      <guard>phi_v == 6.28</guard>
+      <assignment>t' == 0</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="4" timedriven="false">
+      <guard>phi_ref == 0</guard>
+      <assignment>t' == 0</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="4" target="2" timedriven="false">
+      <guard>t == 0.00000000005</guard>
+      <assignment>t' == 0</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+  </component>
+  <component id="pll_sys">
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="v_i" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="v_p1" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="v_p" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="phi_v" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="phi_ref" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="t" type="real"/>
+    <bind as="pll" component="pll_net">
+      <map key="v_i">v_i</map>
+      <map key="v_p1">v_p1</map>
+      <map key="v_p">v_p</map>
+      <map key="phi_v">phi_v</map>
+      <map key="phi_ref">phi_ref</map>
+      <map key="t">t</map>
+    </bind>
+  </component>
+</sspaceex>
+

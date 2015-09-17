@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Hyst Project" default="build" basedir=".">
+	
+    <property name="main.package"          value="exporter"/>
+    <property name="parser.package"        value="${main.package}/parser"/>
+	<property name="main.src.dir"          value="src/com/verivital/hyst"/>
+    <property name="grammar.src.dir"       value="src/com/verivital/hyst/grammar/antlr"/>
+    <property name="grammar.file"          value="${grammar.src.dir}/HystExpression.g4"/>
+	<property name="release.path"          value="release"/>
+	<property name="release_slsf.path"     value="release_slsf"/>
+	<property name="release_inzip.path"    value="Hyst"/>
+	<property name="batch_run.path"        value="../batch_run"/>
+	<property name="release_zip.path"      value="release.zip"/>
+	<property name="release_slsf_zip.path"      value="release_slsf.zip"/>
+	<property name="readme_user.path"           value="../../README_user.txt"/>
+	<property name="readme_ha2slsf.path"           value="../../README_ha2slsf.txt"/>
+	<property name="batch_run_result.path" value="${batch_run.path}/result"/>
+	<property name="examples_dir.path"     value="../../examples"/>
+	<property name="slsf_dir.path"     value="../../spaceex2stateflow"/>
+	
+	<!-- based on: http://stackoverflow.com/questions/453170/using-ant-to-detect-os-and-set-property -->
+	<target name="checkos">
+	    <condition property="isWindows" value="true">
+	            <os family="windows" />
+	    </condition>
+
+	    <condition property="isLinux" value="true">
+	            <os family="unix" />
+	    </condition>
+	</target>
+	
+	<!-- configuration -->
+	<target name="build-config" depends="checkos">
+	    <property name="bin.path" value="bin" />
+		<property name="src.path" value="src" />
+		<property name="lib.path" value="../../lib" />
+	
+		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar commons-cli*.jar" />
+		<property name="jar.path" value="Hyst.jar" />
+		<property name="reports.path" value="tmp" />
+		<property name="regression.path" value="tests/regression" />
+	</target>
+
+	<!-- todo: this is incomplete, need to detect architecture -->
+	<target name="if_windows" depends="checkos" if="isWindows">
+		<property name="z3.path" value="../../lib/win/x64"/>
+	</target>
+	
+	<target name="if_linux" depends="checkos" if="isLinux">
+		<!-- NOTE: the way linux handles JNI libraries, you must execute
+		     the following in your Linux setup prior to having Z3 work:
+		     
+		     LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:../../lib/linux/x64/
+		     
+		     If you don't mind thrashing the LD_LIBRARY_PATH, you can use:
+		     
+		     LD_LIBRARY_PATH=.:../../lib/linux/x64/
+		     
+		     Obviously this is dependent upon the location of the jar relative
+		     to the .so.
+		     
+		     However, if you don't do this, it should only result in a runtime
+		     error, and should not prevent compilation (as the jar will
+		     have been appropriately include at compile time, it's just
+		     at runtime when it tries to find the code to execute it,
+		     it will fail to find the .so library called via JNI).
+		     
+		     Here are references for setting this up:
+		     
+		     http://leodemoura.github.io/blog/2012/12/10/z3-for-java.html
+		     
+		     http://stackoverflow.com/questions/19642388/how-to-include-an-external-jar-lib-in-my-ant-build
+		     
+		     http://stackoverflow.com/questions/17972438/jni-findclass-cant-find-class-which-uses-jar
+		     
+		     http://stackoverflow.com/questions/422848/ant-how-to-modify-java-library-path-in-a-buildfile
+		     
+		     http://stackoverflow.com/questions/3619036/override-annotation-in-jdk-1-6
+		-->
+		<property name="z3.path" value="../../lib/linux/x64/"/>
+	</target>
+		
+	<target name="classpath" depends="build-config,if_windows,if_linux" >
+		<path id="build.classpath">
+		  	<fileset dir="${lib.path}" includes="*.jar"/>
+			<fileset dir="${z3.path}" includes="*.jar"/>
+		</path>
+	</target>
+
+	<!-- rebuild the antlr files -->
+	<!-- based on: http://stackoverflow.com/questions/8029577/a-sample-of-build-xml-for-antlr-project -->
+	<!-- also useful: http://stackoverflow.com/questions/25481/where-do-i-get-the-antlr-ant-task -->
+	<!-- also useful for antlr command line options: https://theantlrguy.atlassian.net/wiki/display/ANTLR4/ANTLR+Tool+Command+Line+Options -->
+	<!-- downloads for ANTLR libs and jars: http://www.antlr.org/download.html -->
+    <target name="antlr_generate" depends="build-config,classpath" description="Generates the lexer and parser from the .g grammar file.">
+        <echo>Generating the lexer and parser...</echo>
+        <java classname="org.antlr.v4.Tool" fork="true" failonerror="true">
+        	<arg value="${grammar.file}"/>
+            <!--<arg value="-fo"/>-->
+        	<arg value="-visitor"/>
+        	<arg value="-no-listener"/>
+        	<arg value="-package"/>
+            <!--<arg value="${main.src.dir}/${parser.package}"/>-->
+        	<arg value="com.verivital.hyst.grammar.antlr"/>
+        	<!-- Stan: commented this out because it would generate the files in a subdirectory of the grammar file,
+        	although it did compile it correctly somehow.-->
+        	<!--<arg value="-o"/>
+			<arg value="src/com/verivital/hyst/grammar/antlr"/>-->
+        	<!-- Taylor: the previous are necessary for me...? -->
+            <classpath refid="build.classpath"/>
+        	
+        </java>
+
+        <!-- 
+            compile the generated parser and lexer source file to see
+            if there's no illegal code inside these source files
+        -->
+        <antcall target="build"/>
+    </target>
+	
+	<!-- JUnit classpath. -->
+	<path id="junit.classpath">
+		<fileset dir="../../lib" includes="**/*.jar" excludes="**/*Hyst*"/>
+		<pathelement location="bin"/>
+	</path>
+	
+	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" description="Create a jar for the Hyst project">
+		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}">
+			<zipgroupfileset dir="${lib.path}" includes="${runtimejarnames.path}"/>
+			<zipgroupfileset dir="${z3.path}" includes="**/*.jar"/>
+			<manifest>
+				<attribute name="Main-Class" value="com.verivital.hyst.main.Hyst"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name ="copyjar" depends="build-config,buildjar" description="Copy Hyst.jar file to an appropriate folder">
+		<copy file="Hyst.jar" todir="../../lib"/>
+	</target>
+	
+	<target name ="clean" depends="build-config" description="Delete the .class files and .jar file">
+		<delete file ="${jar.path}"/>
+		<delete dir="${bin.path}"/>
+	</target>
+	
+	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath" description="Make the .class files">
+    	<echo>Classpath: ${ant.refid:build.classpath}</echo>
+
+		<mkdir dir="${bin.path}"/>		
+		<javac includeantruntime="false" destdir="${bin.path}" failonerror="true" target="1.7" source="1.7">
+				<classpath refid="build.classpath"/>
+				<src path="${src.path}"/>
+				<compilerarg value="-Xlint:unchecked" />
+		</javac>
+	</target>
+	
+	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar" description="Make the .class files and .jar file">
+	</target>
+	
+	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
+	
+	<!-- This will unit test every class with *Test*.java in it -->
+	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
+		<mkdir dir="${reports.path}"/>
+		
+		<junit printsummary="yes" haltonfailure="yes" fork = "true">
+		 	<classpath refid="junit.classpath"/>
+			
+			<formatter type="plain" usefile="false"/>
+			
+		 	<batchtest fork="yes" todir="${reports.path}">
+	 	        <fileset dir="${src.path}">
+	 	          <include name="**/*Test*.java"/>
+	 	        </fileset>
+	 	    </batchtest>
+		 </junit>
+	</target>
+	
+	<target name ="regression_test" depends="build-config,build" description="Run the Regression Tests">
+		<exec dir="${regression.path}" executable="python" failonerror="true">
+		    <arg line="run_tests.py" />
+		</exec>
+	</target>
+	
+	<!-- run all tests (unit and regression) -->
+	<target name ="test" depends="unit_test,regression_test" description="Run the Unit and Regression Tests">
+	</target>
+	
+	<target name ="release" depends="build-config,build" description="Builds the release">
+		<delete dir="${release.path}"/>
+		<mkdir dir="${release.path}"/>
+		<copy file="${jar.path}" tofile="${release.path}/${jar.path}"/>
+		
+		<copy file="${readme_user.path}" tofile="${release.path}/README.txt"/>
+		
+		<!-- only try to run if not on windows -->
+		<!-- based on: http://stackoverflow.com/questions/4520572/different-targets-on-different-os-with-ant -->
+		<exec dir="${batch_run.path}" executable="python" failonerror="true" os="linux">
+		    <arg line="run_examples.py" />
+		</exec>
+		
+		<copy todir="${release.path}/result">
+			<fileset dir="${batch_run_result.path}"/>
+		</copy>
+		
+		<!-- Copy examples over -->
+		<mkdir dir="${release.path}/examples"/>
+		
+		<copy todir="${release.path}/examples">
+			<fileset dir="${examples_dir.path}" 
+				includes="3d_stable/**,biology7d/**,biology9d/**,brusselator/**,coupled_vanderpol/**,heaterLygeros/**,lorenz/**,neuron/**,toy/**,rtss2015_benchmarks/**,vanderpol/**"/>
+		</copy>
+		
+		<move todir="${release_inzip.path}">
+		    <fileset dir="${release.path}"/>
+		</move>
+	
+		<zip destfile="${release_zip.path}"
+		       basedir="${release_inzip.path}"
+		 />
+		
+		<move todir="${release.path}">
+		    <fileset dir="${release_inzip.path}"/>
+		</move>
+		
+		<echo message="Done! Release created at ${release_zip.path}"/>
+	</target>
+	<target name ="release_slsf" depends="build-config,build" description="Builds the release for ha2slsf">
+		<delete dir="${release_slsf.path}"/>
+		<mkdir dir="${release_slsf.path}"/>
+		<copy file="${jar.path}" tofile="${release_slsf.path}/${jar.path}"/>
+		<copy file="${jar.path}" tofile="${release_slsf.path}/lib/${jar.path}"/>
+		
+		<copy file="${readme_user.path}" tofile="${release_slsf.path}/README.txt"/>
+
+		<copy file="${readme_ha2slsf.path}" tofile="${release_slsf.path}/README_slsf.txt"/>
+		
+		<!-- only try to run if not on windows -->
+		<!-- based on: http://stackoverflow.com/questions/4520572/different-targets-on-different-os-with-ant -->
+		<exec dir="${batch_run.path}" executable="python" failonerror="true" os="linux">
+		    <arg line="run_examples.py" />
+		</exec>
+			
+		<!-- Copy examples over -->
+		<mkdir dir="${release_slsf.path}/examples"/>
+		
+		<copy todir="${release_slsf.path}/examples">
+			<fileset dir="${examples_dir.path}" 
+				includes="rtss2015_benchmarks/**"/>
+		</copy>
+		
+		<!-- Copy slsf matlab codes over -->
+		<mkdir dir="${release_slsf.path}/spaceex2stateflow"/>
+		
+		<copy todir="${release_slsf.path}/spaceex2stateflow">
+			<fileset dir="${slsf_dir.path}" 
+				includes="output_slsf_models/**,functions/**,checkLocations.m, Initial_SpaceExToStateflow.m, Location_SpaceExToStateflow.m, option_SpaceExToStateflow.m, plotExecution.m, plotSimulationLoop.m, resultsToMatrix.m, semanticTranslation.m, simulation_config.m, simulationLoop.m, SpaceExToStateflow.m, Transition_SpaceExToStateflow.m, ha2slsf_rtss15_all_benchmarks.m "/>
+
+		</copy>
+		
+		<move todir="${release_inzip.path}">
+		    <fileset dir="${release_slsf.path}"/>
+		</move>
+	
+		<zip destfile="${release_slsf_zip.path}"
+		       basedir="${release_inzip.path}"
+		 />
+		
+		<move todir="${release_slsf.path}">
+		    <fileset dir="${release_inzip.path}"/>
+		</move>
+		
+		<echo message="Done! Release created at ${release_slsf_zip.path}"/>
+	</target>
+	
+</project>
+

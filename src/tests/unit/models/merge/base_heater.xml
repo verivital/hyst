@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="HeaterTemplate">
+    <param name="t" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="true" />
+    <param name="r_up" type="real" d1="1" d2="1" local="false" dynamics="const" />
+    <param name="r_down" type="real" d1="1" d2="1" local="false" dynamics="const" />
+    <param name="turn_on" type="label" local="false" />
+    <param name="turn_off" type="label" local="false" />
+    <location id="1" name="heater_off" x="67.0" y="189.0" width="100" height="80">
+      <note>In this location the temperature is falling because the heater is off.</note>
+      <flow>t' == r_down</flow>
+    </location>
+    <location id="2" name="heater_on" x="303.0" y="189.0" width="100" height="80">
+      <note>In this location the temperature is rising because the heater is on.</note>
+      <flow>t' == r_up</flow>
+    </location>
+    <transition source="1" target="2">
+      <note>Switching the heater on.</note>
+      <label>turn_on</label>
+      <assignment>t' == t</assignment>
+      <labelposition x="0.0" y="-56.0" />
+      <middlepoint x="183.0" y="102.0" />
+    </transition>
+    <transition source="2" target="1">
+      <note>Switching the heater off.</note>
+      <label>turn_off</label>
+      <assignment>t' == t</assignment>
+      <labelposition x="0.0" y="10.0" />
+      <middlepoint x="185.0" y="284.0" />
+    </transition>
+  </component>
+ 
+
+  <component id="system">
+    <param name="temp" type="real" d1="1" d2="1" local="false" dynamics="any" />
+    <param name="turn_on" type="label" local="true" />
+    <param name="turn_off" type="label" local="true" />
+    <bind component="HeaterTemplate" as="Heater" x="180.0" y="184.0">
+      <map key="t">temp</map>
+      <map key="r_up">2</map>
+      <map key="r_down">-1</map>
+      <map key="turn_on">turn_on</map>
+      <map key="turn_off">turn_off</map>
+    </bind>
+    <bind component="ControllerTemplate" as="Controller" x="179.0" y="29.0">
+      <map key="t">temp</map>
+      <map key="t_on">18</map>
+      <map key="t_off">21</map>
+      <map key="turn_on">turn_on</map>
+      <map key="turn_off">turn_off</map>
+    </bind>
+  </component>
+
+</sspaceex>
+

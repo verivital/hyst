@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="main">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="running" x="191.0" y="239.0" width="146.0" height="140.0">
+      <flow>x' == y &amp;
+y' == y - x - x*x*y &amp;
+u' == v &amp;
+v' == v - u - u*u*v + y - v</flow>
+    </location>
+  </component>
+  <component id="sys">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="u" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="main" as="main_1" x="280.0" y="81.0">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="u">u</map>
+      <map key="v">v</map>
+    </bind>
+  </component>
+</sspaceex>
+

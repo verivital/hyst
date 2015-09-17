@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="dynamics">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="range" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="range_min" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="range_max" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="one" x="161.0" y="260.0" width="228.0" height="176.0">
+      <invariant>x &lt;= 5 &amp;
+range_min == 1 &amp;
+range_max == 2 &amp;
+range_min &lt;= range &lt;= range_max</invariant>
+      <flow>x' == 1 &amp; y' == range</flow>
+    </location>
+    <location id="2" name="two" x="846.0" y="259.0" width="274.0" height="160.0">
+      <invariant>x &lt;= 10 &amp;
+range_min == 2 &amp;
+range_max == 3 &amp;
+range_min &lt;= range &lt;= range_max</invariant>
+      <flow>x' == 1 &amp; y' == range</flow>
+    </location>
+    <location id="3" name="skip" x="532.0" y="259.0">
+      <flow>false</flow>
+    </location>
+    <transition source="1" target="3">
+      <guard>x &gt;= 5</guard>
+      <assignment>y := 0 &amp; 
+range_min' &gt;= 0 &amp;
+range_min' &lt;= 2147483647 &amp;
+range_max' &gt;= 0 &amp;
+range_max' &lt;= 2147483647 &amp;
+range' &gt;= 0 &amp;
+range' &lt;= 2147483647</assignment>
+      <labelposition x="-58.0" y="-47.0" width="192.0" height="184.0" />
+    </transition>
+    <transition source="3" target="2">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+  </component>
+</sspaceex>
+

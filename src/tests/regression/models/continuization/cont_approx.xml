@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="helicopter">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="a" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="flying" x="588.0" y="179.0" width="236.0" height="184.0">
+      <flow>x' == v &amp;&amp;
+v' == a &amp;&amp;
+a' == -10 * v - 3 * a</flow>
+    </location>
+    <location id="2" name="init" x="223.0" y="178.0" width="178.0" height="140.0">
+      <flow>false</flow>
+    </location>
+    <transition source="2" target="1">
+      <assignment>a := 10 * (1 - x) + 3 * (-v)</assignment>
+      <labelposition x="-100.0" y="-4.0" width="166.0" height="76.0" />
+    </transition>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="ticking" x="210.0" y="110.0">
+      <invariant>t &lt;= tmax</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="a" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="helicopter" as="helicopter_1" x="403.0" y="31.0">
+      <map key="x">x</map>
+      <map key="v">v</map>
+      <map key="a">a</map>
+    </bind>
+    <bind component="timer" as="timer_1" x="408.0" y="191.0">
+      <map key="t">t</map>
+      <map key="tmax">tmax</map>
+    </bind>
+  </component>
+</sspaceex>
+

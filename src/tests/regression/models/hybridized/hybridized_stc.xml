@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" math="SpaceEx" version="0.2">
+  <component id="vanderpol_net">
+    <note>Created by Hyst v1.2
+Hybrid Automaton in SpaceEx
+Converted from file: ../../examples/vanderpol/vanderpol.xml
+Command Line arguments: ../../examples/vanderpol/vanderpol.xml -o sim.xml -layout -simulate 1,t,1,2,3,4,5</note>
+    <param d1="1" d2="1" dynamics="any" local="false" name="x" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="y" type="real"/>
+    <param d1="1" d2="1" dynamics="any" local="false" name="t" type="real"/>
+    <param controlled="false" d1="1" d2="1" dynamics="any" local="false" name="_x_interval" type="real"/>
+    <param controlled="false" d1="1" d2="1" dynamics="any" local="false" name="_y_interval" type="real"/>
+    <location id="1" name="Mode0_0">
+      <invariant>0 &lt;= t &amp;
+ t &lt;= 1 &amp;
+ 0.2474 &lt;= x &amp;
+ x &lt;= 0.6330128462466275 &amp;
+ 0.24679590044085573 &lt;= y &amp;
+ y &lt;= 0.4041 &amp;
+ _x_interval &lt;= 0 &amp;
+ _x_interval &gt;= 0 &amp;
+ _y_interval &lt;= 0.130989 &amp;
+ _y_interval &gt;= 0.103606</invariant>
+      <flow>x' == 0 * x + 1 * y + _x_interval &amp;
+ y' == -1.286529 * x + 0.806218 * y + _y_interval &amp;
+ t' == 1</flow>
+    </location>
+    <location id="2" name="Mode0_1">
+      <invariant>1 &lt;= t &amp;
+ t &lt;= 2 &amp;
+ 0.5535167768234619 &lt;= x &amp;
+ x &lt;= 0.6330128462466275 &amp;
+ -0.45015565646868044 &lt;= y &amp;
+ y &lt;= 0.25198369640935786 &amp;
+ _x_interval &lt;= 0 &amp;
+ _x_interval &gt;= 0 &amp;
+ _y_interval &lt;= -0.05248 &amp;
+ _y_interval &gt;= -0.085595</invariant>
+      <flow>x' == 0 * x + 1 * y + _x_interval &amp;
+ y' == -0.882432 * x + 0.648037 * y + _y_interval &amp;
+ t' == 1</flow>
+    </location>
+    <transition asap="false" bezier="false" source="1" target="2" timedriven="false">
+      <guard>t &lt;= 1</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+  </component>
+  <component id="vanderpol_sys">
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="x" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="y" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="t" type="real"/>
+    <param controlled="false" d1="1" d2="1" dynamics="any" local="false" name="_x_interval" type="real"/>
+    <param controlled="false" d1="1" d2="1" dynamics="any" local="false" name="_y_interval" type="real"/>
+    <bind as="vanderpol" component="vanderpol_net">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="t">t</map>
+      <map key="_x_interval">_x_interval</map>
+      <map key="_y_interval">_y_interval</map>
+    </bind>
+  </component>
+</sspaceex>
+
