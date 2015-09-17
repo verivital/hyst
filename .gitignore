@@ -1,0 +1,4 @@
+*~
+*.pyc
+src/tests/regression/result/*
+src/bin/*
