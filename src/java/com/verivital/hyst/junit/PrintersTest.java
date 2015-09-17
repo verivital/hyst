@@ -40,6 +40,9 @@ public class PrintersTest
 	    Expression.expressionPrinter = null;
 	}
 	
+	private String UNIT_BASEDIR = "tests/unit/models/";
+	private String REGRESSION_BASEDIR = "tests/regression/models/";
+	
 	// tools to test here. Each test will run all of these
 	private static final ArrayList <ToolPrinter> printers; 
 	
@@ -66,7 +69,7 @@ public class PrintersTest
 	 */
 	private void runAllPrintersOnModel(String baseName)
 	{
-		String path = "tests/unit/models/" + baseName + "/";
+		String path = UNIT_BASEDIR + baseName + "/";
 		String xml = baseName + ".xml";
 		String cfg = baseName + ".cfg";
 		
@@ -154,7 +157,7 @@ public class PrintersTest
 	@Test
 	public void testPrintSimpleModel()
 	{
-		runAllPrintersOnModel("tests/unit/models/no_vars_check/", "has_vars.xml", "has_vars.cfg");
+		runAllPrintersOnModel(UNIT_BASEDIR + "no_vars_check/", "has_vars.xml", "has_vars.cfg");
 	}
 	
 	/**
@@ -311,7 +314,7 @@ public class PrintersTest
 	{
 		ToolPrinter tp = new SpaceExPrinter();
 		
-		String path = "tests/unit/models/hybridized/hybridized.";
+		String path = UNIT_BASEDIR + "hybridized/hybridized.";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(path + "cfg", path + "xml");
 		Configuration c = ModelParserTest.flatten(sd);

@@ -42,6 +42,9 @@ public class PassTests
 	{      
 	    Expression.expressionPrinter = null;
 	}
+	
+	private String UNIT_BASEDIR = "tests/unit/models/";
+	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	 
 	/**
 	 * make a sample configuration, which is used in multiple tests
@@ -110,7 +113,7 @@ public class PassTests
 	@Test
 	public void testSubConstantsPll()
 	{
-		String path = "tests/unit/models/pll/";
+		String path = UNIT_BASEDIR + "pll/";
 		String spaceExFile = path + "pll_orig.xml";
 		String configFile = path + "pll_orig.cfg";
 		
@@ -127,7 +130,7 @@ public class PassTests
 	{
 		ArrayList <PassRun> rv = new ArrayList <PassRun>();
 		
-		String path = "tests/regression/models/continuization/";
+		String path = REGRESSION_BASEDIR + "continuization/";
 		String spaceExFile = path + "cont_approx.xml";
 		String configFile = path + "cont_approx.cfg";
 		

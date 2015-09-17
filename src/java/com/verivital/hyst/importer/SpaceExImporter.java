@@ -5,6 +5,8 @@ package com.verivital.hyst.importer;
 
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.main.Hyst;
@@ -29,10 +31,15 @@ public class SpaceExImporter
 	 */
 	public static SpaceExDocument importModels(String cfgFilename, String ... xmlFilenames)
 	{
+		//System.out.println("Working Directory = " + System.getProperty("user.dir"));
+		Path currentRelativePath = Paths.get("");
+		String s = currentRelativePath.toAbsolutePath().toString();
+		//System.out.println("Current relative path is: " + s);
+		
 		for (String name : xmlFilenames)
 		{
 			if (!new File(name).exists()) 
-				throw new AutomatonExportException(name + " not found.");
+				throw new AutomatonExportException(name + " not found; full path tried: " + s + name);
 		}
 		
 		if (!new File(cfgFilename).exists()) 

@@ -1,4 +1,4 @@
-// Generated from src/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
+// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
 package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -73,6 +73,8 @@ public class HystExpressionLexer extends Lexer {
 	public String[] getTokenNames() {
 		return tokenNames;
 	}
+
+	@Override
 
 	public Vocabulary getVocabulary() {
 		return VOCABULARY;

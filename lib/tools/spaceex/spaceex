@@ -1,0 +1,56 @@
+#!/bin/bash
+# a shell function to resolve symbolic links
+# taken from
+# http://sites.google.com/site/jdisnard/realpath
+#
+real_path () {
+  OIFS=$IFS
+  IFS='/'
+  for I in $1
+  do
+    # Resolve relative path punctuation.
+    if [ "$I" = "." ] || [ -z "$I" ]
+      then continue
+    elif [ "$I" = ".." ]
+      then FOO="${FOO%%/${FOO##*/}}"
+           continue
+      else FOO="${FOO}/${I}"
+    fi
+
+    # Dereference symbolic links.
+    if [ -h "$FOO" ] && [ -x "/bin/ls" ]
+      then IFS=$OIFS
+           set `/bin/ls -l "$FOO"`
+           while shift ;
+           do
+             if [ "$1" = "->" ]
+               then FOO=$2
+                    shift $#
+                    break
+             fi
+           done
+    fi
+  done
+  IFS=$OIFS
+  echo "$FOO"
+}
+
+dir_name () {
+  echo "${1%/*}"
+}
+
+# however, the following doesn't work at all
+# script_dir="$(dir_name "$(real_path ${BASH_SOURCE[0]})")"
+
+# faulty workaround
+# script_dir="$(dirname ${BASH_SOURCE[0]})"
+
+# solution using perl
+script_name=`perl -e 'use Cwd "abs_path";print abs_path(shift)' $0`
+
+#echo $script_name
+script_dir="$(dirname ${script_name})"
+
+LD_LIBRARY_PATH=$script_dir/lib:$LD_LIBRARY_PATH $script_dir/bin/sspaceex "$@"
+
+

@@ -1,4 +1,4 @@
-// Generated from src/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
+// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
 package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -77,6 +77,8 @@ public class HystExpressionParser extends Parser {
 	public String[] getTokenNames() {
 		return tokenNames;
 	}
+
+	@Override
 
 	public Vocabulary getVocabulary() {
 		return VOCABULARY;
@@ -631,6 +633,15 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
+	public static class GuardBlankContext extends GuardExpressionContext {
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
+		public GuardBlankContext(GuardExpressionContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitGuardBlank(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class GuardContext extends GuardExpressionContext {
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
@@ -640,15 +651,6 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitGuard(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class GuardBlankContext extends GuardExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
-		public GuardBlankContext(GuardExpressionContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitGuardBlank(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -801,6 +803,24 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
+	public static class FlowFalseContext extends FlowExpressionContext {
+		public TerminalNode FALSE() { return getToken(HystExpressionParser.FALSE, 0); }
+		public FlowFalseContext(FlowExpressionContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitFlowFalse(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class FlowBlankContext extends FlowExpressionContext {
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
+		public FlowBlankContext(FlowExpressionContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitFlowBlank(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class FlowContext extends FlowExpressionContext {
 		public List<TerminalNode> VAR() { return getTokens(HystExpressionParser.VAR); }
 		public TerminalNode VAR(int i) {
@@ -829,24 +849,6 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitFlow(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class FlowFalseContext extends FlowExpressionContext {
-		public TerminalNode FALSE() { return getToken(HystExpressionParser.FALSE, 0); }
-		public FlowFalseContext(FlowExpressionContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitFlowFalse(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class FlowBlankContext extends FlowExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
-		public FlowBlankContext(FlowExpressionContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitFlowBlank(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1031,17 +1033,6 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class LocAndExpContext extends LocSubExpressionContext {
-		public AndContext and() {
-			return getRuleContext(AndContext.class,0);
-		}
-		public LocAndExpContext(LocSubExpressionContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLocAndExp(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class LocSubExpContext extends LocSubExpressionContext {
 		public TerminalNode LOC() { return getToken(HystExpressionParser.LOC, 0); }
 		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
@@ -1068,6 +1059,17 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLocSubBlankExp(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class LocAndExpContext extends LocSubExpressionContext {
+		public AndContext and() {
+			return getRuleContext(AndContext.class,0);
+		}
+		public LocAndExpContext(LocSubExpressionContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLocAndExp(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1315,17 +1317,6 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class ToNotContext extends AndContext {
-		public NotContext not() {
-			return getRuleContext(NotContext.class,0);
-		}
-		public ToNotContext(AndContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToNot(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class AndExpressionContext extends AndContext {
 		public NotContext not() {
 			return getRuleContext(NotContext.class,0);
@@ -1338,6 +1329,17 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitAndExpression(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class ToNotContext extends AndContext {
+		public NotContext not() {
+			return getRuleContext(NotContext.class,0);
+		}
+		public ToNotContext(AndContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToNot(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1392,14 +1394,16 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class ToCompareContext extends NotContext {
-		public CompareContext compare() {
-			return getRuleContext(CompareContext.class,0);
+	public static class BoolParenthesesContext extends NotContext {
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
+		public OrContext or() {
+			return getRuleContext(OrContext.class,0);
 		}
-		public ToCompareContext(NotContext ctx) { copyFrom(ctx); }
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
+		public BoolParenthesesContext(NotContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToCompare(this);
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitBoolParentheses(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1417,16 +1421,14 @@ public class HystExpressionParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class BoolParenthesesContext extends NotContext {
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
-		public OrContext or() {
-			return getRuleContext(OrContext.class,0);
+	public static class ToCompareContext extends NotContext {
+		public CompareContext compare() {
+			return getRuleContext(CompareContext.class,0);
 		}
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public BoolParenthesesContext(NotContext ctx) { copyFrom(ctx); }
+		public ToCompareContext(NotContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitBoolParentheses(this);
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToCompare(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1495,30 +1497,21 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
-	public static class LessOpContext extends OpContext {
-		public TerminalNode LESS() { return getToken(HystExpressionParser.LESS, 0); }
-		public LessOpContext(OpContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLessOp(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class LessEqualOpContext extends OpContext {
-		public TerminalNode LESSEQUAL() { return getToken(HystExpressionParser.LESSEQUAL, 0); }
-		public LessEqualOpContext(OpContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLessEqualOp(this);
-			else return visitor.visitChildren(this);
-		}
-	}
 	public static class EqualOpContext extends OpContext {
 		public TerminalNode EQUAL() { return getToken(HystExpressionParser.EQUAL, 0); }
 		public EqualOpContext(OpContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitEqualOp(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class GreaterOpContext extends OpContext {
+		public TerminalNode GREATER() { return getToken(HystExpressionParser.GREATER, 0); }
+		public GreaterOpContext(OpContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitGreaterOp(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1540,12 +1533,21 @@ public class HystExpressionParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class GreaterOpContext extends OpContext {
-		public TerminalNode GREATER() { return getToken(HystExpressionParser.GREATER, 0); }
-		public GreaterOpContext(OpContext ctx) { copyFrom(ctx); }
+	public static class LessOpContext extends OpContext {
+		public TerminalNode LESS() { return getToken(HystExpressionParser.LESS, 0); }
+		public LessOpContext(OpContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitGreaterOp(this);
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLessOp(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class LessEqualOpContext extends OpContext {
+		public TerminalNode LESSEQUAL() { return getToken(HystExpressionParser.LESSEQUAL, 0); }
+		public LessEqualOpContext(OpContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLessEqualOp(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1630,6 +1632,15 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
+	public static class ConstTrueContext extends CompareContext {
+		public TerminalNode TRUE() { return getToken(HystExpressionParser.TRUE, 0); }
+		public ConstTrueContext(CompareContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitConstTrue(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class BoolOpContext extends CompareContext {
 		public List<AddSubContext> addSub() {
 			return getRuleContexts(AddSubContext.class);
@@ -1656,15 +1667,6 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitConstFalse(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class ConstTrueContext extends CompareContext {
-		public TerminalNode TRUE() { return getToken(HystExpressionParser.TRUE, 0); }
-		public ConstTrueContext(CompareContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitConstTrue(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -1771,6 +1773,17 @@ public class HystExpressionParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
+	public static class ToTimesDivContext extends AddSubContext {
+		public TimesDivContext timesDiv() {
+			return getRuleContext(TimesDivContext.class,0);
+		}
+		public ToTimesDivContext(AddSubContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToTimesDiv(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class MinusContext extends AddSubContext {
 		public AddSubContext addSub() {
 			return getRuleContext(AddSubContext.class,0);
@@ -1783,17 +1796,6 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitMinus(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class ToTimesDivContext extends AddSubContext {
-		public TimesDivContext timesDiv() {
-			return getRuleContext(TimesDivContext.class,0);
-		}
-		public ToTimesDivContext(AddSubContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitToTimesDiv(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -2200,6 +2202,29 @@ public class HystExpressionParser extends Parser {
 			super.copyFrom(ctx);
 		}
 	}
+	public static class TanFuncContext extends UnaryContext {
+		public TerminalNode TAN() { return getToken(HystExpressionParser.TAN, 0); }
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
+		public AddSubContext addSub() {
+			return getRuleContext(AddSubContext.class,0);
+		}
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
+		public TanFuncContext(UnaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitTanFunc(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class NumberContext extends UnaryContext {
+		public TerminalNode NUM() { return getToken(HystExpressionParser.NUM, 0); }
+		public NumberContext(UnaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitNumber(this);
+			else return visitor.visitChildren(this);
+		}
+	}
 	public static class LnFuncContext extends UnaryContext {
 		public TerminalNode LN() { return getToken(HystExpressionParser.LN, 0); }
 		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
@@ -2211,6 +2236,34 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitLnFunc(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class SqrtFuncContext extends UnaryContext {
+		public TerminalNode SQRT() { return getToken(HystExpressionParser.SQRT, 0); }
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
+		public AddSubContext addSub() {
+			return getRuleContext(AddSubContext.class,0);
+		}
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
+		public SqrtFuncContext(UnaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitSqrtFunc(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+	public static class CosFuncContext extends UnaryContext {
+		public TerminalNode COS() { return getToken(HystExpressionParser.COS, 0); }
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
+		public AddSubContext addSub() {
+			return getRuleContext(AddSubContext.class,0);
+		}
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
+		public CosFuncContext(UnaryContext ctx) { copyFrom(ctx); }
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitCosFunc(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -2233,56 +2286,6 @@ public class HystExpressionParser extends Parser {
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
 			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitDottedVariable(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class ParenthesesContext extends UnaryContext {
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
-		public AddSubContext addSub() {
-			return getRuleContext(AddSubContext.class,0);
-		}
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public ParenthesesContext(UnaryContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitParentheses(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class NumberContext extends UnaryContext {
-		public TerminalNode NUM() { return getToken(HystExpressionParser.NUM, 0); }
-		public NumberContext(UnaryContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitNumber(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class TanFuncContext extends UnaryContext {
-		public TerminalNode TAN() { return getToken(HystExpressionParser.TAN, 0); }
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
-		public AddSubContext addSub() {
-			return getRuleContext(AddSubContext.class,0);
-		}
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public TanFuncContext(UnaryContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitTanFunc(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	public static class SqrtFuncContext extends UnaryContext {
-		public TerminalNode SQRT() { return getToken(HystExpressionParser.SQRT, 0); }
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
-		public AddSubContext addSub() {
-			return getRuleContext(AddSubContext.class,0);
-		}
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public SqrtFuncContext(UnaryContext ctx) { copyFrom(ctx); }
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitSqrtFunc(this);
 			else return visitor.visitChildren(this);
 		}
 	}
@@ -2314,17 +2317,16 @@ public class HystExpressionParser extends Parser {
 			else return visitor.visitChildren(this);
 		}
 	}
-	public static class CosFuncContext extends UnaryContext {
-		public TerminalNode COS() { return getToken(HystExpressionParser.COS, 0); }
+	public static class ParenthesesContext extends UnaryContext {
 		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public AddSubContext addSub() {
 			return getRuleContext(AddSubContext.class,0);
 		}
 		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public CosFuncContext(UnaryContext ctx) { copyFrom(ctx); }
+		public ParenthesesContext(UnaryContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitCosFunc(this);
+			if ( visitor instanceof HystExpressionVisitor ) return ((HystExpressionVisitor<? extends T>)visitor).visitParentheses(this);
 			else return visitor.visitChildren(this);
 		}
 	}

@@ -61,13 +61,15 @@ public class ModelParserTest
 		return config;
 	}
 	
+	private String UNIT_BASEDIR = "tests/unit/models/";
+	
 	/**
 	 * Model has a 'const' value which is actually an interval in the initial conditions
 	 */
 	@Test
     public void testParseRangedConstant() 
 	{
-		String path = "tests/unit/models/const_range/";
+		String path = UNIT_BASEDIR + "const_range/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 			path + "const_range.cfg",
@@ -92,7 +94,7 @@ public class ModelParserTest
 	@Test
     public void testUrgent() 
 	{
-		String path = "tests/unit/models/urgent/";
+		String path = UNIT_BASEDIR + "urgent/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "urgent.cfg",
@@ -109,7 +111,7 @@ public class ModelParserTest
 	@Test
 	public void testModelSimpleTwoNetworkComponent()
 	{
-		String path = "tests/unit/models/comp_simple_crossprod_network/";
+		String path = UNIT_BASEDIR + "comp_simple_crossprod_network/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "sys.cfg",
@@ -149,7 +151,7 @@ public class ModelParserTest
 	@Test
     public void testHeaterInstantiation() 
 	{
-		String path = "tests/unit/models/controller_heater/";
+		String path = UNIT_BASEDIR + "controller_heater/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "controller_heater.cfg",
 				path + "controller_heater.xml");
@@ -174,7 +176,7 @@ public class ModelParserTest
 	@Test
 	public void testLocalVar()
 	{
-		String path = "tests/unit/models/local_vars/";
+		String path = UNIT_BASEDIR + "local_vars/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "sys.cfg",
@@ -193,7 +195,7 @@ public class ModelParserTest
 	@Test
     public void testLocalVarsInstantiation() 
 	{
-		String path = "tests/unit/models/local_vars/";
+		String path = UNIT_BASEDIR + "local_vars/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "sys.cfg",
 				path + "sys.xml");
@@ -210,7 +212,7 @@ public class ModelParserTest
 	@Test
     public void testToyTemplateImporting() 
 	{
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
 				path + "model.xml");
@@ -266,7 +268,7 @@ public class ModelParserTest
 	@Test
     public void testToyTemplateInstantiation() 
 	{
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
 				path + "model.xml");
@@ -293,7 +295,7 @@ public class ModelParserTest
 	@Test
     public void testToyFullyQualified() 
 	{
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
 				path + "model.xml");
@@ -324,7 +326,7 @@ public class ModelParserTest
 	@Test
     public void testToyFlattening() 
 	{
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "one_init.cfg",
 				path + "model.xml"));
@@ -349,7 +351,7 @@ public class ModelParserTest
 	{
 		// no loc in initial should be okay now (no exception)
 		
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		
 		flatten(SpaceExImporter.importModels(
 			path + "no_init.cfg",
@@ -359,7 +361,7 @@ public class ModelParserTest
 	@Test
     public void testImportSpaceEx()
 	{
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
 				path + "model.xml");
@@ -374,7 +376,7 @@ public class ModelParserTest
 	{
 		try
 		{
-			String path = "tests/unit/models/loc_init/";
+			String path = UNIT_BASEDIR + "loc_init/";
 			Configuration c = flatten(SpaceExImporter.importModels(
 					path + "all_init.cfg",
 					path + "model.xml"));
@@ -396,7 +398,7 @@ public class ModelParserTest
 	@Test
 	public void testModelNoVars()
 	{
-		String path = "tests/unit/models/no_vars_check/";
+		String path = UNIT_BASEDIR + "no_vars_check/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "discrete.cfg",
@@ -425,7 +427,7 @@ public class ModelParserTest
 	@Test
 	public void testModelHasVarsAcceptance()
 	{
-		String path = "tests/unit/models/no_vars_check/";
+		String path = UNIT_BASEDIR + "no_vars_check/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "has_vars.cfg",
@@ -444,7 +446,7 @@ public class ModelParserTest
 	@Test
 	public void testModelBlankForbidden()
 	{
-		String path = "tests/unit/models/blank_forbidden/";
+		String path = UNIT_BASEDIR + "blank_forbidden/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "blank_forbidden.cfg",
@@ -463,7 +465,7 @@ public class ModelParserTest
 	@Test
 	public void testMissingBaseComponent()
 	{
-		String path = "tests/unit/models/comp_base/";
+		String path = UNIT_BASEDIR + "comp_base/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "sys.cfg",
@@ -483,7 +485,7 @@ public class ModelParserTest
 	@Test
 	public void testModelBaseTwoComponent()
 	{
-		String path = "tests/unit/models/comp_base/";
+		String path = UNIT_BASEDIR + "comp_base/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "sys2.cfg",
@@ -504,7 +506,7 @@ public class ModelParserTest
 	@Test
 	public void testModelSingleNetworkComponent()
 	{
-		String path = "tests/unit/models/comp_single_network/";
+		String path = UNIT_BASEDIR + "comp_single_network/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "sys.cfg",
@@ -522,7 +524,7 @@ public class ModelParserTest
 	@Test
 	public void testModelLabelledTwoNetworkComponent()
 	{
-		String path = "tests/unit/models/controller_heater/";
+		String path = UNIT_BASEDIR + "controller_heater/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "controller_heater.cfg",
@@ -559,7 +561,7 @@ public class ModelParserTest
 	@Test
 	public void testModelTimedNetworkComponent()
 	{
-		String path = "tests/unit/models/controller_heater/";
+		String path = UNIT_BASEDIR + "controller_heater/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "timed_controller_heater.cfg",
@@ -582,7 +584,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocFlow() 
 	{
-		String path = "tests/unit/models/havoc_flow/";
+		String path = UNIT_BASEDIR + "havoc_flow/";
 		
 		try
 		{
@@ -599,7 +601,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocFlowTransition() 
 	{
-		String path = "tests/unit/models/havoc_flow_transition/";
+		String path = UNIT_BASEDIR + "havoc_flow_transition/";
 		
 		try
 		{
@@ -630,7 +632,7 @@ public class ModelParserTest
 	@Test
     public void testNondetermAssignment() 
 	{
-		String path = "tests/unit/models/nondeterm_reset/";
+		String path = UNIT_BASEDIR + "nondeterm_reset/";
 		
 		try
 		{
@@ -657,7 +659,7 @@ public class ModelParserTest
 	@Test
     public void testUrgentSimple() 
 	{
-		String path = "tests/unit/models/urgent_simple/";
+		String path = UNIT_BASEDIR + "urgent_simple/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "urgent_simple.cfg",
@@ -671,7 +673,7 @@ public class ModelParserTest
 	@Test
     public void testUrgentComposition() 
 	{
-		String path = "tests/unit/models/urgent_composition/";
+		String path = UNIT_BASEDIR + "urgent_composition/";
 		
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "urgent_composition.cfg",
@@ -685,7 +687,7 @@ public class ModelParserTest
 	@Test
     public void testUrgentInit() 
 	{
-		String path = "tests/unit/models/urgent_init/";
+		String path = UNIT_BASEDIR + "urgent_init/";
 		
 		flatten(SpaceExImporter.importModels(
 				path + "urgent_init.cfg",
@@ -695,7 +697,7 @@ public class ModelParserTest
 	@Test
     public void testMerge() 
 	{
-		String path = "tests/unit/models/merge/";
+		String path = UNIT_BASEDIR + "merge/";
 		
 		Configuration c1 = flatten(SpaceExImporter.importModels(
 				path + "controller_heater.cfg",
@@ -720,7 +722,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocVariableFlow() 
 	{
-		String path = "tests/unit/models/havoc_var_range/";
+		String path = UNIT_BASEDIR + "havoc_var_range/";
 		
 		try
 		{
@@ -737,7 +739,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocVariableEqualFlow() 
 	{
-		String path = "tests/unit/models/havoc_var_equal/";
+		String path = UNIT_BASEDIR + "havoc_var_equal/";
 		
 		try
 		{
@@ -754,7 +756,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocVariableEqualRemove() 
 	{
-		String path = "tests/unit/models/havoc_var_equal_remove/";
+		String path = UNIT_BASEDIR + "havoc_var_equal_remove/";
 		
 		try
 		{				
@@ -777,7 +779,7 @@ public class ModelParserTest
 	@Test
     public void testParseHavocVariableEqualRemoveConstant() 
 	{
-		String path = "tests/unit/models/havoc_var_equal_remove2/";
+		String path = UNIT_BASEDIR + "havoc_var_equal_remove2/";
 		
 		try
 		{			
@@ -802,7 +804,7 @@ public class ModelParserTest
 	@Test
 	public void testModelTwoNetworkDifferentLengthNamesComponent()
 	{
-		String path = "tests/unit/models/two_network_diff_names/";
+		String path = UNIT_BASEDIR + "two_network_diff_names/";
 		
 		SpaceExDocument sd = SpaceExImporter.importModels(
 				path + "sys.cfg",
@@ -838,7 +840,7 @@ public class ModelParserTest
 	{
 		// printing models with nondeterministic assignments to open intervals should fail
 		
-		String path = "tests/unit/models/nondeterm_reset_open/";
+		String path = UNIT_BASEDIR + "nondeterm_reset_open/";
 		
 		try
 		{
@@ -863,7 +865,7 @@ public class ModelParserTest
     public void testComplexInit() 
 	{
 		// init expression has a non-trivial expression: "timeout = 2 * 10"
-		String path = "tests/unit/models/loc_init/";
+		String path = UNIT_BASEDIR + "loc_init/";
 		Configuration c = flatten(SpaceExImporter.importModels(
 				path + "complex_init.cfg",
 				path + "model.xml"));
@@ -875,8 +877,8 @@ public class ModelParserTest
 	public void testPrintInitStates()
 	{
 		// Luan's import test. Init was printing as null when it wasn't null
-		String cfgPath = "tests/unit/models/loc_init/one_init.cfg";
-		String xmlPath = "tests/unit/models/loc_init/model.xml";
+		String cfgPath = UNIT_BASEDIR + "loc_init/one_init.cfg";
+		String xmlPath = UNIT_BASEDIR + "loc_init/model.xml";
 		
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
 		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
@@ -917,7 +919,7 @@ public class ModelParserTest
 	/*@Test
     public void testLutTable() 
 	{
-		String path = "tests/unit/models/lut_table/";
+		String path = UNIT_BASEDIR + "lut_table/";
 		
 		HybridAutomaton ha = flatten(SpaceExImporter.importModels(
 				path + "lut_table.cfg",

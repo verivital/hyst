@@ -16,7 +16,7 @@ def get_script_path():
 
 def get_hypy_path():
     '''get the path to the hybridpy directory'''
-    rv = os.path.realpath(get_script_path() + '../../../../tools')
+    rv = os.path.realpath(get_script_path() + '../../../../lib/tools')
 
     if not os.path.exists(rv):
         raise RuntimeError("hypy path is wrong")
