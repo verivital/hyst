@@ -157,7 +157,7 @@ public class PythonBridge
 		ProcessBuilder pb = new ProcessBuilder(loc, "-i");
 		String workingDir = getJarBaseDirectory();
 		pb.directory(new File(workingDir));
-        
+		
 		try
 		{
 			process = pb.start();
