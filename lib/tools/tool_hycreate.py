@@ -32,6 +32,8 @@ class HyCreateTool(HybridTool):
             proc.wait()
 
             if proc.returncode != 0:
+                print "Error Running HyCreate (java return code was " + str(proc.returncode) + ")"
+                print "Did you assign HYCREATE_BIN?"
                 rv = RunCode.ERROR
         except OSError as e:
             print "Exception while trying to run HyCreate2: " + str(e)
