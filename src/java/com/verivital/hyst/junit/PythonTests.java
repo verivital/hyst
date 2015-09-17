@@ -24,7 +24,6 @@ public class PythonTests
 	@Test
 	public void testPythonFuncs()
 	{
-		Hyst.debugMode = true;
 		PythonBridge pb = new PythonBridge();
 		boolean runTests = true;
 

@@ -158,8 +158,6 @@ public class PythonBridge
 		String workingDir = getJarBaseDirectory();
 		pb.directory(new File(workingDir));
 		
-		System.out.println("working dir = " + workingDir);
-        
 		try
 		{
 			process = pb.start();
