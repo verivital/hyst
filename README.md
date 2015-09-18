@@ -7,11 +7,18 @@ Taylor T. Johnson, http://www.taylortjohnson.com/
 
 Hyst has been tested on Windows and Linux using Java 1.7.
 
-
 BUILDING HYST: 
 
 To build Hyst, proceed to the exporter/Hyst directory and run "ant". This will create the Hyst.jar file.
 
+VERSION CONTROL AND GITHUB INTERACTION:
+
+We are using a forking workflow with GitHub for version control. Many details are available here (https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow), but the basic process is:
+
+1) Fork the main hyst repository to your own GitHub account:
+2) Make changes to Hyst in your GitHub fork of Hyst
+3) When ready to share your changes with others, you create a pull request. This makes your changes available to the Hyst maintainers.
+4) The Hyst maintainers review and merge your changes into the main Hyst development branch (master).
 
 GUI USAGE:
 
