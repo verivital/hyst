@@ -1,9 +1,9 @@
-HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models: http://www.verivital.com/hyst/
-HyST Source Code: https://github.com/verivital/hyst
-HyST Benchmarks: https://github.com/verivital/hyst-benchmark
+# HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models: http://www.verivital.com/hyst/
+## HyST Source Code: https://github.com/verivital/hyst
+## HyST Benchmarks: https://github.com/verivital/hyst-benchmark
 
 ***********************************
-Contributors
+### Contributors
 ***********************************
 
 Luan Viet Nguyen
@@ -15,18 +15,18 @@ Christopher Dillo
 HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to AFRL, and is based on an initial project that provided a SpaceEx parser by Christopher Dillo and Sergiy Bogomolov.
 
 ************************************
-HYST USAGE
+### HYST USAGE
 ************************************
 
 Hyst has been tested on Windows 7/8/10 and Linux (Ubuntu) using Java 1.7 and Java 1.8.
 
-GUI USAGE:
+#### GUI USAGE:
 
 Hyst can be run through a GUI or using the command line. To use the GUI, after building Hyst.jar simply run it as an executable .jar file with no arguments:
 
 $ java -jar Hyst.jar
 
-COMMAND-LINE USAGE: 
+#### COMMAND-LINE USAGE: 
 
 After building Hyst.jar, you can run it as an executable .jar file with the -help flag to see usage:
 
@@ -65,7 +65,7 @@ XMLFilename: The SpaceEx XML automaton to be processed (*.xml)
 CFGFilename: The automaton's config file. Will be derived from the XML filename if not explicitly stated (*.cfg)
 ```
 
-CONVERTING AN EXAMPLE: 
+#### CONVERTING AN EXAMPLE: 
 
 To convert from a SpaceEx model, you run Hyst, provide the proper flag for the format you want to output, and the path to the SpaceEx .xml and, if named differently the .cfg file. You can also provide an output filename with the -o flag (stdout will be used otherwise, which may be incompatible with model formats that require multiple files).
 
@@ -78,10 +78,10 @@ $ java -jar Hyst.jar -flowstar ../examples/toy/toy.xml
 In this case -flowstar indicates we want a model in the Flow* format (see the usage above). The .cfg file will be assumed to be ../examples/toy/toy.cfg since it is not explicitly specified. Since no filename is given using the -o flag, the output will be printed to stdout.
 
 ************************
-SPECIFIC EXAMPLES FOR SUPPORTED OUTPUT FORMATS
+### SPECIFIC EXAMPLES FOR SUPPORTED OUTPUT FORMATS
 ************************
 
-HYCREATE2: http://stanleybak.com/projects/hycreate/hycreate.html
+#### HYCREATE2: http://stanleybak.com/projects/hycreate/hycreate.html
 
 ```
 java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -hycreate -o heaterLygeros.hycreate
@@ -89,13 +89,13 @@ java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -hycreate -o heat
 
 This will convert the heater/thermostat example described in the paper to the HyCreate2 format, and write the result to the file heaterLygeros.hycreate.
 
-FLOW*: http://systems.cs.colorado.edu/research/cyberphysical/taylormodels/
+#### FLOW*: http://systems.cs.colorado.edu/research/cyberphysical/taylormodels/
 
 ```
 java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -flowstar -o heaterLygeros.flow
 ```
 
-DREACH: http://dreal.github.io/dReach/
+#### DREACH: http://dreal.github.io/dReach/
 
 NOTE: dReach (as of this writing) requires files to have the extension .drh to execute.
 
@@ -103,7 +103,7 @@ NOTE: dReach (as of this writing) requires files to have the extension .drh to e
 java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh
 ```
 
-SPACEEX: http://spaceex.imag.fr/
+#### SPACEEX: http://spaceex.imag.fr/
 
 You may want to convert from a SpaceEx model back to SpaceEx to run some transformation passes or just to do network flattening.
 
@@ -111,19 +111,19 @@ You may want to convert from a SpaceEx model back to SpaceEx to run some transfo
 java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -spaceex -o heaterLygeros.xml
 ```
 
-HYCOMP / HYDI / NUXMV: https://es-static.fbk.eu/tools/hycomp/
+#### HYCOMP / HYDI / NUXMV: https://es-static.fbk.eu/tools/hycomp/
 
 ```
 java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -hycomp -o heaterLygeros.hydi
 ```
 
-EXAMPLES AND RESULTS DIRECTORY:
+#### EXAMPLES AND RESULTS DIRECTORY:
 
 Several examples have been included which can be converted in the examples directory. The result shows the result of converting the models and running them with the various tools using the default settings (not all tools complete on all models).
 
 Some examples are not yet complete, as we are currently working to convert all the ARCH 2014/2015 workshop (http://cps-vo.org/group/ARCH) benchmarks to SpaceEx format (where possible).
 
-ADVANCED USAGE:
+#### ADVANCED USAGE:
 
 To generate the output plots provided across all the examples, we have included Python scripts to call HYST against all examples in all formats.  See them in:
 
@@ -144,20 +144,20 @@ In run_examples.py there are a bunch of global variables you can set for differe
 A copy of the expected model files and plot files produced is in the expected_results directory. Also included is stdout.txt which includes stdout when running the script.
 
 *******************************
-DEVELOPER USAGE
+### DEVELOPER USAGE
 *******************************
 
-BUILDING HYST: 
+#### BUILDING HYST: 
 
 To build Hyst, proceed to the hyst/src/ directory and run "ant". This will create the Hyst.jar file.
 
 
-TESTS:
+#### TESTS:
 
 There are included unit tests as well as regression tests. You can run these using "ant test". The regression tests may require tool step in the file src/tests/regression/run_tests.py
 
 *******************************
-ADDING A NEW PRINTER:
+#### ADDING A NEW PRINTER:
 *******************************
 
 It is relatively easy to add a new printer. The typical process we follow is to copy an existing printer that extends com.verivital.hyst.printers.ToolPrinter ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/printers/ToolPrinter.java ), then start converting syntactic elements to match the input format of the other tool (HyST's output). For examples of implemented printers, see: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/printers
@@ -168,13 +168,13 @@ A simple example is the AddIdentityResetsPass.java ( https://github.com/verivita
 
 Another basic example is the ShortenModeNamesPass.java ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/basic/ShortenModeNamesPass.java ) pass, which will decrease the length of the descriptive mode names in a hybrid automaton. This is required for some tools that have string length limitations on mode names (such as 255 characters). Related passes would strip reserved keywords from variable/mode/etc. names, and so on.
 
-ECLIPSE SETUP:
+#### ECLIPSE SETUP:
 
 You need to compile with antlt-4.4-runtime.jar and several others jars (in /lib) on your classpath. In Eclipse, you do this by going to: 
 
 Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> select the antlt-4.4-complete.jar file (should be in the project directory) -> Ok
 
-RUNNING DIRECTLY FROM .CLASS FILES:
+#### RUNNING DIRECTLY FROM .CLASS FILES:
 
 To run the .class files directly, rather than from the .jar, you also need this jar on your classpath (option -cp to java).
 
