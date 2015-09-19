@@ -1,24 +1,24 @@
-HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models 
-http://verivital.com/hyst/
+HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models: http://www.verivital.com/hyst/
+HyST Source Code: https://github.com/verivital/hyst
+HyST Benchmarks: https://github.com/verivital/hyst-benchmark
 
+***********************************
+Contributors
+***********************************
+
+Luan Viet Nguyen
 Stanley Bak, http://stanleybak.com
 Sergiy Bogomolov, http://swt.informatik.uni-freiburg.de/staff/bogom
 Taylor T. Johnson, http://www.taylortjohnson.com/
+Christopher Dillo
 
-Hyst has been tested on Windows and Linux using Java 1.7.
+HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to AFRL, and is based on an initial project that provided a SpaceEx parser by Christopher Dillo and Sergiy Bogomolov.
 
-BUILDING HYST: 
+************************************
+HYST USAGE
+************************************
 
-To build Hyst, proceed to the exporter/Hyst directory and run "ant". This will create the Hyst.jar file.
-
-VERSION CONTROL AND GITHUB INTERACTION:
-
-We are using a forking workflow with GitHub for version control. Many details are available here (https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow), but the basic process is:
-
-1) Fork the main hyst repository to your own GitHub account:
-2) Make changes to Hyst in your GitHub fork of Hyst
-3) When ready to share your changes with others, you create a pull request. This makes your changes available to the Hyst maintainers.
-4) The Hyst maintainers review and merge your changes into the main Hyst development branch (master).
+Hyst has been tested on Windows 7/8/10 and Linux (Ubuntu) using Java 1.7 and Java 1.8.
 
 GUI USAGE:
 
@@ -26,11 +26,11 @@ Hyst can be run through a GUI or using the command line. To use the GUI, after b
 
 $ java -jar Hyst.jar
 
-
-CHECKING COMMAND-LINE USAGE: 
+COMMAND-LINE USAGE: 
 
 After building Hyst.jar, you can run it as an executable .jar file with the -help flag to see usage:
 
+```
 $ java -jar Hyst.jar -help
 Hyst v1.17
 Usage:
@@ -63,65 +63,114 @@ Optional Model Transformation Passes:
 -o [filename] output to the given filename
 XMLFilename: The SpaceEx XML automaton to be processed (*.xml)
 CFGFilename: The automaton's config file. Will be derived from the XML filename if not explicitly stated (*.cfg)
-
+```
 
 CONVERTING AN EXAMPLE: 
 
 To convert from a SpaceEx model, you run Hyst, provide the proper flag for the format you want to output, and the path to the SpaceEx .xml and, if named differently the .cfg file. You can also provide an output filename with the -o flag (stdout will be used otherwise, which may be incompatible with model formats that require multiple files).
 
-$ java -jar Hyst.jar -flowstar ../../examples/toy/toy.xml
+From the default directory of hyst/src (where Hyst.jar is compiled), execute:
 
-In this case -flowstar indicates we want a model in the Flow* format (see the usage above). The .cfg file will be assumed to be ../../examples/toy/toy.cfg since it is not explicitly specified. Since no filename is given using the -o flag, the output will be printed to stdout.
+```
+$ java -jar Hyst.jar -flowstar ../examples/toy/toy.xml
+```
 
+In this case -flowstar indicates we want a model in the Flow* format (see the usage above). The .cfg file will be assumed to be ../examples/toy/toy.cfg since it is not explicitly specified. Since no filename is given using the -o flag, the output will be printed to stdout.
 
-HYCREATE2:
+************************
+SPECIFIC EXAMPLES FOR SUPPORTED OUTPUT FORMATS
+************************
 
-java -jar Hyst.jar ../../examples/heaterLygeros/heaterLygeros.xml -hycreate -o heaterLygeros.hycreate
+HYCREATE2: http://stanleybak.com/projects/hycreate/hycreate.html
+
+```
+java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -hycreate -o heaterLygeros.hycreate
+```
 
 This will convert the heater/thermostat example described in the paper to the HyCreate2 format, and write the result to the file heaterLygeros.hycreate.
 
-FLOW*:
+FLOW*: http://systems.cs.colorado.edu/research/cyberphysical/taylormodels/
 
-java -jar Hyst.jar ../../examples/heaterLygeros/heaterLygeros.xml -flowstar -o heaterLygeros.flow
+```
+java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -flowstar -o heaterLygeros.flow
+```
 
-DREACH:
+DREACH: http://dreal.github.io/dReach/
 
 NOTE: dReach (as of this writing) requires files to have the extension .drh to execute.
 
-java -jar Hyst.jar ../../examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh
+```
+java -jar Hyst.jar ../examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh
+```
 
+SPACEEX: http://spaceex.imag.fr/
 
+You may want to convert from a SpaceEx model back to SpaceEx to run some transformation passes or just to do network flattening.
 
+```
+java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -spaceex -o heaterLygeros.xml
+```
 
-EXAMPLES DIRECTORY:
+HYCOMP / HYDI / NUXMV: https://es-static.fbk.eu/tools/hycomp/
 
-Some examples are not yet complete, as we are currently working to convert all the ARCH 2014 workshop (http://cps-vo.org/group/ARCH) benchmarks to SpaceEx format (where possible).
+```
+java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -hycomp -o heaterLygeros.hydi
+```
+
+EXAMPLES AND RESULTS DIRECTORY:
+
+Several examples have been included which can be converted in the examples directory. The result shows the result of converting the models and running them with the various tools using the default settings (not all tools complete on all models).
+
+Some examples are not yet complete, as we are currently working to convert all the ARCH 2014/2015 workshop (http://cps-vo.org/group/ARCH) benchmarks to SpaceEx format (where possible).
 
 ADVANCED USAGE:
 
 To generate the output plots provided across all the examples, we have included Python scripts to call HYST against all examples in all formats.  See them in:
 
-exporter\batch_run
+```
+src\hybridpy\hybrid_tool.py
+```
 
 Additionally, the scripts provided the ability to call the tools themselves and generate plots.  If you are interested to do this, please contact us and we will share our repository to help get you set up.
 
 To run Hyst on all the models, as well as the associated tools in a batch run, simply do:
 
+```
 python run_examples.py
+```
 
 In run_examples.py there are a bunch of global variables you can set for different parameters (such as different timeouts, the paths to the tool binaries to run). The tool binaries are NOT included in this package (they each have their own licenses you should read before using). The result is placed in the result folder. 
 
 A copy of the expected model files and plot files produced is in the expected_results directory. Also included is stdout.txt which includes stdout when running the script.
 
+*******************************
+DEVELOPER USAGE
+*******************************
+
+BUILDING HYST: 
+
+To build Hyst, proceed to the hyst/src/ directory and run "ant". This will create the Hyst.jar file.
+
 
 TESTS:
 
-There are included unit tests as well as regression tests. You can run these using "ant test". The regression tests may require tool step in the file exporter/Hyst/tests/regression/run_tests.py
+There are included unit tests as well as regression tests. You can run these using "ant test". The regression tests may require tool step in the file src/tests/regression/run_tests.py
 
+*******************************
+ADDING A NEW PRINTER:
+*******************************
+
+It is relatively easy to add a new printer. The typical process we follow is to copy an existing printer that extends com.verivital.hyst.printers.ToolPrinter ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/printers/ToolPrinter.java ), then start converting syntactic elements to match the input format of the other tool (HyST's output). For examples of implemented printers, see: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/printers
+
+For tools that support hybrid automata or networks of hybrid automata, this is relatively straightforward, and there are typically no major semantics differences. However, there may be subtle semantics differences as well as syntactic incompatibilities. To handle these issues, adding a new printer may require creating some syntax and/or semantics transformation passes, which is a class that extends com.verivital.hyst.passes.TransformationPass ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/TransformationPass.java ). Several examples are included at: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/passes
+
+A simple example is the AddIdentityResetsPass.java ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/basic/AddIdentityResetPass.java ) pass that adds identity resets on all transitions, since some tools' input format requires this explicitly, while some other tools will automatically add such identity resets on transitions. For example, suppose a hybrid automaton has two variables x and y, and has a transition from some mode a to some mode b, with a reset that x' := 0, but does not mention y. Under some assumptions (e.g., controlled and not havoc variables), the typical semantics interpretation of this (and is what SpaceEx's input format does) is that the reset is: x' := 0 /\ y' := y, so that the value of y in the post-state remains unchanged.
+
+Another basic example is the ShortenModeNamesPass.java ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/basic/ShortenModeNamesPass.java ) pass, which will decrease the length of the descriptive mode names in a hybrid automaton. This is required for some tools that have string length limitations on mode names (such as 255 characters). Related passes would strip reserved keywords from variable/mode/etc. names, and so on.
 
 ECLIPSE SETUP:
 
-You need to compile with antlt-4.4-runtime.jar on your classpath. In Eclipse, you do this by going to: 
+You need to compile with antlt-4.4-runtime.jar and several others jars (in /lib) on your classpath. In Eclipse, you do this by going to: 
 
 Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> select the antlt-4.4-complete.jar file (should be in the project directory) -> Ok
 
@@ -201,81 +250,16 @@ You can also call
 
 The last argument 'a' means that you want a final system with affine dynamics in each of the modes. It can also be 'l' if you want a Linear Hybrid Automata with piecewise constant dynamics.
 
-USER README:
-
-HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models 
-http://verivital.com/hyst/
-
-Stanley Bak, (stanleybak [at] gmail.com) http://stanleybak.com
-Sergiy Bogomolov, http://swt.informatik.uni-freiburg.de/staff/bogom
-Taylor T. Johnson, http://www.taylortjohnson.com/
-
-Hyst has been tested on Windows and Linux using Java 1.7.
-
-If you run into any issues, please don't hesitate to contact the authors. If you want to add support for your reachability or falsification tool, please don't hesitate to contact the authors.
 
 
-GUI USAGE:
-
-Hyst can be run through a GUI or using the command line. To use the GUI, after building Hyst.jar simply run it as an executable .jar file with no arguments. Additionally, depending on your OS you may be able to just double click the icon to run the GUI (on Linux you must set it as executable).
-
-$ java -jar Hyst.jar
-
-
-CHECKING COMMAND-LINE USAGE: 
-
-You can run it as an executable .jar file with the -help flag to see command-line usage (no GUI):
-
-$ java -jar Hyst.jar -help
-
-This will show you the Hyst version as well as the flags for the various printers and transformation passes. Run the tool with -verbose or -debug is there is any trouble converting to try to get more insight into the Error.
-
-
-CONVERTING AN EXAMPLE: 
-
-To convert from a SpaceEx model, you run Hyst, provide the proper flag for the format you want to output, and the path to the SpaceEx .xml and, if named differently the .cfg file. You can also provide an output filename with the -o flag (stdout will be used otherwise, which may be incompatible with model formats that require multiple files).
-
-$ java -jar Hyst.jar -flowstar examples/toy/toy.xml
-
-In this case -flowstar indicates we want a model in the Flow* format (see the usage above). The .cfg file will be assumed to be examples/toy/toy.cfg since it is not explicitly specified. Since no filename is given using the -o flag, the output will be printed to stdout.
-
-
-HYCREATE2:
-
-java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -hycreate -o heaterLygeros.hyc2
-
-This will convert the heater/thermostat example described in the paper to the HyCreate2 format, and write the result to the file heaterLygeros.hyc2.
-
-FLOW*:
-
-java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -flowstar -o heaterLygeros.model
-
-DREACH:
-
-NOTE: dReach (as of this writing) requires files to have the extension .drh to execute.
-
-java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh
-
-SPACEEX:
-
-You may want to convert from a SpaceEx model back to SpaceEx to run some transformation passes or just to do flattening.
-
-java -jar Hyst.jar examples/heaterLygeros/heaterLygeros.xml -spaceex -o heaterLygeros.drh
-
-
-EXAMPLES AND RESULTS DIRECTORY:
-
-Several examples have been included which can be converted in the examples directory. The result shows the result of converting the models and running them with the various tools using the default settings (not all tools complete on all models).
-
-
-*************** PRINTER *****************
+*****************************************
+ADDITIONAL PRINTER DOCUMENTATION
 *****************************************
 Continuous-Time Stateflow Charts in MathWorks' Simulink/Stateflow
 Modes of operation:
 * Semantics preserving
 * Non-semantics preserving (but preserves semantics if the automaton is deterministic)
 
-This is supplementary material for the submission at Real-Time Systems Symposium 2015.
 Title: Embedding Hybrid Automata into Simulation-Equivalent Simulink/Stateflow Models
 Authors: Stanley Bak, Sergiy Bogomolov, Taylor T. Johnson, Luan Viet Nguyen, and Christian Schilling
 
