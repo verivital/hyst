@@ -162,7 +162,42 @@ There are included unit tests as well as regression tests. You can run these usi
 
 It is relatively easy to add a new printer. The typical process we follow is to copy an existing printer that extends com.verivital.hyst.printers.ToolPrinter ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/printers/ToolPrinter.java ), then start converting syntactic elements to match the input format of the other tool (HyST's output). For examples of implemented printers, see: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/printers
 
-For tools that support hybrid automata or networks of hybrid automata, this is relatively straightforward, and there are typically no major semantics differences. However, there may be subtle semantics differences as well as syntactic incompatibilities. To handle these issues, adding a new printer may require creating some syntax and/or semantics transformation passes, which is a class that extends com.verivital.hyst.passes.TransformationPass ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/TransformationPass.java ). Several examples are included at: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/passes
+For tools that support hybrid automata or networks of hybrid automata, this is relatively straightforward, and there are typically no major semantics differences. The internal representation is in essence a network of hybrid automata, where each hybrid automaton is a tuple consisting of the standard sets (a set of variables, a set of modes/locations, a set of transitions between modes, etc.). So, a printer typically just walks this data structure printing the appropriate components in the syntax of the output format.
+
+For example, see: https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/printers/DReachPrinter.java#L92 which consists of:
+
+```
+	private void printProcedure() 
+	{
+		printVars();
+		printConstants();
+		printModes();
+		printInitialStates();
+		printGoalStates();
+	}
+```
+
+For this, printVars declares the continuous variables, printConstants sets up some constant values, printModes prints the modes/locations of the automaton and the transitions between them (for this format), and the initial states and bad (goal) states are printed last.
+
+For the translation of expressions (as appearing in guards, resets, invariants, flows/differential equations, etc.), the printer extends a DefaultExpressionPrinter class ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/grammar/formula/DefaultExpressionPrinter.java ) and can override easily operand types, convert between prefix/infix expressions if necessary, etc. For the dReach example, this is done at https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/printers/DReachPrinter.java#L325 :
+
+```
+public static class DReachExpressionPrinter extends DefaultExpressionPrinter
+	{
+		public DReachExpressionPrinter()
+		{
+			super();
+
+			opNames.put(Operator.AND, "and");
+			opNames.put(Operator.OR, "or");
+			opNames.put(Operator.POW, "^");
+			...
+		}
+```
+
+Which overrides the default conjunction (AND) operator to be `and` instead of `&`, and similarly for OR and other operators. The dReach printer also does some conversion to prefix form (dReach's syntax is an unusual mixture of infix and prefix format).
+
+There may be subtle semantics differences as well as syntactic incompatibilities. To handle these issues, adding a new printer may require creating some syntax and/or semantics transformation passes, which is a class that extends com.verivital.hyst.passes.TransformationPass ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/TransformationPass.java ). Several examples are included at: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/passes
 
 A simple example is the AddIdentityResetsPass.java ( https://github.com/verivital/hyst/blob/master/src/java/com/verivital/hyst/passes/basic/AddIdentityResetPass.java ) pass that adds identity resets on all transitions, since some tools' input format requires this explicitly, while some other tools will automatically add such identity resets on transitions. For example, suppose a hybrid automaton has two variables x and y, and has a transition from some mode a to some mode b, with a reset that x' := 0, but does not mention y. Under some assumptions (e.g., controlled and not havoc variables), the typical semantics interpretation of this (and is what SpaceEx's input format does) is that the reset is: x' := 0 /\ y' := y, so that the value of y in the post-state remains unchanged.
 
