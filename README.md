@@ -6,11 +6,12 @@
 ### Contributors
 ***********************************
 
-Luan Viet Nguyen
-Stanley Bak, http://stanleybak.com
-Sergiy Bogomolov, http://swt.informatik.uni-freiburg.de/staff/bogom
-Taylor T. Johnson, http://www.taylortjohnson.com/
-Christopher Dillo
+* Christian Schilling (2014-present), http://swt.informatik.uni-freiburg.de/staff/christian_schilling
+* Luan Viet Nguyen (2014-present)
+* Stanley Bak (2014-present), http://stanleybak.com
+* Sergiy Bogomolov (2013-present), http://swt.informatik.uni-freiburg.de/staff/bogom
+* Taylor T. Johnson (2014-present), http://www.taylortjohnson.com/
+* Christopher Dillo (2013-2014)
 
 HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to AFRL, and is based on an initial project that provided a SpaceEx parser by Christopher Dillo and Sergiy Bogomolov.
 
