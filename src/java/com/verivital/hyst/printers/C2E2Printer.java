@@ -29,12 +29,14 @@ import com.verivital.hyst.passes.basic.RenameParamPass;
 
 /**
  * Takes a hybrid automaton from the internal model format and
- * outputs a HyDI (HyComp).
+ * outputs a C2E2 (HyXML) model
  * 
- * @author Taylor Johnson (7-2015)
+ * TODO: just created base model
+ * 
+ * @author Taylor Johnson (9-2015)
  *
  */
-public class HyCompPrinter extends ToolPrinter
+public class C2E2Printer extends ToolPrinter
 {
 	private BaseComponent ha;
 	
@@ -46,7 +48,7 @@ public class HyCompPrinter extends ToolPrinter
 	@Override
 	protected String getCommentCharacter()
 	{
-		return "--";
+		return "# ";
 	}
 	
 	/**
@@ -406,56 +408,17 @@ public class HyCompPrinter extends ToolPrinter
 		{
 			super();
 
-			opNames.put(Operator.AND, "&");
+			opNames.put(Operator.AND, "&amp;");
 			opNames.put(Operator.OR, "|");
 			opNames.put(Operator.POW, "^");
+			opNames.put(Operator.LESS, "&lt;");
+			opNames.put(Operator.LESSEQUAL, "&lt;=");
+			opNames.put(Operator.GREATER, "&gt;");
+			opNames.put(Operator.GREATEREQUAL, "&gt;=");
 
 			// force to print decimals
 			constFormatter.setMinimumFractionDigits(1);
 		}
-		/*
-		public String printOperation(Operation o)
-		{
-			String rv = null;
-
-			Operator op = o.op;
-			
-			// hycomp expects a mix of infix and prefix
-			switch (op) 
-			{
-				case MULTIPLY :
-				case DIVIDE :
-				case ADD :
-				case SUBTRACT :
-				case POW:
-					// default
-					rv = super.printOperation(o);
-					break;
-				case EQUAL :
-				case LESS :
-				case GREATER :
-				case LESSEQUAL :
-				case GREATEREQUAL :
-				case NOTEQUAL :
-					// infix
-					rv = "(" + print(o.getLeft()) + " " + opNames.get(op) + " " + print(o.getRight()) + ")";
-					break;
-				case NEGATIVE:
-					rv = "-" + print(o.children.get(0));
-					break;
-				default :
-					// prefix
-					rv = "(" + opNames.get(op);
-					
-					for (Expression e : o.children)
-						rv += " " + print(e);
-					
-					rv += ")";
-					break;
-			}
-			
-			return rv;
-		}*/
 	}
 
 	@Override
@@ -512,6 +475,6 @@ public class HyCompPrinter extends ToolPrinter
 	@Override
 	public String getExtension()
 	{
-		return ".hycomp";
+		return ".xml";
 	}
 }
