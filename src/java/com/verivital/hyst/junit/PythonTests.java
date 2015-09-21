@@ -14,7 +14,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.complex.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 

@@ -1,6 +1,8 @@
-package com.verivital.hyst.passes.complex;
+package com.verivital.hyst.passes.complex.hybridize;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
@@ -19,6 +21,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -98,6 +101,10 @@ public class HybridizeTimeTriggered extends TransformationPass
 		
 		final double SIM_TIME_STEP = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
 		int numSteps = (int)Math.round(timeMax / SIM_TIME_STEP);
+		PythonBridge pb = new PythonBridge();
+		pb.open();
+		long startMs = System.currentTimeMillis();
+		AffineOptimize.numOptimizations = 0;
 		
         Simulator.simulateFor(timeMax, initPt, numSteps, am.flowDynamics, ha.variables, new StepListener()
 		{
@@ -123,6 +130,9 @@ public class HybridizeTimeTriggered extends TransformationPass
 				        // bloat bounding box between prevPoint and hp
 						HyperRectangle hr = boundingBox(prevPoint, hp);
 						hr.bloatAdditive(epsilon);
+						
+						// set the flows based on the box
+						hybridizeFlow(am, hr, pb);
 						
 						// set invariant based on the box
 						setModeInvariant(am, hr);
@@ -151,6 +161,32 @@ public class HybridizeTimeTriggered extends TransformationPass
 				}
 			}
 		});
+        
+        // report stats
+		long difMs = System.currentTimeMillis() - startMs;
+		pb.close();
+		
+		Hyst.log("Completed " + AffineOptimize.numOptimizations + " optimizations in " + difMs + " milliseconds. " +
+				(1000.0 * AffineOptimize.numOptimizations / difMs) + " per second.");
+	}
+	
+	
+	/**
+	 * Change the (nonlinear) flow in the given mode to a hybridized one with affine dynamics
+	 * @param am the mode to change 
+	 * @param hr the constraint set, in the order of ha.variablenames
+	 */
+	private void hybridizeFlow(AutomatonMode am, HyperRectangle hr, PythonBridge pb)
+	{
+		HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+		
+		for (int dim = 0; dim < ha.variables.size(); ++dim)
+		{
+			String name = ha.variables.get(dim);
+			bounds.put(name, hr.dims[dim]);
+		}
+		
+		am.flowDynamics = AffineOptimize.createAffineDynamics(pb, am.flowDynamics, bounds);
 	}
 	
 	/**
