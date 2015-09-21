@@ -1,4 +1,4 @@
-package com.verivital.hyst.ir.base;
+package com.verivital.hyst.geometry;
 
 import java.util.Map;
 
@@ -487,5 +487,11 @@ public class Interval
 		}
 		
 		return rv;
+	}
+
+	public void validate()
+	{
+		if (min > max)
+			throw new RuntimeException("Interval min > max");
 	}
 }

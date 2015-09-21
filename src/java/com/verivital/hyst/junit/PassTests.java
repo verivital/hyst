@@ -199,4 +199,22 @@ public class PassTests
 			tp.runTransformationPass(config, params);
 		}
 	}
+	
+	/**
+	 * Test hybridization pass
+	 */
+	@Test
+	public void testHybridizationPass()
+	{
+		Configuration c =  makeSampleConfiguration();
+		
+		System.out.println("Todo: make this test");
+		// steps: remove 'stopped' mode
+		// update dynamics to be 3*y*x+y
+		// approximation sohuld be 7.5*x + 5.5*y
+		// rest is in notebook
+		Assert.fail("this test needs to be written");
+		
+		Assert.fail("Also test that there is a single initial mode (initial mode trimming as Pradyot had it)");
+	}
 }

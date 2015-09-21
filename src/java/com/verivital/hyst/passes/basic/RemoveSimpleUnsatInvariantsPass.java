@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;

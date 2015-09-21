@@ -30,7 +30,7 @@ import com.verivital.hyst.passes.complex.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.RegularizePass;
-import com.verivital.hyst.passes.flat.SimulatorPass;
+import com.verivital.hyst.passes.complex.HybridizeTimeTriggered;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
@@ -106,7 +106,7 @@ public class Hyst
 					new RegularizePass(),
 					//new ContinuizationPass(), // TODO: add back, but the commons-cli stuff is breaking the stateflow converter
 					new HybridizeGridPass(),
-					new SimulatorPass(),
+					new HybridizeTimeTriggered(),
 					new FlattenAutomatonPass(),
 			};
 

@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**

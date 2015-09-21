@@ -2,13 +2,14 @@ package com.verivital.hyst.ir.base;
 
 import java.util.ArrayList;
 
+import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.simulation.HyperPoint;
 import com.verivital.hyst.simulation.RungeKutta;
 
 /**
