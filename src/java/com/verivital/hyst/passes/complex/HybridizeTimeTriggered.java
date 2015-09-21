@@ -133,8 +133,14 @@ public class HybridizeTimeTriggered extends TransformationPass
 						if (prevMode != null)
 						{
 							// add to previous mode's invariant the time-triggered value
+							Expression timeConstraint = new Operation(Operator.LESSEQUAL, 
+									new Variable(timeVariable), new Constant(curTime));
+							prevMode.invariant = Expression.and(prevMode.invariant, timeConstraint);
 							
 							// add transitions at time trigger from previous mode
+							Expression timeGuard = new Operation(Operator.GREATEREQUAL, 
+									new Variable(timeVariable), new Constant(curTime));
+							ha.createTransition(prevMode, am).guard = timeGuard;
 						}
 						
 						prevMode = am;
