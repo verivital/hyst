@@ -201,20 +201,39 @@ public class PassTests
 	}
 	
 	/**
-	 * Test hybridization pass
+	 * Test hybridization (grid) pass
 	 */
 	@Test
-	public void testHybridizationPass()
+	public void testHybrideGridPass()
 	{
 		Configuration c =  makeSampleConfiguration();
+		BaseComponent ha = (BaseComponent)c.root;
+		ha.modes.remove("stopped");
+		ha.transitions.clear();
 		
 		System.out.println("Todo: make this test");
-		// steps: remove 'stopped' mode
 		// update dynamics to be 3*y*x+y
 		// approximation sohuld be 7.5*x + 5.5*y
 		// rest is in notebook
 		Assert.fail("this test needs to be written");
 		
 		Assert.fail("Also test that there is a single initial mode (initial mode trimming as Pradyot had it)");
+	}
+	
+	/**
+	 * Test hybridization (time-triggered) pass
+	 */
+	@Test
+	public void testHybrideTimeTriggeredPass()
+	{
+		Configuration c =  makeSampleConfiguration();
+		BaseComponent ha = (BaseComponent)c.root;
+		ha.modes.remove("stopped");
+		ha.transitions.clear();
+		
+		// we're going to follow the example in the powerpoint for this
+		
+		System.out.println("Todo: make this test");
+		
 	}
 }

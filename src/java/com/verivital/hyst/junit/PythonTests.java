@@ -14,6 +14,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
@@ -103,7 +104,7 @@ public class PythonTests
 		// y' == 7.5*x + 5.5*y
 		// interval for y should be [10.5, 12]
 		
-		LinkedHashMap<String, ExpressionInterval> newDy = HybridizeGridPass.createAffineDynamics(pb, dy, bounds);
+		LinkedHashMap<String, ExpressionInterval> newDy = AffineOptimize.createAffineDynamics(pb, dy, bounds);
 		ExpressionInterval yEi = newDy.get("y");
 		
 		double TOL = 10e-6;

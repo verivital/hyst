@@ -1,6 +1,5 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -16,7 +15,6 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
@@ -101,7 +99,7 @@ public class HybridizeTimeTriggered extends TransformationPass
 		
 		final double SIM_TIME_STEP = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
 		int numSteps = (int)Math.round(timeMax / SIM_TIME_STEP);
-		PythonBridge pb = new PythonBridge();
+		final PythonBridge pb = new PythonBridge();
 		pb.open();
 		long startMs = System.currentTimeMillis();
 		AffineOptimize.numOptimizations = 0;
