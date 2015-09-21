@@ -70,6 +70,17 @@ public class Operation extends Expression
 		}
 	}
 	
+	/**
+	 * Create an operation of the form 'var <op> constant'
+	 * @param op the operator
+	 * @param var the variable name
+	 * @param c the constant value
+	 */
+	public Operation(Operator op, String var, double c)
+	{
+		this(op, new Variable(var), new Constant(c));
+	}
+	
 	public Operation copy() 
 	{
 		ArrayList <Expression> c = new ArrayList <Expression>();

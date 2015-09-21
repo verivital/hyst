@@ -8,6 +8,7 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
+import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.simulation.RungeKutta;
@@ -49,6 +50,15 @@ public class ExpressionInterval
 	public ExpressionInterval(double d)
 	{
 		this(new Constant(d));
+	}
+
+	/**
+	 * Create from a text expression (interval is null)
+	 * @param text the text to parse, like 'x + y * 2'
+	 */
+	public ExpressionInterval(String text)
+	{
+		this(FormulaParser.parseNumber(text));
 	}
 
 	public ExpressionInterval copy()

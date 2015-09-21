@@ -9,7 +9,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -23,10 +25,13 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeTimeTriggeredPass;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -47,10 +52,10 @@ public class PassTests
 	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	 
 	/**
-	 * make a sample configuration, which is used in multiple tests
+	 * make a sample network configuration, which is used in multiple tests
 	 * @return the constructed Configuration
 	 */
-	private static Configuration makeSampleConfiguration()
+	private static Configuration makeSampleNetworkConfiguration()
 	{
 		NetworkComponent nc = new NetworkComponent();
 		nc.variables.add("x");
@@ -92,10 +97,36 @@ public class PassTests
 		return c;
 	}
 	
+	/**
+	 * make a sample base configuration with a single mode, with x' == 1, and y' == 1
+	 * @return the constructed Configuration
+	 */
+	private static Configuration makeSampleBaseConfiguration()
+	{
+		BaseComponent ha = new BaseComponent();
+		ha.variables.add("x");
+		ha.variables.add("y");
+		
+		Configuration c = new Configuration(ha);
+		
+		c.settings.plotVariableNames[0] = "x";
+		c.settings.plotVariableNames[1] = "y"; 
+		c.init.put("running", FormulaParser.parseLoc("x = 0 & y == 0"));
+		
+		AutomatonMode am1 = ha.createMode("running");
+		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
+		am1.flowDynamics.put("y", new ExpressionInterval(new Constant(1)));
+		am1.invariant = Constant.TRUE;
+		
+		c.validate();
+		
+		return c;
+	}
+	
 	@Test
 	public void testSimplifyExpressions()
 	{
-		Configuration c =  makeSampleConfiguration();
+		Configuration c =  makeSampleNetworkConfiguration();
 		
 		NetworkComponent nc = (NetworkComponent)c.root;
 		BaseComponent bc = (BaseComponent)nc.children.values().iterator().next().child;
@@ -200,38 +231,71 @@ public class PassTests
 		}
 	}
 	
+	class RoundPrinter extends DefaultExpressionPrinter
+	{
+		public RoundPrinter()
+		{
+			super();
+			constFormatter.setMaximumFractionDigits(3);
+		}
+	}
+	
 	/**
 	 * Test hybridization (grid) pass
 	 */
 	@Test
-	public void testHybrideGridPass()
+	public void testHybridGridPass()
 	{
-		Configuration c =  makeSampleConfiguration();
+		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
-		ha.modes.remove("stopped");
-		ha.transitions.clear();
 		
-		System.out.println("Todo: make this test");
-		// update dynamics to be 3*y*x+y
-		// approximation sohuld be 7.5*x + 5.5*y
+		// update dynamics to be 3*t*x+t
+		// approximation should be 7.5*x + 5.5*t
 		// rest is in notebook
-		Assert.fail("this test needs to be written");
+		AutomatonMode am = ha.modes.values().iterator().next();
+		am.flowDynamics.put("x", new ExpressionInterval("3*y*x+y"));
 		
-		Assert.fail("Also test that there is a single initial mode (initial mode trimming as Pradyot had it)");
+		String params = "x,y,0,2,0,5,2,5,a";
+		new HybridizeGridPass().runTransformationPass(c, params);
+		
+		Assert.assertEquals("10 modes", 10, ha.modes.size());
+		
+		AutomatonMode m = ha.modes.get("m_1_2");
+		Assert.assertNotEquals("mode named 'm_1_2 exists'", null, m);
+	
+		// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
+		Expression.expressionPrinter = new RoundPrinter();
+		ExpressionInterval ei = m.flowDynamics.get("x");
+		Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + [-12, -10.5]", ei.toString());
+		
+		// TODO fix this
+		Assert.assertEquals("single initial state", c.init.size(), 1);
 	}
 	
 	/**
 	 * Test hybridization (time-triggered) pass
 	 */
 	@Test
-	public void testHybrideTimeTriggeredPass()
+	public void testHybridTimeTriggeredPass()
 	{
-		Configuration c =  makeSampleConfiguration();
+		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
-		ha.modes.remove("stopped");
-		ha.transitions.clear();
+		AutomatonMode am = ha.modes.values().iterator().next();
 		
 		// we're going to follow the example in the powerpoint for this
+		ha.variables.remove("y");
+		ha.variables.add("c");
+		am.flowDynamics.remove("y");
+		am.flowDynamics.put("c", new ExpressionInterval("1"));
+		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
+		c.settings.plotVariableNames[1] = "c";
+		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26 & c == 0"));
+		c.validate();
+		
+		String params = "0.5,1.0,0.05";
+		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
+		
+		
 		
 		System.out.println("Todo: make this test");
 		

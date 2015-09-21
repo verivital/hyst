@@ -25,7 +25,7 @@ import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
-public class HybridizeTimeTriggered extends TransformationPass 
+public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
 	private final static String USAGE = "[time_step, time max, epsilon]";
 	double timeStep;
@@ -149,6 +149,9 @@ public class HybridizeTimeTriggered extends TransformationPass
 							Expression timeGuard = new Operation(Operator.GREATEREQUAL, 
 									new Variable(timeVariable), new Constant(curTime));
 							ha.createTransition(prevMode, am).guard = timeGuard;
+							
+							// add transitions at the time trigger to the error mode (negation of invariant)
+							addErrorTransitionsAtTimeTrigger(prevMode, curTime, hr);
 						}
 						
 						prevMode = am;
@@ -167,7 +170,6 @@ public class HybridizeTimeTriggered extends TransformationPass
 		Hyst.log("Completed " + AffineOptimize.numOptimizations + " optimizations in " + difMs + " milliseconds. " +
 				(1000.0 * AffineOptimize.numOptimizations / difMs) + " per second.");
 	}
-	
 	
 	/**
 	 * Change the (nonlinear) flow in the given mode to a hybridized one with affine dynamics
@@ -207,6 +209,32 @@ public class HybridizeTimeTriggered extends TransformationPass
 			
 			ha.createTransition(am, errorMode).guard = le;
 			ha.createTransition(am, errorMode).guard = ge;
+		}
+	}
+	
+	/**
+	 * Add transitions at the time trigger to the error mode (negation of invariant)
+	 * @param am the mode to add to
+	 * @param tt the time-trigger time
+	 * @param hr the rectangle bounds
+	 */
+	private void addErrorTransitionsAtTimeTrigger(
+			AutomatonMode am, double curTime, HyperRectangle hr)
+	{
+		for (int d = 0; d < hr.dims.length; ++d)
+		{
+			if (d == timeVarIndex)
+				continue;
+			
+			Interval i = hr.dims[d];
+			
+			Variable v = new Variable(ha.variables.get(d));
+			Expression atTT = new Operation(Operator.EQUAL, timeVariable, curTime);
+			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.min));
+			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.max));
+			
+			ha.createTransition(am, errorMode).guard = Expression.and(atTT, le);
+			ha.createTransition(am, errorMode).guard = Expression.and(atTT, ge);
 		}
 	}
 
