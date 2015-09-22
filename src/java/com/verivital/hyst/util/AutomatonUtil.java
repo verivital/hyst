@@ -654,7 +654,6 @@ public abstract class AutomatonUtil
 	 */
 	public static double[][] estimateJacobian(LinkedHashMap<String, ExpressionInterval> dy,	HashMap<String, Interval> bounds)
 	{
-		final double FRAC = 0.01; // sampling fraction of width, from center, used to estimate the Jacobian
 		final int NUM_VARS = dy.size();
 		double[][] rv = new double[NUM_VARS][NUM_VARS];
 		ArrayList <String> variables = new ArrayList<String>();
@@ -670,8 +669,7 @@ public abstract class AutomatonUtil
 			for(int x = 0; x < NUM_VARS; ++x)
 			{
 				String partialDerVar = variables.get(x); // the partial derivative variable
-				double width = bounds.get(partialDerVar).width();
-				double sampleOffset = width * FRAC;
+				double sampleOffset = bounds.get(partialDerVar).width() / 2;
 				HyperPoint left = new HyperPoint(center);
 				HyperPoint right = new HyperPoint(center);
 				

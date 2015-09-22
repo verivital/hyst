@@ -11,6 +11,7 @@ import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -45,6 +46,9 @@ public class AffineOptimize
 			
 			for (int partialVar = 0; partialVar < NUM_VARS; ++partialVar)
 			{
+				if (JAC[derVar][partialVar] == 0)
+					continue;
+				
 				Operation term = new Operation(Operator.MULTIPLY, new Constant(JAC[derVar][partialVar]),
 						new Variable(orderedVariables.get(partialVar)));
 				
@@ -54,13 +58,30 @@ public class AffineOptimize
 					linearized = new Operation(Operator.ADD, linearized, term);
 			}
 			
+			// if jacobian was zero for all directions
+			if (linearized == null)
+				linearized = new Constant(0);
+			
 			// the function to be optimized is the difference between the linear approximation and the real function
 			Expression optimizeFunc = new Operation(Operator.SUBTRACT, derivativeExp, linearized);
 			
 			Interval inter = PythonUtil.scipyOptimize(pb, optimizeFunc, bounds);
 			++numOptimizations;
-
-			rv.put(derVarName, new ExpressionInterval(linearized, inter));
+			
+			// absorb the interval into the expression if it's a constant
+			double TOL = 1e-9;
+			
+			if (Math.abs(inter.min-inter.max) < TOL)
+			{
+				double val = inter.middle();
+				
+				linearized = new Operation(Operator.ADD, linearized, new Constant(val));
+				linearized = SimplifyExpressionsPass.simplifyExpression(linearized);
+				
+				rv.put(derVarName, new ExpressionInterval(linearized));
+			}
+			else
+				rv.put(derVarName, new ExpressionInterval(linearized, inter));
 		}
 		
 		return rv;

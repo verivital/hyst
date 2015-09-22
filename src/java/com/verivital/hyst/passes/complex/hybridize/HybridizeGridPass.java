@@ -3,7 +3,9 @@ package com.verivital.hyst.passes.complex.hybridize;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -23,6 +25,7 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.RangeExtractor;
 
 
 public class HybridizeGridPass extends TransformationPass
@@ -300,13 +303,13 @@ public class HybridizeGridPass extends TransformationPass
 
 	/**
 	 *	useful to convert the mode names to string
-	 *	mode name starts with m_
+	 *	mode name starts with _m_
  	 *	and the following characters have been described at
 	 *	the start of this class
 	 */
 	private String indexListToModeName(ArrayList<Integer> v)
 	{
-		String s = "m";
+		String s = "_m";
 		
 		for(int i=0;i<v.size();++i)
 			s += "_" + v.get(i);
@@ -352,9 +355,19 @@ public class HybridizeGridPass extends TransformationPass
 	 */
 	private Expression createInvariant(ArrayList<Integer> indexList)
 	{
-		Expression rv = Constant.TRUE;
-
 		HashMap<String, Interval> bounds = getIntervalBounds(indexList);
+
+		return boundsToExpression(bounds);
+	}
+
+	/**
+	 * Convert from a set of bounds (variable -> interval) to an expression
+	 * @param bounds the bounds
+	 * @return the generated expression
+	 */
+	private Expression boundsToExpression(Map<String, Interval> bounds)
+	{
+		Expression rv = Constant.TRUE;
 		
 		for (Entry<String, Interval> e : bounds.entrySet())
 		{
@@ -482,8 +495,53 @@ public class HybridizeGridPass extends TransformationPass
 	{
 		Expression init = config.init.values().iterator().next();
 		config.init.clear();
+
+		TreeMap<String, Interval> rangesInit = RangeExtractor.getVariableRanges(init, "initial states"); 
 		
-		for(String name : ha.modes.keySet())
-			config.init.put(name, init.copy());
+		for(AutomatonMode am : ha.modes.values())
+		{
+			TreeMap<String, Interval> rangesMode = RangeExtractor.getVariableRanges(am.invariant, "invariant for mode " + am.name);
+			
+			// if there is a point in both rangesMode and rangesInit, add as initial state
+			TreeMap<String, Interval> intersection = getIntersection(rangesInit, rangesMode);
+			
+			if (intersection != null)
+				config.init.put(am.name, boundsToExpression(intersection));
+		}
+	}
+
+	/**
+	 * Get the intersection of two sets of constraints
+	 * @param a the first range
+	 * @param b the second range
+	 * @return the intersection
+	 */
+	private TreeMap<String, Interval> getIntersection(TreeMap<String, Interval> a, TreeMap<String, Interval> b)
+	{
+		TreeMap<String, Interval> rv = new TreeMap<String, Interval>();
+		
+		for (Entry<String, Interval> entryA : a.entrySet())
+		{
+			String variable = entryA.getKey();
+			Interval intervalA = entryA.getValue();
+			Interval intervalB = b.get(variable);
+			
+			if (intervalB == null) // unconstrained in B, any value in intervalA is valid
+				rv.put(variable, intervalA);
+			else
+			{
+				Interval i = intervalA.intersection(intervalB);
+				
+				if (i == null)
+				{
+					rv = null;
+					break;
+				}
+				else
+					rv.put(variable, i);
+			}
+		}
+		
+		return rv;
 	}
 }

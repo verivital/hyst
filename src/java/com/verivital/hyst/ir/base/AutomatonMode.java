@@ -102,8 +102,13 @@ public class AutomatonMode
 		
 		if (!urgent)
 		{
-			for (ExpressionInterval ei : flowDynamics.values())
+			for (Entry<String, ExpressionInterval> entry : flowDynamics.entrySet())
 			{
+				ExpressionInterval ei = entry.getValue();
+				
+				if (ei == null)
+					throw new AutomatonValidationException("Flow for " + entry.getKey() + " was null");
+				
 				Expression e = ei.getExpression();
 				Configuration.validateExpression(e, "mode " + name + " dynamics: " + DefaultExpressionPrinter.instance.print(e));
 			}

@@ -2,6 +2,7 @@ package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
@@ -24,6 +25,7 @@ import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.RangeExtractor;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
@@ -34,6 +36,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	String timeVariable;
 	int timeVarIndex; // the index of timeVarible in ha.variableName
     private BaseComponent ha;
+    private AutomatonMode originalMode;
 
     AutomatonMode errorMode = null;
     
@@ -91,12 +94,10 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
      */
 	private void simulateAndConstruct()
 	{
-		AutomatonMode am = ha.modes.values().iterator().next();
-        
 		// simulate from initial state
 		double[] initPt = AutomatonUtil.getInitialPoint(ha, config);
 		Hyst.log("Init point from config: " + Arrays.toString(initPt));
-		
+
 		final double SIM_TIME_STEP = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
 		int numSteps = (int)Math.round(timeMax / SIM_TIME_STEP);
 		final PythonBridge pb = new PythonBridge();
@@ -104,7 +105,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		long startMs = System.currentTimeMillis();
 		AffineOptimize.numOptimizations = 0;
 		
-        Simulator.simulateFor(timeMax, initPt, numSteps, am.flowDynamics, ha.variables, new StepListener()
+        Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, new StepListener()
 		{
         	private int modeCount = 0;
         	private HyperPoint prevPoint = null;
@@ -116,14 +117,16 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				double curTime = numStepsCompleted * SIM_TIME_STEP;
 				double prevTime = (numStepsCompleted - 1) * SIM_TIME_STEP;
 				
-				if (prevTime / timeStep != curTime / timeStep)
+				if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
 				{
-					System.out.println(". creating new mode at time " + curTime);
-
 					if (prevPoint != null)
 					{
 						final String MODE_PREFIX = "_m_";
 						AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
+						am.flowDynamics = originalMode.flowDynamics;
+						am.invariant = originalMode.invariant;
+						
+						System.out.println(". prevPoint = " + prevPoint + ", curPoint = " + hp);
 						
 				        // bloat bounding box between prevPoint and hp
 						HyperRectangle hr = boundingBox(prevPoint, hp);
@@ -146,7 +149,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 							prevMode.invariant = Expression.and(prevMode.invariant, timeConstraint);
 							
 							// add transitions at time trigger from previous mode
-							Expression timeGuard = new Operation(Operator.GREATEREQUAL, 
+							Expression timeGuard = new Operation(Operator.EQUAL, 
 									new Variable(timeVariable), new Constant(curTime));
 							ha.createTransition(prevMode, am).guard = timeGuard;
 							
@@ -158,6 +161,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 					}
 					
 					// record the time-triggered point for the construction of the next box
+					System.out.println("Recording prevPoint at step " + numStepsCompleted + ": "+ hp);
 					prevPoint = hp;
 				}
 			}
@@ -296,7 +300,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		// not found, add a new one
 		if (timeVariable == null)
 		{
-			final String TIME_VAR_NAME = "_trigger";
+			final String TIME_VAR_NAME = "_time_trigger";
 			
 			timeVariable = TIME_VAR_NAME;
 			am.flowDynamics.put(TIME_VAR_NAME, new ExpressionInterval(new Constant(1)));
@@ -311,6 +315,41 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		String name = ha.modes.keySet().iterator().next() + "_error"; 
 		errorMode = ha.createMode(name);
 		errorMode.invariant = Constant.TRUE;
+		
+		for (String v : ha.variables)
+			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
+	}
+	
+	private void assignInitialStates()
+	{
+		Expression init = config.init.values().iterator().next();
+		TreeMap<String, Interval> initRanges = RangeExtractor.getVariableRanges(init, "initial states");
+		config.init.clear();
+		
+		final String FIRST_MODE_NAME = "_m_0";
+		AutomatonMode am = ha.modes.get(FIRST_MODE_NAME);
+		TreeMap<String, Interval> modeRanges = RangeExtractor.getVariableRanges(am.invariant, "mode _m_0 invariant");
+		
+		for (int i = 0; i < ha.variables.size(); ++i)
+		{
+			String var = ha.variables.get(i);
+			
+			if (var.equals(timeVariable))
+				continue;
+			
+			// make sure mode range is contained entirely in initRanges
+			Interval modeInterval = modeRanges.get(var);
+			Interval initInterval = initRanges.get(var);
+			
+			if (initInterval.min < modeInterval.min || initInterval.max > modeInterval.max)
+			{
+				throw new AutomatonExportException("Hybridized first mode's invariant does not entirely contain the " +
+						"initial set of states. " + var + " is " + initInterval + " in initial states, and " + modeInterval 
+						+ " in the first mode. Consider increasing the bloating term (epsilon).");
+			}
+		}
+		
+		config.init.put(FIRST_MODE_NAME, init);
 	}
 
 	@Override
@@ -319,12 +358,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
         Expression.expressionPrinter = DefaultExpressionPrinter.instance;
 
         this.ha = (BaseComponent)config.root;
+        this.originalMode = ha.modes.values().iterator().next();
         parseParams(params);
         extractTimeVariable(); // sets timeVariable
         makeErrorMode(); // sets errorMode
         ha.validate();
-        
+
+        ha.modes.remove(originalMode.name);
         simulateAndConstruct();
+        assignInitialStates();
 
         config.settings.spaceExConfig.timeTriggered = true;
     }

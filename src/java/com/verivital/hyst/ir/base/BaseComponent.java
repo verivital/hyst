@@ -36,7 +36,7 @@ public class BaseComponent extends Component
 	
 	/**
 	 * Create a new mode in this hybrid automaton. By default the invariant
-	 * is null (must be manually set) and the flows are x'=0 (see AutomatonMode.DEFAULT_FLOW_RHS) 
+	 * is null (must be manually set) and the flows are x'=null for all x (these must be assigned) 
 	 * @param name a name for the mode (must be unique)
 	 * @return the created AutomatonMode object
 	 */

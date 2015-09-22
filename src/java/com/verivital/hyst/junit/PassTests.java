@@ -11,7 +11,6 @@ import org.junit.Test;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -25,7 +24,6 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
@@ -231,12 +229,16 @@ public class PassTests
 		}
 	}
 	
+	/**
+	 * An ExpresssionPrinter which prints constants to a certain number of digits after the decimel
+	 *
+	 */
 	class RoundPrinter extends DefaultExpressionPrinter
 	{
-		public RoundPrinter()
+		public RoundPrinter(int digits)
 		{
 			super();
-			constFormatter.setMaximumFractionDigits(3);
+			constFormatter.setMaximumFractionDigits(digits);
 		}
 	}
 	
@@ -260,15 +262,14 @@ public class PassTests
 		
 		Assert.assertEquals("10 modes", 10, ha.modes.size());
 		
-		AutomatonMode m = ha.modes.get("m_1_2");
-		Assert.assertNotEquals("mode named 'm_1_2 exists'", null, m);
+		AutomatonMode m = ha.modes.get("_m_1_2");
+		Assert.assertNotEquals("mode named '_m_1_2 exists'", null, m);
 	
 		// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
-		Expression.expressionPrinter = new RoundPrinter();
+		Expression.expressionPrinter = new RoundPrinter(3);
 		ExpressionInterval ei = m.flowDynamics.get("x");
 		Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + [-12, -10.5]", ei.toString());
 		
-		// TODO fix this
 		Assert.assertEquals("single initial state", c.init.size(), 1);
 	}
 	
@@ -278,6 +279,7 @@ public class PassTests
 	@Test
 	public void testHybridTimeTriggeredPass()
 	{
+		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
 		AutomatonMode am = ha.modes.values().iterator().next();
@@ -288,16 +290,36 @@ public class PassTests
 		am.flowDynamics.remove("y");
 		am.flowDynamics.put("c", new ExpressionInterval("1"));
 		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
+		
 		c.settings.plotVariableNames[1] = "c";
 		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26 & c == 0"));
 		c.validate();
 		
-		String params = "0.5,1.0,0.05";
+		String params = "0.5,1.0,0.05"; // step time = 0.5, total time = 1.0, epsilon = 0.05
 		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
 		
+		Assert.assertEquals("3 modes (2 + error)", 3, ha.modes.size());
+		Assert.assertEquals("1 initial mode", 1, c.init.size());
 		
+		AutomatonMode m = ha.modes.get("_m_1");
+		Assert.assertNotEquals("mode named '_m_1 exists'", null, m);
 		
-		System.out.println("Todo: make this test");
+		// dynmiacs should be c' == 1
+		Expression.expressionPrinter = rp;
+		Assert.assertEquals("c' == 1", "1", m.flowDynamics.get("c").toString());
+		
+		// dynamics should be c' = 1, x' =.536*x – 0.0718 + [0, 0.0046]
+		
+		System.out.println("m = " + m);
+		System.out.println("dynamics = " + m.flowDynamics);
+		
+		// invariant c <= 1 should be present in first mode
+		
+		// error transitions should exist from the first mode at the time trigger
+		
+		// error transitions should exist in the first mode due to the hyperrectangle constraints
+		
+		Assert.fail("Todo: make this test");
 		
 	}
 }

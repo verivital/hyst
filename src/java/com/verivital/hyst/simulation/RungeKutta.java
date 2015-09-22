@@ -50,13 +50,13 @@ public class RungeKutta
 		for (int s = 0; s < numSteps; ++s)
 		{
 			if (sl != null)
-				sl.step(s, hp);
+				sl.step(s, new HyperPoint(hp));
 				
 			stepRK(hp, h);
 		}
 		
 		if (sl != null)
-			sl.step(numSteps, hp);
+			sl.step(numSteps, new HyperPoint(hp));
 	}
 	
 	/**
