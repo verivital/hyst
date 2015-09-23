@@ -361,30 +361,6 @@ public class HybridizeGridPass extends TransformationPass
 	}
 
 	/**
-	 * Convert from a set of bounds (variable -> interval) to an expression
-	 * @param bounds the bounds
-	 * @return the generated expression
-	 */
-	private Expression boundsToExpression(Map<String, Interval> bounds)
-	{
-		Expression rv = Constant.TRUE;
-		
-		for (Entry<String, Interval> e : bounds.entrySet())
-		{
-			Variable v = new Variable(e.getKey());
-			Interval i = e.getValue();
-			
-			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
-			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
-			Expression range = Expression.and(ge, le);
-			
-			rv = Expression.and(rv, range);
-		}
-
-		return rv;
-	}
-
-	/**
 	 * create modes in the hybrid automaton, as well as their invariants
 	 */
 	private void createModes()
@@ -489,25 +465,68 @@ public class HybridizeGridPass extends TransformationPass
 	}
 
 	/**
-	 * Set the initial states to be every mode (invariants will trim them)
+	 * Set the initial states
 	*/
 	private void addInitialCondition()
 	{
 		Expression init = config.init.values().iterator().next();
-		config.init.clear();
-
-		TreeMap<String, Interval> rangesInit = RangeExtractor.getVariableRanges(init, "initial states"); 
+		config.init = expressionInvariantsIntersection(ha, init, "initial states");
+	}
+	
+	/**
+	 * Get the modes in a hybrid automaton which intersect an expression
+	 * @param ha the original autommaton (with modes created and invariants assigned)
+	 * @param e the expression
+	 * @param desc a description for errors if e is not a rectangle
+	 * @return a map from mode_name to expression where the value is the intersection of e an the mode's invariant
+	 */
+	public static LinkedHashMap<String, Expression> expressionInvariantsIntersection(BaseComponent ha, Expression e, String desc)
+	{
+		LinkedHashMap<String, Expression> rv = new LinkedHashMap<String, Expression>();
+		
+		TreeMap<String, Interval> rangesExp = RangeExtractor.getVariableRanges(e, desc); 
 		
 		for(AutomatonMode am : ha.modes.values())
 		{
 			TreeMap<String, Interval> rangesMode = RangeExtractor.getVariableRanges(am.invariant, "invariant for mode " + am.name);
 			
 			// if there is a point in both rangesMode and rangesInit, add as initial state
-			TreeMap<String, Interval> intersection = getIntersection(rangesInit, rangesMode);
+			TreeMap<String, Interval> intersection = getIntersection(rangesExp, rangesMode);
 			
 			if (intersection != null)
-				config.init.put(am.name, boundsToExpression(intersection));
+				rv.put(am.name, boundsToExpression(intersection));
 		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Convert from a set of bounds (variable -> interval) to an expression
+	 * @param bounds the bounds
+	 * @return the generated expression
+	 */
+	private static Expression boundsToExpression(Map<String, Interval> bounds)
+	{
+		Expression rv = Constant.TRUE;
+		
+		for (Entry<String, Interval> e : bounds.entrySet())
+		{
+			Variable v = new Variable(e.getKey());
+			Interval i = e.getValue();
+			
+			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
+			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
+			Expression range = Expression.and(ge, le);
+
+			if (i.isMinOpen())
+				rv = Expression.and(rv, le);
+			else if (i.isMaxOpen())
+				rv = Expression.and(rv, ge);
+			else
+				rv = Expression.and(rv, range);
+		}
+
+		return rv;
 	}
 
 	/**
@@ -516,7 +535,7 @@ public class HybridizeGridPass extends TransformationPass
 	 * @param b the second range
 	 * @return the intersection
 	 */
-	private TreeMap<String, Interval> getIntersection(TreeMap<String, Interval> a, TreeMap<String, Interval> b)
+	private static TreeMap<String, Interval> getIntersection(Map<String, Interval> a, Map<String, Interval> b)
 	{
 		TreeMap<String, Interval> rv = new TreeMap<String, Interval>();
 		

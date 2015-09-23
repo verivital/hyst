@@ -494,4 +494,14 @@ public class Interval
 		if (min > max)
 			throw new RuntimeException("Interval min > max");
 	}
+
+	public boolean isMaxOpen()
+	{
+		return max == Double.MAX_VALUE;
+	}
+	
+	public boolean isMinOpen()
+	{
+		return min == -Double.MAX_VALUE;
+	}
 }

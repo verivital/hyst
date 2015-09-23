@@ -121,7 +121,6 @@ public class Configuration
 			
 			if (!AutomatonUtil.modeExistsInComponent(modeName, root))
 			{
-				System.out.println("config = " + this);
 				throw new AutomatonValidationException(name + " contains mode " + modeName + ", which is not in the automaton");
 			}
 		}

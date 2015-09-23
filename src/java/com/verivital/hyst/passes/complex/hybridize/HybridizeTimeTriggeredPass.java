@@ -328,18 +328,12 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 
 	private void makeErrorMode()
 	{
-		String name = ha.modes.keySet().iterator().next() + "_error"; 
+		String name = originalMode.name + "_error"; 
 		errorMode = ha.createMode(name);
 		errorMode.invariant = Constant.TRUE;
 		
 		for (String v : ha.variables)
 			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
-		
-		if (noForbidden == false)
-		{
-			// add it to the forbidden states
-			config.forbidden.put(name, Constant.TRUE);
-		}
 	}
 	
 	private void assignInitialStates()
@@ -373,6 +367,22 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		config.init.put(FIRST_MODE_NAME, init);
 	}
+	
+	private void assignForbiddenStates()
+	{
+		if (config.forbidden.size() > 0)
+		{
+			Expression e = config.forbidden.values().iterator().next();
+			config.forbidden = HybridizeGridPass.expressionInvariantsIntersection(ha, e, "forbidden states");
+		}
+		
+		if (noForbidden == false)
+		{
+			// add error mode to the forbidden states
+			String name = originalMode.name + "_error";
+			config.forbidden.put(name, Constant.TRUE);
+		}
+	}
 
 	@Override
     protected void runPass(String params)
@@ -389,6 +399,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
         ha.modes.remove(originalMode.name);
         simulateAndConstruct();
         assignInitialStates();
+        assignForbiddenStates();
 
         config.settings.spaceExConfig.timeTriggered = true;
     }
