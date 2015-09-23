@@ -352,5 +352,7 @@ public class PassTests
 		Assert.assertEquals("5 outgoing transitions from mode0", numTransitions, 5);
 		Assert.assertTrue("transition exists at time trigger in mode0", foundTriggerTransition);
 		Assert.assertTrue("transition to out of bounds error mode exists in mode0", foundOobTransition);
+		
+		Assert.assertEquals("single forbidden mode", 1, c.forbidden.size());
 	}
 }

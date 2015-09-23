@@ -322,6 +322,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		for (String v : ha.variables)
 			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
+		
+		// add it to the forbidden states
+		config.forbidden.put(name, Constant.TRUE);
 	}
 	
 	private void assignInitialStates()
