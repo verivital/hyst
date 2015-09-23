@@ -29,14 +29,19 @@ import com.verivital.hyst.util.RangeExtractor;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
-	private final static String USAGE = "[time_step, time max, epsilon]";
+	private final static String USAGE = "[time_step, time max, epsilon, (noforbidden)]";
+	
 	double timeStep;
 	double timeMax;
 	double epsilon;
+	boolean noForbidden = false;
+	
 	String timeVariable;
 	int timeVarIndex; // the index of timeVarible in ha.variableName
-    private BaseComponent ha;
+	
+	private BaseComponent ha;
     private AutomatonMode originalMode;
+    
 
     AutomatonMode errorMode = null;
     
@@ -74,8 +79,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		// time step, time max, epsilon
 		String[] parts = params.split(",");
 		
-		if (parts.length != 3)
-			throw new AutomatonExportException("Pass expected three params: " + USAGE);
+		if (parts.length != 3 && parts.length != 4)
+			throw new AutomatonExportException("Pass expected three or four params: " + USAGE);
 		
 		try
 		{
@@ -86,6 +91,14 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		catch (NumberFormatException e)
 		{
 			throw new AutomatonExportException("Error parsing pass parameter: " + USAGE, e);
+		}
+		
+		if (parts.length == 4)
+		{
+			if (parts[3].equals("noforbidden"))
+				noForbidden = true;
+			else
+				throw new AutomatonExportException("Unknown last param: '" + parts[3] + "'. " + USAGE);
 		}
 	}
 
@@ -322,8 +335,11 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		for (String v : ha.variables)
 			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
 		
-		// add it to the forbidden states
-		config.forbidden.put(name, Constant.TRUE);
+		if (noForbidden == false)
+		{
+			// add it to the forbidden states
+			config.forbidden.put(name, Constant.TRUE);
+		}
 	}
 	
 	private void assignInitialStates()
