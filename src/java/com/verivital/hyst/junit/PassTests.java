@@ -327,7 +327,7 @@ public class PassTests
 		
 		// mode 1 invariant correct
 		// should be c <= 1 & x >= 0.2357 & x <= 0.3833
-		Assert.assertEquals("mode1 invariant correct", "c <= 1 & x >= 0.2357 & x <= 0.3833", m1.invariant.toString());
+		Assert.assertEquals("mode1 invariant correct", "c <= 1 & x >= 0.2357 & x <= 0.3833 & c <= 1", m1.invariant.toString());
 		
 		// error transitions should exist from the first mode at the time trigger
 		// error transitions should exist in the first mode due to the hyperrectangle constraints

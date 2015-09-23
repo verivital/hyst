@@ -140,13 +140,12 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				        // add transitions to error mode on all sides of box
 						addModeErrorTransitions(am, hr);
 						
+						// add to mode's invariant the time-triggered value
+						Expression timeConstraint = new Operation(Operator.LESSEQUAL, timeVariable, curTime);
+						am.invariant = Expression.and(am.invariant, timeConstraint);
+						
 						if (prevMode != null)
 						{
-							// add to previous mode's invariant the time-triggered value
-							Expression timeConstraint = new Operation(Operator.LESSEQUAL, 
-									new Variable(timeVariable), new Constant(prevBoxTime));
-							prevMode.invariant = Expression.and(prevMode.invariant, timeConstraint);
-							
 							// add transitions at time trigger from previous mode
 							Expression timeGuard = new Operation(Operator.EQUAL, 
 									new Variable(timeVariable), new Constant(prevBoxTime));

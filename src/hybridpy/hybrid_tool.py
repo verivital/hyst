@@ -160,7 +160,11 @@ def get_env_var_path(basename, default_path):
         rv = default_path
 
     if not os.path.exists(rv):
-        print basename + ' not found at path: ' + rv + '. Did you set ' + var + '? ',
+        print basename + ' not found at path: ' + rv + '.',
+
+        if os.environ.get(var) is None:
+            print 'Environment variable ' + var + ' was NOT set.',
+
         print "Tool will be set as non-runnable."
         rv = None
 
