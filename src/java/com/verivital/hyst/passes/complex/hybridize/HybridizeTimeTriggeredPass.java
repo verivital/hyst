@@ -281,15 +281,17 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	 */
 	private void extractTimeVariable()
 	{
-		// look for a variable with derivative 1
+		// look for a variable with derivative 1 and initial state 0
 		AutomatonMode am = ha.modes.values().iterator().next();
+		Expression init = config.init.values().iterator().next();
+		TreeMap<String, Interval> ranges = RangeExtractor.getVariableRanges(init, "initial states");
 		
 		for (String v : ha.variables)
 		{
 			ExpressionInterval ei = am.flowDynamics.get(v);
 			Expression e = ei.getExpression();
 			
-			if (ei.getInterval() == null && (e instanceof Constant) && ((Constant)e).getVal() == 1)
+			if (ei.getInterval() == null && (e instanceof Constant) && ((Constant)e).getVal() == 1 && ranges.get(v).isExactly(0))
 			{
 				timeVariable = v;
 				break;
@@ -304,6 +306,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			timeVariable = TIME_VAR_NAME;
 			am.flowDynamics.put(TIME_VAR_NAME, new ExpressionInterval(new Constant(1)));
 			ha.variables.add(TIME_VAR_NAME);
+			
+			Expression newInit = Expression.and(init, new Operation(Operator.EQUAL, timeVariable, 0));
+			config.init.put(am.name, newInit);
 		}
 		
 		timeVarIndex = ha.variables.indexOf(timeVariable);
