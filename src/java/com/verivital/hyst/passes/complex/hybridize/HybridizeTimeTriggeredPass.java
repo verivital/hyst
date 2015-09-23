@@ -1,5 +1,6 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.TreeMap;
@@ -101,6 +102,18 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				throw new AutomatonExportException("Unknown last param: '" + parts[3] + "'. " + USAGE);
 		}
 	}
+    
+    private class SimulateStats
+    {
+    	public int totalBoxes = 0;
+    	public ArrayList <Double> totalWidth = new ArrayList <Double>();
+    	
+    	public SimulateStats(int numDims)
+    	{
+    		for (int i = 0; i < ha.variables.size(); ++i)
+    			totalWidth.add(0.0);
+    	}
+    }
 
     /**
      * Construct the time-triggered modes and transitions
@@ -118,7 +131,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		long startMs = System.currentTimeMillis();
 		AffineOptimize.numOptimizations = 0;
 		
-        Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, new StepListener()
+		final SimulateStats stats = new SimulateStats(ha.variables.size()); 
+		
+		StepListener sl = new StepListener()
 		{
         	private int modeCount = 0;
         	private HyperPoint prevBoxPoint = null;
@@ -169,6 +184,12 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 						}
 						
 						prevMode = am;
+						
+						// update stats
+						stats.totalBoxes++;
+						
+						for (int i = 0; i < ha.variables.size(); ++i)
+							stats.totalWidth.set(i, stats.totalWidth.get(i) + hr.dims[i].width());
 					}
 					
 					// record the time-triggered point for the construction of the next box
@@ -176,7 +197,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 					prevBoxTime = curTime;
 				}
 			}
-		});
+		};
+		
+		Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, sl);
         
         // report stats
 		long difMs = System.currentTimeMillis() - startMs;
@@ -184,6 +207,16 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		Hyst.log("Completed " + AffineOptimize.numOptimizations + " optimizations in " + difMs + " milliseconds. " +
 				(1000.0 * AffineOptimize.numOptimizations / difMs) + " per second.");
+		
+		Hyst.log("Average box widths (after bloating):");
+		for (int i = 0; i < ha.variables.size(); ++i)
+		{
+			if (i == timeVarIndex)
+				continue;
+			
+			double avg = stats.totalWidth.get(i) / stats.totalBoxes;
+			Hyst.log(ha.variables.get(i) + ": " + avg);
+		}
 	}
 	
 	/**
