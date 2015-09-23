@@ -108,7 +108,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
         Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, new StepListener()
 		{
         	private int modeCount = 0;
-        	private HyperPoint prevPoint = null;
+        	private HyperPoint prevBoxPoint = null;
+        	private double prevBoxTime = -1;
         	private AutomatonMode prevMode = null;
         	
 			@Override
@@ -119,17 +120,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				
 				if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
 				{
-					if (prevPoint != null)
+					if (prevBoxPoint != null)
 					{
 						final String MODE_PREFIX = "_m_";
 						AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
 						am.flowDynamics = originalMode.flowDynamics;
 						am.invariant = originalMode.invariant;
 						
-						System.out.println(". prevPoint = " + prevPoint + ", curPoint = " + hp);
-						
 				        // bloat bounding box between prevPoint and hp
-						HyperRectangle hr = boundingBox(prevPoint, hp);
+						HyperRectangle hr = boundingBox(prevBoxPoint, hp);
 						hr.bloatAdditive(epsilon);
 						
 						// set the flows based on the box
@@ -145,24 +144,24 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 						{
 							// add to previous mode's invariant the time-triggered value
 							Expression timeConstraint = new Operation(Operator.LESSEQUAL, 
-									new Variable(timeVariable), new Constant(curTime));
+									new Variable(timeVariable), new Constant(prevBoxTime));
 							prevMode.invariant = Expression.and(prevMode.invariant, timeConstraint);
 							
 							// add transitions at time trigger from previous mode
 							Expression timeGuard = new Operation(Operator.EQUAL, 
-									new Variable(timeVariable), new Constant(curTime));
+									new Variable(timeVariable), new Constant(prevBoxTime));
 							ha.createTransition(prevMode, am).guard = timeGuard;
 							
 							// add transitions at the time trigger to the error mode (negation of invariant)
-							addErrorTransitionsAtTimeTrigger(prevMode, curTime, hr);
+							addErrorTransitionsAtTimeTrigger(prevMode, prevBoxTime, hr);
 						}
 						
 						prevMode = am;
 					}
 					
 					// record the time-triggered point for the construction of the next box
-					System.out.println("Recording prevPoint at step " + numStepsCompleted + ": "+ hp);
-					prevPoint = hp;
+					prevBoxPoint = hp;
+					prevBoxTime = curTime;
 				}
 			}
 		});
@@ -256,9 +255,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			
 			Interval i = hr.dims[d];
 			Variable v = new Variable(ha.variables.get(d));
-			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
 			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
-			Expression constraint = Expression.and(le, ge);
+			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
+			Expression constraint = Expression.and(ge, le);
 			
 			am.invariant = Expression.and(am.invariant, constraint);
 		}

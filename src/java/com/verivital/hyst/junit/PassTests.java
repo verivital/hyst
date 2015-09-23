@@ -268,7 +268,7 @@ public class PassTests
 		// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
 		Expression.expressionPrinter = new RoundPrinter(3);
 		ExpressionInterval ei = m.flowDynamics.get("x");
-		Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + [-12, -10.5]", ei.toString());
+		Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + -12 + [0, 1.5]", ei.toString());
 		
 		Assert.assertEquals("single initial state", c.init.size(), 1);
 	}
@@ -290,6 +290,7 @@ public class PassTests
 		am.flowDynamics.remove("y");
 		am.flowDynamics.put("c", new ExpressionInterval("1"));
 		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
+		am.invariant = FormulaParser.parseInvariant("c <= 1");
 		
 		c.settings.plotVariableNames[1] = "c";
 		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26 & c == 0"));
@@ -301,25 +302,55 @@ public class PassTests
 		Assert.assertEquals("3 modes (2 + error)", 3, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
 		
-		AutomatonMode m = ha.modes.get("_m_1");
-		Assert.assertNotEquals("mode named '_m_1 exists'", null, m);
+		AutomatonMode m0 = ha.modes.get("_m_0");
+		Assert.assertNotEquals("mode named '_m_0 exists'", null, m0);
 		
-		// dynmiacs should be c' == 1
+		// dynamics should be c' == 1
 		Expression.expressionPrinter = rp;
-		Assert.assertEquals("c' == 1", "1", m.flowDynamics.get("c").toString());
+		Assert.assertEquals("c' == 1", "1", m0.flowDynamics.get("c").toString());
 		
-		// dynamics should be c' = 1, x' =.536*x – 0.0718 + [0, 0.0046]
+		// dynamics should be approximately x' =.536*x – 0.0718 + [0, 0.0046]
+		String correctDynamics = "0.5357 * x + -0.0717 + [0, 0.0046]";
+		Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
+
+		AutomatonMode m1 = ha.modes.get("_m_1");
+		Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
 		
-		System.out.println("m = " + m);
-		System.out.println("dynamics = " + m.flowDynamics);
-		
+		// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
+		correctDynamics = "0.619 * x + -0.0958 + [0, 0.0054]";
+		Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
+
 		// invariant c <= 1 should be present in first mode
+		// time trigger invariant c <= 0.5 should be present in first mode as well
+		// should be c <= 1 & x >= 0.2 & x <= 0.3357 & c <= 0.5
+		Assert.assertEquals("mode0 invariant correct", "c <= 1 & x >= 0.2 & x <= 0.3357 & c <= 0.5", m0.invariant.toString());
+		
+		// mode 1 invariant correct
+		// should be c <= 1 & x >= 0.2357 & x <= 0.3833
+		Assert.assertEquals("mode1 invariant correct", "c <= 1 & x >= 0.2357 & x <= 0.3833", m1.invariant.toString());
 		
 		// error transitions should exist from the first mode at the time trigger
-		
 		// error transitions should exist in the first mode due to the hyperrectangle constraints
+		int numTransitions = 0; 
+		boolean foundTriggerTransition = false;
+		boolean foundOobTransition = false;
 		
-		Assert.fail("Todo: make this test");
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from == m0)
+			{
+				++numTransitions;
+				
+				if (at.to == m1 && at.guard.toString().equals("c = 0.5"))
+					foundTriggerTransition = true;
+				
+				if (at.to.name.equals("running_error") && at.guard.toString().equals("x >= 0.3357"))
+					foundOobTransition = true;
+			}
+		}
 		
+		Assert.assertEquals("5 outgoing transitions from mode0", numTransitions, 5);
+		Assert.assertTrue("transition exists at time trigger in mode0", foundTriggerTransition);
+		Assert.assertTrue("transition to out of bounds error mode exists in mode0", foundOobTransition);
 	}
 }

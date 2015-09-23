@@ -68,18 +68,19 @@ public class AffineOptimize
 			Interval inter = PythonUtil.scipyOptimize(pb, optimizeFunc, bounds);
 			++numOptimizations;
 			
-			// absorb the interval into the expression if it's a constant
+			// make the min interval 0, so that we get something like: x + y + 4 + [0, 0.1]
+			double val = inter.min;
+			linearized = new Operation(Operator.ADD, linearized, new Constant(val));
+			linearized = SimplifyExpressionsPass.simplifyExpression(linearized);
+			
+			inter.min -= val;
+			inter.max -= val;
+			
+			// if the interval is zero, don't include it as an interval
 			double TOL = 1e-9;
 			
-			if (Math.abs(inter.min-inter.max) < TOL)
-			{
-				double val = inter.middle();
-				
-				linearized = new Operation(Operator.ADD, linearized, new Constant(val));
-				linearized = SimplifyExpressionsPass.simplifyExpression(linearized);
-				
+			if (Math.abs(inter.max) < TOL)
 				rv.put(derVarName, new ExpressionInterval(linearized));
-			}
 			else
 				rv.put(derVarName, new ExpressionInterval(linearized, inter));
 		}
