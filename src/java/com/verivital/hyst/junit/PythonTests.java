@@ -107,9 +107,8 @@ public class PythonTests
 		LinkedHashMap<String, ExpressionInterval> newDy = AffineOptimize.createAffineDynamics(pb, dy, bounds);
 		ExpressionInterval yEi = newDy.get("y");
 		
-		double TOL = 10e-6;
-		Assert.assertTrue("interval min bound is -12", Math.abs((-12) - yEi.getInterval().min) < TOL);
-		Assert.assertTrue("interval max bound is -10.5", Math.abs((-10.5) - yEi.getInterval().max) < TOL);
+		// the interval is offset to start at 0
+		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y + -12 + [0, 1.5]", yEi.toDefaultString());
 	}
 
 	public void testIntervalOptBranchAndBound(PythonBridge pb)
