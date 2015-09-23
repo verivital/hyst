@@ -578,7 +578,6 @@ public class SpaceExXMLPrinter
         appendCfgString(rv, "flowpipe-tolerance", "0.001");
 		appendCfgString(rv, "set-aggregation", "chull");
 		
-		System.out.println(". SpaceExXMLPrinter.java: config.timeTriggered = " + config.timeTriggered);
 		if (config.timeTriggered)
 			appendCfgString(rv, "map-zero-duration-jump-sets", "true");
 

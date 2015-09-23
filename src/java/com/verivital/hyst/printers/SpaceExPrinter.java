@@ -157,6 +157,7 @@ public class SpaceExPrinter extends ToolPrinter
 	    SpaceExDocument sed = new SpaceExDocument();
 	    sed.setVersion("0.2");
 	    sed.setMathFormat("SpaceEx");
+	    sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
 	    //sed.setTimeHorizon(-1);
 	    sed.setMaxIterations(Integer.parseInt((getParam("iter-max", config.settings.spaceExConfig.maxIterations))));
 	    
