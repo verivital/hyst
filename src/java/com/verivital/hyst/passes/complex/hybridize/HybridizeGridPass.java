@@ -3,6 +3,7 @@ package com.verivital.hyst.passes.complex.hybridize;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -22,6 +23,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -223,25 +225,39 @@ public class HybridizeGridPass extends TransformationPass
 	
 	public void affineOptimize()
 	{
-		PythonBridge pb = new PythonBridge();
-		pb.open();
-		
-		AffineOptimize.numOptimizations = 0;
-		long start = System.currentTimeMillis();
-		
+		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
+
 		for (ArrayList <Integer> indexList : modeIndexLists)
 		{
-			AutomatonMode am = ha.modes.get(indexListToModeName(indexList));			
 			HashMap<String, Interval> bounds = getIntervalBounds(indexList);
+			OptimizationParams op = new OptimizationParams();
 			
-			am.flowDynamics = AffineOptimize.createAffineDynamics(pb, originalDynamics, bounds);
+			op.bounds = bounds;
+			op.original = originalDynamics;
+			params.add(op);
 		}
+		
+		PythonBridge pb = new PythonBridge();
+		pb.open();
+		long start = System.currentTimeMillis();
+
+		AffineOptimize.createAffineDynamics(pb, params);
 		
 		long dif = System.currentTimeMillis() - start;
 		pb.close();
 		
-		Hyst.log("Completed " + AffineOptimize.numOptimizations + " optimizations in " + dif + " milliseconds. " +
-				(1000.0 * AffineOptimize.numOptimizations / dif) + " per second");
+		// store result
+		for (int i = 0; i < modeIndexLists.size(); ++i)
+		{
+			ArrayList <Integer> indexList = modeIndexLists.get(i);
+			AutomatonMode am = ha.modes.get(indexListToModeName(indexList));
+			
+			am.flowDynamics = params.get(i).result;
+		}
+		
+		int numOpt = modeIndexLists.size() * (ha.variables.size());
+		Hyst.log("Completed " + numOpt + " optimizations in " + dif + " milliseconds. " +
+				(1000.0 * numOpt / dif) + " per second");
 	}
 
 	private void linearOptimize(){

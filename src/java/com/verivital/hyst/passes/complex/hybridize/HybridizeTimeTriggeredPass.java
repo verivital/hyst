@@ -2,7 +2,7 @@ package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.HyperPoint;
@@ -21,6 +21,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
@@ -102,18 +103,6 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				throw new AutomatonExportException("Unknown last param: '" + parts[3] + "'. " + USAGE);
 		}
 	}
-    
-    private class SimulateStats
-    {
-    	public int totalBoxes = 0;
-    	public ArrayList <Double> totalWidth = new ArrayList <Double>();
-    	
-    	public SimulateStats(int numDims)
-    	{
-    		for (int i = 0; i < ha.variables.size(); ++i)
-    			totalWidth.add(0.0);
-    	}
-    }
 
     /**
      * Construct the time-triggered modes and transitions
@@ -124,117 +113,169 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		double[] initPt = AutomatonUtil.getInitialPoint(ha, config);
 		Hyst.log("Init point from config: " + Arrays.toString(initPt));
 
-		final double SIM_TIME_STEP = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
-		int numSteps = (int)Math.round(timeMax / SIM_TIME_STEP);
+		double simTimeStep = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
+		int numSteps = (int)Math.round(timeMax / simTimeStep);
+		
+		MyStepListener sl = new MyStepListener(simTimeStep);
+		
+		long simStartMs = System.currentTimeMillis();
+		Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, sl);
+		long simEndMs = System.currentTimeMillis();
+		
 		final PythonBridge pb = new PythonBridge();
 		pb.open();
-		long startMs = System.currentTimeMillis();
-		AffineOptimize.numOptimizations = 0;
+
+		long optStartMs = System.currentTimeMillis();
 		
-		final SimulateStats stats = new SimulateStats(ha.variables.size()); 
+		// hybridize all the flows
+		hybridizeFlows(sl.modes, sl.rects, pb);
 		
-		StepListener sl = new StepListener()
-		{
-        	private int modeCount = 0;
-        	private HyperPoint prevBoxPoint = null;
-        	private double prevBoxTime = -1;
-        	private AutomatonMode prevMode = null;
-        	
-			@Override
-			public void step(int numStepsCompleted, HyperPoint hp)
-			{
-				double curTime = numStepsCompleted * SIM_TIME_STEP;
-				double prevTime = (numStepsCompleted - 1) * SIM_TIME_STEP;
-				
-				if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
-				{
-					if (prevBoxPoint != null)
-					{
-						final String MODE_PREFIX = "_m_";
-						AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
-						am.flowDynamics = originalMode.flowDynamics;
-						am.invariant = originalMode.invariant;
-						
-				        // bloat bounding box between prevPoint and hp
-						HyperRectangle hr = boundingBox(prevBoxPoint, hp);
-						hr.bloatAdditive(epsilon);
-						
-						// set the flows based on the box
-						hybridizeFlow(am, hr, pb);
-						
-						// set invariant based on the box
-						setModeInvariant(am, hr);
-						
-				        // add transitions to error mode on all sides of box
-						addModeErrorTransitions(am, hr);
-						
-						// add to mode's invariant the time-triggered value
-						Expression timeConstraint = new Operation(Operator.LESSEQUAL, timeVariable, curTime);
-						am.invariant = Expression.and(am.invariant, timeConstraint);
-						
-						if (prevMode != null)
-						{
-							// add transitions at time trigger from previous mode
-							Expression timeGuard = new Operation(Operator.EQUAL, 
-									new Variable(timeVariable), new Constant(prevBoxTime));
-							ha.createTransition(prevMode, am).guard = timeGuard;
-							
-							// add transitions at the time trigger to the error mode (negation of invariant)
-							addErrorTransitionsAtTimeTrigger(prevMode, prevBoxTime, hr);
-						}
-						
-						prevMode = am;
-						
-						// update stats
-						stats.totalBoxes++;
-						
-						for (int i = 0; i < ha.variables.size(); ++i)
-							stats.totalWidth.set(i, stats.totalWidth.get(i) + hr.dims[i].width());
-					}
-					
-					// record the time-triggered point for the construction of the next box
-					prevBoxPoint = hp;
-					prevBoxTime = curTime;
-				}
-			}
-		};
-		
-		Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, sl);
-        
         // report stats
-		long difMs = System.currentTimeMillis() - startMs;
+		long simTime = simEndMs - simStartMs;
+		long optTime = System.currentTimeMillis() - optStartMs;
 		pb.close();
 		
-		Hyst.log("Completed " + AffineOptimize.numOptimizations + " optimizations in " + difMs + " milliseconds. " +
-				(1000.0 * AffineOptimize.numOptimizations / difMs) + " per second.");
+		int numOpt = sl.modes.size() * (sl.modes.get(0).flowDynamics.size() - 1);
 		
+		Hyst.log("Simulation time to construct " + sl.modes.size() + " modes: " + simTime + " milliseconds.");
+		
+		Hyst.log("Completed " + numOpt + " optimizations in " + optTime + " milliseconds. " +
+				(1000.0 * numOpt / optTime) + " per second.");
+		
+		printAverageBoxWidths(sl);
+	}
+	
+	private void printAverageBoxWidths(MyStepListener sl)
+	{
 		Hyst.log("Average box widths (after bloating):");
+		
+		ArrayList <Double> totalWidth = new ArrayList <Double>();
+		
+		for (int i = 0; i < ha.variables.size(); ++i)
+			totalWidth.add(0.0);
+		
+		for (HyperRectangle hr : sl.rects)
+		{
+			for (int d = 0; d < hr.dims.length; ++d)
+				totalWidth.set(d, totalWidth.get(d) + hr.dims[d].width());
+		}
+		
 		for (int i = 0; i < ha.variables.size(); ++i)
 		{
 			if (i == timeVarIndex)
 				continue;
 			
-			double avg = stats.totalWidth.get(i) / stats.totalBoxes;
+			double avg = totalWidth.get(i) / sl.rects.size();
 			Hyst.log(ha.variables.get(i) + ": " + avg);
+		}
+	}
+
+	private class MyStepListener extends StepListener
+	{
+    	private int modeCount = 0;
+    	private HyperPoint prevBoxPoint = null;
+    	private double prevBoxTime = -1;
+    	private AutomatonMode prevMode = null;
+    	private double simTimeStep;
+    	
+    	public ArrayList <AutomatonMode> modes = new ArrayList <AutomatonMode>();
+    	public ArrayList <HyperRectangle> rects = new ArrayList <HyperRectangle>();
+    	
+    	public MyStepListener(double simTimeStep)
+    	{
+    		this.simTimeStep = simTimeStep;
+    	}
+    	
+		@Override
+		public void step(int numStepsCompleted, HyperPoint hp)
+		{
+			double curTime = numStepsCompleted * simTimeStep;
+			double prevTime = (numStepsCompleted - 1) * simTimeStep;
+			
+			if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
+			{
+				if (prevBoxPoint != null)
+				{
+					final String MODE_PREFIX = "_m_";
+					AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
+					am.flowDynamics = originalMode.flowDynamics;
+					am.invariant = originalMode.invariant;
+					
+			        // bloat bounding box between prevPoint and hp
+					HyperRectangle hr = boundingBox(prevBoxPoint, hp);
+					hr.bloatAdditive(epsilon);
+					
+					// set the flows based on the box
+					modes.add(am);
+					rects.add(hr);
+					
+					// set invariant based on the box
+					setModeInvariant(am, hr);
+					
+			        // add transitions to error mode on all sides of box
+					addModeErrorTransitions(am, hr);
+					
+					// add to mode's invariant the time-triggered value
+					Expression timeConstraint = new Operation(Operator.LESSEQUAL, timeVariable, curTime);
+					am.invariant = Expression.and(am.invariant, timeConstraint);
+					
+					if (prevMode != null)
+					{
+						// add transitions at time trigger from previous mode
+						Expression timeGuard = new Operation(Operator.EQUAL, 
+								new Variable(timeVariable), new Constant(prevBoxTime));
+						ha.createTransition(prevMode, am).guard = timeGuard;
+						
+						// add transitions at the time trigger to the error mode (negation of invariant)
+						addErrorTransitionsAtTimeTrigger(prevMode, prevBoxTime, hr);
+					}
+					
+					prevMode = am;
+				}
+				
+				// record the time-triggered point for the construction of the next box
+				prevBoxPoint = hp;
+				prevBoxTime = curTime;
+			}
 		}
 	}
 	
 	/**
-	 * Change the (nonlinear) flow in the given mode to a hybridized one with affine dynamics
+	 * Change the (nonlinear) flow in each mode to a hybridized one with affine dynamics
 	 * @param am the mode to change 
 	 * @param hr the constraint set, in the order of ha.variablenames
 	 */
-	private void hybridizeFlow(AutomatonMode am, HyperRectangle hr, PythonBridge pb)
+	private void hybridizeFlows(ArrayList<AutomatonMode> modes,
+			ArrayList<HyperRectangle> rects, PythonBridge pb)
 	{
-		HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		
-		for (int dim = 0; dim < ha.variables.size(); ++dim)
+		for (int i = 0; i < modes.size(); ++i)
 		{
-			String name = ha.variables.get(dim);
-			bounds.put(name, hr.dims[dim]);
+			AutomatonMode am = modes.get(i);
+			HyperRectangle hr = rects.get(i);
+			
+			OptimizationParams op = new OptimizationParams();
+			op.original = am.flowDynamics;
+			
+			for (int dim = 0; dim < ha.variables.size(); ++dim)
+			{
+				String name = ha.variables.get(dim);
+				op.bounds.put(name, hr.dims[dim]);
+			}
+			
+			params.add(op);
 		}
 		
-		am.flowDynamics = AffineOptimize.createAffineDynamics(pb, am.flowDynamics, bounds);
+		 AffineOptimize.createAffineDynamics(pb, params);
+		
+		 for (int i = 0; i < modes.size(); ++i)
+		 {
+			AutomatonMode am = modes.get(i);
+			OptimizationParams op = params.get(i);
+			
+			am.flowDynamics = op.result;
+		 }
 	}
 	
 	/**

@@ -65,25 +65,92 @@ public class PythonUtil
 	 * @param pb the PythonBridge interface to use
 	 * @param exp the expression to minimize and maximize
 	 * @param bounds the interval bounds for each variable used in the expression
-	 * @return an interval bounds on exp
+	 * @return an interval bounds on exp (the result)
 	 */
 	public static Interval scipyOptimize(PythonBridge pb, Expression exp, HashMap<String, Interval> bounds)
 	{
+		ArrayList <Expression> exps = new ArrayList <Expression>(1);
+		ArrayList <HashMap<String, Interval>> b = new ArrayList <HashMap<String, Interval>>(1);
+		
+		exps.add(exp);
+		b.add(bounds);
+		
+		return scipyOptimize(pb, exps, b).get(0);
+	}
+	
+	/**
+	 * Optimize a function in a hyper-rectangle using scipy.optimize.basinhopping
+	 *
+	 * This is a a parallel version the call above. It will use the number of cores available in the system.
+	 *
+	 * @param pb the PythonBridge interface to use
+	 * @param exp_list a list of expression to minimize and maximize
+	 * @param bounds_list a list of interval bounds for each variable used in the expression
+	 * @return an list of interval bounds on exp (the results)
+	 */
+	public static List<Interval> scipyOptimize(PythonBridge pb, List<Expression> expList, 
+			List<HashMap<String, Interval>> boundsList)
+	{
+		
+		int size = expList.size();
+		
+		if (size != boundsList.size())
+			throw new AutomatonExportException("expression list and bounds list should be same size");
+		
+		// python needs explicit functions (not lambdas) for Pool.map
+		String FUNC_PREFIX = "_func";
+		String varList = makeVariableList(boundsList.get(0).keySet());
+		
+		for (int i = 0; i < size; ++i)
+		{
+			Expression e = expList.get(i);
+			
+			// make sure bounds are provided for all the variables in the expression
+			checkAllVariablesHaveBounds(e, boundsList.get(i));
+			
+			StringBuilder s = new StringBuilder();
+			s.append("def " + FUNC_PREFIX + i + " ((" + varList + ")):\n");
+			s.append("    return " + pyPrinter.print(e) + "\n");
+			
+			String res = pb.sendWithTrailingNewline(s.toString());
+			
+			if (res.length() > 0)
+				throw new AutomatonExportException("Got result when defining function (didn't expect one): " + res);
+		}
+		
 		StringBuilder s = new StringBuilder();
-
-		s.append("print opt(lambda (");
-		s.append(makeVariableList(bounds.keySet()));
-		s.append("): (");
-
-		s.append(pyPrinter.print(exp));
-		s.append("),");
-		s.append(toPythonIntervalList(bounds));
-		s.append(")");
+		s.append("print opt_multi([");
+		
+		for (int i = 0; i < size; ++i)
+		{
+			s.append("(");
+			
+			s.append(FUNC_PREFIX + i + ", ");
+			s.append(toPythonIntervalList(boundsList.get(i)));
+			s.append("),");
+		}
+				
+		s.append("])");
 
 		pb.send("from pythonbridge.scipy_optimize import *");
 		String result = pb.send(s.toString());
+		
+		return parseIntervalListResult(result);
+	}
 
-		return parseIntervalResult(result);
+	private static void checkAllVariablesHaveBounds(Expression e, HashMap<String, Interval> bounds)
+	{
+		Set <String> vars = AutomatonUtil.getVariablesInExpression(e);
+		
+		for (String var : vars)
+		{
+			if (!bounds.containsKey(var))
+			{
+				throw new AutomatonExportException("Bounds not provided for variable: " + var + " in expression: " 
+						+ e.toDefaultString());
+			}
+		}
+		
 	}
 
 	/**
@@ -171,6 +238,50 @@ public class PythonUtil
 		s.append("}");
 
 		return s.toString();
+	}
+	
+	private static List<Interval> parseIntervalListResult(String str)
+	{
+		if (!str.startsWith("[") || !str.endsWith("]"))
+			throw new AutomatonExportException("Python result wasn't a list: " + str);
+		
+		String rem = str.substring(1, str.length() - 1);
+		int index = 0;
+		ArrayList <Interval> rv = new ArrayList <Interval>();
+		
+		while (index < rem.length())
+		{
+			if (rem.charAt(index) == ',')
+				++index;
+			
+			if (rem.charAt(index) == ' ')
+				++index;
+			
+			if (rem.charAt(index) != '[')
+				throw new AutomatonExportException("Malformed interval list (expected '['): " + str);
+			else
+				++index;
+			
+			int commaIndex = rem.indexOf(',', index);
+			int rightIndex = rem.indexOf(']', index);
+			
+			String first = rem.substring(index, commaIndex);
+			String second = rem.substring(commaIndex + 1, rightIndex);
+			
+			try
+			{
+				Interval i = new Interval(Double.parseDouble(first), Double.parseDouble(second));
+				rv.add(i);
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AutomatonExportException("Error formatting python optimization result", e);
+			}
+			
+			index = rightIndex + 1;
+		}
+		
+		return rv;
 	}
 
 	private static Interval parseIntervalResult(String str)
