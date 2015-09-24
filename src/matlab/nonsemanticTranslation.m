@@ -108,39 +108,6 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
                 end
             end
         end
-
-    %     % Parsing constant from hybidautomaton into SLSF
-    %     const = ha.constants;
-    %     constKey = const.keySet().toArray;
-    %     if (const.containsKey('tmax') || const.containsKey('Tmax'))
-    %         if const.containsKey('Tmax')
-    %             stopTime = [const.get('Tmax').middle()];
-    %         else 
-    %             stopTime = [const.get('tmax').middle()];
-    %         end    
-    %        % set simulation time to tmax
-    %         set_param(model.Name, 'StopTime', num2str(stopTime));
-    %         const.remove('tmax');
-    %         const.remove('Tmax');
-    %     end
-    %     if ~isempty(const)
-    %         constValue = const.values.toArray;
-    %         constKey = const.keySet().toArray;
-    %         % add constants
-    %         for i_const = 1: const.size
-    %             sF_cons = Stateflow.Data(chart); 
-    %             sF_cons.Name = constKey(i_const);
-    %             sF_cons.Scope = 'Constant';
-    %             sF_cons.Props.InitialValue = num2str(constValue(i_const).middle());
-    %         end
-    %     end
-        %add scope to see the outputs
-    %     add_block('built-in/Scope',[name '/Scope'],'NumInputPorts',num2str(numVar+1),'Position',[350, 25, 400, 100],...
-    %             'SaveToWorkspace', 'on', ...
-    %         'SaveName', 'ScopeData', ...
-    %         'DataFormat', 'Structure', ...
-    %         'LimitDataPoints', 'off');
-
         %
         % create local, output, and input variables in SLSF model
         for i = 1: numVar
@@ -152,15 +119,12 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
             % link the outputs to scope
            % add_line(model.Name,[chart.Name,'/',num2str(i)],['Scope/',num2str(i)],'autorouting','on');     
         end
-        [num_port] = addOutput(num_port,[comp_name(i_comp),'_location'],chart);E
+        [num_port] = addOutput(num_port,[comp_name(i_comp),'_location'],chart);
         if ha.modes.size() > 1 && isNetwork
             sF(ha.modes.size()+1) = Stateflow.State(chart);
             sF(ha.modes.size()+1).position = [x+3/2*w  y-h/4 w*2*position_x+10 h*(position_y+3/2)];
             sF(ha.modes.size()+1).Name = comp_name(i_comp);
         end
- 
-
-
 
         width = 150;
         heigth = 150;
@@ -201,7 +165,6 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
                 else    
                     TransitionPointer.SourceOClock = (i_trans + 1)*6+rand;
                     TransitionPointer.DestinationOClock = (i_trans + 1)*6+rand;
-
                 end       
             end        
             Guard_Label = '';

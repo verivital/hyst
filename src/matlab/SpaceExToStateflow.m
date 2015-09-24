@@ -31,7 +31,8 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 
     %Ex: how to instantiate java objects into Matlab
     %add java library for spaceex parsing library (from spaceex2boogie)
-    javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
+    %javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
+    javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'Hyst.jar']);
     addpath(['..', filesep, 'lib', filesep]);
     
     % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
@@ -170,20 +171,7 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 %         ex
 %         ex.stack
 %     end
-    % test network component
-    %net = com.verivital.hyst.ir.network;
-    
-%     config.root.constants
-%     %
-%     components = config.root.template.children
-%     comp_name = components.keySet().toArray()
-%     ha = components.get(comp_name(1)).child
-%     ha.variables.toArray()
-%     ha.constants
-%     c1.modes
-
-    
-    
+  
     %com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
     
     %ha = ... flatten here
@@ -215,35 +203,16 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     ch.Name = strcat('SF_',name);  
     % Update chart method type to be continuous
     ch.ChartUpdate='CONTINUOUS';
-  
     % LUAN TODO next: refactor and merge these, all of this should be the same
     % for the semantics vs. non-semantics preserving converters
     %basecomponent
     if (opt_semantics)
-        
         com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
         %ha = ... flatten here
         ha = config.root;
         semanticTranslation(ch, config, ha, name, opt_eager_violation);
     else     
-%         % test network component
-%         %
-%         components = config.root.template.children; 
-%         comp_name = components.keySet().toArray();
-%         comp_size = components.size();
-%         if comp_size > 1
-%             isNetwork = true;
-%             set(ch,'Decomposition','PARALLEL_AND');
-%         end
-%         % using list of variable to eliminate duplicated variables and
-%         % outputs declaration
-%         varList = java.util.LinkedList();
-%         for i_comp = 1: comp_size
-%             ha = components.get(comp_name(i_comp)).child;
         [sF] = nonsemanticTranslation(isNetwork,m,ch,config,opt_cfg_reader);
-            %[sF] = Location_SpaceExToStateflow(m,ch,printer,config,ha,name,opt_cfg_reader,opt_display_flow,opt_display_invariant);
-            %Transition_SpaceExToStateflow(sF,ch,printer,ha,opt_display_guard);
-%         end
     end
     
     % Save model file
