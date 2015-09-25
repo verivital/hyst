@@ -7,6 +7,7 @@ import threading
 import os
 import shutil
 import re
+import collections
 
 from hybrid_tool import HybridTool
 from hybrid_tool import RunCode
@@ -167,14 +168,14 @@ class SpaceExTool(HybridTool):
         '''create the tool-spcific processed output object
         For SpaceEx, this expects output-format=INTV
 
-        The result object is a dictionary, with
+        The result object is an ordered dictionary, with
         'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
         'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
         '''
 
         filename = directory + '/plotdata.txt'
-        var = {} # map from var_name -> (min, max)
-        loc = {} # map from loc_name->{map from var_name -> (min,max)}
+        var = collections.OrderedDict() # map from var_name -> (min, max)
+        loc = collections.OrderedDict() # map from loc_name->{map from var_name -> (min,max)}
 
         # state machine when reading file
         state_init = 0

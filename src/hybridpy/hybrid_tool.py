@@ -68,6 +68,10 @@ def tool_main(tool_obj, extra_args=None):
     print "Exit code: " + str(code)
     sys.exit(code)
 
+def _kill_pg(p):
+    '''kill a process' processgroup'''
+    os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+
 def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None):
     '''run a tool by creating a subprocess and directing output to print_pipe
     image may be None
@@ -96,9 +100,10 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
     try:
         proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+        print ".hybrid_tool timeout =", timeout
+        
         if timeout is not None:
-            kill_pg = lambda p: os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-            timer = threading.Timer(timeout, kill_pg, [proc])
+            timer = threading.Timer(timeout, _kill_pg, [proc])
             timer.daemon = True
             timer.start()
 
