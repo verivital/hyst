@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="MediaPump">
+    <param name="OD" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmut" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="g" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="ODderiv" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="gmut" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="T" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="gmutGain" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="ODt" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="tmutTh" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="gdil" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="MPon" x="287.0" y="143.0" width="268.0" height="130.0">
+      <flow>OD' == ODderiv &amp;&amp; 
+tmut' ==  1&amp;&amp; t1' ==1</flow>
+    </location>
+    <location id="2" name="MPoff" x="775.0" y="177.0" width="268.0" height="130.0">
+      <flow>OD' == ODderiv &amp;&amp; 
+tmut' ==  1&amp;&amp; t1' ==1</flow>
+    </location>
+    <location id="3" name="Mutate" x="474.0" y="422.0" width="268.0" height="130.0">
+      <flow>tmut' == 1</flow>
+    </location>
+    <transition source="1" target="2">
+      <guard>OD&lt;=ODt&amp;&amp;t1&gt;=T</guard>
+      <assignment>t1 := 0&amp;&amp;
+ODderiv :=OD*g</assignment>
+      <labelposition x="-103.0" y="-115.0" width="302.0" height="100.0" />
+      <middlepoint x="455.5" y="133.5" />
+    </transition>
+    <transition source="2" target="1">
+      <guard>OD &gt; ODt&amp;&amp;t1&gt;=T</guard>
+      <assignment>t1:= 0&amp;&amp;
+ODderiv := OD*(g-gdil)</assignment>
+      <labelposition x="-19.0" y="12.0" width="256.0" height="82.0" />
+      <middlepoint x="447.5" y="247.5" />
+    </transition>
+    <transition source="1" target="3">
+      <guard>tmut &gt;= tmutTh</guard>
+      <assignment>tmut :=0 &amp;&amp;
+g := g+gmut &amp;&amp;
+gmut := gmutGain*gmut</assignment>
+      <labelposition x="-157.0" y="24.0" width="198.0" height="92.0" />
+      <middlepoint x="212.5" y="322.5" />
+    </transition>
+    <transition source="3" target="1">
+      <labelposition x="15.0" y="-47.0" />
+    </transition>
+  </component>
+  <component id="DrugPump">
+    <param name="OD" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="ODderiv" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t3" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="g" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="k" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="T" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="gdrugGain" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="ODt" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="ODderivTh" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="ODdrug" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="2" name="DPon" x="181.0" y="266.0" width="268.0" height="130.0">
+      <flow>t3' ==1 &amp;&amp; k'==0</flow>
+    </location>
+    <location id="3" name="DPoff" x="741.0" y="253.0" width="268.0" height="130.0">
+      <flow>t3' ==1&amp;&amp; k'==0</flow>
+    </location>
+    <transition source="2" target="3">
+      <guard>t3&gt;=4*T</guard>
+      <assignment>t3 := 0&amp;&amp; k := 1</assignment>
+      <labelposition x="-145.0" y="-110.0" width="302.0" height="100.0" />
+      <middlepoint x="455.5" y="133.5" />
+    </transition>
+    <transition source="3" target="2">
+      <guard>OD &gt;= ODt &amp;&amp; ODderiv &gt;= ODderivTh  &amp;&amp; t3&gt;=T</guard>
+      <assignment>t3:= 0&amp;&amp;
+k:= 0&amp;&amp;
+OD := ODdrug * OD&amp;&amp;
+g=gdrugGain*g</assignment>
+      <labelposition x="-151.0" y="24.0" width="322.0" height="120.0" />
+      <middlepoint x="448.5" y="332.5" />
+    </transition>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="2" name="ticking" x="223.0" y="131.0" width="124.0" height="104.0">
+      <invariant>t &lt;= tmax</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="network">
+    <param name="OD" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmut" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="g" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="ODderiv" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="gmut" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="T" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="gmutGain" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="ODt" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="tmutTh" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="gdil" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="t3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="k" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="gdrugGain" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="ODderivTh" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="ODdrug" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="MediaPump" as="MediaPump_1" x="450.0" y="122.0">
+      <map key="OD">OD</map>
+      <map key="t1">t1</map>
+      <map key="tmut">tmut</map>
+      <map key="g">g</map>
+      <map key="ODderiv">ODderiv</map>
+      <map key="gmut">gmut</map>
+      <map key="T">T</map>
+      <map key="gmutGain">gmutGain</map>
+      <map key="ODt">ODt</map>
+      <map key="tmutTh">tmutTh</map>
+      <map key="gdil">gdil</map>
+    </bind>
+    <bind component="DrugPump" as="DrugPump_1" x="442.0" y="247.0">
+      <map key="OD">OD</map>
+      <map key="ODderiv">ODderiv</map>
+      <map key="t3">t3</map>
+      <map key="g">g</map>
+      <map key="k">k</map>
+      <map key="T">T</map>
+      <map key="gdrugGain">gdrugGain</map>
+      <map key="ODt">ODt</map>
+      <map key="ODderivTh">ODderivTh</map>
+      <map key="ODdrug">ODdrug</map>
+    </bind>
+    <bind component="timer" as="timer_1" x="447.0" y="399.0">
+      <map key="t">t</map>
+      <map key="tmax">tmax</map>
+    </bind>
+  </component>
+</sspaceex>
+
