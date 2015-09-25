@@ -10,13 +10,14 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
     num_port = 0; 
     if comp_size > 1
         isNetwork = true;
-        set(chart,'Decomposition','PARALLEL_AND');
+        %set(chart,'Decomposition','PARALLEL_AND');
     end
+    %set(chart,'Decomposition','PARALLEL_AND')
     % initial location
     initLoc = config.init.keySet().toString();
     initLoc  = strrep(char(strrep(char(initLoc),']','')),'[','');
     % for network system, only label one initial condition
-    netIntLabel = true;
+    %netIntLabel = true;
     modeTotal = 0;
     % using list of variable, constants to eliminate duplicated variables and
     % outputs declaration
@@ -27,8 +28,8 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
     for i_comp = 1: comp_size
         ha = components.get(comp_name(i_comp)).child;
         %position parmameter;
-        x = 20;
-        y = 200*i_comp;
+        x = 120;
+        y = 300*i_comp;
         w = 150;
         h = 150;
         % iterate over mode   
@@ -49,6 +50,13 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
         modeName = ha.modes.keySet().toArray;
         %basecompone
         for i_mode = 1 : ha.modes.size()
+%             if  isNetwork
+%                 set(chart,'Decomposition','PARALLEL_AND')
+%                 %set(chart,'Decomposition','EXCLUSIVE_OR');
+%             end
+%             if ha.modes.size()>1
+%                 set(chart,'Decomposition','EXCLUSIVE_OR');
+%             end
             modeTotal = modeTotal + 1;
             %clear mode mode binds transitions;
             mode = ha.modes.get(modeName(i_mode));
@@ -84,25 +92,14 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
 
             % create a default transition
             % set defaut transtion acquired from configuration field 
-            %|| (ha.modes.size() == 1 && modeTotal == comp_size && isNetwork)
             if opt_cfg_reader 
                 if ~isNetwork || (ha.modes.size() > 1 && isNetwork) 
                     if strfind(initLoc, modeName(i_mode))
-                       defaultTransition = Stateflow.Transition(chart);
-                       defaultTransition.Destination = sF(i_mode);
-                       dtA.DestinationOClock = 0;
                        xsource = sF(i_mode).Position(1)+sF(i_mode).Position(3)/2;
                        ysource = sF(i_mode).Position(2)-30;
-                       dtA.SourceEndPoint = [xsource ysource];
-                       dtA.MidPoint = [xsource ysource+15];
+                       [defaultTransistion] = addInittransistion(chart,sF(i_mode),xsource,ysource);
                        if ~isNetwork
-                           defaultTransition.LabelString = char(printer.getTransitionInit2inLabel(mode,1,ha.constants));
-                       else
-                           if netIntLabel == true
-                               intmode = ha.createMode(initLoc);
-                               defaultTransition.LabelString = char(printer.getTransitionInit2inLabel(intmode,1,const));
-                               netIntLabel = false;
-                           end    
+                           defaultTransistion.LabelString = char(printer.getTransitionInit2inLabel(mode,1,ha.constants));
                        end
                     end
                 end
@@ -121,9 +118,18 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
         end
         [num_port] = addOutput(num_port,[comp_name(i_comp),'_location'],chart);
         if ha.modes.size() > 1 && isNetwork
-            sF(ha.modes.size()+1) = Stateflow.State(chart);
-            sF(ha.modes.size()+1).position = [x+3/2*w  y-h/4 w*2*position_x+10 h*(position_y+3/2)];
-            sF(ha.modes.size()+1).Name = comp_name(i_comp);
+            % add state outside each components
+            [bagState] = addState(chart,x+3/2*w,y-h/4,w*2*position_x+10,h*(position_y+3/2),comp_name(i_comp));
+        end
+        if i_comp == comp_size && comp_size > 1
+            % add system state
+            [system] = addState(chart,x+w,150,2000,2*i_comp*h*(position_y+3/2),model.name);
+            set(system,'Decomposition','PARALLEL_AND');
+            xsource = system.Position(1)+sF(i_mode).Position(3)/2;
+            ysource = system.Position(2)-30;
+            [defaultTransistion] = addInittransistion(chart,system,xsource,ysource);
+            intmode = ha.createMode(initLoc);
+            defaultTransistion.LabelString = char(printer.getTransitionInit2inLabel(intmode,1,const));
         end
 
         width = 150;
@@ -150,18 +156,13 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
 
             % set the position of transition
             if trs.size() == 1
-                TransitionPointer.SourceOClock = 0;
-                TransitionPointer.DestinationOClock = 3;
-                TransitionPointer.MidPoint = [500 125];
-                TransitionPointer.LabelPosition = [450 100 0 0]; 
+                [TransitionPointer] = transistionPos(TransitionPointer,0,3,500,125,450,100);
             else
                 % add random number to make sure transitions do not overlap
                 % each other
                 if (transSource == transTarget)
-                    TransitionPointer.SourceOClock = (i_trans - 1)*(3+rand);
-                    TransitionPointer.DestinationOClock = (i_trans)*(6+rand);
-                    TransitionPointer.MidPoint = [550+ i_trans*50 175];
-                    TransitionPointer.LabelPosition = [500 150-i_trans*50 0 0]; 
+                    [TransitionPointer] = transistionPos(TransitionPointer,(i_trans - 1)*(3+rand),(i_trans)*(6+rand),...
+                                                        550+ i_trans*50,175,500,150-i_trans*50);
                 else    
                     TransitionPointer.SourceOClock = (i_trans + 1)*6+rand;
                     TransitionPointer.DestinationOClock = (i_trans + 1)*6+rand;
@@ -210,7 +211,29 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
     end
     addScope(num_port,model,chart);
 end    
+function [out] = addState(chart,x,y,w,h,name)
+    state = Stateflow.State(chart);
+    state.position = [x y w h];
+    state.Name = name;
+    out = state ;
+end
+function [out] = addInittransistion(chart,state,xsource,ysource)
+    defaultTransition = Stateflow.Transition(chart);
+    defaultTransition.Destination = state;
+    defaultTransition.DestinationOClock = 0;
+    defaultTransition.SourceEndPoint = [xsource ysource];
+    defaultTransition.MidPoint = [xsource ysource+15];
+    defaultTransition.LabelPosition = [xsource-50 ysource-50 0 0];
+    out = defaultTransition;
+end
 
+function [out] = transistionPos(TransitionPointer,src,dst,midx,midy,labelx,labely)
+    TransitionPointer.SourceOClock = src;
+    TransitionPointer.DestinationOClock = dst;
+    TransitionPointer.MidPoint = [midx midy];
+    TransitionPointer.LabelPosition = [labelx labely 0 0]; 
+    out = TransitionPointer;
+end
 function [out] = addOutput(num_port,name,chart)
     sF_output = Stateflow.Data(chart); 
     sF_output.Name = name;
