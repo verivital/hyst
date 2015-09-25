@@ -34,7 +34,7 @@ def get_script_path():
 def valid_image(s):
     '''check if the given string is a valid output image (.png) path'''
 
-    if not s.endswith(".png"):
+    if not s.endswith(".png") and not s == '-':
         raise argparse.ArgumentTypeError('Image does not end in .png: ' + s)
 
     return s
@@ -48,8 +48,9 @@ def tool_main(tool_obj, extra_args=None):
 
     parser = argparse.ArgumentParser(description='Run ' + tool_obj.tool_name)
     parser.add_argument('model', help='input model file')
-    parser.add_argument('image', nargs='?', help='output image file', type=valid_image)
+    parser.add_argument('image', nargs='?', help='output image file (use "-" to skip)', type=valid_image)
     parser.add_argument('--debug', '-d', action='store_true', help='save intermediate files directory')
+    parser.add_argument('--explicit_temp_dir', '-e', nargs='?', help='specify explicitly the temp dir')
 
     if extra_args is not None:
         for flag, help_text in extra_args:
@@ -67,8 +68,9 @@ def tool_main(tool_obj, extra_args=None):
     print "Exit code: " + str(code)
     sys.exit(code)
 
-def run_tool(tool_obj, model, image, timeout, print_pipe):
+def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None):
     '''run a tool by creating a subprocess and directing output to print_pipe
+    image may be None
 
     returns a value in RunCode.*
     '''
@@ -81,8 +83,15 @@ def run_tool(tool_obj, model, image, timeout, print_pipe):
 
     script_file = inspect.getfile(tool_obj.__class__)
 
+    if image is None:
+        image = "-" # no image indicator
+    
     # -u is unbuffered stdout, may affect performance if there is a lot of output
     params = [sys.executable, "-u", script_file, model, image]
+    
+    if explicit_temp_dir is not None:
+        params.append("--explicit_temp_dir")
+        params.append(explicit_temp_dir)
 
     try:
         proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -184,6 +193,8 @@ class HybridTool(object):
     debug = False # if set to true, will copy temp work folder back to model folder
 
     default_extension = None
+    explicit_temp_dir = None
+    output_obj = None
 
     def __init__(self, tool_name, default_ext, path):
         '''Initialize the tool for running. This checks if the tool exists
@@ -197,13 +208,26 @@ class HybridTool(object):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
 
         self.original_model_path = args.model
-        self.image_path = os.path.realpath(args.image)
+
+        if args.image != "-":
+            self.image_path = os.path.realpath(args.image)
 
         if not os.path.exists(self.original_model_path):
             raise RuntimeError('Model file not found at path: ' + self.original_model_path)
 
-        if args.debug is not None:
-            self.debug = args.debug
+        if args.debug == True:
+            self.set_debug(True)
+
+        if args.explicit_temp_dir is not None:
+            self.set_explicit_temp_dir(args.explicit_temp_dir)
+
+    def set_debug(self, d):
+        '''set the debug flag (will copy temp directory to current working directory)'''
+        self.debug = d
+
+    def set_explicit_temp_dir(self, directory):
+        '''set the temp directory where computation will be performed'''
+        self.explicit_temp_dir = directory
 
     def run(self):
         '''runs the tool and visualization
@@ -222,6 +246,7 @@ class HybridTool(object):
 
         rv = RunCode.SUCCESS
         old_dir = os.getcwd()
+        real_path = os.path.realpath(self.original_model_path)
         temp_dir = self._make_temp_dir()
 
         try:
@@ -237,7 +262,7 @@ class HybridTool(object):
         finally:
             if self.debug:
                 # copy the temp folder to the current working directory
-                dest_dir = os.path.dirname(os.path.realpath(self.original_model_path))
+                dest_dir = os.path.dirname(real_path)
                 dest = dest_dir + "/debug"
 
                 if os.path.exists(dest):
@@ -246,13 +271,19 @@ class HybridTool(object):
                 shutil.copytree(temp_dir, dest)
 
             os.chdir(old_dir)
-            shutil.rmtree(temp_dir)
+
+            # delete the temp dir, if it wasn't explicitly provided
+            if self.explicit_temp_dir is None:
+                shutil.rmtree(temp_dir)
 
         return rv
 
     def _make_temp_dir(self):
         '''make a temporary directory for the computation and return its path'''
-        name = os.path.join(tempfile.gettempdir(), self.tool_name + \
+        if self.explicit_temp_dir is not None:
+            name = self.explicit_temp_dir
+        else:
+            name = os.path.join(tempfile.gettempdir(), self.tool_name + \
                         "_" + str(time.time()) + "_" + str(random.random()))
 
         os.makedirs(name)
@@ -269,6 +300,10 @@ class HybridTool(object):
     def default_ext(self):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
+
+    def create_output(self, _):
+        '''Assigns the output object (self.output_obj). Tool working files are stored in the passed-in directory.'''
+        raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
 
     @abc.abstractmethod
     def _run_tool(self):

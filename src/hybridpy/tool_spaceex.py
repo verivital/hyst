@@ -6,6 +6,7 @@ import subprocess
 import threading
 import os
 import shutil
+import re
 
 from hybrid_tool import HybridTool
 from hybrid_tool import RunCode
@@ -162,9 +163,93 @@ class SpaceExTool(HybridTool):
 
         shutil.copyfile(self.original_cfg_path, self.cfg_path)
 
+    def create_output(self, directory):
+        '''create the tool-spcific processed output object
+        For SpaceEx, this expects output-format=INTV
+
+        The result object is a dictionary, with
+        'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
+        'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
+        '''
+
+        filename = directory + '/plotdata.txt'
+        var = {} # map from var_name -> (min, max)
+        loc = {} # map from loc_name->{map from var_name -> (min,max)}
+
+        # state machine when reading file
+        state_init = 0
+        state_vars = 1
+        state_locs = 2
+        state = state_init
+
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.strip() # remove trailing newline
+                
+                if len(line) == 0: # skip blank lines
+                    continue
+
+                if state == state_init:
+                    if line.startswith('Bounds on the variables over the entire set'):
+                        state = state_vars
+                    elif line.startswith('empty set'):
+                        state = state_locs # prevents error that file format was wrong
+                        break
+                elif state == state_vars:
+                    if line.startswith('Location-wise bounds on the variables'):
+                        state = state_locs
+                    else:
+                        self._read_var_line(line, var)
+                elif state == state_locs:
+                    self._read_loc_line(line, loc)
+
+        if state == state_init:
+            raise RuntimeError('Format of plotdata.txt was wrong. Did you use output-format=INTV?')
+
+        self.output_obj = {'locations':loc, 'variables':var}
+
+    # line = 'Location: loc(Heater)==heater_on & loc(Controller)==controller_on'
+    loc_re = re.compile(r'loc\([^)]*\)==([^ ]+)') # use with findall
+    loc_obj = None
+        
+    def _read_loc_line(self, line, result):
+        '''read a line in the result file in the location section. Parse it and store in result.'''
+
+        if line.startswith("Location:"):
+            parts = self.loc_re.findall(line)
+
+            if len(parts) == 0:
+                raise RuntimeError("Error parsing location name in result line: " + line)
+
+            loc_name = ".".join(parts)
+            self.loc_obj = {}
+            result[loc_name] = self.loc_obj
+        else:
+            self._read_var_line(line, self.loc_obj)
+        
+    # sys1.t: [3.89966e-15,50.0001]
+    var_re = re.compile(r'([^.]+)\.([^:]+)\: \[([^,]+),([^\]]+)\]')
+        
+    def _read_var_line(self, line, result):
+        '''read a line in the result file in the variables section. Parse it and store in result.'''        
+
+        if line.startswith("SPACETIME_TIME"):
+            pass
+        else:
+            m = self.var_re.match(line)
+
+            if m is None or len(m.groups()) != 4:
+                raise RuntimeError("Variable regular expression result didn't match line: " + line)
+
+            var = m.group(2)
+            imin = float(m.group(3))
+            imax = float(m.group(4))
+
+            result[var] = (imin, imax)
+
 def _main():
     '''main func for running SpaceEx'''
-
+    
     extra_args = [('-cfg', 'cfg file')]
     tool_main(SpaceExTool(), extra_args)
 

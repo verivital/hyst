@@ -7,6 +7,7 @@ import time
 import sys
 import random
 import argparse
+import shutil
 
 import hybrid_tool
 from hybrid_tool import get_script_path
@@ -64,9 +65,29 @@ class Engine(object):
     print_output = False
     save_output = False
     output_lines = []
+    process_output_dir = None
+    result_obj = None # the result object, set if set_process_output is ture
 
     def __init__(self):
         pass
+
+    def set_create_result(self, val):
+        '''Sets whether hypy should perform tool-specific processing of the output.
+
+        If set, you can get the (tool-specific) result object by calling get_result()
+        '''
+        if val == False:
+            self.process_output_dir = None
+        else:
+            self.process_output_dir = "" # if it's not None it gets regenerated every time we run
+
+    def get_result(self):
+        '''Get the processed result object, only valid if set_create_result(True) was called'''
+
+        if self.result_obj is None and self.process_output_dir is None:
+            raise RuntimeError("Result was None; did you call set_create_result(True)?")
+
+        return self.result_obj
 
     def set_save_model_path(self, path):
         '''Set the path for saving the model file (optional)'''
@@ -134,42 +155,19 @@ class Engine(object):
             self._add_terminal_output(line)
             line = pipe.readline()
 
-    def run(self, run_tool=True):
-        '''Converts the model in Hyst and runs it with the appropriate
-        tool to produce a plot file.
-
-        returns SUCCESS if successful, otherwise can return one of the
-        ERROR_* codes
-        '''
-
+    def _run_hyst(self):
+        '''runs hyst on the model, returning a code in RUN_CODES'''
+        rv = RUN_CODES.SUCCESS
         start_time = time.time()
-
-        assert self.model_path != None, 'set_model() should be called before run()'
-        assert self.tool_name != None, 'set_tool() should be called before run()'
-
-        if self.image_path is None:
-            self.image_path = os.path.splitext(self.model_path)[0] + ".png"
-
         format_flag = "-" + self.tool_name
 
         self.output_lines = []
         self._add_terminal_output("Running " + self.tool_name + " on model " + self.model_path + "\n")
 
-        # convert the model
-        tool = TOOLS.get(self.tool_name)
-
-        out_model = self.save_model_path
-
-        if out_model is None:
-            out_model = os.path.join(tempfile.gettempdir(), self.tool_name + \
-                        "_" + str(time.time()) + "_" + str(random.random()) + tool.default_ext())
-
         hyst_path = get_env_var_path('hyst', DEFAULT_HYST_PATH)
         params = ['java', '-jar', hyst_path, self.model_path]
         params += self.tool_params
-        params += ['-o', out_model, format_flag] # do after to override any user flags
-
-        rv = RUN_CODES.SUCCESS
+        params += ['-o', self.save_model_path, format_flag] # do after to override any user flags
 
         try:
             proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -183,14 +181,56 @@ class Engine(object):
                 self._add_terminal_output('Error: Hyst returned nonzero exit code.\n')
 
             dif = time.time() - start_time
-            self._add_terminal_output("Seconds for Hyst conversion: " + str(dif) + '\n')
         except OSError as e:
             self._add_terminal_output('Error while running Hyst: ' + e + '\n')
             rv = RUN_CODES.ERROR_CONVERSION
 
+        self._add_terminal_output("Seconds for Hyst conversion: " + str(dif) + '\n')
+
+        return rv
+
+    def run(self, run_hyst=True, run_tool=True, make_image=True):
+        '''Converts the model in Hyst (optional) and runs it with the appropriate
+        tool (optional) to produce a plot file.
+
+        returns SUCCESS if successful, otherwise can return one of the
+        ERROR_* codes
+        '''
+
+        assert self.model_path != None, 'set_model() should be called before run()'
+        assert self.tool_name != None, 'set_tool() should be called before run()'
+
+        image_path = None
+        
+        if make_image == True:
+            if self.image_path is None:
+                image_path = os.path.splitext(self.model_path)[0] + ".png"
+            else:
+                image_path = self.image_path
+
+        start_time = time.time()
+        tool = TOOLS.get(self.tool_name)
+
+        if self.save_model_path is None:
+            self.save_model_path = os.path.join(tempfile.gettempdir(), self.tool_name + \
+                    "_" + str(time.time()) + "_" + str(random.random()) + tool.default_ext())
+
+        rv = RUN_CODES.SUCCESS
+
+        if run_hyst == False:
+            self.save_model_path = self.model_path
+        else:
+            rv = self._run_hyst() # will assign save_model_path
+
         if rv == RUN_CODES.SUCCESS and run_tool:
-            code = hybrid_tool.run_tool(tool, out_model, self.image_path, \
-                                        self.timeout_tool, self._stdout_handler)
+
+            if self.process_output_dir is not None:
+                self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + \
+                                        str(time.time()) + "_" + str(random.random()))
+
+            code = hybrid_tool.run_tool(tool, self.save_model_path, image_path, \
+                                        self.timeout_tool, self._stdout_handler,
+                                        self.process_output_dir)
 
             if code == hybrid_tool.RunCode.TIMEOUT:
                 rv = RUN_CODES.TIMEOUT_TOOL
@@ -198,6 +238,11 @@ class Engine(object):
                 rv = RUN_CODES.ERROR_UNSUPPORTED
             elif code != hybrid_tool.RunCode.SUCCESS:
                 rv = RUN_CODES.ERROR_TOOL
+            elif self.process_output_dir is not None:
+                tool.create_output(self.process_output_dir)
+
+                self.result_obj = tool.output_obj
+                shutil.rmtree(self.process_output_dir)
 
         dif_time = time.time() - start_time
         self._add_terminal_output("Elapsed Seconds: " + str(dif_time) + "\n")
