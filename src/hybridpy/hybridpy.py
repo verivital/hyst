@@ -60,6 +60,7 @@ class Engine(object):
     timeout_tool = None
     save_model_path = None
     tool_params = []
+    running_tool = None # this is the hybrid_tool object, assigned only running tool process
 
     process_return_code = None
     print_output = False
@@ -142,6 +143,10 @@ class Engine(object):
 
         if self.save_output:
             self.output_lines.append(text)
+
+        # if we're creating an output object, and the tool is running
+        if self.process_output_dir is not None and self.running_tool is not None:
+            self.running_tool.got_tool_output(text)
 
     def get_process_return_code(self):
         '''Get the return code of the last external process run by hypy'''
@@ -227,10 +232,13 @@ class Engine(object):
             if self.process_output_dir is not None:
                 self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + \
                                         str(time.time()) + "_" + str(random.random()))
+                tool.output_obj = {} # new output object created
 
+            self.running_tool = tool
             code = hybrid_tool.run_tool(tool, self.save_model_path, image_path, \
                                         self.timeout_tool, self._stdout_handler,
                                         self.process_output_dir)
+            self.running_tool = None
 
             if code == hybrid_tool.RunCode.TIMEOUT:
                 rv = RUN_CODES.TIMEOUT_TOOL

@@ -164,6 +164,14 @@ class SpaceExTool(HybridTool):
 
         shutil.copyfile(self.original_cfg_path, self.cfg_path)
 
+    def got_tool_output(self, text):
+        '''the tool produced some stdout text, and the output object is being made'''
+
+        if 'Found fixpoint after' in text:
+            self.output_obj['fixpoint'] = True
+        elif 'without finding fixpoint' in text:
+            self.output_obj['fixpoint'] = False
+
     def create_output(self, directory):
         '''create the tool-spcific processed output object
         For SpaceEx, this expects output-format=INTV
@@ -171,6 +179,9 @@ class SpaceExTool(HybridTool):
         The result object is an ordered dictionary, with
         'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
         'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
+        'fixpoint' -> True/False   <-- True if 'Found fixpoint after' found on stdout
+                                       False if 'without finding fixpoint' found on stdout
+                                       unassigned if neither
         '''
 
         filename = directory + '/plotdata.txt'
@@ -207,7 +218,9 @@ class SpaceExTool(HybridTool):
         if state == state_init:
             raise RuntimeError('Format of plotdata.txt was wrong. Did you use output-format=INTV?')
 
-        self.output_obj = {'locations':loc, 'variables':var}
+        # assign to output object (don't overwrite object)
+        self.output_obj['locations'] = loc
+        self.output_obj['variables'] = var
 
     # line = 'Location: loc(Heater)==heater_on & loc(Controller)==controller_on'
     loc_re = re.compile(r'loc\([^)]*\)==([^ ]+)') # use with findall

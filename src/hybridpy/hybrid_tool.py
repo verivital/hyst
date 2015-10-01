@@ -100,8 +100,6 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
     try:
         proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        print ".hybrid_tool timeout =", timeout
-        
         if timeout is not None:
             timer = threading.Timer(timeout, _kill_pg, [proc])
             timer.daemon = True
@@ -306,8 +304,19 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
+    def got_tool_output(self, text):
+        '''output was produced by the tool process. This only gets called if
+        an output object is being created. Override if your output object
+        contains information about the stdout the tool produces.
+        '''
+        pass
+
     def create_output(self, _):
-        '''Assigns the output object (self.output_obj). Tool working files are stored in the passed-in directory.'''
+        '''Assigns to the output object (self.output_obj). It is by default set to a blank
+        dictionary (generally don't assign the whole object in case other parts were made
+        while the tool was running, for example using got_tool_output().
+        
+        Tool working files are stored in the passed-in directory.'''
         raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
 
     @abc.abstractmethod
