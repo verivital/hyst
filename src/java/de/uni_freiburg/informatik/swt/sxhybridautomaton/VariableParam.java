@@ -76,7 +76,7 @@ public class VariableParam extends Param {
 		return mControlled;
 	}
 	
-	public void setControlled(Boolean controlled) {
+	public void setControlled(boolean controlled) {
 		mControlled = controlled;
 	}
 

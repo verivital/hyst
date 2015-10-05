@@ -223,8 +223,9 @@ public class SpaceExPrinter extends ToolPrinter
                 	if (!ha.variables.contains(intVarName))
                 	{
                 		ha.variables.add(intVarName);
-	                	Param p = new VariableParam(base); // note: this also adds p to base in the constructor
+	                	VariableParam p = new VariableParam(base); // note: this also adds p to base in the constructor
 	                    p.setName(intVarName);
+	                    p.setControlled(false);
                 	}
                 }
                 
@@ -323,7 +324,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 	
 	/**
-	 * Get the interval parts of the flows for each variable. May return a map of size 0
+	 * Get the interval parts of the flows for each variable. May return a map of size 0.
 	 * @param flowDynamics the flow dynamics to check
 	 * @return a mapping of variable name -> interval part of flow for all nondeterministic flows
 	 */
