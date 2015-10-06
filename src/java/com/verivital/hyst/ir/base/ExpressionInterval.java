@@ -196,6 +196,16 @@ public class ExpressionInterval
 			return false;
 		}
 	}
+	
+	public boolean isZero()
+	{
+		if (i != null) {
+			return e.equals(new Constant(0)) && i.width() == 0; // TODO: test this case
+		}
+		else {
+			return e.equals(new Constant(0));
+		}
+	}
 
 	public String toString(ExpressionPrinter printer)
 	{
