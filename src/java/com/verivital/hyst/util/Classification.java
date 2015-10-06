@@ -3,6 +3,7 @@
  */
 package com.verivital.hyst.util;
 
+import java.util.List;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.grammar.formula.Constant;
@@ -13,6 +14,8 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.network.ComponentInstance;
+import com.verivital.hyst.ir.network.NetworkComponent;
 
 
 
@@ -40,8 +43,8 @@ public class Classification
 	 * 
 	 */
     public enum AutomatonType {
-    	DISCRETE_FINITE, // no flows or all flows 0, and no variables
-    	DISCRETE_EXTENDED, // no flows or all flows 0, possibly with variables (e.g., could have real variables with zero derivatives) 
+    	DISCRETE_FINITE, // no flows or all flows 0, and no variables, equivalent to a finite state machine
+    	DISCRETE_EXTENDED, // no flows or all flows 0, possibly with variables (e.g., could have real variables with zero derivatives), roughly equivalent to extended finite state machine 
     	CONTINUOUS_TIMED, // 1 location, \dot{x} = 1 for all variables x \in Var
     	CONTINUOUS_RECTANGULAR, // 1 location, \dot{x} \in [a,b] for all variables x \in Var
     	CONTINUOUS_LINEAR, // 1 location, \dot{x} = Ax for all variables x \in Var
@@ -55,6 +58,10 @@ public class Classification
     	HYBRID_INITIALIZED_RECTANGULAR,
     	HYBRID_LINEAR,
     	HYBRID_AFFINE,
+    	HYBRID_MULTIAFFINE,
+    	HYBRID_NONLINEAR_POLYNOMIAL, // general polynomials
+    	HYBRID_NONLINEAR_SPECIAL, // special functions such as transcendentals and trig functions like sin, cos, exp, ln, etc.
+    	// TODO: variable structure systems, piecewise linear / affine systems, etc. It would actually be interesting to have a survey paper of all the types of automata...
     	// TODO: stochastic ones, etc.
     }
     
@@ -65,9 +72,23 @@ public class Classification
      */
     public enum AutomatonDeterminism {
     	DETERMINISTIC,
-    	NONDETERMINISTIC
+    	NONDETERMINISTIC,
     	// TODO: further classifications into sources of nondeterminism
     }
+    
+    /**
+     * 
+     * @param n
+     * @return
+     */
+    /*
+    // TODO: can add something like this later, will for now just iterate over network in matlab
+    public static List<AutomatonType> classifyNetwork(NetworkComponent n) {
+    	for (Entry<String, ComponentInstance> c : n.children.entrySet()) {
+    		
+    	}
+    }
+    */
     
     public static AutomatonType classifyAutomaton(BaseComponent c) {
 		if (c.variables.size() == 0) {

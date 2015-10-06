@@ -1,18 +1,15 @@
 function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_reader)
-    %function [sF,out_vars,variables,idToLocation,InitialConstant] = Location_SpaceExToStateflow(model,chart,ha,name,opt_cfg_reader,opt_display_flow,opt_display_invariant)
     % ------------------------------------------------------------------------------
     % author: Luan Viet Nguyen
     % ------------------------------------------------------------------------------
-    components = config.root.template.children; 
+    components = config.root.template.children;
     comp_name = components.keySet().toArray();
     comp_size = components.size();
     % number of outputs to scope
     num_port = 0; 
     if comp_size > 1
         isNetwork = true;
-        %set(chart,'Decomposition','PARALLEL_AND');
     end
-    %set(chart,'Decomposition','PARALLEL_AND')
     % initial location
     initLoc = config.init.keySet().toString();
     initLoc  = strrep(char(strrep(char(initLoc),']','')),'[','');
@@ -23,7 +20,24 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
     % outputs declaration
     varList = java.util.LinkedList();
     %
-    const = config.root.constants;
+    % Get all constants directly mapped in SpaceEx and constants specified by cfg files  
+    template_constants = config.root.getAllConstants();
+    oldkeyList = template_constants.keySet().toArray;
+    for i = 1: comp_size
+        template_name = comp_name(i);
+        for j = 1:  template_constants.size
+            oldkey = oldkeyList(j);
+            if strfind(oldkey,template_name)
+                newkey = strrep(oldkey,strcat(template_name,'.'),'');
+                template_constants.put(newkey, template_constants.get(oldkey));
+                template_constants.remove(oldkey);
+            end    
+        end
+    end
+    %root_constants = config.root.constants
+    const = java.util.HashMap;
+    const.putAll(template_constants);
+    %const.putAll(root_constants)
     %
     for i_comp = 1: comp_size
         ha = components.get(comp_name(i_comp)).child;
@@ -50,13 +64,6 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
         modeName = ha.modes.keySet().toArray;
         %basecompone
         for i_mode = 1 : ha.modes.size()
-%             if  isNetwork
-%                 set(chart,'Decomposition','PARALLEL_AND')
-%                 %set(chart,'Decomposition','EXCLUSIVE_OR');
-%             end
-%             if ha.modes.size()>1
-%                 set(chart,'Decomposition','EXCLUSIVE_OR');
-%             end
             modeTotal = modeTotal + 1;
             %clear mode mode binds transitions;
             mode = ha.modes.get(modeName(i_mode));
@@ -184,8 +191,8 @@ function [sF] = nonsemanticTranslation(isNetwork,model,chart,config,opt_cfg_read
             TransitionPointer.LabelPosition = pos;
         end
     end
-    % Parsing constant from hybidautomaton into SLSF
-    %constKey = const.keySet().toArray;
+    % Parsing constant from hybidautomaton into SLSF    
+    constKey = const.keySet().toArray;
     if (const.containsKey('tmax') || const.containsKey('Tmax'))
         if const.containsKey('Tmax')
             stopTime = [const.get('Tmax').middle()];

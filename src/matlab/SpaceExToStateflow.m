@@ -33,7 +33,7 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     %add java library for spaceex parsing library (from spaceex2boogie)
     %javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
     javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'Hyst.jar']);
-    addpath(['..', filesep, '..', filesep, 'lib', filesep]);
+    addpath(['..', filesep,'..', filesep, 'lib', filesep]);
     
     % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
     %javaaddpath(['..', filesep, 'lib', filesep, 'commons-cli-1.3.1.jar']);
