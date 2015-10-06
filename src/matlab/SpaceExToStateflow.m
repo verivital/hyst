@@ -33,7 +33,7 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     %add java library for spaceex parsing library (from spaceex2boogie)
     %javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
     javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'Hyst.jar']);
-    addpath(['..', filesep, 'lib', filesep]);
+    addpath(['..', filesep, '..', filesep, 'lib', filesep]);
     
     % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
     %javaaddpath(['..', filesep, 'lib', filesep, 'commons-cli-1.3.1.jar']);
@@ -210,6 +210,14 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
         com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
         %ha = ... flatten here
         ha = config.root;
+        
+        % TODO: MERGE THESE ALREADY; use the SAME functions with options to
+        % keep it simple for yourself, e.g., pass in something like
+        % opt_semantics to all the functions, and have them just print the
+        % different things based on the opt_semantics value...
+        % to make it explicit: there should only be one function, you need
+        % to merge semanticTranslation and nonsemanticTranslation
+
         semanticTranslation(ch, config, ha, name, opt_eager_violation);
     else     
         [sF] = nonsemanticTranslation(isNetwork,m,ch,config,opt_cfg_reader);

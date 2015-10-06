@@ -30,6 +30,7 @@ import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader;
@@ -888,6 +889,89 @@ public class ModelParserTest
 		
 		Assert.assertTrue("init string is not null", initString != null);
 	}
+	
+	/**
+	 * Classification tests: no variables (e.g., finite state machine)
+	 */
+	@Test
+	public void testModelClassificationDiscreteNoVars()
+	{
+		String path = UNIT_BASEDIR + "classification_discrete_novars/";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_novars.cfg",
+				path + "classification_discrete_novars.xml"));
+		
+		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+	}
+	
+	/**
+	 * Classification tests: no variables, but some constants (e.g., roughly finite state machine / minorly extended finite state machine)
+	 */
+	@Test
+	public void testModelClassificationDiscreteConstants()
+	{
+		String path = UNIT_BASEDIR + "classification_discrete_novars/";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_constants.cfg",
+				path + "classification_discrete_constants.xml"));
+		
+		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+	}
+	
+	/**
+	 * Classification tests: at least one variable, but no flows in any location
+	 */
+	@Test
+	public void testModelClassificationDiscreteVarsNoFlows()
+	{
+		String path = UNIT_BASEDIR + "classification_discrete_vars/";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_vars_noflows.cfg",
+				path + "classification_discrete_vars_noflows.xml"));
+		
+		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+	}
+	
+	/**
+	 * Classification tests: at least one variable, with flows in all or only some locations zeros
+	 */
+	@Test
+	public void testModelClassificationDiscreteVarsFlowsZero()
+	{
+		String path = UNIT_BASEDIR + "classification_discrete_vars/";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_vars_flows_zero_all.cfg",
+				path + "classification_discrete_vars_flows_zero_all.xml"));
+		
+		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+		
+		c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_vars_flows_zero_some.cfg",
+				path + "classification_discrete_vars_flows_zero_some.xml"));
+		
+		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+	}
+	
+	/**
+	 * Classification tests: at least one variable, but flows in some locations nonzero
+	 */
+	@Test
+	public void testModelClassificationDiscreteVarsFlowsNonZero()
+	{
+		String path = UNIT_BASEDIR + "classification_discrete_vars/";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				path + "classification_discrete_vars_flows_nonzero_some.cfg",
+				path + "classification_discrete_vars_flows_nonzero_some.xml"));
+		
+		Assert.assertNotEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+	}
+	
+	
 	
 	/*@Test
     public void testVariableRenaming() 

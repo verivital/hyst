@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="classification_discrete_novars">
+    <location id="1" name="loc1" x="241.0" y="106.0" />
+    <location id="2" name="loc2" x="509.0" y="119.0" />
+    <location id="3" name="loc3" x="230.0" y="374.0" />
+    <location id="4" name="loc4" x="470.0" y="351.0" />
+    <transition source="1" target="2">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="2" target="4">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="4" target="3">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="3" target="1">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+  </component>
+  <component id="system">
+    <bind component="classification_discrete_novars" as="classification_discrete_novars_1" x="319.0" y="67.0" />
+  </component>
+</sspaceex>
+
