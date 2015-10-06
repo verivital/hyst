@@ -166,7 +166,7 @@
 	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
 		<mkdir dir="${reports.path}"/>
 		
-		<junit printsummary="yes" haltonfailure="yes" fork = "true" dir=""> <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
+		<junit showoutput="true" printsummary="yes" enabletestlistenerevents="true" haltonfailure="yes" fork = "true" dir="" timeout="30000"> <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
 		 	<classpath refid="junit.classpath"/>
 			
 			<formatter type="plain" usefile="false"/>
