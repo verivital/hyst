@@ -28,6 +28,7 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
+import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeTimeTriggeredPass;
 
@@ -354,5 +355,52 @@ public class PassTests
 		Assert.assertTrue("transition to out of bounds error mode exists in mode0", foundOobTransition);
 		
 		Assert.assertEquals("single forbidden mode", 1, c.forbidden.size());
+	}
+	
+	/**
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass)
+	 */
+	@Test
+	public void testPseudoInvariantSimulatePass()
+	{
+		// make a trivial automation with x' == 1
+		BaseComponent ha = new BaseComponent();
+		Configuration c = new Configuration(ha);
+		AutomatonMode am = ha.createMode("running");
+		
+		ha.variables.add("x");
+		c.settings.plotVariableNames[0] = "x";
+		c.settings.plotVariableNames[1] = "x"; 
+		c.init.put("running", FormulaParser.parseLoc("x = 0"));
+		am.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
+		am.invariant = Constant.TRUE;
+		c.validate();
+
+		// run the pseudo-invariant pass on it
+		String params = "2.0,5.0"; // simulation time = 2.0 and then 5.0
+		new PseudoInvariantSimulatePass().runTransformationPass(c, params);
+		
+		// there should be four modes: running_init, running_pi_0, running_pi_1, and running_final
+		Assert.assertEquals("four modes after pass", 4, ha.modes.size());
+		
+		AutomatonMode piInit = ha.modes.get("running_init");
+		AutomatonMode pi0 = ha.modes.get("running_pi_0");
+		AutomatonMode pi1 = ha.modes.get("running_pi_1");
+		AutomatonMode piFinal = ha.modes.get("running_final");
+		
+		Assert.assertTrue("init mode is urgent", piInit.urgent == true);
+		Assert.assertTrue("first mode's invariant is x <= 2", pi0.invariant.toDefaultString().contains("-1 * x >= -2.0000"));
+		Assert.assertTrue("second mode's invariant is x <= 5", pi1.invariant.toDefaultString().contains("-1 * x >= -4.9999"));
+		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
+		
+		// the transition from init to final should contain both pi guards
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from == piInit && at.to == piFinal)
+			{
+				Assert.assertTrue("guard from init to final contains x >= 2", at.guard.toDefaultString().contains("-1 * x <= -2.0000"));
+				Assert.assertTrue("guard from init to final contains x >= 5", at.guard.toDefaultString().contains("-1 * x <= -4.9999"));
+			}
+		}
 	}
 }

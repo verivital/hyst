@@ -14,7 +14,6 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 
@@ -37,7 +36,7 @@ public class PseudoInvariantPass extends TransformationPass
 	AutomatonMode applyMode;
 	String applyModeName;
 	LinkedList <PseudoInvariantParams> params = new LinkedList <PseudoInvariantParams>();
-	String incomingModeName;
+	String initModeName;
 	
 	int numVars;
 	
@@ -68,7 +67,7 @@ public class PseudoInvariantPass extends TransformationPass
 		// first make an incoming mode for incoming transitions
 		// This mode has zero dynamics (x'=0) and outgoing guards based on the current state
 		
-		AutomatonMode incomingMode = makeIncomingMode(incomingModeName);
+		AutomatonMode initMode = makeInitMode();
 		AutomatonMode modeToSplit = applyMode;
 		
 		// make modes for each step in the automaton
@@ -96,7 +95,7 @@ public class PseudoInvariantPass extends TransformationPass
 			secondMode.invariant = pip.inv;
 			
 			// create the transition from the incoming mode
-			AutomatonTransition atFromIncoming = ha.createTransition(incomingMode, secondMode);
+			AutomatonTransition atFromIncoming = ha.createTransition(initMode, secondMode);
 			atFromIncoming.guard = createPiGuard(pip.inv, i);
 			
 			// create the transition to the next pseudo-invariant modes
@@ -133,12 +132,17 @@ public class PseudoInvariantPass extends TransformationPass
 				atToNext.guard = new Operation(Operator.AND, atToNext.guard, negateEqualCondition(otherModePip.inv));
 			}
 			
-			Hyst.log("Created pi mode #" + i + " with invariant: " + pip.inv);
+			Hyst.log("Created pi mode #" + i + " with invariant: " + pip.inv.toDefaultString());
 		}
 		
-		// finally, add the transition from initial mode to applyMode
-		AutomatonTransition atFromIncoming = ha.createTransition(incomingMode, applyMode);
+		// add the transition from initial mode to applyMode
+		AutomatonTransition atFromIncoming = ha.createTransition(initMode, applyMode);
 		atFromIncoming.guard = createPiGuard(null, params.size());
+		
+		// rename applyMode to applyMode_final
+		ha.modes.remove(applyModeName);
+		applyMode.name = checkNewModeName(applyMode.name + "_final");
+		ha.modes.put(applyMode.name, applyMode);
 	}
 
 	/**
@@ -219,22 +223,22 @@ public class PseudoInvariantPass extends TransformationPass
 		return name;
 	}
 
-	private AutomatonMode makeIncomingMode(String incomingModeName)
+	private AutomatonMode makeInitMode()
 	{
-		AutomatonMode rv = ha.createMode(incomingModeName);
+		AutomatonMode rv = ha.createMode(initModeName);
 		
 		// invariant
 		rv.invariant = Constant.TRUE;
 		
-		// flow dynamics
-		for (String var : ha.variables)
-			rv.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+		// flow dynamics (urgent)
+		rv.flowDynamics = null;
+		rv.urgent = true;
 		
 		// redirect initial states to this mode
 		if (config.init.containsKey(applyModeName))
 		{
 			Expression e = config.init.remove(applyModeName);
-			config.init.put(incomingModeName, e);
+			config.init.put(initModeName, e);
 		}
 		
 		// redirect incoming transitions to this mode
@@ -296,7 +300,7 @@ public class PseudoInvariantPass extends TransformationPass
 		}
 			
 		applyMode = ha.modes.get(applyModeName);
-		incomingModeName = checkNewModeName(applyModeName + "_Pi_" + (++UNIQUE_ID) + "_Incoming");
+		initModeName = checkNewModeName(applyModeName + "_init");
 		
 		for (int i = firstIndex; i < splitParams.length; ++i)
 		{
@@ -353,7 +357,7 @@ public class PseudoInvariantPass extends TransformationPass
 			if (inv == null)
 				throw new AutomatonExportException("Invariant was null from dir: " + arrayString(dir));
 			
-			modeName = checkNewModeName(applyModeName + "_Pi_" + (++UNIQUE_ID));
+			modeName = checkNewModeName(applyModeName + "_pi_" + (UNIQUE_ID++));
 		}
 	}
 	
