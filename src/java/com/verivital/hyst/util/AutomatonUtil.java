@@ -702,4 +702,42 @@ public abstract class AutomatonUtil
 		
 		return rv;
 	}
+
+	/**
+	 * Check whether a variable is an output variable of a component. It is an output variable if either a flow is defined for it,
+	 * or if a reset exists where the variable is assigned.
+	 * 
+	 * @param bc the base component
+	 * @param varName the variable name
+	 * @return true iff the passed-in variable is an output variable
+	 */
+	public static boolean isOutputVariable(BaseComponent bc, String varName)
+	{
+		boolean rv = false;
+		
+		// if flow is defined
+		for (AutomatonMode am : bc.modes.values())
+		{
+			if (am.urgent)
+				continue;
+			
+			rv = am.flowDynamics.keySet().contains(varName);
+			break;
+		}
+		
+		if (!rv)
+		{
+			// if a reset is defined
+			for (AutomatonTransition at : bc.transitions)
+			{
+				if (at.reset.containsKey(varName))
+				{
+					rv = true;
+					break;
+				}
+			}
+		}
+		
+		return rv;
+	}
 }

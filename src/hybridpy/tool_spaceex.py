@@ -96,14 +96,14 @@ class SpaceExTool(HybridTool):
 
             proc.wait()
 
-            print "Return code was " + str(proc.returncode)
+            print "SpaceEx return code was " + str(proc.returncode)
 
             if rv == RunCode.SUCCESS: # exit code wasn't set during output
                 if proc.returncode != 0:
                     print "Unknown return code"
                     rv = RunCode.ERROR
                 else:
-                    print "Successfully completed."
+                    print "SpaceEx successfully completed."
 
         except OSError as e:
             print "OSError while trying to run " + str(params) + "\nError: " + str(e)
@@ -164,19 +164,12 @@ class SpaceExTool(HybridTool):
 
         shutil.copyfile(self.original_cfg_path, self.cfg_path)
 
-    def got_tool_output(self, text):
-        '''the tool produced some stdout text, and the output object is being made'''
-
-        if 'Found fixpoint after' in text:
-            self.output_obj['fixpoint'] = True
-        elif 'without finding fixpoint' in text:
-            self.output_obj['fixpoint'] = False
-
     def create_output(self, directory):
-        '''create the tool-spcific processed output object
+        '''Assigns to the output object (self.output_obj)
         For SpaceEx, this expects output-format=INTV
 
         The result object is an ordered dictionary, with
+        'lines' -> [(line1, timestamp1), ...]                    <-- stdout lines (automatically created)
         'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
         'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
         'fixpoint' -> True/False   <-- True if 'Found fixpoint after' found on stdout
@@ -184,6 +177,16 @@ class SpaceExTool(HybridTool):
                                        unassigned if neither
         '''
 
+        ### create 'fixpoint' from stdout
+        for (line, _) in reversed(self.output_obj['lines']):
+            if 'Found fixpoint after' in line:
+                self.output_obj['fixpoint'] = True
+                break
+            elif 'without finding fixpoint' in line:
+                self.output_obj['fixpoint'] = False
+                break
+        
+        ### create 'variables' and 'locations' from plotdata.txt
         filename = directory + '/plotdata.txt'
         var = collections.OrderedDict() # map from var_name -> (min, max)
         loc = collections.OrderedDict() # map from loc_name->{map from var_name -> (min,max)}

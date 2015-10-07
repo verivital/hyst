@@ -65,7 +65,7 @@ def tool_main(tool_obj, extra_args=None):
 
     code = tool_obj.run()
 
-    print "Exit code: " + str(code)
+    print "Tool script exit code: " + str(code)
     sys.exit(code)
 
 def _kill_pg(p):
@@ -198,6 +198,7 @@ class HybridTool(object):
     default_extension = None
     explicit_temp_dir = None
     output_obj = None
+    start_timestamp = None
 
     def __init__(self, tool_name, default_ext, path):
         '''Initialize the tool for running. This checks if the tool exists
@@ -304,17 +305,28 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
-    def got_tool_output(self, text):
-        '''output was produced by the tool process. This only gets called if
-        an output object is being created. Override if your output object
-        contains information about the stdout the tool produces.
+    def got_tool_output(self, line):
+        '''a line of output was produced by the tool process. This only gets called if
+        an output object is being created. This comes from a call to readline, so it's
+        always a single line of output.
         '''
-        pass
+
+        # add (line, timestamp) to output_obj['lines']
+        lines = self.output_obj['lines']
+        
+        if len(lines) == 0: # no output yet
+            self.start_timestamp = time.time()
+
+        timestamp = time.time() - self.start_timestamp
+        lines.append((line, timestamp))
 
     def create_output(self, _):
-        '''Assigns to the output object (self.output_obj). It is by default set to a blank
-        dictionary (generally don't assign the whole object in case other parts were made
+        '''Assigns to the output object (self.output_obj). It is a dictionary;
+        add to it, don't assign the whole object since other parts are made
         while the tool was running, for example using got_tool_output().
+
+        For all tools, obj.lines contains a list of tuples, where the first part is
+        a line of stdout output, and the second part is a timestamp in seconds (from time.time())
         
         Tool working files are stored in the passed-in directory.'''
         raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")

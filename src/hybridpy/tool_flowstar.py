@@ -70,6 +70,20 @@ class FlowstarTool(HybridTool):
 
         return rv
 
+    def create_output(self, _):
+        '''Assigns to the output object (self.output_obj)
+
+        The result object is an ordered dictionary, with:
+        'lines' -> [(line1, timestamp1), ...]       <-- stdout lines (automatically created)
+        'terminated' -> True/False                  <-- did errors occur during computation (was 'terminated' printed?)
+        '''
+
+        self.output_obj['terminated'] = False
+        
+        for (line, _) in reversed(self.output_obj['lines']):
+            if 'terminated' in line.lower():
+                self.output_obj['terminated'] = True
+
 if __name__ == "__main__":
     tool_main(FlowstarTool())
 

@@ -239,7 +239,8 @@ public class Hyst
 		}
 		catch (Exception ex)
 		{
-			logError("Exception while exporting: " + ex.getLocalizedMessage());
+			String message = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : ex.toString();
+			logError("Exception in Hyst while exporting: " + message);
 
 			if (verboseMode)
 			{
@@ -250,6 +251,8 @@ public class Hyst
 				ex.printStackTrace(pw);
 				log(sw.toString());
 			}
+			else
+				logError("For more information about the error, use the -verbose or -debug flag.");
 
 			return ExitCode.EXPORT_EXCEPTION.ordinal();
 		}

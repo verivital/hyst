@@ -174,6 +174,8 @@ class Engine(object):
         params += self.tool_params
         params += ['-o', self.save_model_path, format_flag] # do after to override any user flags
 
+        self._add_terminal_output("Hyst command: " + str(params) + "\n")
+
         try:
             proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self._stdout_handler(proc.stdout)
@@ -233,6 +235,7 @@ class Engine(object):
                 self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + \
                                         str(time.time()) + "_" + str(random.random()))
                 tool.output_obj = {} # new output object created
+                tool.output_obj['lines'] = [] # (stdout_line, timestamp) tuple list
 
             self.running_tool = tool
             code = hybrid_tool.run_tool(tool, self.save_model_path, image_path, \

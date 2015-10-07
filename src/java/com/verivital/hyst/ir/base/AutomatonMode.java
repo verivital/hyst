@@ -19,8 +19,8 @@ import com.verivital.hyst.util.AutomatonUtil;
  * name, automaton and invariant are nonnull
  * name is a valid c identifier
  * invariant is not null or false
- * flowDynamics can only be null if urgent==true; flow may not be defined for every variable (some may map to null, for example,
- * havoc dynamics, or dynamics defined in another automaton).
+ * flowDynamics can only be null if urgent==true; flow may not be defined for every variable (some variables may be omitted, for
+ * example havoc dynamics or dynamics defined in another automaton).
  * if nonnull, every variable defined in flowDynamics must exist in the BaseComponent.
  * 
  * After flattening, every variable must have a defined flowDyanmics (this is one of the guarantees provided by the flatten pass).
@@ -51,7 +51,7 @@ public class AutomatonMode
 		flowDynamics = new LinkedHashMap <String, ExpressionInterval>();
 		
 		for (String s : ha.variables) 
-			flowDynamics.put(s, null); // these MUST be set, otherwise validation will fail
+			flowDynamics.put(s, null); // these MUST be set or removed, otherwise validation will fail
 	}
 	
 	/**

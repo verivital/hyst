@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -199,6 +201,32 @@ public class SpaceExPrinter extends ToolPrinter
             	// this also adds p to base in the constructor
                 new VariableParam(base, v, ParamType.REAL, ParamDynamics.CONST); 
             }
+            
+            // add interval variables from nondeterminism
+            Collection <String> intervalVars = getAllVariablesWithNondeterministicFlows(); 
+            
+            for (String var : intervalVars)
+            {
+            	String newVar = getIntervalVariableName(var);
+            	
+            	ha.variables.add(newVar);
+            	VariableParam p = new VariableParam(base); // note: this also adds p to base in the constructor
+                p.setName(newVar);
+                p.setControlled(false); // because it can change to any value which satisfies the invariant
+                
+                // also, anywhere the interval is not assigned we want to set it to 0 (since it's uncontrolled)
+                for (AutomatonMode am : ha.modes.values())
+                {
+                	if (am.flowDynamics == null)
+                		continue;
+                	
+                	ExpressionInterval ei = am.flowDynamics.get(var);
+                	
+                	if (ei.getInterval() == null)
+                		ei.setInterval(new Interval(0));
+                }
+            }
+            
         
 			/**
 			 * iterate over automaton modes to convert flow dynamics, invariant
@@ -212,23 +240,6 @@ public class SpaceExPrinter extends ToolPrinter
 
                 AutomatonMode mode = e.getValue();
                 
-                // if there are interval expressions, we may need to add new variables for them
-                Map<String, Interval> varInts = getVariableIntervals(mode.flowDynamics);
-                
-                // create new variables for each of the intervals if they don't exist
-                for (String varName : varInts.keySet())
-                {
-                	String intVarName = getIntervalVariableName(varName);
-                	
-                	if (!ha.variables.contains(intVarName))
-                	{
-                		ha.variables.add(intVarName);
-	                	VariableParam p = new VariableParam(base); // note: this also adds p to base in the constructor
-	                    p.setName(intVarName);
-	                    p.setControlled(false);
-                	}
-                }
-                
                 // set flow dynamics
                 if (mode.urgent)
                 	loc.setFlow(Constant.FALSE); // phaver only, other scenarios will have converted already
@@ -238,15 +249,23 @@ public class SpaceExPrinter extends ToolPrinter
                 // set invariant
                 Expression inv = mode.invariant;
                 
-                // accumulate invariant bounds on the variable intervals (nondeterministic flows)
+                // additionally set invariant for nondeterministic flow variables
+                Map<String, Interval> varInts = getVariableIntervals(mode.flowDynamics);
+                
                 for (Entry<String, Interval> entry : varInts.entrySet())
                 {
-                	Variable v = new Variable(getIntervalVariableName(entry.getKey()));
+                	String intervalVar = getIntervalVariableName(entry.getKey());
                 	Interval i = entry.getValue();
+                	Operation bounds;
                 	
-                	Operation topBound = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
-                	Operation bottomBound = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
-                	Operation bounds = new Operation(Operator.AND, topBound, bottomBound);
+                	if (i.isConstant())
+                		bounds = new Operation(Operator.EQUAL, intervalVar, i.middle());
+                	else
+                	{
+	                	Operation topBound = new Operation(Operator.LESSEQUAL, intervalVar, i.max);
+	                	Operation bottomBound = new Operation(Operator.GREATEREQUAL, intervalVar, i.min);
+	                	bounds = new Operation(Operator.AND, topBound, bottomBound);
+                	}
                 	
                 	inv = new Operation(Operator.AND, inv, bounds);
                 }
@@ -323,6 +342,24 @@ public class SpaceExPrinter extends ToolPrinter
             return sed;
 	}
 	
+	/**
+	 * Get the names of every variable that has an interval flow
+	 * @return a list of names of variables
+	 */
+	private Collection <String> getAllVariablesWithNondeterministicFlows()
+	{
+		HashSet <String> rv = new HashSet <String>(); 
+        
+        for (AutomatonMode am : ha.modes.values())
+        {
+        	Map<String, Interval> varInts = getVariableIntervals(am.flowDynamics);
+         
+        	rv.addAll(varInts.keySet());
+        }
+        
+        return rv;
+	}
+
 	/**
 	 * Get the interval parts of the flows for each variable. May return a map of size 0.
 	 * @param flowDynamics the flow dynamics to check
