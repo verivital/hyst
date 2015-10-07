@@ -23,6 +23,7 @@ import com.microsoft.z3.Symbol;
 import com.microsoft.z3.Tactic;
 import com.microsoft.z3.Version;
 import com.microsoft.z3.Z3Exception;
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -31,7 +32,6 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.Interval;
 //import com.microsoft.z3.*;
 
 

@@ -30,12 +30,10 @@ import com.verivital.hyst.passes.complex.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.RegularizePass;
-import com.verivital.hyst.passes.flat.SimulatorPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
-import com.verivital.hyst.printers.LayoutPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SMTPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
@@ -87,8 +85,7 @@ public class Hyst
 					new PythonQBMCPrinter(),
 					new SpaceExPrinter(),
 					new SMTPrinter(),
-					new StateflowSpPrinter(),
-					new LayoutPrinter(),
+					new StateflowSpPrinter()
 			};
 
 	// passes that are run only if the user selects them
@@ -106,7 +103,6 @@ public class Hyst
 					new RegularizePass(),
 					//new ContinuizationPass(), // TODO: add back, but the commons-cli stuff is breaking the stateflow converter
 					new HybridizeGridPass(),
-					new SimulatorPass(),
 					new FlattenAutomatonPass(),
 			};
 

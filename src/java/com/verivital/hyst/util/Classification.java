@@ -101,7 +101,8 @@ public class Classification
 				for (String v : c.variables) {
 					if (m.getValue().flowDynamics.containsKey(v)) {
 						if (m.getValue().flowDynamics.get(v) != null) {
-							if (!m.getValue().flowDynamics.get(v).isZero()) {
+							ExpressionInterval ei = m.getValue().flowDynamics.get(v);
+							if (!ei.getExpression().equals(new Constant(0)) || ei.getInterval() != null) {
 								allNull = false;
 								break;
 							}
