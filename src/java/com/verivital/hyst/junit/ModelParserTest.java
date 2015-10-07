@@ -8,17 +8,18 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
@@ -30,10 +31,8 @@ import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
-import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
-import de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
@@ -890,88 +889,53 @@ public class ModelParserTest
 		Assert.assertTrue("init string is not null", initString != null);
 	}
 	
-	/**
-	 * Classification tests: no variables (e.g., finite state machine)
-	 */
 	@Test
-	public void testModelClassificationDiscreteNoVars()
+	public void testInputOutput()
 	{
-		String path = UNIT_BASEDIR + "classification_discrete_novars/";
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "comp_in_out/sys.cfg";
+		String xmlPath = UNIT_BASEDIR + "comp_in_out/sys.xml";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_novars.cfg",
-				path + "classification_discrete_novars.xml"));
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
 		
-		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+		NetworkComponent nc = (NetworkComponent)config.root;
+		
+		BaseComponent bcX = (BaseComponent)nc.children.get("out_x_1").child;
+		BaseComponent bcY = (BaseComponent)nc.children.get("out_y_1").child;
+		
+		Assert.assertEquals("two variables in out_x component", 2, bcX.variables.size());
+		Assert.assertEquals("one defined flow in out_x component", 1, bcX.modes.values().iterator().next().flowDynamics.size());
+		
+		// also test AutomatonUtil.isOutputVariable()
+		Assert.assertTrue("x is an output variable of base component 'out_x_1'", AutomatonUtil.isOutputVariable(bcX,"x"));
+		Assert.assertTrue("y is NOT an output variable of base component 'out_x_1'", !AutomatonUtil.isOutputVariable(bcX,"y"));
+		
+		Assert.assertTrue("x is NOT an output variable of base component 'out_y_1'", !AutomatonUtil.isOutputVariable(bcY,"x"));
+		Assert.assertTrue("y is an output variable of base component 'out_y_1'", AutomatonUtil.isOutputVariable(bcY,"y"));
 	}
 	
-	/**
-	 * Classification tests: no variables, but some constants (e.g., roughly finite state machine / minorly extended finite state machine)
-	 */
 	@Test
-	public void testModelClassificationDiscreteConstants()
+	public void testInputOutputError()
 	{
-		String path = UNIT_BASEDIR + "classification_discrete_novars/";
+		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
+		String cfgPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.cfg";
+		String xmlPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.xml";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_constants.cfg",
-				path + "classification_discrete_constants.xml"));
-		
-		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
+		try
+		{
+			SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+			Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+			ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+			
+			Assert.fail("Validation exception not raised on invalid input / output automaton");
+		}
+		catch (AutomatonValidationException e)
+		{
+			// expected
+		}
 	}
-	
-	/**
-	 * Classification tests: at least one variable, but no flows in any location
-	 */
-	@Test
-	public void testModelClassificationDiscreteVarsNoFlows()
-	{
-		String path = UNIT_BASEDIR + "classification_discrete_vars/";
-		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_vars_noflows.cfg",
-				path + "classification_discrete_vars_noflows.xml"));
-		
-		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
-	}
-	
-	/**
-	 * Classification tests: at least one variable, with flows in all or only some locations zeros
-	 */
-	@Test
-	public void testModelClassificationDiscreteVarsFlowsZero()
-	{
-		String path = UNIT_BASEDIR + "classification_discrete_vars/";
-		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_vars_flows_zero_all.cfg",
-				path + "classification_discrete_vars_flows_zero_all.xml"));
-		
-		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
-		
-		c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_vars_flows_zero_some.cfg",
-				path + "classification_discrete_vars_flows_zero_some.xml"));
-		
-		Assert.assertEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
-	}
-	
-	/**
-	 * Classification tests: at least one variable, but flows in some locations nonzero
-	 */
-	@Test
-	public void testModelClassificationDiscreteVarsFlowsNonZero()
-	{
-		String path = UNIT_BASEDIR + "classification_discrete_vars/";
-		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				path + "classification_discrete_vars_flows_nonzero_some.cfg",
-				path + "classification_discrete_vars_flows_nonzero_some.xml"));
-		
-		Assert.assertNotEquals(Classification.AutomatonType.DISCRETE_FINITE, Classification.classifyAutomaton((BaseComponent)c.root));
-	}
-	
-	
 	
 	/*@Test
     public void testVariableRenaming() 
