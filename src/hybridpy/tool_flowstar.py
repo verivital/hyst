@@ -1,6 +1,7 @@
 '''Uses flow* to run reachability and gnuplot / gimp to make a plot'''
 
 import subprocess
+import re
 from hybrid_tool import HybridTool
 from hybrid_tool import get_script_path
 from hybrid_tool import run_check_stderr
@@ -76,14 +77,52 @@ class FlowstarTool(HybridTool):
         The result object is an ordered dictionary, with:
         'lines' -> [(line1, timestamp1), ...]       <-- stdout lines (automatically created)
         'terminated' -> True/False                  <-- did errors occur during computation (was 'terminated' printed?)
+        'mode_times' -> [(mode1, time1), ...]       <-- list of reach-tmes computed in each mode, in order
         '''
 
+        # terminated
         self.output_obj['terminated'] = False
         
         for (line, _) in reversed(self.output_obj['lines']):
             if 'terminated' in line.lower():
                 self.output_obj['terminated'] = True
 
+        # mode_times
+        mode_times = []
+        step_regexp = re.compile('mode: ([^,]*).*?step = ([^,]*)')
+        step_nomode_regexp = re.compile('.*?step = ([^,]*)')
+
+        next_mode_string = 'Dealing with the jump from'
+        end_string = "time cost"
+
+        step_total = 0.0
+        cur_mode = None
+        
+        for (line, _) in self.output_obj['lines']:
+            if next_mode_string in line or end_string in line:
+                if cur_mode is not None:
+                    mode_times.append((cur_mode, step_total))
+
+                cur_mode = None
+                step_total = 0.0
+            else:
+                # not a jump, check if it's a step statement
+                res = step_regexp.match(line)
+
+                if res is not None:
+                    (cur_mode, time) = res.groups()
+                    step_total += float(time)
+                else:
+                    # try to match step without mode name
+                    res = step_nomode_regexp.match(line)
+
+                    if res is not None:
+                        time = res.group(1)
+                        cur_mode = ""
+                        step_total += float(time)
+        
+        self.output_obj['mode_times'] = mode_times
+                
 if __name__ == "__main__":
     tool_main(FlowstarTool())
 
