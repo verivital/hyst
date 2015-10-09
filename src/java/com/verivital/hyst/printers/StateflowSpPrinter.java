@@ -899,11 +899,10 @@ public class StateflowSpPrinter extends ToolPrinter {
      * @param constants constants map
      * @return iterable of Stateflow strings
      */
-    private Iterable<String> getInitIterable(final AutomatonMode mode,
+    private Iterable<String> getInitIterable(final String modeName,
     		final Map<String, Double> constants) {
-        final Expression initExpr = config.init.get(mode.name);
+        final Expression initExpr = config.init.get(modeName);
         final List<String> inits = new LinkedList<String>();
-        
         // no initial location
         if (initExpr == null) {
             // TODO What happens for NOP initial conditions like "true"?
@@ -1196,7 +1195,19 @@ public class StateflowSpPrinter extends ToolPrinter {
      */
     public String getTransitionInit2inLabel(final AutomatonMode mode,
             final int initIdx, final Map<String, Double> constants) {
-        Iterator<String> it = getInitIterable(mode, constants).iterator();
+	return getTransitionInit2inLabel(mode.name, initIdx, constants);
+    }
+    
+    /**
+     * Returns the label for the initial transition (enters the initial state).
+     * 
+     * @param modeName automaton mode name
+     * @param initIdx unique index of the transition
+     * @param constants constants map
+     */
+    public String getTransitionInit2inLabel(final String modeName,
+            final int initIdx, final Map<String, Double> constants) {
+        Iterator<String> it = getInitIterable(modeName, constants).iterator();
         
         // only write the label if the mode is initial
         if (it.hasNext()) {
