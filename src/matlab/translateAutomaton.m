@@ -61,11 +61,12 @@ function translateAutomaton( model, config, options )
 end
 
 
-function [ chart, inputVars, outputVars ] = addNetworkComponent( model, component, options, config, componentIdx, isAddSignals, inputVars, outputVars )
+function [ chart, inputVars, outputVars ] = addNetworkComponent( model, component, options, config,  componentIdx, isAddSignals, inputVars, outputVars )
 %% adds an automaton network component
 
     componentName = component.getKey();
     componentHa = component.getValue().child;
+    dynamicType = com.verivital.hyst.util.Classification.classifyAutomaton(componentHa);
     if (componentIdx == 1)
         % first chart is already present (the only one)
         chart = model.find('-isa', 'Stateflow.Chart');
@@ -82,13 +83,15 @@ function [ chart, inputVars, outputVars ] = addNetworkComponent( model, componen
     end
     
     % update method of the chart
-    % mathworks.com/help/stateflow/ug/setting-the-stateflow-block-update-method.html?searchHighlight=Update method
+    % mathworks.com/help/stateflow/ug/setting-the-stateflow-block-update-method.html?searchHighlight=Update  method
     % INHERITED, DISCRETE, CONTINUOUS
-    if (isContinuous(component))
+    if (isContinuous(dynamicType))
         % update chart method type to be continuous
         chart.ChartUpdate = 'CONTINUOUS';
+    else
+        chart.ChartUpdate = 'DISCRETE';
+        chart.SampleTime ='1/50000';
     end
-    
     % LUAN TODO next: refactor and merge these, all of this should be the same
     % for the semantics vs. non-semantics preserving converters
     %basecomponent
@@ -107,23 +110,24 @@ function [ chart, inputVars, outputVars ] = addNetworkComponent( model, componen
         semanticTranslation(chart, config, ha, componentName, options.eager_violation);
     else     
         %[sF] = nonsemanticTranslation(model, chart, config, options.cfg);
-        [inputVars, outputVars, ~] = nonsemanticTranslation(model, chart, ...
+        [inputVars, outputVars, ~] = nonsemanticTranslation(isContinuous(dynamicType),model, chart, ...
             componentName, componentHa, config, options.cfg, componentIdx, ...
             isAddSignals, inputVars, outputVars);
     end
 end
 
 
-function [ answer ] = isContinuous( component )
+function [ answer ] = isContinuous(dynamicType)
 %% determines whether the component is continuous or not
 
     % TODO(X) currently, only components which contain the name 'controller' are
-    % considered discrete
-    answer = isempty(strfind(char(component.getKey()), 'controller'));
-    
-    % TODO(X) to prevent errors caused by zero flows, discrete charts are
-    % currently deactivated
-    answer = true;
+    % considered discrete 
+    %answer = isempty(strfind(char(component.getKey()), 'controller'));
+    if strfind(dynamicType,'DISCRETE')
+        answer = false;
+    else
+       answer = true;
+    end
 end
 
 function addScope(num_port, model)

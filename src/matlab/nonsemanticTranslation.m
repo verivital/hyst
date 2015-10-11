@@ -1,4 +1,4 @@
-function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,ha,config,opt_cfg_reader, componentIdx, isAddSignals, inputVars, outputVars)
+function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,model,chart,name,ha,config,opt_cfg_reader, componentIdx, isAddSignals, inputVars, outputVars)
     % ------------------------------------------------------------------------------
     % author: Luan Viet Nguyen
     % ------------------------------------------------------------------------------
@@ -34,8 +34,8 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
             newkey = [];
         end
         
-        if (~ isempty(newkey))
-            const.put(newkey, template_constants.get(oldkey));
+        if (~isempty(newkey))
+            const.put(newkey, template_constants.get(java.lang.String(oldkey)));
         end
     end
     constIncludingGlobals.putAll(const);
@@ -61,6 +61,9 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
     numVar = var.length(); 
     %
     % create local, output, and input variables in SLSF model
+    % Store guard for plant model, key == input, value == invariant of input
+    guard_of_plant = java.util.HashMap();
+    guard_of_plant_key = java.util.LinkedList;
     nInputPorts = 0;
     for i = 1: numVar
 
@@ -82,6 +85,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
             if (isempty(oldInputComponents)) % Java null check
                 % first component where this variable is an input for
                 inputVars.put(var(i), newEntry);
+                guard_of_plant_key.add(var(i));
             else
                 % variable is also input for other components, add component
                 oldInputComponents(:, end + 1) = newEntry;
@@ -100,11 +104,13 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
     %
     % initial = printer.getInitialConditionNoSp();
     modeNames = ha.modes.keySet().toArray;
-    %basecompone
+    %basecomponent
     for i_mode = 1 : ha.modes.size()
         modeTotal = modeTotal + 1;
         %clear mode mode binds transitions;
         mode = ha.modes.get(modeNames(i_mode));
+        invariant = printer.getInvariantString(mode);
+        guard_of_plant = addPlantGuard(modeNames(i_mode),guard_of_plant,invariant,guard_of_plant_key);
         %modes(i_mode) = mode;
         % create corresponding location in SLSF model, 
         % need to be improved
@@ -122,7 +128,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
 
         % create a map from location ids (from SpaceEx) to location objects (for creating transitions
         % print the flow
-        flow = printer.getStateDwellLabel(mode);
+        flow = printer.getStateDwellLabel(mode);  
         OutputDescription = '';
         for i = 1 : var.length()
             % parse local variables and output
@@ -131,7 +137,13 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
             end
         end
         % display each mode in SLSF
-        ModeDescription = strcat(char(flow),OutputDescription,10,name,'_location =',num2str(i_mode),';');
+        if isContinuous
+            ModeDescription = strcat(char(flow),OutputDescription,10,name,'_location =',num2str(i_mode),';');
+        else
+            % set sampling time
+            %set_param(strcat(model.name,'/',name), 'Sampletime', sampletime);
+            ModeDescription = strcat(name,num2str(i_mode),10,'entry:',10,OutputDescription,10,name,'_location  =',num2str(i_mode),';');
+        end
         % add location ouput
 
         % add the flow into SLSF model
@@ -140,7 +152,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
         % create a default transition
         % set defaut transtion acquired from configuration field 
         if opt_cfg_reader 
-            if (ha.modes.size() > 1) 
+            if (ha.modes.size() >= 1) 
                 if strfind(initLoc, modeNames(i_mode))
                    xsource = sF(i_mode).Position(1)+sF(i_mode).Position(3)/2;
                    ysource = sF(i_mode).Position(2)-30;
@@ -202,7 +214,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
             % add random number to make sure transitions do not overlap
             % each other
             if (transSource == transTarget)
-                [TransitionPointer] = transistionPos(TransitionPointer,(i_trans - 1)*(3+rand),(i_trans)*(6+rand),...
+                [TransitionPointer] = transistionPos(TransitionPointer,(i_trans - 1)*(3+rand),(i_trans)* (6+rand),...
                                                     550+ i_trans*50,175,500,150-i_trans*50);
             else    
                 TransitionPointer.SourceOClock = (i_trans + 1)*6+rand;
@@ -211,8 +223,13 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation(model,chart,name,h
         end        
         Guard_Label = '';
         % add the guard into SLSF model
-        
-        if ~isempty(char(guard)) && ~isempty(char(reset)) 
+        if (strcmp(char(guard),'true') && isempty(char(reset)))
+            guard = guard_of_plant.get(trans.to.name);
+            if ~isempty(guard)
+                   guard = strrep(char(guard), ' = ', ' == ');
+                   Guard_Label = strcat('[',char(guard),']');
+            end       
+        elseif ~isempty(char(guard)) && ~isempty(char(reset)) 
             Guard_Label = strcat('[', char(guard),']',10,'{', char(reset) , '}');
         elseif ~isempty(guard) && isempty(char(reset))
             Guard_Label = strcat('[',char(guard),']');
@@ -296,7 +313,7 @@ end
 
 function addScope(num_port,model,chart)
     %add scope to see the outputs
-    add_block('built-in/Scope',[model.Name '/Scope'],'NumInputPorts',num2str(num_port),'Position',[350, 25, 400, 100],...
+    add_block('built-in/Scope',[model.Name '/Scope'],'NumInputPorts',num2str(num_port),'Position',[350, 25,  400, 100],...
         'SaveToWorkspace', 'on', ...
         'SaveName', 'ScopeData', ...
         'DataFormat', 'Structure', ...
@@ -382,4 +399,15 @@ function [ labelOut ] = filterInitialCondition( labelIn, inputVars, vars, compon
         labelOut = [labelOut, line];
     end
     labelOut = [labelOut, '}'];
+end
+% function used to add guards for plant model when using labels
+function [guard_of_plant] = addPlantGuard(modeName,guard_of_plant,invariant,input)
+    inv = strsplit(char(invariant),'&');
+    for i = 1: length(inv)
+        for j = 1: input.size()
+            if ~isempty(strfind(inv(i),char(input(j))))
+                guard_of_plant.put(modeName,inv(i));
+            end
+        end
+    end
 end

@@ -887,7 +887,7 @@ public class StateflowSpPrinter extends ToolPrinter {
      * @param mode automaton mode
      * @return Stateflow string
      */
-    private String getInvariantString(final AutomatonMode mode) {
+    public String getInvariantString(final AutomatonMode mode) {
         return getCondition(mode.invariant);
     }
     
