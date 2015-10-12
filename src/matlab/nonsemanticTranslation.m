@@ -329,13 +329,16 @@ function [ answer ] = isInputVar( var, ha )
     %answer = com.verivital.hyst.util.AutomatonUtil.isInputVariable(ha, var);
     
     % TODO(X) temporary solution until HyST provides this information
-    answer = false;
+    % if not output, it is input
     
-    if (strcmp(var, 'vc') && strcmp(ha.instanceName, 'controller'))
-        answer = true;
-    elseif (strcmp(var, 'mode_out'))
-        answer = true;
-    end
+    %answer = false;
+    answer = ~com.verivital.hyst.util.AutomatonUtil.isOutputVariable(ha, var);
+    
+%     if ((strcmp(var, 'vc')|| strcmp(var, 'il'))&& strcmp(ha.instanceName, 'controller'))
+%         answer = true;
+%     elseif (strcmp(var, 'mode_out'))
+%         answer = true;
+%     end
 end
 
 function [ answer ] = isOutputVar( var, ha )
@@ -405,7 +408,7 @@ function [guard_of_plant] = addPlantGuard(modeName,guard_of_plant,invariant,inpu
     inv = strsplit(char(invariant),'&');
     for i = 1: length(inv)
         for j = 1: input.size()
-            if ~isempty(strfind(inv(i),char(input(j))))
+            if ~isempty(strfind(inv(i),char(input.get(j-1))))
                 guard_of_plant.put(modeName,inv(i));
             end
         end
