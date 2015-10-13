@@ -1,12 +1,14 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
+import com.verivital.hyst.geometry.HyperRectangleCornerEnumerator;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -23,20 +25,31 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
-import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
+import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
+import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
-	private final static String USAGE = "[time_step, time max, epsilon, (noforbidden)]";
+	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={center|star|corners})" +
+									    ",(addforbidden={true|false})";
 	
 	double timeStep;
 	double timeMax;
 	double epsilon;
-	boolean noForbidden = false;
+	boolean addForbidden = true;
+	SimulationType simType = SimulationType.CENTER;
+	
+	enum SimulationType
+	{
+		CENTER, // simulate from the center
+		STAR, // simulate from 2*n+1 points (center point as well as limits in each dimension),
+		CORNERS // simulate from n^2+1 points (center point as well as corners),
+	}
 	
 	String timeVariable;
 	int timeVarIndex; // the index of timeVarible in ha.variableName
@@ -78,31 +91,162 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     
     private void parseParams(String params)
 	{
-		// time step, time max, epsilon
+    	//"step=<val>,maxtime=<val>,epsilon=<val>(,simtype={center|star|corners}),(addforbidden={true|false})";
+
+    	// defaults
+		timeStep = -1;
+		timeMax = -1;
+		epsilon = -1;
+		addForbidden = true;
+		simType = SimulationType.CENTER;
+		
 		String[] parts = params.split(",");
 		
-		if (parts.length != 3 && parts.length != 4)
-			throw new AutomatonExportException("Pass expected three or four params: " + USAGE);
+		for (String part : parts)
+		{
+			String[] assignment = part.split("=");
+			
+			if (assignment.length != 2)
+				throw new AutomatonExportException("Pass parameter expected single '=' sign: " + part);
+	
+			String name = assignment[0];
+			String value = assignment[1];
+			
+			try
+			{
+				if (name.equals("step"))
+					timeStep=Double.parseDouble(value);
+				else if (name.equals("maxtime"))
+					timeMax=Double.parseDouble(value);
+				else if (name.equals("epsilon"))
+					epsilon=Double.parseDouble(value);
+				else if (name.equals("simtype"))
+				{
+					if (value.equals("center"))
+						simType = SimulationType.CENTER;
+					else if (value.equals("star"))
+						simType = SimulationType.STAR;
+					else if (value.equals("corners"))
+						simType = SimulationType.CORNERS;
+					else
+						throw new AutomatonExportException("Unknown simulation type parameter: " + part+ "; usage: " + USAGE);
+				}
+				else if (name.equals("addforbidden"))
+				{
+					if (value.equals("true"))
+						addForbidden = true;
+					else if (value.equals("false"))
+						addForbidden = false;
+					else
+						throw new AutomatonExportException("Unknown addforbidden parameter: " + part + "; usage: " + USAGE);
+				}
+				else
+					throw new AutomatonExportException("Unknown pass parameter: '" + name + "'; usage: " + USAGE);
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AutomatonExportException("Error parsing pass parameter: " + USAGE, e);
+			}
+		}
+		
+		// errors if not set
+		if (timeStep <= 0)
+			throw new AutomatonExportException("Positive time must be set as pass parameter: " + USAGE);
+		
+		if (timeMax <= 0)
+			throw new AutomatonExportException("Positive max time must be set as pass parameter: " + USAGE);
+		
+		if (epsilon < 0)
+			throw new AutomatonExportException("Nonnegative epsilon must be set as pass parameter: " + USAGE);
+	}
+    
+    /**
+     * Get the initial set of states as a HyperRectangle
+     * @return the initial set of states
+     * @throws AutomatonExportException if the initial set of states is not a box
+     */
+    public HyperRectangle getInitialBox()
+    {
+    	int numDims = ha.variables.size();
+    	HyperRectangle rv = new HyperRectangle(numDims);
+    	
+    	// start in the middle of the initial state set
+		TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
 		
 		try
 		{
-			timeStep = Double.parseDouble(parts[0]);
-			timeMax = Double.parseDouble(parts[1]);
-			epsilon = Double.parseDouble(parts[2]);
-		}
-		catch (NumberFormatException e)
+			RangeExtractor.getVariableRanges(config.init.values().iterator().next(), ranges);
+		} 
+		catch (EmptyRangeException e)
 		{
-			throw new AutomatonExportException("Error parsing pass parameter: " + USAGE, e);
+			throw new AutomatonExportException("Could not determine ranges for inital values (not rectangluar initial states).", e);
+		}
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException("Constant mismatch in initial values.", e);
 		}
 		
-		if (parts.length == 4)
+		int numVars = ha.variables.size();
+		
+		for (int i = 0; i < numVars; ++i)
 		{
-			if (parts[3].equals("noforbidden"))
-				noForbidden = true;
+			String var = ha.variables.get(i);
+			Interval dimRange = ranges.get(var);
+			
+			if (dimRange == null)
+				throw new AutomatonExportException("Range for '" + var + "' was not set (not rectangluar initial states).");
 			else
-				throw new AutomatonExportException("Unknown last param: '" + parts[3] + "'. " + USAGE);
+				rv.dims[i] = dimRange;
 		}
-	}
+		
+		return rv;
+    }
+    
+    /**
+     * Gets the start of the simulation, depending on the simType parameter
+     * @param initBox the initial box of states (from getInitialBox())
+     * @return a set of points
+     */
+    private ArrayList <HyperPoint> getSimulationStart(HyperRectangle initBox)
+    {
+    	HyperPoint center = initBox.center();
+		
+		final ArrayList <HyperPoint> rv = new ArrayList <HyperPoint>();
+		rv.add(center); // all sim types include center
+		
+		if (simType == SimulationType.CENTER)
+			; // center was already included
+		else if (simType == SimulationType.STAR)
+		{
+			for (int d = 0; d < initBox.dims.length; ++d)
+			{
+				Interval range = initBox.dims[d];
+				HyperPoint left = new HyperPoint(center);
+				HyperPoint right = new HyperPoint(center);
+				
+				left.dims[d] = range.min;
+				right.dims[d] = range.max;
+				
+				rv.add(left);
+				rv.add(right);
+			}
+		}
+		else if (simType == SimulationType.CORNERS)
+		{
+			initBox.enumerateCornersUnique(new HyperRectangleCornerEnumerator()
+			{
+				@Override
+				public void enumerate(HyperPoint p)
+				{
+					rv.add(p);
+				}
+			});
+		}
+		else
+			throw new AutomatonExportException("Unimplemented simType: " + simType);
+		
+		return rv;
+    }
 
     /**
      * Construct the time-triggered modes and transitions
@@ -110,16 +254,19 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private void simulateAndConstruct()
 	{
 		// simulate from initial state
-		double[] initPt = AutomatonUtil.getInitialPoint(ha, config);
-		Hyst.log("Init point from config: " + Arrays.toString(initPt));
+    	HyperRectangle initBox = getInitialBox();
+    	HyperPoint centerPoint = initBox.center();
+		ArrayList <HyperPoint> simPoints = getSimulationStart(initBox);
+				
+		Hyst.log("Initial simulation points: " + simPoints);
 
 		double simTimeStep = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
 		int numSteps = (int)Math.round(timeMax / simTimeStep);
 		
-		MyStepListener sl = new MyStepListener(simTimeStep);
+		MyStepListener sl = new MyStepListener(simTimeStep, simPoints, initBox, originalMode);
 		
 		long simStartMs = System.currentTimeMillis();
-		Simulator.simulateFor(timeMax, initPt, numSteps, originalMode.flowDynamics, ha.variables, sl);
+		Simulator.simulateFor(timeMax, centerPoint, numSteps, originalMode.flowDynamics, ha.variables, sl);
 		long simEndMs = System.currentTimeMillis();
 		
 		final PythonBridge pb = new PythonBridge();
@@ -173,7 +320,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private class MyStepListener extends StepListener
 	{
     	private int modeCount = 0;
-    	private HyperPoint prevBoxPoint = null;
+    	private ArrayList <HyperPoint> prevBoxPoints = null;
     	private double prevBoxTime = -1;
     	private AutomatonMode prevMode = null;
     	private double simTimeStep;
@@ -181,9 +328,47 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     	public ArrayList <AutomatonMode> modes = new ArrayList <AutomatonMode>();
     	public ArrayList <HyperRectangle> rects = new ArrayList <HyperRectangle>();
     	
-    	public MyStepListener(double simTimeStep)
+    	private ArrayList<HyperPoint> simPoints = null;
+    	private HyperRectangle initBox = null;
+    	private Map <String, Expression> flowDynamics = null; 
+    	private List <String> varNames = null;
+    	
+    	public MyStepListener(double simTimeStep, ArrayList<HyperPoint> simPoints, HyperRectangle initBox, AutomatonMode am)
     	{
     		this.simTimeStep = simTimeStep;
+    		this.simPoints = simPoints;
+    		this.initBox = initBox;
+    		
+    		if (isNondeterministicDynamics(am.flowDynamics))
+    			throw new AutomatonExportException("Nondeterministic Dynamics are not implemented in simulation.");
+    		
+    		this.flowDynamics = Simulator.centerDynamics(am.flowDynamics);
+    		this.varNames = am.automaton.variables;
+    	}
+
+    	private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
+		{
+			boolean rv = false;
+			
+			for (ExpressionInterval ei : dy.values())
+			{
+				if (ei.getInterval() != null)
+				{
+					rv = true;
+					break;
+				}
+			}
+			
+			return rv;
+		}
+
+		/**
+    	 * Advance a simulation point
+    	 * @param p [inout] the point to advance (in place)
+    	 */
+    	private void step(HyperPoint p)
+    	{
+    		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeStep);
     	}
     	
 		@Override
@@ -192,17 +377,27 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			double curTime = numStepsCompleted * simTimeStep;
 			double prevTime = (numStepsCompleted - 1) * simTimeStep;
 			
+			// if it's not the first (initial) call
+			if (numStepsCompleted > 0)
+			{
+				// simulate every point in simPoints by the time step
+				for (HyperPoint sp : simPoints)
+					step(sp);
+			}
+			
 			if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
 			{
-				if (prevBoxPoint != null)
+				// A time-triggered transition should occur here
+				
+				if (prevBoxPoints != null)
 				{
 					final String MODE_PREFIX = "_m_";
 					AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
 					am.flowDynamics = originalMode.flowDynamics;
 					am.invariant = originalMode.invariant;
 					
-			        // bloat bounding box between prevPoint and hp
-					HyperRectangle hr = boundingBox(prevBoxPoint, hp);
+			        // bloat bounding box between prevBoxPoints and simPoints
+					HyperRectangle hr = boundingBox(prevBoxPoints, simPoints);
 					hr.bloatAdditive(epsilon);
 					
 					// set the flows based on the box
@@ -234,9 +429,22 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				}
 				
 				// record the time-triggered point for the construction of the next box
-				prevBoxPoint = hp;
+				prevBoxPoints = deepCopy(simPoints);
 				prevBoxTime = curTime;
 			}
+		}
+
+		private ArrayList<HyperPoint> deepCopy(ArrayList<HyperPoint> pts)
+		{
+			ArrayList<HyperPoint> rv = new ArrayList<HyperPoint>(pts.size());
+			
+			for (HyperPoint hp : pts)
+			{
+				HyperPoint newHp = new HyperPoint(hp);
+				rv.add(newHp);
+			}
+			
+			return rv;
 		}
 	}
 	
@@ -248,6 +456,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private void hybridizeFlows(ArrayList<AutomatonMode> modes,
 			ArrayList<HyperRectangle> rects, PythonBridge pb)
 	{
+		if (modes.size() == 0)
+			throw new AutomatonExportException("hybridizeFlows was called 0 modes");
+		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		
 		for (int i = 0; i < modes.size(); ++i)
@@ -349,14 +560,25 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		}
 	}
 
-	private static HyperRectangle boundingBox(HyperPoint pt1,	HyperPoint pt2)
+	/**
+	 * Get the bounding box of two sets of points
+	 * @param setA one of the sets
+	 * @param setB the other set
+	 * @return a hyperrectngle which tightly includes all the points
+	 */
+	private static HyperRectangle boundingBox(ArrayList<HyperPoint> setA,	ArrayList<HyperPoint> setB)
 	{
-		HyperRectangle rv = new HyperRectangle(pt1.dims.length);
+		HyperPoint firstPoint = setA.get(0);
+		int numDims = firstPoint.dims.length;
+		HyperRectangle rv = firstPoint.toHyperRectangle();
 		
-		for (int d = 0; d < pt2.dims.length; ++d)
+		for (int d = 0; d < numDims; ++d)
 		{
-			rv.dims[d] = new Interval(pt1.dims[d]);
-			rv.dims[d].expand(pt2.dims[d]);
+			for (HyperPoint hp : setA)
+				rv.dims[d].expand(hp.dims[d]);
+			
+			for (HyperPoint hp : setB)
+				rv.dims[d].expand(hp.dims[d]);
 		}
 		
 		return rv;
@@ -450,7 +672,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			config.forbidden = HybridizeGridPass.expressionInvariantsIntersection(ha, e, "forbidden states");
 		}
 		
-		if (noForbidden == false)
+		if (addForbidden)
 		{
 			// add error mode to the forbidden states
 			String name = originalMode.name + "_error";

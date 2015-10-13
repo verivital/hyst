@@ -297,7 +297,7 @@ public class PassTests
 		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26 & c == 0"));
 		c.validate();
 		
-		String params = "0.5,1.0,0.05"; // step time = 0.5, total time = 1.0, epsilon = 0.05
+		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center";
 		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
 		
 		Assert.assertEquals("3 modes (2 + error)", 3, ha.modes.size());

@@ -93,4 +93,14 @@ public class HyperPoint implements Comparable <HyperPoint>
 		
 		return isLess ? -1 : (isMore ? 1 : 0);
 	}
+
+	public HyperRectangle toHyperRectangle()
+	{
+		HyperRectangle rv = new HyperRectangle(dims.length);
+		
+		for (int d = 0; d < dims.length; ++d)
+			rv.dims[d] = new Interval(dims[d]);
+		
+		return rv;
+	}
 }

@@ -3,9 +3,6 @@
  */
 package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 
-import java.util.Map;
-
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 
 /**

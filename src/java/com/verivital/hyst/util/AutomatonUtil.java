@@ -444,7 +444,7 @@ public abstract class AutomatonUtil
 	 * @param ha the hybrid automaton
 	 * @return the center point of the first initial mode, in the order of ha.variablesNames
 	 */
-	public static double[] getInitialPoint(BaseComponent ha, Configuration config)
+	public static HyperPoint getInitialPoint(BaseComponent ha, Configuration config)
 	{
 		if (config.root != ha)
 			throw new AutomatonExportException("expected flat automaton");
@@ -479,7 +479,7 @@ public abstract class AutomatonUtil
 				rv[i] = in.middle();
 		}
 		
-		return rv;
+		return new HyperPoint(rv);
 	}
 
 	/**

@@ -32,7 +32,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 	BaseComponent ha;
 	TreeSet <Double> simTimes;
 	AutomatonMode mode;
-	double[] initPt;
+	HyperPoint initPt;
 	int numVars;
 	
 	@Override
