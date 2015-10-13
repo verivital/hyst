@@ -13,7 +13,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
     modeTotal = 0;
     %
     % Get all constants directly mapped in SpaceEx and constants specified by cfg files  
-    template_constants = config.root.getAllConstants();
+    template_constants = config.root.getAllConstants()
     oldkeyList = template_constants.keySet().toArray;
     const = java.util.HashMap();
     constIncludingGlobals = java.util.HashMap();
@@ -22,9 +22,9 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
         if strfind(oldkey,name)
             newkey = strrep(oldkey,strcat(name,'.'),'');
             % template_constants.put(newkey, value);
-        elseif (isempty(strfind(oldkey, '.')))
-            if (componentIdx == 1)
-                % add global constants to first component
+        elseif (isempty(strfind(oldkey, '.')));
+            if (componentIdx <= 2)
+                % add global constants to first and second component 
                 newkey = oldkey;
             else
                 newkey = [];
@@ -39,6 +39,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
         end
     end
     constIncludingGlobals.putAll(const);
+    const
     %
     %position parmameter;
     x = 120;

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="buckboost_template">
+    <param name="il" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="vc" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="hop" type="label" local="false" />
+    <param name="a00o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a01o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a10o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a11o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a00c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a01c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a10c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="a11c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="bounds" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="b0o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="b1o" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="b0c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="b1c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="Vs" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="mode_out" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="charging" x="558.0" y="438.5" width="417.0" height="134.0">
+      <invariant>t &gt;= 0 &amp; t &lt;= tmax &amp; il &gt;= 0 &amp; vc &gt;= 0 &amp; mode_out == 2</invariant>
+      <flow>il' == (a00c * il + a01c * vc + b0c * Vs) &amp; vc' == (a10c * il + a11c * vc + b1c * Vs) &amp; t' == 1</flow>
+    </location>
+    <location id="3" name="discharging" x="1220.5" y="466.5" width="283.0" height="142.0">
+      <invariant>t &gt;= 0 &amp; t &lt;= tmax &amp; vc &gt;= 0 &amp; il &gt;= 0 &amp; mode_out == 1</invariant>
+      <flow>il' == (a00o * il + a01o * vc + b0o * Vs) &amp; vc' == (a10o * il + a11o * vc + b1o * Vs) &amp; t' == 1</flow>
+    </location>
+    <location id="2" name="dcm" x="896.5" y="667.5" width="369.0" height="132.0">
+      <invariant>t &gt;= 0 &amp; t &lt;= tmax &amp; vc &gt;= 0 &amp; il &lt;= 0 &amp; mode_out == 1</invariant>
+      <flow>il' == 0 &amp; vc' ==  (a11o * vc + b1o * Vs) &amp; t' == 1</flow>
+    </location>
+    <transition source="1" target="3">
+      <label>hop</label>
+      <labelposition x="-131.0" y="-96.0" width="284.0" height="72.0" />
+      <middlepoint x="900.25" y="337.5" />
+    </transition>
+    <transition source="3" target="1">
+      <label>hop</label>
+      <labelposition x="-184.0" y="-134.0" width="138.0" height="56.0" />
+      <middlepoint x="896.75" y="568.0" />
+    </transition>
+    <transition source="3" target="2">
+      <label>hop</label>
+      <guard>il &lt;= 0</guard>
+      <labelposition x="140.0" y="26.0" width="148.0" height="76.0" />
+    </transition>
+    <transition source="2" target="1">
+      <label>hop</label>
+      <labelposition x="-165.0" y="-17.0" width="122.0" height="74.0" />
+      <middlepoint x="633.25" y="567.5" />
+    </transition>
+  </component>
+  <component id="controller">
+    <param name="vc" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="mode_out" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="hop" type="label" local="false" />
+    <param name="il" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="VcH" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="VcL" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="2" name="charging_controller" x="274.0" y="231.0" width="232.0" height="126.0">
+      <invariant>vc &lt;= VcH &amp; mode_out == 2</invariant>
+      <flow>mode_out'== 0</flow>
+    </location>
+    <location id="3" name="discharging_controller" x="780.0" y="249.0" width="192.0" height="112.0">
+      <invariant>vc &gt;= VcL &amp; mode_out == 1</invariant>
+      <flow>mode_out'== 0</flow>
+    </location>
+    <transition source="2" target="3">
+      <label>hop</label>
+      <guard>vc &gt;= VcH</guard>
+      <assignment>mode_out = 1</assignment>
+      <labelposition x="-87.0" y="-97.0" width="242.0" height="96.0" />
+      <middlepoint x="513.0" y="149.0" />
+    </transition>
+    <transition source="3" target="2">
+      <label>hop</label>
+      <guard>vc &lt;= VcL</guard>
+      <assignment>mode_out = 2</assignment>
+      <labelposition x="-85.0" y="28.0" width="196.0" height="118.0" />
+      <middlepoint x="515.0" y="303.0" />
+    </transition>
+    <transition source="3" target="3">
+      <label>hop</label>
+      <guard>vc &gt; VcL</guard>
+      <labelposition x="14.0" y="-57.0" width="126.0" height="58.0" />
+    </transition>
+    <transition source="2" target="2">
+      <label>hop</label>
+      <guard>vc &lt; VcH</guard>
+      <labelposition x="-65.0" y="-61.0" width="144.0" height="68.0" />
+    </transition>
+  </component>
+  <component id="buckboost">
+    <param name="il" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="vc" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="Vs" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="mode_out" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" x="210.0" y="571.0" />
+    <param name="hop" type="label" local="false" />
+    <param name="VcH" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="VcL" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="buckboost_template" as="buckboost_template_1" x="612.0" y="122.0" width="258.0" height="162.0">
+      <map key="il">il</map>
+      <map key="a00o">-196.2264</map>
+      <map key="a01o">-377.3585</map>
+      <map key="a10o">454.5455</map>
+      <map key="a11o">-45.454545454545450</map>
+      <map key="a00c">-2.716981132075472e+02</map>
+      <map key="a01c">-377.3585</map>
+      <map key="a10c">454.5455</map>
+      <map key="a11c">-45.454545454545450</map>
+      <map key="bounds">1000</map>
+      <map key="t">t</map>
+      <map key="b0o">0</map>
+      <map key="b1o">0</map>
+      <map key="b0c">377.3585</map>
+      <map key="b1c">0</map>
+      <map key="Vs">Vs</map>
+      <map key="tmax">tmax</map>
+      <map key="vc">vc</map>
+      <map key="mode_out">mode_out</map>
+      <map key="hop">hop</map>
+    </bind>
+    <bind component="controller" as="controller_1" x="768.0" y="456.0">
+      <map key="vc">vc</map>
+      <map key="mode_out">mode_out</map>
+      <map key="hop">hop</map>
+      <map key="il">il</map>
+      <map key="VcH">VcH</map>
+      <map key="VcL">VcL</map>
+    </bind>
+  </component>
+</sspaceex>
+
