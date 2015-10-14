@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.HyperPoint;
@@ -35,7 +36,7 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
-	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={CENTER|star|corners})" +
+	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={CENTER|star|corners|starcorners|rand10|rand#})" +
 									    "(,addforbidden={TRUE|false})(,addintermediate={true|FALSE})";
 	
 	double timeStep;
@@ -44,12 +45,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	boolean addForbidden = true;
 	boolean addIntermediate = false;
 	SimulationType simType = SimulationType.CENTER;
+	int randCount = -1; // for SimulationType.RAND
 	
 	enum SimulationType
 	{
 		CENTER, // simulate from the center
 		STAR, // simulate from 2*n+1 points (center point as well as limits in each dimension),
-		CORNERS // simulate from n^2+1 points (center point as well as corners),
+		CORNERS, // simulate from n^2+1 points (center point as well as corners),
+		STARCORNERS, // both STAR and CORNERS
+		RAND, // random points on boundary
 	}
 	
 	String timeVariable;
@@ -130,6 +134,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 						simType = SimulationType.STAR;
 					else if (value.equals("corners"))
 						simType = SimulationType.CORNERS;
+					else if (value.equals("starcorners"))
+						simType = SimulationType.STARCORNERS;
+					else if (value.startsWith("rand") && value.length() > 4)
+					{
+						simType = SimulationType.RAND;
+						randCount = Integer.parseInt(value.substring(4));
+						
+						Hyst.log("Using " + randCount + " random simulations on boundary");
+					}
 					else
 						throw new AutomatonExportException("Unknown simulation type parameter: " + part+ "; usage: " + USAGE);
 				}
@@ -156,7 +169,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			}
 			catch (NumberFormatException e)
 			{
-				throw new AutomatonExportException("Error parsing pass parameter: " + USAGE, e);
+				throw new AutomatonExportException("Error parsing pass parameter '" + part + "': " + USAGE, e);
 			}
 		}
 		
@@ -225,9 +238,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		final ArrayList <HyperPoint> rv = new ArrayList <HyperPoint>();
 		rv.add(center); // all sim types include center
 		
-		if (simType == SimulationType.CENTER)
-			; // center was already included
-		else if (simType == SimulationType.STAR)
+		if (simType == SimulationType.STAR || simType == SimulationType.STARCORNERS)
 		{
 			for (int d = 0; d < initBox.dims.length; ++d)
 			{
@@ -242,19 +253,52 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				rv.add(right);
 			}
 		}
-		else if (simType == SimulationType.CORNERS)
+		
+		if (simType == SimulationType.CORNERS  || simType == SimulationType.STARCORNERS)
 		{
+			System.out.println(": initbox " + initBox);
+			
 			initBox.enumerateCornersUnique(new HyperRectangleCornerEnumerator()
 			{
 				@Override
 				public void enumerate(HyperPoint p)
 				{
 					rv.add(p);
+					System.out.println(": adding simpoint " + p);
 				}
 			});
 		}
-		else
-			throw new AutomatonExportException("Unimplemented simType: " + simType);
+		
+		if (simType == SimulationType.RAND)
+		{
+			Random rand = new Random(0); // use constant seed for reproducibility
+			int numDims = ha.variables.size();
+			
+			for (int i = 0; i < randCount; ++i)
+			{
+				HyperPoint hp = new HyperPoint(numDims);
+				
+				// on the boundary means that one of the variables is forced to be at the minimum or maximum
+				int boundaryVar = rand.nextInt(numDims);
+				
+				for (int d = 0; d < numDims; ++d)
+				{
+					Interval dimInterval = initBox.dims[d];
+					
+					if (d == boundaryVar)
+					{
+						if (rand.nextBoolean())
+							hp.dims[d] = dimInterval.max;
+						else
+							hp.dims[d] = dimInterval.min;
+					}
+					else
+						hp.dims[d] = dimInterval.min + rand.nextDouble() * dimInterval.width();
+				}
+				
+				rv.add(hp);
+			}
+		}
 		
 		return rv;
     }
@@ -355,6 +399,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     		
     		this.flowDynamics = Simulator.centerDynamics(am.flowDynamics);
     		this.varNames = am.automaton.variables;
+    		
+    		HyperRectangle.setDimensionNames(this.varNames);
     	}
 
     	private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
@@ -385,6 +431,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		@Override
 		public void step(int numStepsCompleted, HyperPoint hp)
 		{
+			final String MODE_PREFIX = "_m_";
 			double curTime = numStepsCompleted * simTimeStep;
 			double prevTime = (numStepsCompleted - 1) * simTimeStep;
 			
@@ -402,7 +449,6 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				
 				if (prevBoxPoints != null)
 				{
-					final String MODE_PREFIX = "_m_";
 					String modeName = MODE_PREFIX + modeCount++;
 					AutomatonMode am = ha.createMode(modeName);
 					am.flowDynamics = originalMode.flowDynamics;
@@ -410,7 +456,6 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 					
 			        // bloat bounding box between prevBoxPoints and simPoints
 					HyperRectangle hr = boundingBox(prevBoxPoints, simPoints);
-					Hyst.logDebug("simulation bounding box upon entering mode " + modeName + " was " + boundingBox(simPoints));
 					hr.bloatAdditive(epsilon);
 					
 					// set the flows based on the box
@@ -453,6 +498,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				// record the time-triggered point for the construction of the next box
 				prevBoxPoints = deepCopy(simPoints);
 				prevBoxTime = curTime;
+				Hyst.logDebug("simulation bounding box upon entering mode " + MODE_PREFIX + modeCount + " was " + boundingBox(simPoints));
 			}
 		}
 

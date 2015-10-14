@@ -1,5 +1,7 @@
 package com.verivital.hyst.geometry;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A Hyperrectangle is an n-dimensional rectangle representing a portion of the state space
@@ -20,9 +22,10 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		dimensionNames.add("Z");
 	}
 	
-	public static void setDimensionNames(ArrayList <String> names)
+	public static void setDimensionNames(List <String> names)
 	{
-		dimensionNames = names;
+		dimensionNames.clear();
+		dimensionNames.addAll(names);
 	}
 	
 	/**
@@ -90,29 +93,6 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 			dims[d] = hr.dims[d]; // shallow copy
 		
 		dims[hr.dims.length] = new Interval(time, time);
-	}
-
-	public String toString()
-	{
-		String s = "{HyperRectangle: ";
-		
-		for (int x = 0; x < dims.length; ++x)
-		{
-			Interval i = dims[x];
-			String name = "Dim #" + x;
-			
-			if (x < dimensionNames.size())
-				name = dimensionNames.get(x);
-			
-			s += name + " = [" + i.min + ", " + i.max + "]";
-			
-			if (x + 1 < dims.length)
-				s += "; ";			
-		}
-		
-		s += "}";
-		
-		return s;
 	}
 
 	public boolean contains(HyperPoint p)
@@ -431,31 +411,26 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		
 		// first construct the maximum (2^dim)
 		int maxIterator = 1;
-		int[] dimensionIndex = new int[dims.length];
-		int curDimensionIndex = 0;
+		ArrayList <Integer> dimensionIndex = new ArrayList <Integer>(dims.length);
 		
 		for (int dimIndex = 0; dimIndex < dims.length; ++dimIndex)
 		{
 			if (!dims[dimIndex].isPoint())
 			{
 				maxIterator *= 2;
-				dimensionIndex[curDimensionIndex++] = dimIndex;
+				dimensionIndex.add(dimIndex);
 			}
 		}
-		
-		// next iterate from 0 to maxIterator (try each bit-array combination)
 		
 		for (int iterator = 0; iterator < maxIterator; ++iterator)
 		{
 			// extract each dimension's boolean true/false values from iterator
 			HyperPoint point = center();
 			
-			// assign all the dimensnions that are not flat
+			// assign all the dimensions that are not flat
 			int mask = 0x01;
-			for (int d = 0; d < dimensionIndex.length; ++d)
+			for (int actualDim : dimensionIndex)
 			{
-				int actualDim = dimensionIndex[d];
-				
 				boolean isMin = (iterator & mask) == 0;
 				mask = mask << 1;
 				
@@ -491,5 +466,28 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		}
 		
 		return rv;
+	}
+	
+	public String toString()
+	{
+		String s = "{HyperRectangle: ";
+		
+		for (int x = 0; x < dims.length; ++x)
+		{
+			Interval i = dims[x];
+			String name = "Dim #" + x;
+			
+			if (x < dimensionNames.size())
+				name = dimensionNames.get(x);
+			
+			s += name + " = [" + i.min + ", " + i.max + "]";
+			
+			if (x + 1 < dims.length)
+				s += "; ";			
+		}
+		
+		s += "}";
+		
+		return s;
 	}
 }

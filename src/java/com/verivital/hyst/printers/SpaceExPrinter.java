@@ -335,7 +335,7 @@ public class SpaceExPrinter extends ToolPrinter
             // add ouput variables
             for (String v : config.settings.plotVariableNames) 
                sed.addOutputVar(v);
-                  
+            
             return sed;
 	}
 	
