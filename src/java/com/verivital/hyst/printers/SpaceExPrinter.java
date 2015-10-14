@@ -226,7 +226,6 @@ public class SpaceExPrinter extends ToolPrinter
                 		ei.setInterval(new Interval(0));
                 }
             }
-            
         
 			/**
 			 * iterate over automaton modes to convert flow dynamics, invariant
@@ -289,7 +288,7 @@ public class SpaceExPrinter extends ToolPrinter
                 spaceex_t.setSource( modeNamesToIds.get(t.from.name) );
                 spaceex_t.setTarget( modeNamesToIds.get(t.to.name) );
             }
-
+            
             // Network component
             
             SpaceExNetworkComponent net = new SpaceExNetworkComponent(sed);
@@ -311,10 +310,10 @@ public class SpaceExPrinter extends ToolPrinter
                 new VariableParam(net,c,ParamType.REAL,ParamDynamics.CONST,false);
             }
             
-            sed.setSystemID(baseName + "_sys");
+            sed.setSystemID(baseName + "_net");
             bind.setAs(baseName);
-            bind.setComponent(baseName + "_net");
-            net.setID(baseName + "_sys");
+            bind.setComponent(baseName + "_sys");
+            net.setID(baseName + "_net");
             /**
              * 
              */

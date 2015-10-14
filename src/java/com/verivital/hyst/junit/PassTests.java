@@ -43,7 +43,7 @@ public class PassTests
 {
 	@Before 
 	public void setUpClass() 
-	{      
+	{
 	    Expression.expressionPrinter = null;
 	}
 	

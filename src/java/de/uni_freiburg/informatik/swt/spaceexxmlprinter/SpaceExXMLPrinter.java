@@ -304,6 +304,8 @@ public class SpaceExXMLPrinter
 
 			if (varPar.getControlled())
 				paramElem.setAttribute("controlled", "true");
+			else
+				paramElem.setAttribute("controlled", "false");
 		}
 	}
 	
