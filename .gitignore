@@ -4,6 +4,6 @@ src/tests/regression/result/*
 src/bin/*
 .classpath
 .project
-.hyst.xml
+.*.xml
 
 /bin/
