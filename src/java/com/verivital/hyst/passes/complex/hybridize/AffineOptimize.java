@@ -13,6 +13,7 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
@@ -85,11 +86,12 @@ public class AffineOptimize
 			inter.max -= val;
 			
 			// if the interval is zero, don't include it as an interval
-			double TOL = 1e-9;
+			double TOL = 0; //1e-9;
 			
-			if (Math.abs(inter.max) < TOL)
+			if (Math.abs(inter.max) <= TOL)
 				op.result.put(var, new ExpressionInterval(linearized));
 			else
+			
 				op.result.put(var, new ExpressionInterval(linearized, inter));
 			
 			// increment
@@ -119,7 +121,6 @@ public class AffineOptimize
 		{
 			LinkedHashMap<String, ExpressionInterval> original = op.original;
 			HashMap<String, Interval> bounds = op.bounds;
-			
 			
 			double[][] JAC = AutomatonUtil.estimateJacobian(original, bounds);
 	

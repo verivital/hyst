@@ -55,6 +55,23 @@ public class BaseComponent extends Component
 	}
 	
 	/**
+	 * Create a new mode in this hybrid automaton. By default the invariant
+	 * is null (must be manually set) and the flows are x'=<allDynamics> 
+	 * @param name a name for the mode (must be unique)
+	 * @param allDynamics the dynamics for every variable
+	 * @return the created AutomatonMode object
+	 */
+	public AutomatonMode createMode(String name, ExpressionInterval allDynamics)
+	{
+		AutomatonMode am = createMode(name);
+		
+		for (String v : variables)
+			am.flowDynamics.put(v, allDynamics.copy());
+		
+		return am;
+	}
+	
+	/**
 	 * Create mode with given invariant and flows as strings
 	 * @param name then name of the mode
 	 * @param invariant the mode invariant

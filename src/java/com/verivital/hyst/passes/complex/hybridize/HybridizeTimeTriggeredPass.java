@@ -35,13 +35,14 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
-	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={center|star|corners})" +
-									    ",(addforbidden={true|false})";
+	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={CENTER|star|corners})" +
+									    "(,addforbidden={TRUE|false})(,addintermediate={true|FALSE})";
 	
 	double timeStep;
 	double timeMax;
 	double epsilon;
 	boolean addForbidden = true;
+	boolean addIntermediate = false;
 	SimulationType simType = SimulationType.CENTER;
 	
 	enum SimulationType
@@ -91,7 +92,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     
     private void parseParams(String params)
 	{
-    	//"step=<val>,maxtime=<val>,epsilon=<val>(,simtype={center|star|corners}),(addforbidden={true|false})";
+    	//example params: step=<val>,maxtime=<val>,...
 
     	// defaults
 		timeStep = -1;
@@ -99,6 +100,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		epsilon = -1;
 		addForbidden = true;
 		simType = SimulationType.CENTER;
+		addIntermediate = false;
 		
 		String[] parts = params.split(",");
 		
@@ -109,8 +111,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			if (assignment.length != 2)
 				throw new AutomatonExportException("Pass parameter expected single '=' sign: " + part);
 	
-			String name = assignment[0];
-			String value = assignment[1];
+			String name = assignment[0].toLowerCase();
+			String value = assignment[1].toLowerCase();
 			
 			try
 			{
@@ -140,8 +142,17 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 					else
 						throw new AutomatonExportException("Unknown addforbidden parameter: " + part + "; usage: " + USAGE);
 				}
+				else if (name.equals("addintermediate"))
+				{
+					if (value.equals("true"))
+						addIntermediate = true;
+					else if (value.equals("false"))
+						addIntermediate = false;
+					else
+						throw new AutomatonExportException("Unknown addintermediate parameter: " + part + "; usage: " + USAGE);
+				}
 				else
-					throw new AutomatonExportException("Unknown pass parameter: '" + name + "'; usage: " + USAGE);
+					throw new AutomatonExportException("Unknown parameter for pass: '" + name + "'; usage: " + USAGE);
 			}
 			catch (NumberFormatException e)
 			{
@@ -366,7 +377,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     	 * Advance a simulation point
     	 * @param p [inout] the point to advance (in place)
     	 */
-    	private void step(HyperPoint p)
+    	private void stepPoint(HyperPoint p)
     	{
     		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeStep);
     	}
@@ -382,7 +393,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			{
 				// simulate every point in simPoints by the time step
 				for (HyperPoint sp : simPoints)
-					step(sp);
+					stepPoint(sp);
 			}
 			
 			if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
@@ -392,12 +403,14 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				if (prevBoxPoints != null)
 				{
 					final String MODE_PREFIX = "_m_";
-					AutomatonMode am = ha.createMode(MODE_PREFIX + modeCount++);
+					String modeName = MODE_PREFIX + modeCount++;
+					AutomatonMode am = ha.createMode(modeName);
 					am.flowDynamics = originalMode.flowDynamics;
 					am.invariant = originalMode.invariant;
 					
 			        // bloat bounding box between prevBoxPoints and simPoints
 					HyperRectangle hr = boundingBox(prevBoxPoints, simPoints);
+					Hyst.logDebug("simulation bounding box upon entering mode " + modeName + " was " + boundingBox(simPoints));
 					hr.bloatAdditive(epsilon);
 					
 					// set the flows based on the box
@@ -423,6 +436,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 						
 						// add transitions at the time trigger to the error mode (negation of invariant)
 						addErrorTransitionsAtTimeTrigger(prevMode, prevBoxTime, hr);
+						
+						// add a second transition to an intermediate pre mode with zero dynamics
+						if (addIntermediate)
+						{
+							AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+							
+							preMode.invariant = Constant.TRUE;
+							ha.createTransition(prevMode, preMode).guard = timeGuard.copy();
+						}
 					}
 					
 					prevMode = am;
@@ -566,19 +588,20 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	 * @param setB the other set
 	 * @return a hyperrectngle which tightly includes all the points
 	 */
-	private static HyperRectangle boundingBox(ArrayList<HyperPoint> setA,	ArrayList<HyperPoint> setB)
+	@SafeVarargs
+	private static HyperRectangle boundingBox(ArrayList<HyperPoint> ... sets)
 	{
-		HyperPoint firstPoint = setA.get(0);
+		HyperPoint firstPoint = sets[0].get(0);
 		int numDims = firstPoint.dims.length;
 		HyperRectangle rv = firstPoint.toHyperRectangle();
 		
 		for (int d = 0; d < numDims; ++d)
 		{
-			for (HyperPoint hp : setA)
-				rv.dims[d].expand(hp.dims[d]);
-			
-			for (HyperPoint hp : setB)
-				rv.dims[d].expand(hp.dims[d]);
+			for (int list = 0; list < sets.length; ++list)
+			{
+				for (HyperPoint hp : sets[list])
+					rv.dims[d].expand(hp.dims[d]);
+			}
 		}
 		
 		return rv;
