@@ -179,7 +179,7 @@ public class SpaceExPrinter extends ToolPrinter
 	    sed.setTimeHorizon(Double.parseDouble(getParam("time", config.settings.spaceExConfig.timeHorizon)));
 	    
 	    SpaceExBaseComponent base = new SpaceExBaseComponent(sed);
-		base.setID(baseName + "_net");
+		base.setID(baseName + "_sys");
 	    //base.setID()
 	            
             int id = 1;
@@ -335,8 +335,6 @@ public class SpaceExPrinter extends ToolPrinter
             // add ouput variables
             for (String v : config.settings.plotVariableNames) 
                sed.addOutputVar(v);
-            
-            sed.setSystemID(baseName + "_sys");
                   
             return sed;
 	}
