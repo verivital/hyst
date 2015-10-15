@@ -20,6 +20,7 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
@@ -27,7 +28,6 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.simulation.RungeKutta;
-import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
@@ -36,9 +36,10 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 
 public class HybridizeTimeTriggeredPass extends TransformationPass 
 {
-	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,simtype={CENTER|star|corners|starcorners|rand10|rand#})" +
-									    "(,addforbidden={TRUE|false})(,addintermediate={true|FALSE})";
+	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,picount=#)(,pimaxtime=#)" +
+			"(,simtype={CENTER|star|corners|starcorners|rand10|rand#})(,addforbidden={TRUE|false})(,addintermediate={true|FALSE})";
 	
+	// extracted parameters
 	double timeStep;
 	double timeMax;
 	double epsilon;
@@ -46,6 +47,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	boolean addIntermediate = false;
 	SimulationType simType = SimulationType.CENTER;
 	int randCount = -1; // for SimulationType.RAND
+	int piCount = 0;
+	double piMaxTime = -1;
 	
 	enum SimulationType
 	{
@@ -56,14 +59,13 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		RAND, // random points on boundary
 	}
 	
-	String timeVariable;
-	int timeVarIndex; // the index of timeVarible in ha.variableName
+	final String TT_VARIABLE = "_tt";
+	final Expression ttGreaterThanZero = new Operation(Operator.GREATEREQUAL, TT_VARIABLE, 0);
+	int ttVarIndex; // the index of timeVarible in ha.variableName
 	
 	private BaseComponent ha;
     private AutomatonMode originalMode;
-    
-
-    AutomatonMode errorMode = null;
+    private AutomatonMode errorMode = null;
     
     @Override
     public String getName()
@@ -105,6 +107,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		addForbidden = true;
 		simType = SimulationType.CENTER;
 		addIntermediate = false;
+		piCount = 0;
+		piMaxTime = -1;
 		
 		String[] parts = params.split(",");
 		
@@ -119,13 +123,17 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			String value = assignment[1].toLowerCase();
 			
 			try
-			{
+			{				
 				if (name.equals("step"))
 					timeStep=Double.parseDouble(value);
 				else if (name.equals("maxtime"))
 					timeMax=Double.parseDouble(value);
 				else if (name.equals("epsilon"))
 					epsilon=Double.parseDouble(value);
+				else if (name.equals("picount"))
+					piCount=Integer.parseInt(value);
+				else if (name.equals("pimaxtime"))
+					piMaxTime=Double.parseDouble(value);
 				else if (name.equals("simtype"))
 				{
 					if (value.equals("center"))
@@ -182,10 +190,14 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		if (epsilon < 0)
 			throw new AutomatonExportException("Nonnegative epsilon must be set as pass parameter: " + USAGE);
+		
+		// generated values
+		if (piMaxTime < 0)
+			piMaxTime = timeStep * 5;
 	}
     
     /**
-     * Get the initial set of states as a HyperRectangle
+     * Get the initial set of states as a HyperRectangle.
      * @return the initial set of states
      * @throws AutomatonExportException if the initial set of states is not a box
      */
@@ -214,13 +226,19 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		for (int i = 0; i < numVars; ++i)
 		{
-			String var = ha.variables.get(i);
-			Interval dimRange = ranges.get(var);
-			
-			if (dimRange == null)
-				throw new AutomatonExportException("Range for '" + var + "' was not set (not rectangluar initial states).");
+			if (i == ttVarIndex)
+				rv.dims[i] = new Interval(0);
 			else
-				rv.dims[i] = dimRange;
+			{
+				String var = ha.variables.get(i);
+				
+				Interval dimRange = ranges.get(var);
+				
+				if (dimRange == null)
+					throw new AutomatonExportException("Range for '" + var + "' was not set (not rectangluar initial states).");
+				else
+					rv.dims[i] = dimRange;
+			}
 		}
 		
 		return rv;
@@ -231,8 +249,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
      * @param initBox the initial box of states (from getInitialBox())
      * @return a set of points
      */
-    private ArrayList <HyperPoint> getSimulationStart(HyperRectangle initBox)
+    private ArrayList <HyperPoint> getSimulationStart()
     {
+    	HyperRectangle initBox = getInitialBox();
     	HyperPoint center = initBox.center();
 		
 		final ArrayList <HyperPoint> rv = new ArrayList <HyperPoint>();
@@ -240,31 +259,17 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		if (simType == SimulationType.STAR || simType == SimulationType.STARCORNERS)
 		{
-			for (int d = 0; d < initBox.dims.length; ++d)
-			{
-				Interval range = initBox.dims[d];
-				HyperPoint left = new HyperPoint(center);
-				HyperPoint right = new HyperPoint(center);
-				
-				left.dims[d] = range.min;
-				right.dims[d] = range.max;
-				
-				rv.add(left);
-				rv.add(right);
-			}
+			rv.addAll(initBox.getStarPoints());
 		}
 		
 		if (simType == SimulationType.CORNERS  || simType == SimulationType.STARCORNERS)
 		{
-			System.out.println(": initbox " + initBox);
-			
 			initBox.enumerateCornersUnique(new HyperRectangleCornerEnumerator()
 			{
 				@Override
 				public void enumerate(HyperPoint p)
 				{
 					rv.add(p);
-					System.out.println(": adding simpoint " + p);
 				}
 			});
 		}
@@ -279,7 +284,10 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				HyperPoint hp = new HyperPoint(numDims);
 				
 				// on the boundary means that one of the variables is forced to be at the minimum or maximum
-				int boundaryVar = rand.nextInt(numDims);
+				int boundaryVar = rand.nextInt(numDims - 1); // subtract one for the time triggered variable
+				
+				if (boundaryVar >= ha.variables.indexOf(ttVarIndex))
+					++boundaryVar;
 				
 				for (int d = 0; d < numDims; ++d)
 				{
@@ -309,101 +317,140 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private void simulateAndConstruct()
 	{
 		// simulate from initial state
-    	HyperRectangle initBox = getInitialBox();
-    	HyperPoint centerPoint = initBox.center();
-		ArrayList <HyperPoint> simPoints = getSimulationStart(initBox);
+		ArrayList <HyperPoint> simPoints = getSimulationStart();
 				
-		Hyst.log("Initial simulation points: " + simPoints);
+		Hyst.log("Initial simulation points (" + simPoints.size() + "): " + simPoints);
 
-		double simTimeStep = timeStep / 20.0; // 20 steps per simulation time... seems reasonable
-		int numSteps = (int)Math.round(timeMax / simTimeStep);
-		
-		MyStepListener sl = new MyStepListener(simTimeStep, simPoints, initBox, originalMode);
+		MySimulator sim = new MySimulator(simPoints);
 		
 		long simStartMs = System.currentTimeMillis();
-		Simulator.simulateFor(timeMax, centerPoint, numSteps, originalMode.flowDynamics, ha.variables, sl);
+		sim.run(timeMax);
 		long simEndMs = System.currentTimeMillis();
 		
 		final PythonBridge pb = new PythonBridge();
 		pb.open();
 
 		long optStartMs = System.currentTimeMillis();
-		
-		// hybridize all the flows
-		hybridizeFlows(sl.modes, sl.rects, pb);
-		
-        // report stats
-		long simTime = simEndMs - simStartMs;
+		hybridizeFlows(sim.modes, sim.rects, pb);
 		long optTime = System.currentTimeMillis() - optStartMs;
+		long simTime = simEndMs - simStartMs;
+		
 		pb.close();
 		
-		int numOpt = sl.modes.size() * (sl.modes.get(0).flowDynamics.size() - 1);
+		int numOpt = sim.modes.size() * (sim.modes.get(0).flowDynamics.size() - 1);
 		
-		Hyst.log("Simulation time to construct " + sl.modes.size() + " modes: " + simTime + " milliseconds.");
-		
+		Hyst.log("Simulation time to construct " + sim.modes.size() + " modes: " + simTime + " milliseconds.");
 		Hyst.log("Completed " + numOpt + " optimizations in " + optTime + " milliseconds. " +
 				(1000.0 * numOpt / optTime) + " per second.");
-		
-		printAverageBoxWidths(sl);
-	}
-	
-	private void printAverageBoxWidths(MyStepListener sl)
-	{
-		Hyst.log("Average box widths (after bloating):");
-		
-		ArrayList <Double> totalWidth = new ArrayList <Double>();
-		
-		for (int i = 0; i < ha.variables.size(); ++i)
-			totalWidth.add(0.0);
-		
-		for (HyperRectangle hr : sl.rects)
-		{
-			for (int d = 0; d < hr.dims.length; ++d)
-				totalWidth.set(d, totalWidth.get(d) + hr.dims[d].width());
-		}
-		
-		for (int i = 0; i < ha.variables.size(); ++i)
-		{
-			if (i == timeVarIndex)
-				continue;
-			
-			double avg = totalWidth.get(i) / sl.rects.size();
-			Hyst.log(ha.variables.get(i) + ": " + avg);
-		}
 	}
 
-	private class MyStepListener extends StepListener
+	private class MySimulator
 	{
-    	private int modeCount = 0;
-    	private ArrayList <HyperPoint> prevBoxPoints = null;
-    	private double prevBoxTime = -1;
-    	private AutomatonMode prevMode = null;
-    	private double simTimeStep;
+		// variables used during construction
+    	private ArrayList<HyperPoint> simPoints = null; // set of points being simulated which guide the construction
+    	private Expression nextTransitionGuard = null; // the guard to use for the transition to the next mode
     	
-    	public ArrayList <AutomatonMode> modes = new ArrayList <AutomatonMode>();
-    	public ArrayList <HyperRectangle> rects = new ArrayList <HyperRectangle>();
+    	// settings
+    	final private double simTimeMicroStep;
+    	final private Map <String, Expression> flowDynamics; 
+    	final private List <String> varNames;
     	
-    	private ArrayList<HyperPoint> simPoints = null;
-    	private HyperRectangle initBox = null;
-    	private Map <String, Expression> flowDynamics = null; 
-    	private List <String> varNames = null;
+    	// constants
+    	final String MODE_PREFIX = "_m_";
+    	final int SIMULATION_MICROSTEPS_PER_TT = 20;
     	
-    	public MyStepListener(double simTimeStep, ArrayList<HyperPoint> simPoints, HyperRectangle initBox, AutomatonMode am)
+    	// results
+    	public ArrayList <AutomatonMode> modes = new ArrayList <AutomatonMode>(); // constructed modes
+    	public ArrayList <HyperRectangle> rects = new ArrayList <HyperRectangle>(); // constructed invariant rectangles
+    	
+    	public MySimulator(ArrayList<HyperPoint> simPoints)
     	{
-    		this.simTimeStep = simTimeStep;
+    		this.simTimeMicroStep = timeStep / SIMULATION_MICROSTEPS_PER_TT;
     		this.simPoints = simPoints;
-    		this.initBox = initBox;
     		
-    		if (isNondeterministicDynamics(am.flowDynamics))
+    		if (isNondeterministicDynamics(originalMode.flowDynamics))
     			throw new AutomatonExportException("Nondeterministic Dynamics are not implemented in simulation.");
     		
-    		this.flowDynamics = Simulator.centerDynamics(am.flowDynamics);
-    		this.varNames = am.automaton.variables;
+    		this.flowDynamics = Simulator.centerDynamics(originalMode.flowDynamics);
+    		this.varNames = originalMode.automaton.variables;
     		
     		HyperRectangle.setDimensionNames(this.varNames);
     	}
 
-    	private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
+    	/**
+    	 * Actually run the simulation
+    	 * @param timeMax the amount of time to run the simulation for
+    	 */
+    	public void run(double timeMax)
+		{
+    		double TOL = 1e-12;
+    		double elapsed = 0;
+    		
+    		// pseudo-invariants
+    		double piStepTime = -1;
+    		double piNextTime = -1; 
+    		
+    		if (piCount > 0)
+    		{
+    			piStepTime = timeMax / piCount;
+    			piNextTime = 0;
+    		}
+    		
+    		while (elapsed + TOL < timeMax)
+    		{
+    			if (piNextTime >= 0 && elapsed + TOL > piNextTime)
+    			{
+    				// try a pseudo invariant step (no time elapse)
+    				piNextTime += piStepTime;
+    				
+    				HyperPoint piPoint = getPseudoInvariantPoint();
+    				
+    				if (piPoint != null)
+    				{
+    					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
+    					stepPseudoInvariant(piPoint);
+    					continue;
+    				}
+    				else
+    					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);
+    			}
+    			else
+    			{
+	    			// do a time-triggered step
+	    			stepTimeTrigger();
+	    			elapsed += timeStep;
+    			}
+    		}
+		}
+
+		/**
+    	 * Check if a pseudo-invariant step can be performed. This is the case if the center point's simulation can go to a point
+    	 * where the constructed auxiliary hyperplane would be entirely on one side of the startBox. If so, return the final
+    	 * simulated center point. If not (if the timeout value of piMaxTime is reached first), return null
+    	 * @return the point used to construct the auxiliary hyperplane, if a PI is possible, else null
+    	 */
+		private HyperPoint getPseudoInvariantPoint()
+		{
+			// the first point of simPoints is the center point we should simulate
+			HyperPoint p = simPoints.get(0).copy();
+			HyperRectangle startbox = null;// TODO working here
+			
+			return null;
+		}
+		
+		/**
+		 * Add a space-triggered mode using an auxiliary hyperplane (pseudo-invariant). There is no guarantee of time elapsing in
+		 * the constructed mode.
+		 * 
+		 * @param piPoint the point where the construct the pseudo-invariant
+		 */
+		private void stepPseudoInvariant(HyperPoint piPoint)
+		{
+			// TODO Auto-generated method stub
+			
+		}
+
+		private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
 		{
 			boolean rv = false;
 			
@@ -420,99 +467,85 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		}
 
 		/**
-    	 * Advance a simulation point
+    	 * Advance a simulation point by the simTimeMicroStep
     	 * @param p [inout] the point to advance (in place)
     	 */
-    	private void stepPoint(HyperPoint p)
+    	private void microStep(HyperPoint p)
     	{
-    		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeStep);
+    		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeMicroStep);
     	}
     	
-		@Override
-		public void step(int numStepsCompleted, HyperPoint hp)
+		/**
+		 * create one time-triggered mode
+		 */
+		public void stepTimeTrigger()
 		{
-			final String MODE_PREFIX = "_m_";
-			double curTime = numStepsCompleted * simTimeStep;
-			double prevTime = (numStepsCompleted - 1) * simTimeStep;
+			HyperRectangle simBox = boundingBox(simPoints);
+			HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
+			String modeName = MODE_PREFIX + modes.size();
 			
-			// if it's not the first (initial) call
-			if (numStepsCompleted > 0)
+			Hyst.logDebug("simulation bounding box upon entering mode " + modeName + " was " + simBox + "; points were: " + simPoints);
+			
+			// simulate for a number of microsteps until the time trigger is reached
+			for (int i = 0; i < SIMULATION_MICROSTEPS_PER_TT; ++i)
 			{
-				// simulate every point in simPoints by the time step
 				for (HyperPoint sp : simPoints)
-					stepPoint(sp);
+					microStep(sp);
 			}
 			
-			if (Math.floor(prevTime / timeStep) != Math.floor(curTime / timeStep))
+			// a time-triggered transition should occur here
+			HyperRectangle endBox = HyperRectangle.bloatAdditive(boundingBox(simPoints), epsilon);
+			HyperRectangle invariantBox = HyperRectangle.union(startBox, endBox);
+			
+			AutomatonMode am = ha.createMode(modeName);
+			
+			// store mode and rectangle for optimization
+			modes.add(am);
+			rects.add(invariantBox);
+			
+			// set dynamics
+			am.flowDynamics = originalMode.flowDynamics;
+			am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(-1)));
+			
+			// set invariant
+			am.invariant = Expression.and(originalMode.invariant.copy(), ttGreaterThanZero);
+			addRectangleInvariant(am, invariantBox);
+			
+	        // add transitions to error mode during the computation in this box
+			addModeErrorTransitions(am, invariantBox);
+			
+			// add transition from the previous state
+			if (nextTransitionGuard != null)
 			{
-				// A time-triggered transition should occur here
+				// there was a previous state, create the transition
+				AutomatonMode prevMode = modes.get(modes.size() - 2);
+				AutomatonTransition at = ha.createTransition(prevMode, am);
 				
-				if (prevBoxPoints != null)
+				at.guard = nextTransitionGuard.copy();
+				at.reset.put(TT_VARIABLE, new ExpressionInterval(timeStep));
+				
+				// add error transitions at guard
+				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox);
+				
+				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
+				if (addIntermediate)
 				{
-					String modeName = MODE_PREFIX + modeCount++;
-					AutomatonMode am = ha.createMode(modeName);
-					am.flowDynamics = originalMode.flowDynamics;
-					am.invariant = originalMode.invariant;
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
 					
-			        // bloat bounding box between prevBoxPoints and simPoints
-					HyperRectangle hr = boundingBox(prevBoxPoints, simPoints);
-					hr.bloatAdditive(epsilon);
-					
-					// set the flows based on the box
-					modes.add(am);
-					rects.add(hr);
-					
-					// set invariant based on the box
-					setModeInvariant(am, hr);
-					
-			        // add transitions to error mode on all sides of box
-					addModeErrorTransitions(am, hr);
-					
-					// add to mode's invariant the time-triggered value
-					Expression timeConstraint = new Operation(Operator.LESSEQUAL, timeVariable, curTime);
-					am.invariant = Expression.and(am.invariant, timeConstraint);
-					
-					if (prevMode != null)
-					{
-						// add transitions at time trigger from previous mode
-						Expression timeGuard = new Operation(Operator.EQUAL, 
-								new Variable(timeVariable), new Constant(prevBoxTime));
-						ha.createTransition(prevMode, am).guard = timeGuard;
-						
-						// add transitions at the time trigger to the error mode (negation of invariant)
-						addErrorTransitionsAtTimeTrigger(prevMode, prevBoxTime, hr);
-						
-						// add a second transition to an intermediate pre mode with zero dynamics
-						if (addIntermediate)
-						{
-							AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
-							
-							preMode.invariant = Constant.TRUE;
-							ha.createTransition(prevMode, preMode).guard = timeGuard.copy();
-						}
-					}
-					
-					prevMode = am;
+					preMode.invariant = Constant.TRUE;
+					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
+					ha.createTransition(prevMode, preMode).guard = nextTransitionGuard.copy();
 				}
-				
-				// record the time-triggered point for the construction of the next box
-				prevBoxPoints = deepCopy(simPoints);
-				prevBoxTime = curTime;
-				Hyst.logDebug("simulation bounding box upon entering mode " + MODE_PREFIX + modeCount + " was " + boundingBox(simPoints));
 			}
-		}
-
-		private ArrayList<HyperPoint> deepCopy(ArrayList<HyperPoint> pts)
-		{
-			ArrayList<HyperPoint> rv = new ArrayList<HyperPoint>(pts.size());
-			
-			for (HyperPoint hp : pts)
+			else
 			{
-				HyperPoint newHp = new HyperPoint(hp);
-				rv.add(newHp);
+				// there was no previous state, update the initial set of states to reflect the time trigger
+				Expression init = config.init.values().iterator().next();
+				config.init.put(originalMode.name, Expression.and(init, new Operation(Operator.EQUAL, TT_VARIABLE, timeStep)));
 			}
 			
-			return rv;
+			// add transition condition for next state
+			nextTransitionGuard = new Operation(Operator.EQUAL, TT_VARIABLE, 0);
 		}
 	}
 	
@@ -566,7 +599,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	{
 		for (int d = 0; d < hr.dims.length; ++d)
 		{
-			if (d == timeVarIndex)
+			if (d == ttVarIndex)
 				continue;
 			
 			Interval i = hr.dims[d];
@@ -581,28 +614,26 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	}
 	
 	/**
-	 * Add transitions at the time trigger to the error mode (negation of invariant)
+	 * Add transitions at the guard (for example time trigger) to the error mode (negation of invariant)
 	 * @param am the mode to add to
 	 * @param tt the time-trigger time
 	 * @param hr the rectangle bounds
 	 */
-	private void addErrorTransitionsAtTimeTrigger(
-			AutomatonMode am, double curTime, HyperRectangle hr)
+	private void addErrorTransitionsAtGuard(AutomatonMode am, Expression guard, HyperRectangle nextModeInvariant)
 	{
-		for (int d = 0; d < hr.dims.length; ++d)
+		for (int d = 0; d < nextModeInvariant.dims.length; ++d)
 		{
-			if (d == timeVarIndex)
+			if (d == ttVarIndex)
 				continue;
 			
-			Interval i = hr.dims[d];
+			Interval i = nextModeInvariant.dims[d];
 			
 			Variable v = new Variable(ha.variables.get(d));
-			Expression atTT = new Operation(Operator.EQUAL, timeVariable, curTime);
 			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.min));
 			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.max));
 			
-			ha.createTransition(am, errorMode).guard = Expression.and(atTT, le);
-			ha.createTransition(am, errorMode).guard = Expression.and(atTT, ge);
+			ha.createTransition(am, errorMode).guard = Expression.and(guard.copy(), le);
+			ha.createTransition(am, errorMode).guard = Expression.and(guard.copy(), ge);
 		}
 	}
 
@@ -611,11 +642,11 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	 * @param am the mode
 	 * @param hr the rectangle invariant
 	 */
-	private void setModeInvariant(AutomatonMode am, HyperRectangle hr)
+	private void addRectangleInvariant(AutomatonMode am, HyperRectangle hr)
 	{
 		for (int d = 0; d < hr.dims.length; ++d)
 		{
-			if (d == timeVarIndex)
+			if (d == ttVarIndex)
 				continue;
 			
 			Interval i = hr.dims[d];
@@ -654,41 +685,15 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	}
 	
 	/**
-	 * Sets the value of timeVariable, adding it if necessary
+	 * makes a time-triggered variable
 	 */
-	private void extractTimeVariable()
+	private void makeTimeTriggerVariable()
 	{
-		// look for a variable with derivative 1 and initial state 0
-		AutomatonMode am = ha.modes.values().iterator().next();
-		Expression init = config.init.values().iterator().next();
-		TreeMap<String, Interval> ranges = RangeExtractor.getVariableRanges(init, "initial states");
+		// this assumes a single-mode automaton with a single initial state expression
+		ha.variables.add(TT_VARIABLE);
+		ttVarIndex = ha.variables.size() - 1;
 		
-		for (String v : ha.variables)
-		{
-			ExpressionInterval ei = am.flowDynamics.get(v);
-			Expression e = ei.getExpression();
-			
-			if (ei.getInterval() == null && (e instanceof Constant) && ((Constant)e).getVal() == 1 && ranges.get(v).isExactly(0))
-			{
-				timeVariable = v;
-				break;
-			}
-		}
-		
-		// not found, add a new one
-		if (timeVariable == null)
-		{
-			final String TIME_VAR_NAME = "_time_trigger";
-			
-			timeVariable = TIME_VAR_NAME;
-			am.flowDynamics.put(TIME_VAR_NAME, new ExpressionInterval(new Constant(1)));
-			ha.variables.add(TIME_VAR_NAME);
-			
-			Expression newInit = Expression.and(init, new Operation(Operator.EQUAL, timeVariable, 0));
-			config.init.put(am.name, newInit);
-		}
-		
-		timeVarIndex = ha.variables.indexOf(timeVariable);
+		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval("0"));
 	}
 
 	private void makeErrorMode()
@@ -715,7 +720,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		{
 			String var = ha.variables.get(i);
 			
-			if (var.equals(timeVariable))
+			if (i == ttVarIndex)
 				continue;
 			
 			// make sure mode range is contained entirely in initRanges
@@ -757,7 +762,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
         this.ha = (BaseComponent)config.root;
         this.originalMode = ha.modes.values().iterator().next();
         parseParams(params);
-        extractTimeVariable(); // sets timeVariable
+        makeTimeTriggerVariable(); // sets timeVariable
         makeErrorMode(); // sets errorMode
         ha.validate();
 

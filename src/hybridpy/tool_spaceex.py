@@ -239,7 +239,7 @@ class SpaceExTool(HybridTool):
                 raise RuntimeError("Error parsing location name in result line: " + line)
 
             loc_name = ".".join(parts)
-            self.loc_obj = {}
+            self.loc_obj = collections.OrderedDict()
             result[loc_name] = self.loc_obj
         else:
             self._read_var_line(line, self.loc_obj)

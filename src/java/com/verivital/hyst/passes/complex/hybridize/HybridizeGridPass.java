@@ -565,7 +565,7 @@ public class HybridizeGridPass extends TransformationPass
 				rv.put(variable, intervalA);
 			else
 			{
-				Interval i = intervalA.intersection(intervalB);
+				Interval i = Interval.intersection(intervalA, intervalB);
 				
 				if (i == null)
 				{

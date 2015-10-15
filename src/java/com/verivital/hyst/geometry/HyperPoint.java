@@ -1,5 +1,6 @@
 package com.verivital.hyst.geometry;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 
 
 public class HyperPoint implements Comparable <HyperPoint>
@@ -61,6 +62,28 @@ public class HyperPoint implements Comparable <HyperPoint>
 		return s;
 	}
 
+	@Override 
+	public boolean equals(Object other)
+	{
+		boolean rv = false;
+		
+		if (other instanceof HyperPoint)
+			rv = compareTo((HyperPoint)other) == 0;
+		
+		return rv;
+	}
+	
+	@Override 
+	public int hashCode()
+	{
+		ArrayList <Double> vals = new ArrayList <Double>(dims.length); 
+		
+		for (double d : dims)
+			vals.add(d);
+		
+		return vals.hashCode();
+	}
+	
 	@Override
 	public int compareTo(HyperPoint right)
 	{
@@ -102,5 +125,10 @@ public class HyperPoint implements Comparable <HyperPoint>
 			rv.dims[d] = new Interval(dims[d]);
 		
 		return rv;
+	}
+
+	public HyperPoint copy()
+	{
+		return new HyperPoint(this);
 	}
 }

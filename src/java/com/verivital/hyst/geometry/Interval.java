@@ -180,15 +180,14 @@ public class Interval
 
 	/**
 	 * Compute the intersection of two intervals, returns null if empty
-	 * @param other the other interval we're intersecting with
 	 * @return the overlap, or null if they are disjoint
 	 */
-	public Interval intersection(Interval other)
+	public static Interval intersection(Interval a, Interval b)
 	{
 		Interval rv = new Interval();
 		
-		rv.min = Math.max(other.min, min);
-		rv.max = Math.min(other.max, max);
+		rv.min = Math.max(a.min, b.min);
+		rv.max = Math.min(a.max, b.max);
 		
 		if (rv.max < rv.min)
 			rv = null;
