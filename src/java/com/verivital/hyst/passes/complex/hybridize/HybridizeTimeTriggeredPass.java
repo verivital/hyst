@@ -574,6 +574,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				
 				if (testHyperPlane(p, startBox, flowDynamics, varNames))
 				{
+					Hyst.log("Found pi point: " + p + " with gradient " + Arrays.toString(gradient(p)));
 					rv = p;
 					break;
 				}

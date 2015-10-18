@@ -4,6 +4,7 @@ src/tests/regression/result/*
 src/bin/*
 .classpath
 .project
+.settings*
 .*.xml
 
 *.bbl

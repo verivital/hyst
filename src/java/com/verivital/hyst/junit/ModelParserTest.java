@@ -914,8 +914,6 @@ public class ModelParserTest
 		
 		Assert.assertTrue("x is NOT an output variable of base component 'out_y_1'", !AutomatonUtil.isOutputVariable(bcY,"x"));
 		Assert.assertTrue("y is an output variable of base component 'out_y_1'", AutomatonUtil.isOutputVariable(bcY,"y"));
-		
-		System.out.println("init = " + config.init.keySet());
 	}
 	
 	@Test
