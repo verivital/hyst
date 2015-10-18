@@ -610,7 +610,7 @@ public class SmallTest
 		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
 		double[] point = {1.5, 1.5};
 		double[] dir = {1.0, 0};
-		String expectedResult = "1 * x + 0 * y >= 1.5";
+		String expectedResult = "1 * x >= 1.5";
 		
 		PseudoInvariantPass pi = new PseudoInvariantPass();
 		pi.vars = new ArrayList<String>(2);
@@ -628,7 +628,7 @@ public class SmallTest
 		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
 		double[] point = {0, 0};
 		double[] dir = {0, 1};
-		String expectedResult = "0 * x + 1 * y >= 0";
+		String expectedResult = "1 * y >= 0";
 		
 		PseudoInvariantPass pi = new PseudoInvariantPass();
 		pi.vars = new ArrayList<String>(2);

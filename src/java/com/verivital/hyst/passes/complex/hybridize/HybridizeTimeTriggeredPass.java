@@ -1,9 +1,11 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.TreeMap;
 
@@ -25,6 +27,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.simulation.RungeKutta;
@@ -66,6 +69,18 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private BaseComponent ha;
     private AutomatonMode originalMode;
     private AutomatonMode errorMode = null;
+    
+    // testing below
+    public TestFunctions testFuncs = null;
+    
+    public interface TestFunctions
+    {
+    	public void piSimPointsReached(List <HyperPoint> simPoints);
+    	
+    	public void initialSimPoints(List <HyperPoint> simPoints);
+
+		public void piSucceeded(boolean rv);
+    }
     
     @Override
     public String getName()
@@ -259,7 +274,11 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		if (simType == SimulationType.STAR || simType == SimulationType.STARCORNERS)
 		{
-			rv.addAll(initBox.getStarPoints());
+			for (HyperPoint hp : initBox.getStarPoints())
+			{
+				if (!hp.equals(center))
+					rv.add(hp);
+			}
 		}
 		
 		if (simType == SimulationType.CORNERS  || simType == SimulationType.STARCORNERS)
@@ -318,6 +337,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	{
 		// simulate from initial state
 		ArrayList <HyperPoint> simPoints = getSimulationStart();
+		checkValidStartPoints(simPoints);
 				
 		Hyst.log("Initial simulation points (" + simPoints.size() + "): " + simPoints);
 
@@ -342,6 +362,28 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		Hyst.log("Simulation time to construct " + sim.modes.size() + " modes: " + simTime + " milliseconds.");
 		Hyst.log("Completed " + numOpt + " optimizations in " + optTime + " milliseconds. " +
 				(1000.0 * numOpt / optTime) + " per second.");
+	}
+
+	private void checkValidStartPoints(ArrayList<HyperPoint> simPoints)
+	{
+		HyperRectangle startBox = HyperRectangle.bloatAdditive(boundingBox(simPoints), epsilon);
+		TreeMap<String, Interval> bounds = RangeExtractor.getVariableRanges(config.init.values().iterator().next(), "initial states");
+		
+		for (Entry<String, Interval> e : bounds.entrySet())
+		{
+			String var = e.getKey();
+			Interval i = e.getValue();
+			int index = ha.variables.indexOf(var);
+			
+			if (i.min <= startBox.dims[index].min || i.max >= startBox.dims[index].max)
+			{
+				throw new AutomatonExportException("Bloated initial bounding box of simulations does not contain initial states for variable " + 
+						var + ". Consider increasing epsilon.");
+			}
+		}
+		
+		if (testFuncs != null)
+			testFuncs.initialSimPoints(simPoints);
 	}
 
 	private class MySimulator
@@ -398,56 +440,151 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     		
     		while (elapsed + TOL < timeMax)
     		{
+    			String modeName = MODE_PREFIX + modes.size();
+    			
+    			HyperRectangle simBox = boundingBox(simPoints);
+    			Hyst.logDebug("simulation bounding box upon entering mode " + modeName + " was " + simBox + "; points were: " + simPoints);
+    			
     			if (piNextTime >= 0 && elapsed + TOL > piNextTime)
     			{
     				// try a pseudo invariant step (no time elapse)
     				piNextTime += piStepTime;
+    				HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
     				
-    				HyperPoint piPoint = getPseudoInvariantPoint();
-    				
-    				if (piPoint != null)
+    				if (advanceSimulationToPseudoInvariant(startBox))
     				{
     					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
-    					stepPseudoInvariant(piPoint);
+    					stepPseudoInvariant(startBox);
     					continue;
     				}
     				else
     					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);
     			}
-    			else
-    			{
-	    			// do a time-triggered step
-	    			stepTimeTrigger();
-	    			elapsed += timeStep;
-    			}
+	    		
+    			// didn't do a pi-step, instead do a time-triggered step
+	    		stepTimeTrigger();
+	    		elapsed += timeStep;
     		}
 		}
 
 		/**
-    	 * Check if a pseudo-invariant step can be performed. This is the case if the center point's simulation can go to a point
-    	 * where the constructed auxiliary hyperplane would be entirely on one side of the startBox. If so, return the final
-    	 * simulated center point. If not (if the timeout value of piMaxTime is reached first), return null
-    	 * @return the point used to construct the auxiliary hyperplane, if a PI is possible, else null
+    	 * Advance the simulated points for a pseudo-invariant step. This can fail if if the center point's simulation cannot go to a point
+    	 * where the constructed auxiliary hyperplane would be entirely in front of the startBox (within time piMaxTime), or if some of the simulated points never reach
+    	 * the decided-upon hyperplane (within time 2*piMaxTime).
+    	 *  
+    	 * @param startBox the incoming set of states
+    	 * @return true if succeeded (and simPoints is advanced in place), false otherwise (simPoints is unmodified)
     	 */
-		private HyperPoint getPseudoInvariantPoint()
+		private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox)
+		{
+			boolean rv = false;
+			HyperPoint piPoint = getPiPoint(startBox);
+			
+			if (piPoint != null)
+			{
+				ArrayList<HyperPoint> newSimPoints = new ArrayList <HyperPoint>();
+				newSimPoints.add(piPoint);
+				
+				double piGradient[] = gradient(piPoint);
+				double piVal = dotProduct(piGradient, piPoint);
+				boolean quitEarly = false;
+				
+				// advance every simulation until it exceeds piVal
+				for (int i = 1; i < simPoints.size(); ++i)
+				{
+					HyperPoint p = simPoints.get(i).copy();
+					double prevVal = dotProduct(piGradient, p);
+					HyperPoint prevPoint = p.copy();
+					
+					if (prevVal > piVal)
+						throw new AutomatonExportException("While constructing PI, initial sim-point was on incorrect side of pi hyperplane (shouldn't occur)");
+					
+					// simulate up to 2*piMaxTime
+					
+					for (double t = 0; /* break in loop */; t += simTimeMicroStep)
+					{
+						if (t >= 2*piMaxTime)
+						{
+							Hyst.log("Simpoint " + p + " didn't cross hyperplane defined at " + piPoint + " with gradient " + Arrays.toString(piGradient) 
+									+ " within 2*piMaxTime = " + (2*piMaxTime));
+							quitEarly = true;
+							break;
+						}
+							
+						microStep(p);
+						
+						// check if p crossed the hyperplane
+						double val = dotProduct(piGradient, p);
+						
+						if (val >= piVal)
+						{
+							// it crossed! take the fraction
+							double difVal = val - prevVal; // for example 3.0 difference in val between steps
+							double fracVal = piVal - prevVal; // for example 1.0 difference between piVal and previous step
+							double frac = fracVal / difVal; // should be 1/3
+							
+							// now the point we want is prevPoint + 1/3 * (curPoint - prevPoint)
+							HyperPoint vector = HyperPoint.subtract(p, prevPoint);
+							HyperPoint fracVector = HyperPoint.multiply(vector, frac);
+							HyperPoint newPoint = HyperPoint.add(prevPoint, fracVector);
+							
+							newSimPoints.add(newPoint);
+							
+							break;
+						}
+						
+						prevVal = val;
+						prevPoint = p.copy();
+					}
+					
+					if (quitEarly)
+						break;
+				}
+				
+				if (newSimPoints.size() == simPoints.size()) // every simulation point intersected with the pi-hyperplane
+				{
+					simPoints = newSimPoints;
+					rv = true;
+				}
+				else
+					Hyst.log("Pseudo-invariant construction failed because some simpoints didn't cross the hyperplane within 2*piMaxTime");
+			}
+			else
+				Hyst.log("Pseudo-invariant construction failed because simulating center point didn't created valid PI within piMaxTime");
+			
+			if (testFuncs != null)
+			{
+				testFuncs.piSimPointsReached(simPoints);
+				testFuncs.piSucceeded(rv);
+			}
+			
+			return rv;
+		}
+
+		private HyperPoint getPiPoint(HyperRectangle startBox)
 		{
 			// the first point of simPoints is the center point we should simulate
 			HyperPoint p = simPoints.get(0).copy();
-			HyperRectangle startbox = null;// TODO working here
+			HyperPoint rv = null;
 			
-			return null;
+			// simulate up to piMaxTime, looking for a state where all the corners of startBox are on one side of p
+			for (double t = 0; t < piMaxTime; t += simTimeMicroStep)
+			{
+				microStep(p);
+				
+				if (testHyperPlane(p, startBox, flowDynamics, varNames))
+				{
+					rv = p;
+					break;
+				}
+			}
+			
+			return rv;
 		}
-		
-		/**
-		 * Add a space-triggered mode using an auxiliary hyperplane (pseudo-invariant). There is no guarantee of time elapsing in
-		 * the constructed mode.
-		 * 
-		 * @param piPoint the point where the construct the pseudo-invariant
-		 */
-		private void stepPseudoInvariant(HyperPoint piPoint)
+
+		private double[] gradient(HyperPoint hp)
 		{
-			// TODO Auto-generated method stub
-			
+			return RungeKutta.getGradientAtPoint(flowDynamics, varNames, hp);
 		}
 
 		private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
@@ -475,16 +612,107 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
     		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeMicroStep);
     	}
     	
+    	/**
+		 * Make an expression which represents the pi invariant at the given point with the given gradient
+		 * @param p the point where the pi is being constructed
+		 * @param gradient the gradient of the point
+		 * @return the expression representing the invariant
+		 */
+		private Expression makePiInvariant(HyperPoint p, double[] gradient)
+		{
+			double value = dotProduct(gradient, p);
+			
+			return PseudoInvariantPass.makeExpressionFromLinearInequality(varNames, gradient, Operator.LESSEQUAL, value);
+		}
+		
+		/**
+		 * Make an expression which represents the pi guard at the given point with the given gradient
+		 * @param p the point where the pi is being constructed
+		 * @param gradient the gradient of the point
+		 * @return the expression representing the guard
+		 */
+		private Expression makePiGuard(HyperPoint p, double[] gradient)
+		{
+			double value = dotProduct(gradient, p);
+			
+			return PseudoInvariantPass.makeExpressionFromLinearInequality(varNames, gradient, Operator.GREATEREQUAL, value);
+		}
+    	
+    	/**
+		 * Add a space-triggered mode using an auxiliary hyperplane (pseudo-invariant). There is no guarantee of time elapsing in
+		 * the constructed mode. This should be called after the simPoints have already advanced onto the plane. The first simPoint is the
+		 * one used to construct the hyperplane.
+		 * @param startBox the bloated box surrounding the simPoints before they were advanced (the incoming set)
+		 */
+		private void stepPseudoInvariant(HyperRectangle startBox)
+		{
+			String modeName = MODE_PREFIX + modes.size();
+			Hyst.logDebug("making pseudo-invariant mode named " + modeName + ", startBox was " + startBox + "; (already advanced)");
+			
+			HyperRectangle endBox = HyperRectangle.bloatAdditive(boundingBox(simPoints), epsilon);
+			HyperRectangle invariantBox = HyperRectangle.union(startBox, endBox);
+			
+			AutomatonMode am = ha.createMode(modeName);
+			
+			// store mode and rectangle for optimization
+			modes.add(am);
+			rects.add(invariantBox);
+			
+			// set dynamics
+			am.flowDynamics = copyDynamics(originalMode.flowDynamics); // tt_var' is 0
+			
+			// set invariant
+			HyperPoint piPoint = simPoints.get(0);
+			double[] piGradient = gradient(piPoint);
+			Expression piInvariant = makePiInvariant(piPoint, piGradient);
+			am.invariant = Expression.and(originalMode.invariant.copy(), piInvariant);
+			addRectangleInvariant(am, invariantBox);
+			
+			// add transitions to error mode during the computation in this box
+			addModeErrorTransitions(am, invariantBox);
+			
+			// add transition from the previous state
+			if (nextTransitionGuard != null)
+			{
+				// there was a previous state, create the transition
+				AutomatonMode prevMode = modes.get(modes.size() - 2);
+				AutomatonTransition at = ha.createTransition(prevMode, am);
+				
+				at.guard = nextTransitionGuard.copy();
+				at.reset.put(TT_VARIABLE, new ExpressionInterval(0));
+				
+				// add error transitions at guard
+				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox);
+				
+				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
+				if (addIntermediate)
+				{
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+					
+					preMode.invariant = Constant.TRUE;
+					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
+					ha.createTransition(prevMode, preMode).guard = nextTransitionGuard.copy();
+				}
+			}
+			else
+			{
+				// there was no previous state, update the initial set of states to reflect the time trigger
+				Expression init = config.init.values().iterator().next();
+				config.init.put(originalMode.name, Expression.and(init, new Operation(Operator.EQUAL, TT_VARIABLE, 0)));
+			}
+			
+			// add transition condition for next state
+			nextTransitionGuard = makePiGuard(piPoint, piGradient);
+		}
+
 		/**
 		 * create one time-triggered mode
 		 */
-		public void stepTimeTrigger()
+		private void stepTimeTrigger()
 		{
 			HyperRectangle simBox = boundingBox(simPoints);
 			HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
 			String modeName = MODE_PREFIX + modes.size();
-			
-			Hyst.logDebug("simulation bounding box upon entering mode " + modeName + " was " + simBox + "; points were: " + simPoints);
 			
 			// simulate for a number of microsteps until the time trigger is reached
 			for (int i = 0; i < SIMULATION_MICROSTEPS_PER_TT; ++i)
@@ -504,7 +732,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			rects.add(invariantBox);
 			
 			// set dynamics
-			am.flowDynamics = originalMode.flowDynamics;
+			am.flowDynamics = copyDynamics(originalMode.flowDynamics);
 			am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(-1)));
 			
 			// set invariant
@@ -547,6 +775,69 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			// add transition condition for next state
 			nextTransitionGuard = new Operation(Operator.EQUAL, TT_VARIABLE, 0);
 		}
+
+		private LinkedHashMap<String, ExpressionInterval> copyDynamics(LinkedHashMap<String, ExpressionInterval> dy)
+		{
+			LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
+			
+			rv.putAll(dy);
+			
+			return rv;
+		}
+	}
+	
+	/**
+	 * Test if all the points of box are on one side of a hyperplane derived from the given simulation point
+	 * @param simPoint the simulation point
+	 * @param box the box to test against
+	 * @return true if the box point are all behind the hyperplane
+	 */
+	public static boolean testHyperPlane(HyperPoint simPoint, HyperRectangle box, Map<String, Expression> dynamics, List <String> varNames) 
+	{
+		if (simPoint.dims.length != box.dims.length)
+			throw new RuntimeException("simpoint numdims must be same as box numdims");
+		
+		if (dynamics.size() != varNames.size())
+			throw new RuntimeException("varnames size must be same as dynamics size");
+		
+		if (simPoint.dims.length != varNames.size())
+			throw new RuntimeException("simpoint numdims must be same varNames size");
+		
+		double[] gradient = RungeKutta.getGradientAtPoint(dynamics, varNames, simPoint);
+		double val = dotProduct(gradient, simPoint);
+		
+		double maxVal = 0;
+		
+		for (int d = 0; d < gradient.length; ++d)
+		{
+			double factor = gradient[d];
+			
+			if (factor < 0)
+				maxVal += box.dims[d].min * factor;
+			else
+				maxVal += box.dims[d].max * factor;
+		}
+
+		return val > maxVal;
+	}
+
+	/**
+	 * Evaluate a dot product of a gradient and a hyperpoint
+	 * @param gradient
+	 * @param p
+	 * @return the cross product
+	 */
+	private static double dotProduct(double[] gradient, HyperPoint p)
+	{
+		if (gradient.length != p.dims.length)
+			throw new RuntimeException("eval gradient requires gradient and point have same number of dimensions");
+			
+		double rv = 0;
+		
+		for (int d = 0; d < gradient.length; ++d)
+			rv += gradient[d] * p.dims[d];
+		
+		return rv;
 	}
 	
 	/**
@@ -709,31 +1000,9 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	private void assignInitialStates()
 	{
 		Expression init = config.init.values().iterator().next();
-		TreeMap<String, Interval> initRanges = RangeExtractor.getVariableRanges(init, "initial states");
 		config.init.clear();
 		
 		final String FIRST_MODE_NAME = "_m_0";
-		AutomatonMode am = ha.modes.get(FIRST_MODE_NAME);
-		TreeMap<String, Interval> modeRanges = RangeExtractor.getVariableRanges(am.invariant, "mode _m_0 invariant");
-		
-		for (int i = 0; i < ha.variables.size(); ++i)
-		{
-			String var = ha.variables.get(i);
-			
-			if (i == ttVarIndex)
-				continue;
-			
-			// make sure mode range is contained entirely in initRanges
-			Interval modeInterval = modeRanges.get(var);
-			Interval initInterval = initRanges.get(var);
-			
-			if (initInterval.min < modeInterval.min || initInterval.max > modeInterval.max)
-			{
-				throw new AutomatonExportException("Hybridized first mode's invariant does not entirely contain the " +
-						"initial set of states. " + var + " is " + initInterval + " in initial states, and " + modeInterval 
-						+ " in the first mode. Consider increasing the bloating term (epsilon).");
-			}
-		}
 		
 		config.init.put(FIRST_MODE_NAME, init);
 	}

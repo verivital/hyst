@@ -503,4 +503,9 @@ public class Interval
 	{
 		return min == -Double.MAX_VALUE;
 	}
+
+	public Interval copy()
+	{
+		return new Interval(this);
+	}
 }

@@ -131,4 +131,34 @@ public class HyperPoint implements Comparable <HyperPoint>
 	{
 		return new HyperPoint(this);
 	}
+	
+	public static HyperPoint add(HyperPoint a, HyperPoint b)
+	{
+		HyperPoint rv = new HyperPoint(a.dims.length);
+		
+		for (int d = 0; d < b.dims.length; ++d)
+			rv.dims[d] = a.dims[d] + b.dims[d];
+		
+		return rv;
+	}
+	
+	public static HyperPoint subtract(HyperPoint a, HyperPoint b)
+	{
+		HyperPoint rv = new HyperPoint(a.dims.length);
+		
+		for (int d = 0; d < b.dims.length; ++d)
+			rv.dims[d] = a.dims[d] - b.dims[d];
+		
+		return rv;
+	}
+	
+	public static HyperPoint multiply(HyperPoint a, double val)
+	{
+		HyperPoint rv = new HyperPoint(a.dims.length);
+		
+		for (int d = 0; d < a.dims.length; ++d)
+			rv.dims[d] = a.dims[d] * val;
+		
+		return rv;
+	}
 }

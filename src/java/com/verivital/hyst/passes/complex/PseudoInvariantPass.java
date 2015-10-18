@@ -251,17 +251,37 @@ public class PseudoInvariantPass extends TransformationPass
 		return rv;
 	}
 
-	private Expression makeExpressionFromLinearInequality(double[] coeff,
-			double rhs, Operator op)
+	/**
+	 * Make an expression from a linear inequality (dot product of vars and coeffs) <= right-hand-side value
+	 * @param vars the list of variables
+	 * @param coeff the list of coefficients
+	 * @param op the operator
+	 * @param rhs the right hand side
+	 * @return the Expression for the desired linear inequality
+	 */
+	public static Expression makeExpressionFromLinearInequality(List <String> vars, double[] coeff, Operator op, double rhs)
 	{
-		Operation sum = new Operation(new Constant(coeff[0]), Operator.MULTIPLY, new Variable(vars.get(0)));
+		Operation sum = null;
 		
-		for (int d = 1; d < coeff.length; ++d)
+		new Operation(new Constant(coeff[0]), Operator.MULTIPLY, new Variable(vars.get(0)));
+		
+		for (int d = 0; d < coeff.length; ++d)
 		{
-			Operation term = new Operation(new Constant(coeff[d]), Operator.MULTIPLY, new Variable(vars.get(d)));
+			double c = coeff[d];
 			
-			sum = new Operation(sum, Operator.ADD, term);
+			if (c == 0)
+				continue;
+			
+			Operation term = new Operation(c, Operator.MULTIPLY, vars.get(d));
+			
+			if (sum == null)
+				sum = term;
+			else
+				sum = new Operation(sum, Operator.ADD, term);
 		}
+		
+		if (sum == null)
+			throw new AutomatonExportException("all coefficients were zero when constructing linear inequality");
 		
 		return new Operation(sum, op, new Constant(rhs));
 	}
@@ -349,7 +369,7 @@ public class PseudoInvariantPass extends TransformationPass
 		{
 			double rhs = dot(pt, dir);
 			
-			inv = makeExpressionFromLinearInequality(dir, rhs, Operator.GREATEREQUAL);
+			inv = makeExpressionFromLinearInequality(vars, dir, Operator.GREATEREQUAL, rhs);
 			
 			Hyst.log("Making invariant from point " + arrayString(pt) + " and dir " + arrayString(dir) + ": " + 
 					DefaultExpressionPrinter.instance.print(inv));

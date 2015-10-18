@@ -81,6 +81,19 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		}
 	}
 	
+	public HyperRectangle(Interval ... intervals)
+	{
+		int len = intervals.length;
+		
+		dims = new Interval[len];
+		
+		// for every dimension d
+		for (int d = 0; d < len; ++d)
+		{
+			dims[d] = intervals[d].copy();
+		}
+	}
+	
 	/**
 	 * Creates a hyperrectangle with one additional dimension using a shallow copy of the passed-in one
 	 * @param hr the orignal hyperrectangle

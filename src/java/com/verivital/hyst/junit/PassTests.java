@@ -1,6 +1,7 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -9,6 +10,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -520,5 +523,153 @@ public class PassTests
 		double coeff = ((Constant)ei.getExpression().asOperation().getLeft().asOperation().getLeft()).getVal();
 		
 		Assert.assertTrue("dynamics in mode0 for x was y", Math.abs(coeff - 1.0) < 1e-13);
+	}
+	
+	@Test
+	public void testCheckHyperPlane()
+	{
+		// tests the HybridizeTimeTriggeredPass.testHyperPlane() function
+		// this function tests whether a pseudo-invariant constructed at the given point would be on one side (in front of) of a given box
+		
+		// we'll use a 1d model with x' = 1, and check if the box [1,2] is on one side of x = {0.5, 1.5, 2.5}. Only 2.5 should be okay.
+		Map<String, Expression> dy = new HashMap<String, Expression>();
+		dy.put("x", new Constant(1));
+		
+		List <String> vars = new ArrayList<String>();
+		vars.add("x");
+		
+		HyperRectangle box = new HyperRectangle(new Interval(1,2));
+		double pts[] = {-0.5, 0.5, 1.5, 2.5};
+		boolean expected[] = {false, false, false, true};
+		
+		runBoxTests(vars, dy, box, pts, expected);
+					
+		// try again with [-2, -1] and -2.5, -1.5, -0.5, and 0.5
+		box = new HyperRectangle(new Interval(-2,-1));
+		pts = new double[]{-2.5,-1.5,-0.5,0.5};
+		expected = new boolean[]{false, false, true, true};
+		runBoxTests(vars, dy, box, pts, expected);
+		
+		// try again with dynamics: x' == -1
+		dy.put("x", new Constant(-1));
+		box = new HyperRectangle(new Interval(1,2));
+		pts = new double[]{-0.5, 0.5, 1.5, 2.5};
+		expected = new boolean[]{true, true, false, false};
+		runBoxTests(vars, dy, box, pts, expected);
+		
+		// try again with negative box and dynamics: x' == -1
+		box = new HyperRectangle(new Interval(-2,-1));
+		pts = new double[]{-2.5,-1.5,-0.5,0.5};
+		expected = new boolean[]{true, false, false, false};
+		runBoxTests(vars, dy, box, pts, expected);
+		
+		// try again with box [-1, 1] and dynamics: x' == -1
+		box = new HyperRectangle(new Interval(-1,1));
+		pts = new double[]{-1.5,-0.5, 0, 0.5, 1.5};
+		expected = new boolean[]{true, false, false, false, false};
+		runBoxTests(vars, dy, box, pts, expected);
+	}
+
+	/**
+	 * helper method for testCheckHyperPlane
+	 * @param vars the variable name list
+	 * @param dy the dynamics
+	 * @param box the box
+	 * @param pts the set of points to test
+	 * @param expected the expected results
+	 */
+	private void runBoxTests(List <String> vars, Map<String, Expression> dy, HyperRectangle box, double[] pts, boolean[] expected)
+	{
+		if (pts.length != expected.length)
+			throw new RuntimeException("pts.length should be equal to expected.length");
+		
+		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
+		
+		for (int i = 0; i < pts.length; ++i)
+		{
+			Assert.assertTrue(pts[i] + (expected[i] ? " SHOULD" : " should NOT") + " be in front of box " + box + ". dynamics: " + dy,
+					HybridizeTimeTriggeredPass.testHyperPlane(new HyperPoint(pts[i]), box, dy, vars) == expected[i]);
+		}
+	}
+	
+	@Test
+	public void testTimeTriggeredHybridizeWithPi()
+	{
+		// time-triggered hybridized pass tests with pseudo-invariants
+		// 1d system with x'==1, init box is [0, 1], use star to construct guide simulation
+		// pseudo-invariant count is 1, which means it should be constructed right around x == 1 (the edge of the box)
+		
+		Configuration c = makeSampleBaseConfiguration();
+		BaseComponent ha = (BaseComponent)c.root;
+		AutomatonMode am = ha.modes.values().iterator().next();
+		
+		// we're going to follow the example in the powerpoint for this
+		ha.variables.remove("y");
+		am.flowDynamics.remove("y");
+		am.flowDynamics.put("x", new ExpressionInterval("1"));
+		
+		c.settings.plotVariableNames[1] = "x";
+		c.init.put("running", FormulaParser.parseGuard("x >= 0 & x <= 1"));
+		c.validate();
+		
+		String params = "step=1,maxtime=10,epsilon=0.01,simtype=star,picount=1";
+		HybridizeTimeTriggeredPass htt = new HybridizeTimeTriggeredPass();
+		htt.testFuncs = new HybridizeTimeTriggeredPass.TestFunctions()
+		{
+			@Override
+			public void piSimPointsReached(List<HyperPoint> simPoints)
+			{
+				Assert.assertEquals("3 sim points after construction", 3, simPoints.size());
+					
+				for (HyperPoint sp : simPoints)
+					Assert.assertEquals("simpoint is near x == 1.05", simPoints.get(0).dims[0], sp.dims[0], 1e-4);
+			}
+
+			@Override
+			public void initialSimPoints(List<HyperPoint> simPoints)
+			{
+				Assert.assertEquals("3 initial sim points", 3, simPoints.size());
+			}
+
+			@Override
+			public void piSucceeded(boolean rv)
+			{
+				Assert.assertTrue("pi should succeed", rv);
+			}
+		};
+		
+		htt.runTransformationPass(c, params);
+		
+		final String FIRST_MODE = "_m_0";
+		final String SECOND_MODE = "_m_1";
+		final String TT_VAR = "_tt";
+		
+		AutomatonMode m0 = ha.modes.get(FIRST_MODE);
+		Assert.assertNotEquals("first mode exists'", null, m0);
+		
+		AutomatonMode m1 = ha.modes.get(SECOND_MODE);
+		Assert.assertNotEquals("second mode exists", null, m1);
+		
+		Assert.assertEquals("tt derivative in first mode is zero", ((Constant)m0.flowDynamics.get(TT_VAR).asExpression()).getVal(), 0, 1e-9);
+		int numTransitions = 0;
+		boolean foundGuard = false;
+		
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from == m0)
+			{
+				++numTransitions;
+				
+				if (at.to == m1 && at.guard.toDefaultString().contains("1 * x >= 1.050000"))
+					foundGuard = true;
+			}
+		}
+		
+		Assert.assertEquals("five transitions from first mode", 5, numTransitions);
+		Assert.assertTrue("found pi guard", foundGuard);
+		
+		Assert.assertTrue("pi guard is exists" , m0.invariant.toDefaultString().contains("1 * x <= 1.0500"));
+		
+		Assert.assertTrue("second mode's invariant starts at 1.04", m1.invariant.toDefaultString().contains("x >= 1.040000"));
 	}
 }
