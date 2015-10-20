@@ -127,7 +127,7 @@ public class ComponentInstance
 		
 		if (child.template == child)
 			str.append("Child is a template automaton.");
-		else
+		else if (NetworkComponent.PRINT_RECURSIVE)
 			str.append(child);
 		
 		str.append("]");

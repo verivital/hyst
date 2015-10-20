@@ -42,16 +42,6 @@ public class RangeExtractor
 			throw new AutomatonExportException("Error while parsing expression: " + 
 					DefaultExpressionPrinter.instance.print(expression), e);
 		}
-		catch (EmptyRangeException e)
-		{
-			throw new EmptyRangeException("Could not get all variable ranges for in expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
-		}
-		catch (ConstantMismatchException e)
-		{
-			throw new ConstantMismatchException("Constant mismatch in expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
-		}
 	}
 	
 	public static Map<String, Double> getConstants(Expression expression) throws ConstantMismatchException

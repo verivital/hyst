@@ -5,6 +5,7 @@ package com.verivital.hyst.printers;
 
 
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -372,10 +373,7 @@ public class FlowPrinter extends ToolPrinter
 		
 		for (ExpressionInterval e : flowDynamics.values())
 		{
-			if (expressionContainsOp(e.getExpression(), Operator.DIVIDE) || 
-				expressionContainsOp(e.getExpression(), Operator.COS) || 
-				expressionContainsOp(e.getExpression(), Operator.SIN) || 
-				expressionContainsOp(e.getExpression(), Operator.EXP))
+			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.EXP))
 			{
 				rv = true;
 				break;
@@ -385,20 +383,20 @@ public class FlowPrinter extends ToolPrinter
 		return rv;
 	}
 
-	private boolean expressionContainsOp(Expression e, Operator testOp)
+	private boolean expressionContainsOperator(Expression e, Operator ... operators)
 	{
 		boolean rv = false;
 		Operation o = e.asOperation();
 		
 		if (o != null)
 		{
-			if (o.op.equals(testOp))
+			if (Arrays.asList(operators).contains(o.op))
 				rv = true;
 			else
 			{
 				for (Expression child : o.children)
 				{
-					rv = expressionContainsOp(child, testOp);
+					rv = expressionContainsOperator(child, operators);
 					
 					if (rv)
 						break;

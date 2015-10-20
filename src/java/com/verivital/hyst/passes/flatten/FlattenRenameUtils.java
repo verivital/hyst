@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.ExpressionModifier;
@@ -65,54 +67,28 @@ public class FlattenRenameUtils
 		
 		RenameParamPass.swapNames(child, renameMapping);
 		
-		// also convert the mapping in the parent
-		// parent before was parent_name -> child_name... after will be parent_name -> parent_name
-		RenameParamPass.renameMapping(ci.varMapping, renameMapping); 
-		RenameParamPass.renameMapping(ci.constMapping, renameMapping);
-		RenameParamPass.renameMapping(ci.labelMapping, renameMapping);
-		
 		if (child instanceof NetworkComponent)
 		{
-			// convert the mapped-to variable names
-			// child mapping before was child_name -> grandchild_name... after will be parent_name -> grandchild_name
-			NetworkComponent childNet = (NetworkComponent)child;
-			FlattenRenameUtils.renameComponentInstanceParentVariables(childNet, renameMapping);
+			NetworkComponent childNc = (NetworkComponent)child;
 			
 			// convert the children's children
-			for (Entry<String, ComponentInstance> e : childNet.children.entrySet())
-			{
-				ComponentInstance child_ci = e.getValue();
-				
-				convertToFullyQualifiedParams(child_ci, prefix);
-			}
+			for (ComponentInstance childCi : childNc.children.values())
+				convertToFullyQualifiedParams(childCi, prefix);
 		}
-	}
-	
-	/**
-	 * /child mapping before was child_name -> grandchild_name... after will be parent_name -> grandchild_name
 		
-	 * @param child the child networkcomponent
-	 * @param renameMapping
-	 */
-	private static void renameComponentInstanceParentVariables(NetworkComponent child,	HashMap<String, String> renameMapping)
-	{
-		for (ComponentInstance ci : child.children.values())
+		// convert parent's mapping of this child's variables
+		ArrayList <ArrayList <ComponentMapping>> mappingLists = new ArrayList <ArrayList <ComponentMapping>>();
+		mappingLists.add(ci.constMapping);
+		mappingLists.add(ci.labelMapping);
+		mappingLists.add(ci.varMapping);
+		
+		for (ArrayList <ComponentMapping> mappingList : mappingLists)
 		{
-			renameParentVariableInMapList(ci.constMapping, renameMapping);
-			renameParentVariableInMapList(ci.labelMapping, renameMapping);
-			renameParentVariableInMapList(ci.varMapping, renameMapping);
+			for (ComponentMapping cm : mappingList)
+				cm.childParam = cm.parentParam;
 		}
-	}
-
-	private static void renameParentVariableInMapList(ArrayList<ComponentMapping> mapList, HashMap<String, String> renameMapping)
-	{
-		for (ComponentMapping cm : mapList)
-		{
-			String newParentName = renameMapping.get(cm.parentParam);
-			
-			if (newParentName != null)
-				cm.parentParam = newParentName;
-		}
+		
+		ci.child.validate();
 	}
 
 	/**

@@ -952,6 +952,23 @@ public class ModelParserTest
 				xmlPath));
     }
 	
+	@Test
+    public void testSixTank() 
+	{
+		// network component inside another network component, all with renaming & locals at each level
+		// this is the 6 tank model 
+		
+		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
+		String cfgPath = UNIT_BASEDIR + "three_hier/tank6.cfg";
+		String xmlPath = UNIT_BASEDIR + "three_hier/tank6.xml";
+		
+		Configuration c = flatten(SpaceExImporter.importModels(
+				cfgPath,
+				xmlPath));
+		
+		Assert.assertEquals("Single mode after flattening", 1, ((BaseComponent)c.root).modes.size());
+    }
+	
 	/*@Test
     public void testVariableRenaming() 
 	{
