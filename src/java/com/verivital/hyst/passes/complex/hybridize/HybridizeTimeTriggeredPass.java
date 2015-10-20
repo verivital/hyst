@@ -347,7 +347,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		sim.run(timeMax);
 		long simEndMs = System.currentTimeMillis();
 		
-		final PythonBridge pb = new PythonBridge();
+		final PythonBridge pb = new PythonBridge(-1);
 		pb.open();
 
 		long optStartMs = System.currentTimeMillis();

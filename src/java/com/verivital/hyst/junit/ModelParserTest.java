@@ -937,6 +937,21 @@ public class ModelParserTest
 		}
 	}
 	
+	@Test
+    public void testTripleNestedModelWithRenaming() 
+	{
+		// network component inside another network component, all with renaming & locals at each level
+		// test that the names are correctly flattened 
+		
+		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
+		String cfgPath = UNIT_BASEDIR + "three_hier/three_hier.cfg";
+		String xmlPath = UNIT_BASEDIR + "three_hier/three_hier.xml";
+		
+		flatten(SpaceExImporter.importModels(
+				cfgPath,
+				xmlPath));
+    }
+	
 	/*@Test
     public void testVariableRenaming() 
 	{
@@ -944,14 +959,7 @@ public class ModelParserTest
 		Assert.fail("write a test that does variable renaming with two base components with names that conflict " +
 				"(but are renamed in the parent network component so it's okay)"); 
     }
-	
-	@Test
-    public void testTripleNestedModelWithRenaming() 
-	{
-		// TODO
-		Assert.fail("write a test that has a network component inside another network component, all with renaming & locals"
-				+ " at each level; test that the names are correctly flattened"); 
-    }*/
+	*/
 	
 	// TODO write a test with an automaton like this:
 	// if c is a network component,	modename is going to be a dotted version with a mode from each child, in order

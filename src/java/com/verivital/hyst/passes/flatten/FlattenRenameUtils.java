@@ -42,7 +42,7 @@ public class FlattenRenameUtils
 				convertToFullyQualifiedParams(ci, ROOT_PREFIX);
 			}
 		}
-		
+
 		root.validate();
 	}
 
@@ -66,14 +66,20 @@ public class FlattenRenameUtils
 		RenameParamPass.swapNames(child, renameMapping);
 		
 		// also convert the mapping in the parent
-		RenameParamPass.renameMapping(ci.varMapping, renameMapping);
+		// parent before was parent_name -> child_name... after will be parent_name -> parent_name
+		RenameParamPass.renameMapping(ci.varMapping, renameMapping); 
 		RenameParamPass.renameMapping(ci.constMapping, renameMapping);
 		RenameParamPass.renameMapping(ci.labelMapping, renameMapping);
 		
-		// now convert the children's children
 		if (child instanceof NetworkComponent)
 		{
-			for (Entry<String, ComponentInstance> e : ((NetworkComponent) child).children.entrySet())
+			// convert the mapped-to variable names
+			// child mapping before was child_name -> grandchild_name... after will be parent_name -> grandchild_name
+			NetworkComponent childNet = (NetworkComponent)child;
+			FlattenRenameUtils.renameComponentInstanceParentVariables(childNet, renameMapping);
+			
+			// convert the children's children
+			for (Entry<String, ComponentInstance> e : childNet.children.entrySet())
 			{
 				ComponentInstance child_ci = e.getValue();
 				
@@ -82,6 +88,33 @@ public class FlattenRenameUtils
 		}
 	}
 	
+	/**
+	 * /child mapping before was child_name -> grandchild_name... after will be parent_name -> grandchild_name
+		
+	 * @param child the child networkcomponent
+	 * @param renameMapping
+	 */
+	private static void renameComponentInstanceParentVariables(NetworkComponent child,	HashMap<String, String> renameMapping)
+	{
+		for (ComponentInstance ci : child.children.values())
+		{
+			renameParentVariableInMapList(ci.constMapping, renameMapping);
+			renameParentVariableInMapList(ci.labelMapping, renameMapping);
+			renameParentVariableInMapList(ci.varMapping, renameMapping);
+		}
+	}
+
+	private static void renameParentVariableInMapList(ArrayList<ComponentMapping> mapList, HashMap<String, String> renameMapping)
+	{
+		for (ComponentMapping cm : mapList)
+		{
+			String newParentName = renameMapping.get(cm.parentParam);
+			
+			if (newParentName != null)
+				cm.parentParam = newParentName;
+		}
+	}
+
 	/**
 	 * Get a set of rename assignments (oldName->newName) for a single type of parameter. 
 	 * Variables are renamed if they don't have a mapping in the parent, or if the parent uses a different name.

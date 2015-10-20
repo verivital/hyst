@@ -45,15 +45,22 @@ public class PythonBridge
 	
 	public PythonBridge()
 	{
-		
 		this(DEFAULT_TIMEOUT);
 	}
 	
+	/**
+	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * @param timeoutMs
+	 */
 	public PythonBridge(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
 	}
 	
+	/**
+	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * @param timeoutMs
+	 */
 	public void setTimeout(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
