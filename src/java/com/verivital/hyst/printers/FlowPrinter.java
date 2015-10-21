@@ -193,13 +193,15 @@ public class FlowPrinter extends ToolPrinter
 	
 	private String getPlotParam()
 	{
-		String auto = "gnuplot octagon " + config.settings.plotVariableNames[0] + "," 
-				+ config.settings.plotVariableNames[1];
-		
+		String auto = "gnuplot octagon";
 		String value = toolParams.get("plot");
 		
 		if (value.equals("auto"))
 			value = auto;
+		
+		if (value.equals("gnuplot octagon") || value.equals("gnuplot interval") 
+				|| value.equals("matlab interval") || value.equals("matlab octagon"))
+			value = value + " " + config.settings.plotVariableNames[0] + "," + config.settings.plotVariableNames[1];
 		
 		return value;
 	}
