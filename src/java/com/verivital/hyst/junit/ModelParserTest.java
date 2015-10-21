@@ -1,6 +1,7 @@
 package com.verivital.hyst.junit;
 
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -962,11 +963,31 @@ public class ModelParserTest
 		String cfgPath = UNIT_BASEDIR + "three_hier/tank6.cfg";
 		String xmlPath = UNIT_BASEDIR + "three_hier/tank6.xml";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
-				cfgPath,
-				xmlPath));
+		// 1. import spaceex doc
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath,xmlPath);
+		
+		// 2. convert the SpaceEx data structures to template automata
+		Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		
+		// 3. run any component template passes here (future)
+		
+		// 4. instantiate the component templates into a networked configuration
+		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+		ArrayList <String> originalOrder = new ArrayList <String>();
+		originalOrder.addAll(c.root.variables);
+		
+		FlattenAutomatonPass.flattenAndOptimize(c);
 		
 		Assert.assertEquals("Single mode after flattening", 1, ((BaseComponent)c.root).modes.size());
+		
+		// variable names should remain ordered after flattening
+		for (int i = 0; i < 6; ++i)
+		{
+			String expectedVarName = originalOrder.get(i);
+			String varName = c.root.variables.get(i);
+			
+			Assert.assertEquals("variable name at index " + i + " was incorrect", expectedVarName, varName);
+		}
     }
 	
 	/*@Test
