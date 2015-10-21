@@ -687,6 +687,9 @@ public class FlowPrinter extends ToolPrinter
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");
 		
+		if (ha.modes.containsKey("start"))
+			throw new AutomatonExportException("mode named 'start' is not allowed in Flow* printer");
+		
 		if (config.init.size() > 1)
 		{
 			Hyst.log("Multiple initial modes detected (not supported by Flow*). Converting to single urgent one.");
