@@ -771,6 +771,9 @@ public class SpaceExXMLReader {
 						else if (property.equals("scenario")) {
 							mTarget.setScenario(value);
 						}
+						else if (property.equals("directions")) {
+							mTarget.setDirections(value);
+						}
 					}
 				}
 			} catch (IOException e) {

@@ -166,6 +166,9 @@ public class SpaceExPrinter extends ToolPrinter
 	    String format = getParam("output-format", config.settings.spaceExConfig.outputFormat);
 	    sed.setOutputFormat(format);
 	    
+	    String dirs = getParam("directions", config.settings.spaceExConfig.directions);
+	    sed.setDirections(dirs);
+	    
 	    String scenario = getParam("scenario", config.settings.spaceExConfig.scenario);
 	    sed.setScenario(scenario);
 	    
@@ -588,6 +591,7 @@ public class SpaceExPrinter extends ToolPrinter
 		params.put("step", "auto");
 		params.put("output-format", "auto");
 		params.put("iter-max", "auto");
+		params.put("directions", "auto");
 		
 		return params;
 	}

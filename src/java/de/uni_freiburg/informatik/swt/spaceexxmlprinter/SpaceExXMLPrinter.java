@@ -568,7 +568,7 @@ public class SpaceExXMLPrinter
 
 		appendCfgString(rv, "system",  config.systemID);
 		appendCfgString(rv, "scenario", config.scenario); // was supp
-		appendCfgString(rv, "directions", "oct");
+		appendCfgString(rv, "directions", config.directions);
 		appendCfgString(rv, "sampling-time", new Double(config.samplingTime).toString());
 		appendCfgString(rv, "time-horizon", 
 				Double.toString(config.timeHorizon));

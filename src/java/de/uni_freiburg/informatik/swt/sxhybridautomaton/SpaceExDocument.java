@@ -130,6 +130,11 @@ public class SpaceExDocument {
 	public void setOutputFormat(String outputFormat) {
 		mConfig.outputFormat = outputFormat;
 	}
+	
+	public void setDirections(String dirs)
+	{
+		mConfig.directions = dirs;
+	}
 
 	public String toString()
 	{
