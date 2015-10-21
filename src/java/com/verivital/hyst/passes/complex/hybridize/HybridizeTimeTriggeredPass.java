@@ -53,6 +53,8 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	int piCount = 0;
 	double piMaxTime = -1;
 	
+	private ArrayList <String> forbiddenModeNames = new ArrayList <String>();
+	
 	enum SimulationType
 	{
 		CENTER, // simulate from the center
@@ -68,7 +70,6 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	
 	private BaseComponent ha;
     private AutomatonMode originalMode;
-    private AutomatonMode errorMode = null;
     
     // testing below
     public TestFunctions testFuncs = null;
@@ -670,7 +671,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			addRectangleInvariant(am, invariantBox);
 			
 			// add transitions to error mode during the computation in this box
-			addModeErrorTransitions(am, invariantBox);
+			addModeErrorTransitions(am, invariantBox, "_error_pi_inv" + modeName);
 			
 			// add transition from the previous state
 			if (nextTransitionGuard != null)
@@ -683,7 +684,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				at.reset.put(TT_VARIABLE, new ExpressionInterval(0));
 				
 				// add error transitions at guard
-				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox);
+				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox, "_error_pi_guard" + modeName);
 				
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
@@ -741,7 +742,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 			addRectangleInvariant(am, invariantBox);
 			
 	        // add transitions to error mode during the computation in this box
-			addModeErrorTransitions(am, invariantBox);
+			addModeErrorTransitions(am, invariantBox, "_error_tt_inv" + modeName);
 			
 			// add transition from the previous state
 			if (nextTransitionGuard != null)
@@ -754,7 +755,7 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 				at.reset.put(TT_VARIABLE, new ExpressionInterval(timeStep));
 				
 				// add error transitions at guard
-				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox);
+				addErrorTransitionsAtGuard(prevMode, nextTransitionGuard, startBox, "_error_tt_guard" + modeName);
 				
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
@@ -886,9 +887,12 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	 * Add transitions to the error mode on each side of the box for a given mode
 	 * @param am the mode
 	 * @param hr the invariant box of the mode
+	 * @param errorModeName the name of the error mode to transition to
 	 */ 
-	private void addModeErrorTransitions(AutomatonMode am, HyperRectangle hr)
+	private void addModeErrorTransitions(AutomatonMode am, HyperRectangle hr, String errorModeName)
 	{
+		AutomatonMode errorMode = makeErrorMode(errorModeName);
+		
 		for (int d = 0; d < hr.dims.length; ++d)
 		{
 			if (d == ttVarIndex)
@@ -910,9 +914,13 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 	 * @param am the mode to add to
 	 * @param tt the time-trigger time
 	 * @param hr the rectangle bounds
+	 * @param errorModeName the name of the error mode
 	 */
-	private void addErrorTransitionsAtGuard(AutomatonMode am, Expression guard, HyperRectangle nextModeInvariant)
+	private void addErrorTransitionsAtGuard(AutomatonMode am, Expression guard, 
+			HyperRectangle nextModeInvariant, String errorModeName)
 	{
+		AutomatonMode errorMode = makeErrorMode(errorModeName);
+		
 		for (int d = 0; d < nextModeInvariant.dims.length; ++d)
 		{
 			if (d == ttVarIndex)
@@ -988,14 +996,20 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval("0"));
 	}
 
-	private void makeErrorMode()
+	/**
+	 * Make an error mode with the given name
+	 * @param name the name of the error mode
+	 */
+	private AutomatonMode makeErrorMode(String name)
 	{
-		String name = originalMode.name + "_error"; 
-		errorMode = ha.createMode(name);
+		forbiddenModeNames.add(name);
+		AutomatonMode errorMode = ha.createMode(name);
 		errorMode.invariant = Constant.TRUE;
 		
 		for (String v : ha.variables)
 			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
+		
+		return errorMode;
 	}
 	
 	private void assignInitialStates()
@@ -1018,9 +1032,11 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
 		
 		if (addForbidden)
 		{
-			// add error mode to the forbidden states
-			String name = originalMode.name + "_error";
-			config.forbidden.put(name, Constant.TRUE);
+			for (String forbiddenModeName : forbiddenModeNames)
+			{
+				// add error mode to the forbidden states
+				config.forbidden.put(forbiddenModeName, Constant.TRUE);
+			}
 		}
 	}
 
@@ -1033,7 +1049,6 @@ public class HybridizeTimeTriggeredPass extends TransformationPass
         this.originalMode = ha.modes.values().iterator().next();
         parseParams(params);
         makeTimeTriggerVariable(); // sets timeVariable
-        makeErrorMode(); // sets errorMode
         ha.validate();
 
         ha.modes.remove(originalMode.name);

@@ -304,7 +304,7 @@ public class PassTests
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center";
 		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
 		
-		Assert.assertEquals("3 modes (2 + error)", 3, ha.modes.size());
+		Assert.assertEquals("5 modes (2 + 3 error)", 5, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
 		Assert.assertTrue("variable _tt exists", ha.variables.contains("_tt"));
 		
@@ -335,34 +335,6 @@ public class PassTests
 		// mode 1 invariant correct
 		// should be c <= 1 & x >= 0.2357 & x <= 0.3833
 		Assert.assertEquals("mode1 invariant correct", "x <= 10 & _tt >= 0 & x >= 0.2357 & x <= 0.3833", m1.invariant.toString());
-		
-		// error transitions should exist from the first mode at the time trigger
-		// error transitions should exist in the first mode due to the hyperrectangle constraints
-		int numTransitions = 0; 
-		boolean foundTriggerTransition = false;
-		boolean foundOobTransition = false;
-		
-		for (AutomatonTransition at : ha.transitions)
-		{
-			if (at.from == m0)
-			{
-				++numTransitions;
-				
-				if (at.to == m1 && at.guard.toString().equals("_tt = 0"))
-					foundTriggerTransition = true;
-				
-				if (at.to.name.equals("running_error") && at.guard.toString().equals("x >= 0.3357"))
-					foundOobTransition = true;
-			}
-		}
-		
-		Assert.assertTrue("transition exists at time trigger in mode0", foundTriggerTransition);
-		Assert.assertTrue("transition to out of bounds error mode exists in mode0", foundOobTransition);
-		
-		Assert.assertEquals("wrong number of outgoing transitions from mode0, expected five " +
-				"(tt, x-too-small, x-too-large, x-too-small-at-tt, x-too-large-at-tt)", 5, numTransitions);
-		
-		Assert.assertEquals("single forbidden mode", 1, c.forbidden.size());
 	}
 	
 	/**
@@ -436,7 +408,7 @@ public class PassTests
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center,addintermediate=true";
 		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
 		
-		Assert.assertEquals("3 modes (2 + premode + error)", 4, ha.modes.size());
+		Assert.assertEquals("6 modes (2 + premode + 3 errors)", 6, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
 		Assert.assertTrue("variable _tt exists", ha.variables.contains("_tt"));
 		
@@ -480,7 +452,7 @@ public class PassTests
 				if (at.to == m1 && at.guard.toString().equals("_tt = 0"))
 					foundTriggerTransition = true;
 				
-				if (at.to.name.equals("running_error") && at.guard.toString().equals("x >= 0.3357"))
+				if (at.to.name.equals("_error_tt_inv_m_0") && at.guard.toString().equals("x >= 0.3357"))
 					foundOobTransition = true;
 			}
 		}
@@ -491,7 +463,7 @@ public class PassTests
 		Assert.assertEquals("wrong number of outgoing transitions from mode0, expected 6 " +
 				"(tt, premode, x-too-small, x-too-large, x-too-small-at-tt, x-too-large-at-tt)", 6, numTransitions);
 		
-		Assert.assertEquals("single forbidden mode", 1, c.forbidden.size());
+		Assert.assertEquals("three forbidden modes (inv1, guard2, inv2)", 3, c.forbidden.size());
 	}
 	
 	@Test
@@ -511,7 +483,7 @@ public class PassTests
 		String params = "step=0.01,maxtime=0.02,epsilon=0.01,addforbidden=false";
 		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
 		
-		Assert.assertEquals("3 modes (2 + error)", 3, ha.modes.size());
+		Assert.assertEquals("3 modes (2 + 3 error)", 5, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
 		
 		AutomatonMode m0 = ha.modes.get("_m_0");
