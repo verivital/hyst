@@ -88,6 +88,7 @@ public class PythonTests
 			testVanderpolOptimize(pb);
 			testAffineHybridized(pb);
 			testMultiOptimizeSciPy(pb);
+			testOptimizeSqrt(pb);
 		}
 	}
 	
@@ -192,6 +193,26 @@ public class PythonTests
 		Interval sciPi = PythonUtil.scipyOptimize(pb, e, bounds);
 		
 		Assert.assertTrue("optimization included 1.0", sciPi.contains(1.0));
+	}
+	
+	private void testOptimizeSqrt(PythonBridge pb)
+	{
+		ArrayList <Expression> expList = new ArrayList <Expression>(); 
+		expList.add(FormulaParser.parseNumber("sqrt(x)"));
+		
+		HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+		bounds.put("x", new Interval(1, 4));
+		
+		ArrayList<HashMap<String, Interval>> boundsList = new ArrayList<HashMap<String, Interval>>();
+		boundsList.add(bounds);
+		
+		List<Interval> result = PythonUtil.scipyOptimize(pb, expList, boundsList);
+		
+		Interval i0 = result.get(0);
+		
+		double TOL = 1e-6;
+		Assert.assertEquals("lower bound of sqrt([1, 4]) = 1", 1, i0.min, TOL);
+		Assert.assertEquals("upper bound of sqrt([1, 4]) = 2", 2, i0.max, TOL);
 	}
 	
 	private void testMultiOptimizeSciPy(PythonBridge pb)

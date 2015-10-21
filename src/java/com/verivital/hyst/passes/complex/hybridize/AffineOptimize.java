@@ -13,7 +13,6 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;

@@ -40,9 +40,11 @@ public class PythonUtil
 	 */
 	public static Interval intervalOptimize(PythonBridge pb, Expression exp, Map<String, Interval> bounds)
 	{
+		pb.send("import math");
+		
 		StringBuilder s = new StringBuilder();
 		s.append(makeExpressionVariableSymbols(exp));
-
+		
 		s.append("print eval_eq(");
 		s.append(pyPrinter.print(exp));
 		s.append(",");
@@ -91,11 +93,12 @@ public class PythonUtil
 	public static List<Interval> scipyOptimize(PythonBridge pb, List<Expression> expList, 
 			List<HashMap<String, Interval>> boundsList)
 	{
-		
 		int size = expList.size();
 		
 		if (size != boundsList.size())
 			throw new AutomatonExportException("expression list and bounds list should be same size");
+		
+		pb.send("import math");
 		
 		// python needs explicit functions (not lambdas) for Pool.map
 		String FUNC_PREFIX = "_func";
@@ -330,6 +333,8 @@ public class PythonUtil
 	public static List<Interval> intervalOptimizeMulti(PythonBridge pb, Expression exp,
 			List<Map<String, Interval>> boundsList)
 	{
+		pb.send("import math");
+		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
 
 		StringBuilder s = new StringBuilder();
@@ -388,6 +393,8 @@ public class PythonUtil
 	public static List<Interval> intervalOptimizeMulti_bb(PythonBridge pb, Expression exp,
 			List<Map<String, Interval>> boundsList, double maxSize)
 	{
+		pb.send("import math");
+		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
 
 		StringBuilder s = new StringBuilder();
@@ -439,6 +446,12 @@ public class PythonUtil
 		{
 			super();
 			opNames.put(Operator.POW, "**");
+			opNames.put(Operator.SQRT, "math.sqrt");
+			opNames.put(Operator.SIN, "math.sin");
+			opNames.put(Operator.COS, "math.cos");
+			opNames.put(Operator.EXP, "math.exp");
+			opNames.put(Operator.LN, "math.log");
+			opNames.put(Operator.TAN, "math.tan");
 		}
 	}
 }

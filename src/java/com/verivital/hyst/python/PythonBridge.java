@@ -512,7 +512,7 @@ public class PythonBridge
 		return result;
 	}
 	
-	public void importModule(String module)
+	public void importPythonBridgeModule(String module)
 	{
 		String result = send("from pythonbridge import " + module);
 		
