@@ -258,29 +258,27 @@ public class StateflowSpPrinter extends ToolPrinter {
     * @return the dynamic matrix for each location
     */
     public String convertFlowToMatrix(AutomatonMode m) {
-        String rv = "";
-        
-        for (String v : ha.variables){
-            if (m.flowDynamics.keySet().contains(v))
-            {
-                if (m.flowDynamics.get(v) == null)
-                    throw new AutomatonValidationException("flow for variables" + v +  "is null");
-                else{
-                    for (ExpressionInterval ei : m.flowDynamics.values()){
-                            Expression e = ei.getExpression();
-                            getCoefficient(v,e);
-                            rv = rv + coeff + " ";
-                            found = false;
-                            coeff = "0";
-                    }  
-                }
-            }
-            rv = rv + ";";
-        }
-        rv = "[" + rv + "]";   
-        
-        return rv;
-    } 
+           String rv = "";
+           for (String v : ha.variables){
+               if (!(m.flowDynamics.keySet().contains(v)))
+                   throw new AutomatonValidationException("flow for variables " + v +  " is empty");
+               else
+               {
+                       for (ExpressionInterval ei : m.flowDynamics.values()){
+                               Expression e = ei.getExpression();
+                               getCoefficient(v,e);
+                               rv = rv + coeff + " ";
+                               found = false;
+                               coeff = "0";
+                       }  
+               }
+               rv = rv + ";";
+           }
+           rv = "[" + rv + "]";   
+
+           return rv;
+    }
+    
     private void getCoefficient(String v, Expression e){
 
         if (!found){
