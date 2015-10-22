@@ -18,6 +18,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
@@ -29,6 +30,7 @@ import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.passes.flatten.FlattenRenameUtils;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
+import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -361,6 +363,7 @@ public class ModelParserTest
 	@Test
     public void testImportSpaceEx()
 	{
+            
 		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
@@ -935,6 +938,83 @@ public class ModelParserTest
 		{
 			// expected
 		}
+	}
+        
+        @Test
+	public void testConvertLinearDynamicThreeVars()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "three_var.cfg",
+				path + "three_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                AutomatonMode mode = ha.modes.get("running");
+                sp.ha = ha;
+                String s = sp.convertFlowToMatrix(mode);
+                String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0 2.0 4.0 ;]";
+                Assert.assertEquals(s, result);        	
+	}
+         @Test
+	public void testConvertLinearDynamicTwoVars()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "two_var.cfg",
+				path + "two_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                AutomatonMode mode = ha.modes.get("running");
+                sp.ha = ha;
+                String s = sp.convertFlowToMatrix(mode);
+                String result = "[2.0 4.0 ;0 -3.0 ;]";
+                Assert.assertEquals(s, result);        	
+	}
+         @Test
+	public void testConvertLinearDynamicOneVar()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "one_var.cfg",
+				path + "one_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                AutomatonMode mode = ha.modes.get("running");
+                sp.ha = ha;
+                String s = sp.convertFlowToMatrix(mode);
+                String result = "[1 ;]";
+                Assert.assertEquals(s, result);        	
+	}
+        @Test
+	public void testConvertLinearDynamicTimeHAOneVar()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "time_flow_one_var.cfg",
+				path + "time_flow_one_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                AutomatonMode mode = ha.modes.get("running");
+                sp.ha = ha;
+                String s = sp.convertFlowToMatrix(mode);
+                String result = "[0 ;]";
+                Assert.assertEquals(s, result);        	
 	}
 	
 	/*@Test

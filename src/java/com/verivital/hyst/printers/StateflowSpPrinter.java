@@ -1,5 +1,17 @@
 package com.verivital.hyst.printers;
 
+import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
+import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Operator;
+import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.AutomatonValidationException;
+import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
+import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,25 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
-
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
-
 import org.antlr.v4.runtime.misc.Nullable;
-
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
-import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.Operation;
-import com.verivital.hyst.grammar.formula.Operator;
-import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
-import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 
 /**
  * Printer for Simulink/Stateflow models with non-semantics preservation and semantics preservation
@@ -74,7 +73,9 @@ public class StateflowSpPrinter extends ToolPrinter {
     
     // random counter (how many random values are needed at one time?)
     private int m_randoms;
-    
+    private String coeff = "0";
+    private boolean found = false;
+    private boolean first = false;
     // ------------- variable wrappers -------------
     
     // stopping signal
@@ -238,7 +239,93 @@ public class StateflowSpPrinter extends ToolPrinter {
 
         //proxy = factory.getProxy();
     }    
+    
+    
+    public String FlowToMatrix(AutomatonMode m) {
+        String rv = "";
+        
+        for (ExpressionInterval ei : m.flowDynamics.values()){
+                Expression e = ei.getExpression();
+                rv = rv + e.toString()+ ";\n";
+        }
+        rv = rv + ";"; 
+      
+        return rv;
+    } 
+    
+     /**
+    * 
+    * @return the dynamic matrix for each location
+    */
+    public String convertFlowToMatrix(AutomatonMode m) {
+        String rv = "";
+        
+        for (String v : ha.variables){
+            if (m.flowDynamics.keySet().contains(v))
+            {
+                if (m.flowDynamics.get(v) == null)
+                    throw new AutomatonValidationException("flow for variables" + v +  "is null");
+                else{
+                    for (ExpressionInterval ei : m.flowDynamics.values()){
+                            Expression e = ei.getExpression();
+                            getCoefficient(v,e);
+                            rv = rv + coeff + " ";
+                            found = false;
+                            coeff = "0";
+                    }  
+                }
+            }
+            rv = rv + ";";
+        }
+        rv = "[" + rv + "]";   
+        
+        return rv;
+    } 
+    private void getCoefficient(String v, Expression e){
 
+        if (!found){
+            if (e instanceof Variable){
+                if (e.toString().equals(v)){
+                    coeff = "1";
+                }
+            } 
+            else if (e instanceof Constant){
+                    coeff = "0";
+            } 
+            else if (e instanceof Operation) {
+                
+                Operation o = (Operation) e;
+                if (o.op == Operator.MULTIPLY){
+                    Expression l = o.getLeft();
+                    Expression r = o.getRight();
+                    if ( r instanceof Variable && l instanceof Constant){
+                            if (r.toString().equals(v)){
+                                coeff = Double.toString(((Constant)l).getVal());
+                                if  (o.getParent() !=null){
+                                    if (o.getParent().op == Operator.SUBTRACT &&  o.getParent().getRight().equals(o))
+                                        coeff = "-"+ coeff; 
+                                }
+                                found = true;
+                            }
+                    }
+                    else if (l instanceof Variable && r instanceof Constant){
+                        if (l.toString().equals(v)){  
+                                coeff = Double.toString(((Constant)r).getVal());
+                                found = true;
+                        }
+                    }
+                }
+                else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT)
+                {    
+                        if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation){
+                            getCoefficient(v, o.getRight());
+                            getCoefficient(v, o.getLeft());
+                        }
+                }
+            } 
+        }
+    }
+   
     /**
     * 
     * @return modeName to id for non-semantics preservation converter
