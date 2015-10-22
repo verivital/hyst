@@ -240,7 +240,7 @@ public class StateflowSpPrinter extends ToolPrinter {
         //proxy = factory.getProxy();
     }    
     
-    
+    /*
     public String FlowToMatrix(AutomatonMode m) {
         String rv = "";
         
