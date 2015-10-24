@@ -257,72 +257,66 @@ public class StateflowSpPrinter extends ToolPrinter {
     * 
     * @return the dynamic matrix for each location
     */
-    public String convertFlowToMatrix(AutomatonMode m) {
-           String rv = "";
-           for (String v : ha.variables){
-               if (!(m.flowDynamics.keySet().contains(v)))
-                   throw new AutomatonValidationException("flow for variables " + v +  " is empty");
-               else
-               {
-                       for (ExpressionInterval ei : m.flowDynamics.values()){
-                               Expression e = ei.getExpression();
-                               getCoefficient(v,e);
-                               rv = rv + coeff + " ";
-                               found = false;
-                               coeff = "0";
-                       }  
-               }
-               rv = rv + ";";
-           }
-           rv = "[" + rv + "]";   
+	public String convertFlowToMatrix(AutomatonMode m) {
+		String rv = "";
+		for (String v : ha.variables) {
+			if (!(m.flowDynamics.keySet().contains(v)))
+				throw new AutomatonValidationException("flow for variables " + v + " is empty");
+			else {
+				for (ExpressionInterval ei : m.flowDynamics.values()) {
+					Expression e = ei.getExpression();
+					getCoefficient(v, e);
+					rv = rv + coeff + " ";
+					found = false;
+					coeff = "0";
+				}
+			}
+			rv = rv + ";";
+		}
+		rv = "[" + rv + "]";
 
-           return rv;
-    }
+		return rv;
+	}
     
-    private void getCoefficient(String v, Expression e){
+	private void getCoefficient(String v, Expression e) {
 
-        if (!found){
-            if (e instanceof Variable){
-                if (e.toString().equals(v)){
-                    coeff = "1";
-                }
-            } 
-            else if (e instanceof Constant){
-                    coeff = "0";
-            } 
-            else if (e instanceof Operation) {
-                
-                Operation o = (Operation) e;
-                if (o.op == Operator.MULTIPLY){
-                    Expression l = o.getLeft();
-                    Expression r = o.getRight();
-                    if ( r instanceof Variable && l instanceof Constant){
-                            if (r.toString().equals(v)){
-                                coeff = Double.toString(((Constant)l).getVal());
-                                if  (o.getParent() !=null){
-                                    if (o.getParent().op == Operator.SUBTRACT &&  o.getParent().getRight().equals(o))
-                                        coeff = "-"+ coeff; 
-                                }
-                                found = true;
-                            }
-                    }
-                    else if (l instanceof Variable && r instanceof Constant){
-                        if (l.toString().equals(v)){  
-                                coeff = Double.toString(((Constant)r).getVal());
-                                found = true;
-                        }
-                    }
-                }
-                else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT)
-                {    
-                        if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation){
-                            getCoefficient(v, o.getRight());
-                            getCoefficient(v, o.getLeft());
-                        }
-                }
-            } 
-        }
-    }
+		if (!found) {
+			if (e instanceof Variable) {
+				if (e.toString().equals(v)) {
+					coeff = "1";
+				}
+			} else if (e instanceof Constant) {
+				coeff = "0";
+			} else if (e instanceof Operation) {
+
+				Operation o = (Operation) e;
+				if (o.op == Operator.MULTIPLY) {
+					Expression l = o.getLeft();
+					Expression r = o.getRight();
+					if (r instanceof Variable && l instanceof Constant) {
+						if (r.toString().equals(v)) {
+							coeff = Double.toString(((Constant) l).getVal());
+							if (o.getParent() != null) {
+								if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+									coeff = "-" + coeff;
+							}
+							found = true;
+						}
+					} else if (l instanceof Variable && r instanceof Constant) {
+						if (l.toString().equals(v)) {
+							coeff = Double.toString(((Constant) r).getVal());
+							found = true;
+						}
+					}
+				} else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
+					if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+						getCoefficient(v, o.getRight());
+						getCoefficient(v, o.getLeft());
+					}
+				}
+			}
+		}
+	}
    
     /**
     * 
