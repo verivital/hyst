@@ -978,7 +978,7 @@ public class ModelParserTest
 		String result = "[2.0 4.0 ;0 -3.0 ;]";
 		Assert.assertEquals(s, result);    	
 	}
-         @Test
+        @Test
 	public void testConvertLinearDynamicOneVar()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
@@ -991,12 +991,13 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-		AutomatonMode mode = ha.modes.get("running");
-		sp.ha = ha;
-		String s = sp.convertFlowToMatrix(mode);
-		String result = "[1 ;]";
-		Assert.assertEquals(s, result);  	
+                AutomatonMode mode = ha.modes.get("running");
+                sp.ha = ha;
+                String s = sp.convertFlowToMatrix(mode);
+                String result = "[1 ;]";
+                Assert.assertEquals(s, result);        	
 	}
+         
         @Test
 	public void testConvertLinearDynamicTimeHAOneVar()
 	{
@@ -1016,7 +1017,37 @@ public class ModelParserTest
 		String result = "[0 ;]";
 		Assert.assertEquals(s, result);     	
 	}
-	
+	@Test
+	public void testConvertLinearDynamicTwoVarTwoHavocTwoInput()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "four_var_two_input.cfg",
+				path + "four_var_two_input.xml");
+                /*
+                Configuration c = flatten(test1);
+                
+		BaseComponent ha = (BaseComponent)c.root;
+                
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+		AutomatonMode mode = ha.modes.get("running");
+		sp.ha = ha;
+                // test A matrix
+		String A = sp.convertFlowToMatrix(mode);
+		String resultA = "[1 4.0 ;0.5 -3.0 ;]";
+		Assert.assertEquals(A, resultA);  
+                // test B matrix
+		String B = sp.convertInputToMatrix(mode);
+		String resultB = "[0.5 -2.0 ;-0.2 3.0 ;]";
+		Assert.assertEquals(B, resultB);
+                // test A matrix
+		String C = sp.convertInvToMatrix(mode);
+		String resultC = "[1 2.0 ;0 1 ;]";
+		Assert.assertEquals(C, resultC);
+		*/
+		
+	}
 	/*@Test
     public void testVariableRenaming() 
 	{

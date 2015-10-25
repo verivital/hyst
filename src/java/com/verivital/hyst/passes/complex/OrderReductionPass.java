@@ -102,7 +102,7 @@ public class OrderReductionPass extends TransformationPass
 	        	proxy.eval("B_" + e.getKey() + " = " + matlabBMatrix + ";");
 	        	
 	        	String matlabCMatrix = sp.convertInvToMatrix(e.getValue());
-	        	proxy.eval("C_" + e.getKey() + " = '" + matlabCMatrix + "'");
+	        	proxy.eval("C_" + e.getKey() + " = " + matlabCMatrix + "';");
 	        }
 	        
 	        // TODO: get inputs, I guess these are going to be constants from looking at the example model (e.g., u has constant dynamics for building) ; do the same dynamics matrix function to get the B vector, etc.

@@ -1,6 +1,5 @@
 package com.verivital.hyst.printers;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -28,6 +27,7 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
+//import org.antlr.v4.runtime.misc.Nullable;
 
 /**
  * Printer for Simulink/Stateflow models with non-semantics preservation and semantics preservation
@@ -74,7 +74,10 @@ public class StateflowSpPrinter extends ToolPrinter {
     // random counter (how many random values are needed at one time?)
     private int m_randoms;
     private String coeff = "0";
+    private String coeffInput = "0";
     private boolean found = false;
+    //private String invCoeff = "0";
+    private boolean invFound = false;
     private boolean first = false;
     // ------------- variable wrappers -------------
     
@@ -121,18 +124,30 @@ public class StateflowSpPrinter extends ToolPrinter {
     // --- strings which are only non-null with certain constructor ---
     
     // common label part for entry states
+    //@Nullable
     private final String STATE_IN_PART;
+    //@Nullable
     private final String TRANS_CHOOSEJ2DWELL_STRING;
     // constant strings
+    //@Nullable
     private final String STATE_CHOOSE_STRING;
+    //@Nullable
     private final String STATE_DWELL_STRING;
+    //@Nullable
     private final String TRANS_DWELL2LEAVE_STRING;
+    //@Nullable
     private final String TRANS_LEAVE2DWELL_STRING;
+    //@Nullable
     private final String TRANS_CHOOSES2DWELL_STRING;
+    //@Nullable
     private final String TRANS_CHOOSEJ2CHOOSES_STRING;
+    //@Nullable
     private final String TRANS_CHOOSES2CHOOSEJ_STRING;
+    //@Nullable
     private final String TRANS_IN2DWELL_STRING;
+    //@Nullable
     private final String TRANS_BACKTRACK2DWELL_STRING;
+    //@Nullable
     private final String TRANS_LEAVE2TRANS_STRING;
     
     // ------------- normal static fields -------------
@@ -240,83 +255,118 @@ public class StateflowSpPrinter extends ToolPrinter {
       
         return rv;
     } 
-    
-     /**
+    /**
     * 
-    * @return the dynamic matrix for each location
-    */
-	public String convertFlowToMatrix(AutomatonMode m) {
+    * @return invariant matrix C for each location
+ 
+	public String convertInvariantMatrix(AutomatonMode m) {
 		String rv = "";
+                Expression e = m.invariant;
 		for (String v : ha.variables) {
-			if (!(m.flowDynamics.keySet().contains(v)))
-				throw new AutomatonValidationException("flow for variable " + v + " is empty");
-			else {
-				for (ExpressionInterval ei : m.flowDynamics.values()) {
-					Expression e = ei.getExpression();
-					getCoefficient(v, e, false);
-					rv = rv + coeff + " ";
-					found = false;
-					coeff = "0";
+                        if (!(m.flowDynamics.containsKey(v))){
+                        
+                            getInvCoefficient(v, e);
+                            rv = rv + coeff + " ";
+                            //rv = rv + c;
+                            invFound = false;
+                            coeff = "0";
+                        }
+                }
+			rv = rv + ";";
+
+		rv = "[" + rv + "]";
+
+		return rv;
+	}
+        private void getInvCoefficient(String v, Expression e) {
+
+		if (!invFound) {
+			if (e instanceof Operation) {
+
+				Operation o = (Operation) e;
+				if (o.op == Operator.EQUAL ) {
+					Expression l = o.getLeft();
+					Expression r = o.getRight();
+                                        //extract input coefficient                                
+                                        if (l instanceof Variable && r instanceof Constant) {
+							coeff = "0";
+							invFound = true;
+					} else if (l instanceof Variable && r instanceof Variable) {
+						if (l.toString().equals(v)) {                                                   
+                                                        coeff = "1";
+							invFound = true;
+						}
+					} else if (l instanceof Variable && r instanceof Operation){
+                                                getCoefficient(v, o.getRight());
+                                        }
+                                }
+				else if (o.op == Operator.AND || o.op == Operator.OR) {
+                                    
+                                        if (o.getRight() instanceof Variable || o.getLeft() instanceof Variable) {
+						if (o.getRight().toString().equals(v) || o.getLeft().toString().equals(v) ) {
+							coeff = "1";
+							invFound = true;
+						}
+					}
+                                        else if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+						getInvCoefficient(v, o.getRight());
+						getInvCoefficient(v, o.getLeft());
+					}
 				}
 			}
-			rv = rv + ";";
 		}
-		rv = "[" + rv + "]";
-
-		return rv;
 	}
-	
+    /**
+    * 	
+    * @return input matrix B for each location
+    */
 	// TODO: please have this actually construct a java object of a matrix, this will make our lives much easier
-	public String convertInputToMatrix(AutomatonMode m) {
+        public String convertInputToMatrix(AutomatonMode m) {
 		String rv = "";
-		for (Entry<String, Interval> v : ha.constants.entrySet()) {
-			for (ExpressionInterval ei : m.flowDynamics.values()) {
-				Expression e = ei.getExpression();
-				getCoefficient(v.getKey(), e, true);
-				rv = rv + coeff + " ";
-				found = false;
-				coeff = "0";
-			}
+		for (String c : ha.constants.keySet()) {
+                        for (ExpressionInterval ei : m.flowDynamics.values()) {
+                                Expression e = ei.getExpression();
+                                getCoefficient(c, e);
+                                rv = rv + coeff + " ";
+                                //rv = rv + c;
+                                found = false;
+                                coeff = "0";
+                        }
 			rv = rv + ";";
 		}
 		rv = "[" + rv + "]";
 
 		return rv;
 	}
-	
-	public String convertInvToMatrix(AutomatonMode m) {
+    /**
+    * 
+    * @return invariant matrix C for each location
+    */
+        public String convertInvToMatrix(AutomatonMode m) {
 		String rv = "";
-		
-		for (String v : ha.variables) {
-			
+		Expression eInv = m.invariant;
+		for (String v : ha.variables) {			
 			// skip all variables with non-null dynamics
 			// outputs (y = Cx) are those with non defined (havoc) dynamics
-			if (m.flowDynamics.containsKey(v)) {
-				Expression e = m.flowDynamics.get(v).asExpression();
-				if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
-					Expression eInv = m.invariant;
+                        
+			if (!(m.flowDynamics.containsKey(v))|| m.flowDynamics.get(v).asExpression().equals(new Constant(0))) {
+				//Expression e = m.flowDynamics.get(v).asExpression();
+				//if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
+					
 					Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
-					//getCoefficient(v, subEquality.asOperation().getRight(), false);
+                                        for (String s : m.flowDynamics.keySet()){
+                                                getCoefficient(s, subEquality.asOperation().getRight());
+                                                rv = rv + coeff + " ";
+                                                found = false;
+                                                coeff = "0";
+                                                
+                                        }
+                                        rv = rv + ";";
 					// TODO: really need to have objects for the vectors and matrices around, we can find this coefficient of 1
 					// but now how do we know where to set it...?
-				}
-				else {
-					coeff = "0";
-				}
-				
-				continue;
-			}
-			
-			//Expression e = m.invariant;
-			//getCoefficient(v, e, false);
-			// TODO: going to just hack a quick fix for our examples...
-			// NOTE: we probably want to find all havoc variables, as this is what's being exploited in
-			// the input semantics (e.g., the flows are undefined)
-			
-			rv = rv + v + "=" + coeff + " ";
-			found = false;
-			coeff = "0";
-			rv = rv + ";";
+                        }
+                        
+
 		}
 		rv = "[" + rv + "]";
 
@@ -329,6 +379,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 				return e.getParent();
 			}
 			else {
+                            
+                            
 				return null;
 			}
 		}
@@ -347,30 +399,51 @@ public class StateflowSpPrinter extends ToolPrinter {
 		}
 		return null;
 	}
-    
-	private void getCoefficient(String v, Expression e, boolean constant) {
+     /**
+    * 
+    * @return the dynamic matrix A for each location
+    */
+	public String convertFlowToMatrix(AutomatonMode m) {
+		String rv = "";
+		for (String v : ha.variables) {
+			//if (!(m.flowDynamics.keySet().contains(v)))
+                        if (m.flowDynamics.keySet().contains(v)){
+				//throw new AutomatonValidationException("flow for variables " + v + " is empty");
+                                //coeff = "0";
+			//else {
+				for (ExpressionInterval ei : m.flowDynamics.values()) {
+					Expression e = ei.getExpression();
+					getCoefficient(v, e);
+					rv = rv + coeff + " ";
+					found = false;
+					coeff = "0";
+				}
+                                
+			rv = rv + ";";
+                        }
+		}
+		rv = "[" + rv + "]";
+
+		return rv;
+	}
+        // 
+	private void getCoefficient(String v, Expression e) {
+
 		if (!found) {
 			if (e instanceof Variable) {
-				if (e.toString().equals(v) && !constant) {
+				if (e.toString().equals(v)) {
 					coeff = "1";
 				}
-				else {
-					coeff = "0";
-				}
 			} else if (e instanceof Constant) {
-				if (constant) {
-					coeff = Double.toString(((Constant) e).getVal());
-				}
-				else {
-					coeff = "0";
-				}
+				coeff = "0";
 			} else if (e instanceof Operation) {
 
 				Operation o = (Operation) e;
 				if (o.op == Operator.MULTIPLY) {
 					Expression l = o.getLeft();
 					Expression r = o.getRight();
-					if (r instanceof Variable && l instanceof Constant) {
+                                        //extract input coefficient                                
+                                        if (r instanceof Variable && l instanceof Constant) {
 						if (r.toString().equals(v)) {
 							coeff = Double.toString(((Constant) l).getVal());
 							if (o.getParent() != null) {
@@ -386,9 +459,16 @@ public class StateflowSpPrinter extends ToolPrinter {
 						}
 					}
 				} else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
-					if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
-						getCoefficient(v, o.getRight(), constant);
-						getCoefficient(v, o.getLeft(), constant);
+                                    
+                                        if (o.getRight() instanceof Variable || o.getLeft() instanceof Variable) {
+						if (o.getRight().toString().equals(v) || o.getLeft().toString().equals(v) ) {
+							coeff = "1";
+							found = true;
+						}
+					}
+                                        if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+						getCoefficient(v, o.getRight());
+						getCoefficient(v, o.getLeft());
 					}
 				}
 			}
@@ -419,6 +499,7 @@ public class StateflowSpPrinter extends ToolPrinter {
         // name
         public final String name;
         // properties
+        //@Nullable
         public Collection<VariableProperty> props;
         
         private static final String SCOPE = "Scope";
@@ -539,7 +620,9 @@ public class StateflowSpPrinter extends ToolPrinter {
 	 */
 	private class IntervalBound extends VariableBound {
     	// bounds
+    	//@Nullable
     	private Expression lower;
+		//@Nullable
 		private Expression upper;
     	
     	/**
@@ -548,8 +631,10 @@ public class StateflowSpPrinter extends ToolPrinter {
     	 * @param upper lower bound expression
     	 */
 		public IntervalBound(final String var,
-				final Expression lower,
-				final Expression upper) {
+				//@Nullable 
+                        final Expression lower,
+				//@Nullable 
+                        final Expression upper) {
 			super(var, false);
 			this.lower = lower;
 			this.upper = upper;
@@ -580,6 +665,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 	 */
 	private class EqualityBound extends VariableBound {
 		// equality expression (including the variable and equality)
+		//@Nullable
 		private Expression expr;
 		
 		/**
