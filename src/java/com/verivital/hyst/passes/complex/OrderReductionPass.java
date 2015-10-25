@@ -97,6 +97,12 @@ public class OrderReductionPass extends TransformationPass
 	        	String matlabAMatrix = sp.convertFlowToMatrix(e.getValue());
 	        	proxy.eval("A_" + e.getKey() + " = " + matlabAMatrix + ";");
 	        	proxy.eval("A_" + e.getKey() + " * X.'");
+	        	
+	        	String matlabBMatrix = sp.convertInputToMatrix(e.getValue());
+	        	proxy.eval("B_" + e.getKey() + " = " + matlabBMatrix + ";");
+	        	
+	        	String matlabCMatrix = sp.convertInvToMatrix(e.getValue());
+	        	proxy.eval("C_" + e.getKey() + " = '" + matlabCMatrix + "'");
 	        }
 	        
 	        // TODO: get inputs, I guess these are going to be constants from looking at the example model (e.g., u has constant dynamics for building) ; do the same dynamics matrix function to get the B vector, etc.

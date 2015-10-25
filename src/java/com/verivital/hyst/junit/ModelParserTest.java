@@ -953,11 +953,11 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-                AutomatonMode mode = ha.modes.get("running");
-                sp.ha = ha;
-                String s = sp.convertFlowToMatrix(mode);
-                String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0 2.0 4.0 ;]";
-                Assert.assertEquals(s, result);        	
+		AutomatonMode mode = ha.modes.get("running");
+		sp.ha = ha;
+		String s = sp.convertFlowToMatrix(mode);
+		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0 2.0 4.0 ;]";
+		Assert.assertEquals(s, result);
 	}
          @Test
 	public void testConvertLinearDynamicTwoVars()
@@ -972,11 +972,11 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-                AutomatonMode mode = ha.modes.get("running");
-                sp.ha = ha;
-                String s = sp.convertFlowToMatrix(mode);
-                String result = "[2.0 4.0 ;0 -3.0 ;]";
-                Assert.assertEquals(s, result);        	
+		AutomatonMode mode = ha.modes.get("running");
+		sp.ha = ha;
+		String s = sp.convertFlowToMatrix(mode);
+		String result = "[2.0 4.0 ;0 -3.0 ;]";
+		Assert.assertEquals(s, result);    	
 	}
          @Test
 	public void testConvertLinearDynamicOneVar()
@@ -991,11 +991,11 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-                AutomatonMode mode = ha.modes.get("running");
-                sp.ha = ha;
-                String s = sp.convertFlowToMatrix(mode);
-                String result = "[1 ;]";
-                Assert.assertEquals(s, result);        	
+		AutomatonMode mode = ha.modes.get("running");
+		sp.ha = ha;
+		String s = sp.convertFlowToMatrix(mode);
+		String result = "[1 ;]";
+		Assert.assertEquals(s, result);  	
 	}
         @Test
 	public void testConvertLinearDynamicTimeHAOneVar()
@@ -1010,11 +1010,11 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-                AutomatonMode mode = ha.modes.get("running");
-                sp.ha = ha;
-                String s = sp.convertFlowToMatrix(mode);
-                String result = "[0 ;]";
-                Assert.assertEquals(s, result);        	
+		AutomatonMode mode = ha.modes.get("running");
+		sp.ha = ha;
+		String s = sp.convertFlowToMatrix(mode);
+		String result = "[0 ;]";
+		Assert.assertEquals(s, result);     	
 	}
 	
 	/*@Test

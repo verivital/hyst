@@ -69,8 +69,8 @@ resetSubExpression
 	;
 
 resetExpression
-	:
-    (resetSubExpression (AND resetSubExpression))* EOF    # Reset
+    : EOF								    # ResetBlank
+    | resetSubExpression (AND resetSubExpression)* EOF    # Reset
     ;
 
 guardExpression
@@ -84,7 +84,8 @@ invariantExpression
     ;
 
 flowExpression
-    : (VAR TICK? EQUAL addSub (AND VAR TICK? EQUAL addSub))* EOF	# Flow
+    : EOF							# FlowBlank
+    | VAR TICK? EQUAL addSub (AND VAR TICK? EQUAL addSub)* EOF	# Flow
 	| FALSE # FlowFalse
     ;
 

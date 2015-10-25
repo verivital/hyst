@@ -107,8 +107,8 @@
         	<arg value="com.verivital.hyst.grammar.antlr"/>
         	<!-- Stan: commented this out because it would generate the files in a subdirectory of the grammar file,
         	although it did compile it correctly somehow.-->
-        	<!--<arg value="-o"/>
-			<arg value="java/com/verivital/hyst/grammar/antlr"/>-->
+        	<arg value="-o"/>
+			<arg value="java/com/verivital/hyst/grammar/antlr"/>
         	<!-- Taylor: the previous are necessary for me...? -->
             <classpath refid="build.classpath"/>
         	
