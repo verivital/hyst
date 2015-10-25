@@ -224,6 +224,12 @@ DEPENDENCIES:
 
 pip install sympy
 
+For plotting:
+
+* matplotlib: http://matplotlib.org/
+
+pip install matplotlib
+
 *******************************************************************************
 MODEL TRANSFORMATION PASSES:
 *******************************************************************************
