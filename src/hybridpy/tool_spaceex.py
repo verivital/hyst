@@ -115,7 +115,14 @@ class SpaceExTool(HybridTool):
         rv = True
 
         # graph -T "ps" -BC -q 0.5 plots/$MODELNAME-plot.txt > plots/$MODELNAME-plot.ps
-        params = ["graph", "-T", "png", "-BC", "-q", "0.25", "plotdata.txt"]
+        # -T png = image type png
+        # -B = turn of varying linemode feature (all ploted datasets will use the same style)
+        # -C = color
+        # -q 0.25 = fill polygons with color intensity 0.25
+        # -w, -h, -r, -u = width and height ratios of plot area, and right and uo offset ratios
+        # bitmap-size = size of output file
+        params = ["graph", "-T", "png", "-BC", "-q", "0.25", \
+                  "-h", "0.9", "-w", "0.8", "-r", ".1", "-u", ".07", "--bitmap-size", "1000x1000", "plotdata.txt"]
 
         print "Plotting with command 'graph' (plotutils), params: %s"%str(params)
 
