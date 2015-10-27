@@ -35,7 +35,7 @@ import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
-import com.verivital.hyst.passes.complex.hybridize.HybridizeTimeTriggeredPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.util.RangeExtractor;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -284,7 +284,7 @@ public class PassTests
 	 * Test hybridization (time-triggered) pass
 	 */
 	@Test
-	public void testHybridTimeTriggeredPass()
+	public void testHybridMixedTriggeredPass()
 	{
 		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
@@ -302,7 +302,7 @@ public class PassTests
 		c.validate();
 		
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center";
-		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 		
 		Assert.assertEquals("5 modes (2 + 3 error)", 5, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
@@ -388,7 +388,7 @@ public class PassTests
 	 * Test hybridization (time-triggered) pass
 	 */
 	@Test
-	public void testHybridTimeTriggeredPassWithPremodes()
+	public void testHybridizeMixedTriggeredPassWithPremodes()
 	{
 		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
@@ -406,7 +406,7 @@ public class PassTests
 		c.validate();
 		
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center,addintermediate=true";
-		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 		
 		Assert.assertEquals("6 modes (2 + premode + 3 errors)", 6, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
@@ -467,7 +467,7 @@ public class PassTests
 	}
 	
 	@Test
-	public void testHybridTimeTriggeredPassVanderpol()
+	public void testHybridizeMixedTriggeredPassVanderpol()
 	{
 		// test that dynamics in mode zero should be exactly x' == y
 		// params: step=0.01,maxtime=0.02,epsilon=0.001,addforbidden=false
@@ -481,7 +481,7 @@ public class PassTests
 		c.validate();
 		
 		String params = "step=0.01,maxtime=0.02,epsilon=0.01,addforbidden=false";
-		new HybridizeTimeTriggeredPass().runTransformationPass(c, params);
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 		
 		Assert.assertEquals("3 modes (2 + 3 error)", 5, ha.modes.size());
 		Assert.assertEquals("1 initial mode", 1, c.init.size());
@@ -560,12 +560,12 @@ public class PassTests
 		for (int i = 0; i < pts.length; ++i)
 		{
 			Assert.assertTrue(pts[i] + (expected[i] ? " SHOULD" : " should NOT") + " be in front of box " + box + ". dynamics: " + dy,
-					HybridizeTimeTriggeredPass.testHyperPlane(new HyperPoint(pts[i]), box, dy, vars) == expected[i]);
+					HybridizeMixedTriggeredPass.testHyperPlane(new HyperPoint(pts[i]), box, dy, vars) == expected[i]);
 		}
 	}
 	
 	@Test
-	public void testTimeTriggeredHybridizeWithPi()
+	public void testMixedTriggeredHybridizeWithPi()
 	{
 		// time-triggered hybridized pass tests with pseudo-invariants
 		// 1d system with x'==1, init box is [0, 1], use star to construct guide simulation
@@ -585,8 +585,8 @@ public class PassTests
 		c.validate();
 		
 		String params = "step=1,maxtime=10,epsilon=0.01,simtype=star,picount=1";
-		HybridizeTimeTriggeredPass htt = new HybridizeTimeTriggeredPass();
-		htt.testFuncs = new HybridizeTimeTriggeredPass.TestFunctions()
+		HybridizeMixedTriggeredPass htt = new HybridizeMixedTriggeredPass();
+		htt.testFuncs = new HybridizeMixedTriggeredPass.TestFunctions()
 		{
 			@Override
 			public void piSimPointsReached(List<HyperPoint> simPoints)
