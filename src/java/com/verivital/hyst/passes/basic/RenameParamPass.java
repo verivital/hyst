@@ -2,11 +2,13 @@ package com.verivital.hyst.passes.basic;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -17,7 +19,6 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.ExpressionModifier;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
@@ -70,10 +71,10 @@ public class RenameParamPass extends TransformationPass
 	{
 		for (ComponentMapping mapping : mappingList)
 		{
-			String newName = convertMap.get(mapping.childParam);
+			String newName = convertMap.get(mapping.parentParam);
 			
 			if (newName != null)
-				mapping.childParam = newName;
+				mapping.parentParam = newName;
 		}
 	}
 
@@ -257,10 +258,34 @@ public class RenameParamPass extends TransformationPass
 	
 	private static class SwapExpressionModifier extends ExpressionModifier
 	{
-		Map<String, String> convertMap;
-		public SwapExpressionModifier(Map<String, String> convertMap)
+		private Map<String, Variable> convertMap = new HashMap<String, Variable>();
+		private ArrayList <Variable> newVariables = new ArrayList <Variable>();
+		
+		private boolean isNewVariableInstance(Variable v)
 		{
-			this.convertMap = convertMap;
+			boolean rv = false;
+			
+			for (Variable var : newVariables)
+			{
+				if (var == v) // instance comparison
+				{
+					rv = true;
+					break;
+				}
+			}
+			
+			return rv;
+		}
+		
+		public SwapExpressionModifier(Map<String, String> convertNameMap)
+		{
+			for (Entry<String, String> e : convertNameMap.entrySet())
+			{
+				Variable v = new Variable(e.getValue());
+				
+				newVariables.add(v);
+				convertMap.put(e.getKey(), v);
+			}
 		}
 
 		@Override
@@ -268,14 +293,14 @@ public class RenameParamPass extends TransformationPass
 		{
 			Expression rv = e;
 
-			if (e instanceof Variable)
+			if (e instanceof Variable && !newVariables.contains(e))
 			{
 				Variable v = (Variable)e;
 				
-				String to = convertMap.get(v.name);
+				Variable to = convertMap.get(v.name);
 				
 				if (to != null)
-					rv = new Variable(to);
+					rv = to;
 			}
 			else if (e instanceof Operation)
 			{

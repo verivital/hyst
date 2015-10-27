@@ -21,18 +21,22 @@ import com.verivital.hyst.util.FileOperations;
  * Use open() to open the process, which should be called before interacting with python, and close() to close it.
  * Failure to call close() will leave the python process running, which is a bug.
  * 
- * DO NOT INSTANTIATE THIS CLASS IN A STATIC CONTEXT. If you do this, running Hyst will be dependent on having python installed, which
- * we don't want.
+ * DO NOT INSTANTIATE THIS CLASS IN A STATIC CONTEXT. If you do this, running Hyst will be dependent on having python installed, 
+ * which we don't want.
  * 
  * Overhead:
  * In performance tests, I measured around 15000 function calls per second using this bridge
  * In native python, I measured 5.5 million function calls per second
+ * 
+ * You can reduce overhead by passing all of your data to python at once (or as much as is possible), and then having python 
+ * do an extended computation (even in parallel) and only then print back the result. 
  * 
  * @author Stanley Bak (May 2015)
  *
  */
 public class PythonBridge
 {
+	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
 	private int timeoutMs;
 	private Process process = null;
 	private BufferedReader stdout = null;
@@ -41,14 +45,22 @@ public class PythonBridge
 	
 	public PythonBridge()
 	{
-		this(5000);
+		this(DEFAULT_TIMEOUT);
 	}
 	
+	/**
+	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * @param timeoutMs
+	 */
 	public PythonBridge(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
 	}
 	
+	/**
+	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * @param timeoutMs
+	 */
 	public void setTimeout(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
@@ -67,6 +79,10 @@ public class PythonBridge
 					"There may be version issues. Preamble:\n" + preamble);
 		
 		log("Python process opened successfully. Preamble: \n" + preamble);
+		
+		// remove the continuation prompt on multi-line commands in interactive mode "... "
+		send("import sys");
+		send("sys.ps2 = ''"); 
 	}
 	
 	private static void log(String description)
@@ -85,6 +101,7 @@ public class PythonBridge
 	 */
 	private void error(String description)
 	{
+		Hyst.logDebug(description);
 		close();
 		
 		throw new AutomatonExportException(description);
@@ -422,13 +439,19 @@ public class PythonBridge
 		
 		try
 		{
-			if (s != null)
-			{
-				logDebug("Sending to python: " + s);
-				stdin.write(s);
-				stdin.write("\n");
-				stdin.flush();
-			}
+			String stdOutBefore = readUntilBlocked(stdout);
+			String stdErrBefore = readUntilBlocked(stderr);
+			
+			if (stdOutBefore.length() != 0)
+				error("stdout contained stale text before the send command: '" + stdOutBefore + "'");
+			
+			if (stdErrBefore.length() != 0)
+				error("stderr contained stale text before the send command: '" + stdErrBefore + "'");
+			
+			logDebug("Sending to python: " + s);
+			stdin.write(s);
+			stdin.write("\n");
+			stdin.flush();
 			
 			logDebug("Reading from python with timeout " + timeoutMs + " ms");
 			result = readUntilPrompt();
@@ -445,22 +468,51 @@ public class PythonBridge
 	/**
 	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * @param cmd the command to send (without the trailing newline, which is automatically added)
-	 * @param timeoutMs the timeout to use, in milliseconds. If < 0, then no timeout is used.
 	 * @return the output from stdout until the next prompt. May be the empty string, but never null.
 	 */
 	public String send(String s)
+	{
+		return send(s, false);
+	}
+	
+	/**
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout.
+	 * 
+	 * This version allows the string to end with a newline, which is typically an error, but may be
+	 * necessary for things like function declarations
+	 * 
+	 * @param cmd the command to send (trailing newline is automatically added, so that your string will have
+	 * 			  two trailing newlines)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never null.
+	 */
+	public String sendWithTrailingNewline(String s)
+	{
+		if (!s.endsWith("\n"))
+			error("sendNewlineIsOnPurpose() used by command didn't end with newline: " + s);
+			
+		return send(s, true);
+	}
+	
+	private String send(String s, boolean allowNewlineEndings)
 	{
 		String result = null;
 		
 		if (process == null)
 			error("send() called but process is not running (was open() called?)");
 		
+		if (s.length() == 0)
+			error("send() called with empty string");
+		else if (!allowNewlineEndings && s.endsWith("\n"))
+			error("send() ends with \\n; the newline is added automatically and this would " +
+					"cause issues with PythonBridge's prompt detection.\nIf you want to end " +
+					"the command with a \\n, for example to declare a function, use sendWithTrailingNewline().");
+		
 		result = sendAndWait(s);
 		
 		return result;
 	}
 	
-	public void importModule(String module)
+	public void importPythonBridgeModule(String module)
 	{
 		String result = send("from pythonbridge import " + module);
 		

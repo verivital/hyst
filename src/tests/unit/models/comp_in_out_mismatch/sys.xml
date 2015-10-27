@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="out_x">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="xon1" x="196.0" y="252.0" width="176.0" height="100.0">
+      <invariant>x &lt;= 2</invariant>
+      <flow>x' == 2*x + 2*y</flow>
+    </location>
+    <location id="2" name="xon2" x="579.0" y="263.0" width="146.0" height="116.0" />
+    <transition source="1" target="2">
+      <guard>x &gt;= 2</guard>
+      <labelposition x="-35.0" y="-54.0" width="94.0" height="52.0" />
+      <middlepoint x="398.5" y="211.5" />
+    </transition>
+  </component>
+  <component id="out_y">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="yon" x="307.0" y="139.0" width="184.0" height="104.0">
+      <flow>y' == 2*x + 2*y</flow>
+    </location>
+  </component>
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="out_x" as="out_x_1">
+      <map key="x">x</map>
+      <map key="y">y</map>
+    </bind>
+    <bind component="out_y" as="out_y_1" x="278.0" y="311.0">
+      <map key="x">x</map>
+      <map key="y">y</map>
+    </bind>
+  </component>
+</sspaceex>
+
