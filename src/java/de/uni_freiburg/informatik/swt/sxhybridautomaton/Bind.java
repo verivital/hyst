@@ -19,6 +19,11 @@ public class Bind {
 	private UIPosition mPosition;
 	private UIDimensions mDimensions;
 	
+	public String toString()
+	{
+		return "[Bind component(type): " + mComponent + ", instanceName(as): " + mAs + "]";
+	}
+	
 	/**
 	 * Creates a new Bind and adds it to the parent Component
 	 * @param parent The Component this Bind belongs to

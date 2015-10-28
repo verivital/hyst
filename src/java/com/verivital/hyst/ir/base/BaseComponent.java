@@ -26,6 +26,8 @@ import com.verivital.hyst.util.AutomatonUtil;
  * 
  * labels (exported labels) must match at least one label in a transition
  * 
+ * the defined flows in all non-urgent locations must be for the same variables
+ * 
  * @author Stanley Bak (stanleybak@gmail.com)
  *
  */
@@ -36,7 +38,7 @@ public class BaseComponent extends Component
 	
 	/**
 	 * Create a new mode in this hybrid automaton. By default the invariant
-	 * is null (must be manually set) and the flows are x'=0 (see AutomatonMode.DEFAULT_FLOW_RHS) 
+	 * is null (must be manually set) and the flows are x'=null for all x (these must be assigned) 
 	 * @param name a name for the mode (must be unique)
 	 * @return the created AutomatonMode object
 	 */
@@ -50,6 +52,23 @@ public class BaseComponent extends Component
 		modes.put(name, rv);
 		
 		return rv;
+	}
+	
+	/**
+	 * Create a new mode in this hybrid automaton. By default the invariant
+	 * is null (must be manually set) and the flows are x'=<allDynamics> 
+	 * @param name a name for the mode (must be unique)
+	 * @param allDynamics the dynamics for every variable
+	 * @return the created AutomatonMode object
+	 */
+	public AutomatonMode createMode(String name, ExpressionInterval allDynamics)
+	{
+		AutomatonMode am = createMode(name);
+		
+		for (String v : variables)
+			am.flowDynamics.put(v, allDynamics.copy());
+		
+		return am;
 	}
 	
 	/**
@@ -169,6 +188,36 @@ public class BaseComponent extends Component
 				String msg = "Exported label '" + label + "' was not used in BaseComponent '" + getPrintableInstanceName() + "'.";
 				Hyst.log(msg + " This would block all transitions using this label in other components, and is typically a mistake.");
 				throw new AutomatonValidationException(msg);
+			}
+		}
+		
+		// the defined flows in all locations must be for the same set of variables
+		Set <String> firstModeFlows = null;
+		String firstModeName = null;
+		
+		for (Entry<String, AutomatonMode> e : modes.entrySet())
+		{
+			String name = e.getKey();
+			AutomatonMode am = e.getValue();
+			
+			if (am.urgent)
+				continue;
+			
+			Set <String> flows = am.flowDynamics.keySet();
+			
+			if (firstModeName == null)
+			{
+				firstModeName = name;
+				firstModeFlows = flows;
+			}
+			else
+			{
+				if (!flows.equals(firstModeFlows))
+				{
+					throw new AutomatonValidationException("BaseComponent " + getPrintableInstanceName() + 
+							": Variables with defined flows in mode '" + firstModeName + "' (" + firstModeFlows + 
+							") differ from mode '" + name + "' (" + flows + ")" );
+				}
 			}
 		}
 	}

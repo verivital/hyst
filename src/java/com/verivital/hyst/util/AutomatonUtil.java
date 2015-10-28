@@ -12,6 +12,8 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -25,12 +27,10 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.simulation.HyperPoint;
 import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
@@ -444,7 +444,7 @@ public abstract class AutomatonUtil
 	 * @param ha the hybrid automaton
 	 * @return the center point of the first initial mode, in the order of ha.variablesNames
 	 */
-	public static double[] getInitialPoint(BaseComponent ha, Configuration config)
+	public static HyperPoint getInitialPoint(BaseComponent ha, Configuration config)
 	{
 		if (config.root != ha)
 			throw new AutomatonExportException("expected flat automaton");
@@ -479,7 +479,7 @@ public abstract class AutomatonUtil
 				rv[i] = in.middle();
 		}
 		
-		return rv;
+		return new HyperPoint(rv);
 	}
 
 	/**
@@ -654,7 +654,6 @@ public abstract class AutomatonUtil
 	 */
 	public static double[][] estimateJacobian(LinkedHashMap<String, ExpressionInterval> dy,	HashMap<String, Interval> bounds)
 	{
-		final double FRAC = 0.01; // sampling fraction of width, from center, used to estimate the Jacobian
 		final int NUM_VARS = dy.size();
 		double[][] rv = new double[NUM_VARS][NUM_VARS];
 		ArrayList <String> variables = new ArrayList<String>();
@@ -670,8 +669,7 @@ public abstract class AutomatonUtil
 			for(int x = 0; x < NUM_VARS; ++x)
 			{
 				String partialDerVar = variables.get(x); // the partial derivative variable
-				double width = bounds.get(partialDerVar).width();
-				double sampleOffset = width * FRAC;
+				double sampleOffset = bounds.get(partialDerVar).width() / 2;
 				HyperPoint left = new HyperPoint(center);
 				HyperPoint right = new HyperPoint(center);
 				
@@ -701,6 +699,44 @@ public abstract class AutomatonUtil
 		
 		for (String v : variables)
 			rv.dims[dim++] = bounds.get(v).middle();
+		
+		return rv;
+	}
+
+	/**
+	 * Check whether a variable is an output variable of a component. It is an output variable if either a flow is defined for it,
+	 * or if a reset exists where the variable is assigned.
+	 * 
+	 * @param bc the base component
+	 * @param varName the variable name
+	 * @return true iff the passed-in variable is an output variable
+	 */
+	public static boolean isOutputVariable(BaseComponent bc, String varName)
+	{
+		boolean rv = false;
+		
+		// if flow is defined
+		for (AutomatonMode am : bc.modes.values())
+		{
+			if (am.urgent)
+				continue;
+			
+			rv = am.flowDynamics.keySet().contains(varName);
+			break;
+		}
+		
+		if (!rv)
+		{
+			// if a reset is defined
+			for (AutomatonTransition at : bc.transitions)
+			{
+				if (at.reset.containsKey(varName))
+				{
+					rv = true;
+					break;
+				}
+			}
+		}
 		
 		return rv;
 	}

@@ -13,7 +13,9 @@
       <invariant>x &lt;= 1</invariant>
       <flow>x' == 1</flow>
     </location>
-    <location id="1" name="two" x="543.0" y="227.0" />
+    <location id="1" name="two" x="543.0" y="227.0">
+      <flow>x' == 0</flow>
+    </location>
     <location id="2" name="init" x="215.0" y="87.0">
       <flow>false</flow>
     </location>

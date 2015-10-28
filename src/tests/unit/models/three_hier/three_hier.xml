@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="bottom">
+    <param name="xbottom" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="new" x="210.0" y="110.0" width="130.0" height="70.0">
+      <flow>xbottom' == 1</flow>
+    </location>
+  </component>
+  <component id="mid">
+    <param name="xmid" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="bottom" as="bottom_1" x="174.0" y="31.0">
+      <map key="xbottom">xmid</map>
+    </bind>
+  </component>
+  <component id="top">
+    <param name="xtop" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="mid" as="mid_1" x="159.0" y="71.0">
+      <map key="xmid">xtop</map>
+    </bind>
+  </component>
+</sspaceex>
+

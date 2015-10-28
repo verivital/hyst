@@ -1,10 +1,14 @@
-package com.verivital.hyst.passes.complex;
+package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -17,13 +21,13 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
-import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.RangeExtractor;
 
 
 public class HybridizeGridPass extends TransformationPass
@@ -77,8 +81,6 @@ public class HybridizeGridPass extends TransformationPass
 	private Expression originalInvariant;
 	
 	private boolean printGuards = false;
-
-	private static int scipyOptimizeCalls = 0;
 	
 	@Override
 	public String getName()
@@ -223,72 +225,39 @@ public class HybridizeGridPass extends TransformationPass
 	
 	public void affineOptimize()
 	{
-		PythonBridge pb = new PythonBridge();
-		pb.open();
-		
-		scipyOptimizeCalls = 0;
-		long start = System.currentTimeMillis();
-		
+		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
+
 		for (ArrayList <Integer> indexList : modeIndexLists)
 		{
-			AutomatonMode am = ha.modes.get(indexListToModeName(indexList));			
 			HashMap<String, Interval> bounds = getIntervalBounds(indexList);
+			OptimizationParams op = new OptimizationParams();
 			
-			am.flowDynamics = createAffineDynamics(pb, originalDynamics, bounds);
+			op.bounds = bounds;
+			op.original = originalDynamics;
+			params.add(op);
 		}
+		
+		PythonBridge pb = new PythonBridge();
+		pb.open();
+		long start = System.currentTimeMillis();
+
+		AffineOptimize.createAffineDynamics(pb, params);
 		
 		long dif = System.currentTimeMillis() - start;
 		pb.close();
 		
-		Hyst.log("Completed " + scipyOptimizeCalls + " optimizations in " + dif + " milliseconds. " +
-				(1000.0 * scipyOptimizeCalls / dif) + " per second");
-	}
-
-	/**
-	 * Create affine dynamics which encompass the original dynamics in some rectangle
-	 * @param pb the PythonBridge to use
-	 * @param original the original dynamics
-	 * @param bounds the rectangle bounds
-	 * @return the constructed affine flows
-	 */
-	public static LinkedHashMap<String, ExpressionInterval> createAffineDynamics( PythonBridge pb,
-			LinkedHashMap<String, ExpressionInterval> original, HashMap<String, Interval> bounds)
-	{
-		LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
-		int NUM_VARS = original.size();
-		double[][] JAC = AutomatonUtil.estimateJacobian(original, bounds);
-		ArrayList <String> orderedVariables = new ArrayList <String>(); // same ordering as the flow hashmap		
-		orderedVariables.addAll(original.keySet());
-
-		for (int derVar = 0; derVar < NUM_VARS; ++derVar)
+		// store result
+		for (int i = 0; i < modeIndexLists.size(); ++i)
 		{
-			String derVarName = orderedVariables.get(derVar);
-			Expression derivativeExp = original.get(derVarName).asExpression();
+			ArrayList <Integer> indexList = modeIndexLists.get(i);
+			AutomatonMode am = ha.modes.get(indexListToModeName(indexList));
 			
-			// linear estimate is: JAC[derVar][0] * var0 + JAC[derVar][1] * var1 + ...
-			Expression linearized = null;
-			
-			for (int partialVar = 0; partialVar < NUM_VARS; ++partialVar)
-			{
-				Operation term = new Operation(Operator.MULTIPLY, new Constant(JAC[derVar][partialVar]),
-						new Variable(orderedVariables.get(partialVar)));
-				
-				if (linearized == null)
-					linearized = term;
-				else
-					linearized = new Operation(Operator.ADD, linearized, term);
-			}
-			
-			// the function to be optimized is the difference between the linear approximation and the real function
-			Expression optimizeFunc = new Operation(Operator.SUBTRACT, derivativeExp, linearized);
-			
-			Interval inter = PythonUtil.scipyOptimize(pb, optimizeFunc, bounds);
-			++scipyOptimizeCalls;
-
-			rv.put(derVarName, new ExpressionInterval(linearized, inter));
+			am.flowDynamics = params.get(i).result;
 		}
 		
-		return rv;
+		int numOpt = modeIndexLists.size() * (ha.variables.size());
+		Hyst.log("Completed " + numOpt + " optimizations in " + dif + " milliseconds. " +
+				(1000.0 * numOpt / dif) + " per second");
 	}
 
 	private void linearOptimize(){
@@ -350,13 +319,13 @@ public class HybridizeGridPass extends TransformationPass
 
 	/**
 	 *	useful to convert the mode names to string
-	 *	mode name starts with m_
+	 *	mode name starts with _m_
  	 *	and the following characters have been described at
 	 *	the start of this class
 	 */
 	private String indexListToModeName(ArrayList<Integer> v)
 	{
-		String s = "m";
+		String s = "_m";
 		
 		for(int i=0;i<v.size();++i)
 			s += "_" + v.get(i);
@@ -402,23 +371,9 @@ public class HybridizeGridPass extends TransformationPass
 	 */
 	private Expression createInvariant(ArrayList<Integer> indexList)
 	{
-		Expression rv = Constant.TRUE;
-
 		HashMap<String, Interval> bounds = getIntervalBounds(indexList);
-		
-		for (Entry<String, Interval> e : bounds.entrySet())
-		{
-			Variable v = new Variable(e.getKey());
-			Interval i = e.getValue();
-			
-			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
-			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
-			Expression range = Expression.and(ge, le);
-			
-			rv = Expression.and(rv, range);
-		}
 
-		return rv;
+		return boundsToExpression(bounds);
 	}
 
 	/**
@@ -526,14 +481,102 @@ public class HybridizeGridPass extends TransformationPass
 	}
 
 	/**
-	 * Set the initial states to be every mode (invariants will trim them)
+	 * Set the initial states
 	*/
 	private void addInitialCondition()
 	{
 		Expression init = config.init.values().iterator().next();
-		config.init.clear();
+		config.init = expressionInvariantsIntersection(ha, init, "initial states");
+	}
+	
+	/**
+	 * Get the modes in a hybrid automaton which intersect an expression
+	 * @param ha the original autommaton (with modes created and invariants assigned)
+	 * @param e the expression
+	 * @param desc a description for errors if e is not a rectangle
+	 * @return a map from mode_name to expression where the value is the intersection of e an the mode's invariant
+	 */
+	public static LinkedHashMap<String, Expression> expressionInvariantsIntersection(BaseComponent ha, Expression e, String desc)
+	{
+		LinkedHashMap<String, Expression> rv = new LinkedHashMap<String, Expression>();
 		
-		for(String name : ha.modes.keySet())
-			config.init.put(name, init.copy());
+		TreeMap<String, Interval> rangesExp = RangeExtractor.getVariableRanges(e, desc); 
+		
+		for(AutomatonMode am : ha.modes.values())
+		{
+			TreeMap<String, Interval> rangesMode = RangeExtractor.getVariableRanges(am.invariant, "invariant for mode " + am.name);
+			
+			// if there is a point in both rangesMode and rangesInit, add as initial state
+			TreeMap<String, Interval> intersection = getIntersection(rangesExp, rangesMode);
+			
+			if (intersection != null)
+				rv.put(am.name, boundsToExpression(intersection));
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Convert from a set of bounds (variable -> interval) to an expression
+	 * @param bounds the bounds
+	 * @return the generated expression
+	 */
+	private static Expression boundsToExpression(Map<String, Interval> bounds)
+	{
+		Expression rv = Constant.TRUE;
+		
+		for (Entry<String, Interval> e : bounds.entrySet())
+		{
+			Variable v = new Variable(e.getKey());
+			Interval i = e.getValue();
+			
+			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
+			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
+			Expression range = Expression.and(ge, le);
+
+			if (i.isMinOpen())
+				rv = Expression.and(rv, le);
+			else if (i.isMaxOpen())
+				rv = Expression.and(rv, ge);
+			else
+				rv = Expression.and(rv, range);
+		}
+
+		return rv;
+	}
+
+	/**
+	 * Get the intersection of two sets of constraints
+	 * @param a the first range
+	 * @param b the second range
+	 * @return the intersection
+	 */
+	private static TreeMap<String, Interval> getIntersection(Map<String, Interval> a, Map<String, Interval> b)
+	{
+		TreeMap<String, Interval> rv = new TreeMap<String, Interval>();
+		
+		for (Entry<String, Interval> entryA : a.entrySet())
+		{
+			String variable = entryA.getKey();
+			Interval intervalA = entryA.getValue();
+			Interval intervalB = b.get(variable);
+			
+			if (intervalB == null) // unconstrained in B, any value in intervalA is valid
+				rv.put(variable, intervalA);
+			else
+			{
+				Interval i = Interval.intersection(intervalA, intervalB);
+				
+				if (i == null)
+				{
+					rv = null;
+					break;
+				}
+				else
+					rv.put(variable, i);
+			}
+		}
+		
+		return rv;
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
@@ -13,7 +14,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
@@ -137,9 +137,38 @@ public class FlattenAutomatonPass extends TransformationPass
 			// copy some parts from parent network component
 			rv.instanceName = c.instanceName;
 			mergeParams(rv, nc);
+			fixVariableOrder(rv, nc);
 		}
 		
 		return rv;
+	}
+
+	/**
+	 * The variable ordering may have gotten messed up since when merging they get adding in the order
+	 * they are used in each base component. This function modifies rv's variable order to first include all variables
+	 * in nc's order, and then any remaining variables
+	 * @param rv
+	 * @param nc
+	 */
+	private void fixVariableOrder(BaseComponent rv, NetworkComponent nc)
+	{
+		ArrayList <String> ordered = new ArrayList <String>();
+		
+		// add all the variables that exist in nc's order
+		for (String var : nc.variables)
+		{
+			if (rv.variables.contains(var))
+				ordered.add(var);
+		}
+		
+		// add all remaining variables
+		for (String var : rv.variables)
+		{
+			if (!ordered.contains(var))
+				ordered.add(var);
+		}
+		
+		rv.variables = ordered;
 	}
 
 	@Override

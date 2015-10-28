@@ -15,6 +15,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
@@ -27,11 +29,9 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.simulation.HyperPoint;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -632,11 +632,11 @@ public class ContinuizationPass extends TransformationPass
 		Hyst.log("minimum simulation range is " + minRange + ", simulation step = " + stepTime);
 		
 		// simulate from initial state
-		double[] initPt = AutomatonUtil.getInitialPoint(ha, config);
-		Hyst.log("Init point from config: " + Arrays.toString(initPt));
+		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
+		Hyst.log("Init point from config: " + initPt);
 		
 		initPt = Simulator.processReset(initPt, ha.variables, t.reset);
-		Hyst.log("Init point after urgent transition: " + Arrays.toString(initPt));
+		Hyst.log("Init point after urgent transition: " + initPt);
 		
 		double simTime = params.domains.get(params.domains.size() - 1).endTime;
 		int numSteps = (int)(Math.ceil(simTime / stepTime));
