@@ -30,7 +30,6 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
@@ -625,7 +624,7 @@ public class PassTests
 		String[][] dynamics = {{"y", "cos(t)"}, {"t", "1"}};
 		Configuration c = makeDebugConfiguration(dynamics);
 		
-		String continuizationParam = "-var y -period 0.1 -times 1.57:3.14 -timevar t -bloats 0.1:0.2";
+		String continuizationParam = "-var y -period 0.1 -times 1.57 3.14 -timevar t -bloats 0.1 0.2";
 		
 		new ContinuizationPass().runTransformationPass(c, continuizationParam);
 		BaseComponent ha = (BaseComponent)c.root;
@@ -655,7 +654,7 @@ public class PassTests
 		String[][] dynamics = {{"x", "v", "0.05"}, {"v", "a", "0"}, {"a", "-10 * v - 3 * a", "9.5"}};
 		Configuration c = makeDebugConfiguration(dynamics);
 		
-		String continuizationParam = "-var a -period 0.005 -times 1.5:5 -timevar t -bloats 4:4";
+		String continuizationParam = "-var a -period 0.005 -times 1.5 5 -timevar t -bloats 4 4";
 		
 		new ContinuizationPass().runTransformationPass(c, continuizationParam);
 		BaseComponent ha = (BaseComponent)c.root;

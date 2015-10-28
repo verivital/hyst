@@ -1,18 +1,15 @@
 package com.verivital.hyst.passes.complex;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
@@ -38,31 +35,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 
 public class ContinuizationPass extends TransformationPass
 {
-	static int HELP_WIDTH = 100; // TODO: remove: leave any GUI elements out of the passes
 	private static final String PASS_PARAM = "-continuize";
-	
-	static Options options = new Options(); 
-	
-	static
-	{
-		options.addOption(Option.builder("var").argName( "name" ).hasArg()
-				.desc("variable name being continuized").required().build());
-		
-		options.addOption(Option.builder("period").argName( "time" ).hasArg()
-				.desc("period of controller").required().build());
-		
-		options.addOption(Option.builder("timevar").argName( "name" ).hasArg()
-				.desc("time variable").build());
-		
-		options.addOption(Option.builder("times").argName( "time1:time2:..." ).hasArg()
-				.desc("time domain boundaries").required().build());
-		
-		options.addOption(Option.builder("bloats").argName( "val1:val2:..." ).hasArg()
-				.desc("bloating values for each time domain").required().build());
-		
-		options.addOption(Option.builder("noerrormodes")
-				.desc("skip created error modes").build());
-	}
 	
 	public ContinuizationPass()
 	{
@@ -79,16 +52,28 @@ public class ContinuizationPass extends TransformationPass
 		AutomatonMode mode;
 	}
 	
-	private static class ParamValues
-	{
-		String varName;
-		String timeVarName;
-		double period;
-		
-		boolean skipErrorModes;
-		
-		ArrayList <DomainValues> domains = new ArrayList <DomainValues>();
-	}
+	ArrayList <DomainValues> domains = new ArrayList <DomainValues>();
+	
+	// command line parameter values below
+	@Option(name="-var",required=true,usage="variable name being continuized", metaVar="NAME")
+	private String varName;
+	
+	@Option(name="-timevar",usage="time variable", metaVar="NAME")
+	private String timeVarName;
+	
+	@Option(name="-period",required=true,usage="period of controller", metaVar="TIME")
+	private double period;
+	
+	@Option(name="-noerrormodes",usage="skip created error modes")
+	boolean skipErrorModes = false;
+	
+	@Option(name="-times",required=true,handler=StringArrayOptionHandler.class,usage="time domain boundaries", metaVar="TIME1 TIME2 ...")
+	List<String> times;
+	
+	@Option(name="-bloats",required=true,handler=StringArrayOptionHandler.class,usage="bloating terms for each time domain", metaVar="VAL1 VAL2 ...")
+	List<String> bloats;
+	
+	CmdLineParser parser = new CmdLineParser(this);
 	
 	@Override
 	protected void checkPreconditons(Configuration c, String name)
@@ -146,32 +131,25 @@ public class ContinuizationPass extends TransformationPass
 	@Override
 	public String getParamHelp()
 	{
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
+		ByteArrayOutputStream out = new ByteArrayOutputStream(); 
 		
-		HelpFormatter formatter = new HelpFormatter();
-		formatter.printOptions(pw, HELP_WIDTH, options, 0, 0);
+		parser.printUsage(out);
 		
-		return sw.toString();
+		return out.toString();
 	}
 	
 	@Override
 	public String getLongHelp()
 	{
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		
-		String header = "Currently, this pass assumes a one or two-mode automaton, where the first mode is urgent and the reset does any" +
-				"initialization. The second mode is the continuous approximation of the system." +
-				"the 'range_adders' are combined with a simulation to determine the ranges of" +
-				"the variables. The ranges are initially estimated from a simulation, then this gets increased by" +
+		String header = 
+				"Currently, this pass assumes a one or two-mode automaton, where the first mode is urgent and the\n" +
+				"reset does any initialization. The second mode is the continuous approximation of the system.\n" +
+				"the 'range_adders' are combined with a simulation to determine the ranges of\n" +
+				"the variables. The ranges are initially estimated from a simulation, then this gets increased by\n" +
 				"range_adder. If you reach the error_range_ modes try increasing these values.\n\n" +
 				"If several partitions are used, the time_var_name must be provided, otherwise it can be omitted.";
 		 
-		HelpFormatter formatter = new HelpFormatter();
-		formatter.printHelp(pw, HELP_WIDTH, PASS_PARAM, header, options, 0, 0, null, false);
-		
-		return sw.toString();
+		return header;
 	}
 	
 	@Override
@@ -188,46 +166,44 @@ public class ContinuizationPass extends TransformationPass
 			approxMode = trans.to; 
 		}
 		
-		ParamValues params = parseParams(paramStr);
+		parseParams(paramStr);
 		
 		// extract derivatives
 		LinkedHashMap <String, ExpressionInterval> flows = approxMode.flowDynamics;
-		ExpressionInterval ei = flows.get(params.varName);
+		ExpressionInterval ei = flows.get(varName);
 		
 		if (ei == null)
-			throw new AutomatonExportException("flow not found for variable " + params.varName + " in mode " + approxMode.name);
+			throw new AutomatonExportException("flow not found for variable " + varName + " in mode " + approxMode.name);
 		
 		// estimate ranges based on simulation, stored in params.ranges
-		estimateRanges(ha, params, approxMode);
+		estimateRanges(ha, approxMode);
 		
-		if (params.timeVarName != null)
-			createModesWithTimeConditions(ha, params, approxMode);
+		if (timeVarName != null)
+			createModesWithTimeConditions(ha, approxMode);
 		else
-			params.domains.get(0).mode = approxMode; // timeVarName not provided (single mode only)
+			domains.get(0).mode = approxMode; // timeVarName not provided (single mode only)
 
 		// substitute every occurrence of c_i with c_i + \omega_i
-		substituteCyberVariables(params);
+		substituteCyberVariables();
 		
 		// add the range conditions to each of the modes
-		if (params.skipErrorModes == false)
-			addRangeConditionsToModes(ha, params);
+		if (skipErrorModes == false)
+			addRangeConditionsToModes(ha);
 	}
 
 	/**
 	 * substitute every occurrence of c_i with c_i + \omega_i
-	 * @param params 
-	 * @param params the mode parameters
 	 */
-	private void substituteCyberVariables(ParamValues params)
+	private void substituteCyberVariables()
 	{
-		String cyberVar = params.varName;
+		String cyberVar = varName;
 		
-		for (DomainValues dv : params.domains)
+		for (DomainValues dv : domains)
 		{
 			AutomatonMode am = dv.mode;
 			
 			Interval K = dv.range;
-			Interval omega = Interval.mult(K, new Interval(-params.period, 0));
+			Interval omega = Interval.mult(K, new Interval(-period, 0));
 			
 			substituteCyberVariableInMode(am, cyberVar, omega);
 		}
@@ -439,14 +415,14 @@ public class ContinuizationPass extends TransformationPass
 		return rv;
 	}
 
-	private void addRangeConditionsToModes(BaseComponent ha, ParamValues params)
+	private void addRangeConditionsToModes(BaseComponent ha)
 	{
-		for (DomainValues dv : params.domains)
+		for (DomainValues dv : domains)
 		{
 			AutomatonMode am = dv.mode;
 			
 			// add checks that the candidate derivatives domains are maintained
-			ExpressionInterval ei = am.flowDynamics.get(params.varName);
+			ExpressionInterval ei = am.flowDynamics.get(varName);
 			Interval i = ei.getInterval();
 			Expression e = ei.getExpression();
 			Expression maxDerivative;
@@ -500,16 +476,16 @@ public class ContinuizationPass extends TransformationPass
 	 * @param params the ParamValues instance
 	 * @param mode the automaton mode we're continuizing
 	 */
-	private void createModesWithTimeConditions(BaseComponent ha, ParamValues params, AutomatonMode mode)
+	private void createModesWithTimeConditions(BaseComponent ha, AutomatonMode mode)
 	{
 		// make sure time variable exists
-		if (!ha.variables.contains(params.timeVarName))
-			throw new AutomatonExportException("Time variable named '" + params.timeVarName + "' not found in automaton.");
+		if (!ha.variables.contains(timeVarName))
+			throw new AutomatonExportException("Time variable named '" + timeVarName + "' not found in automaton.");
 			
 		// make all the modes
-		for (int i = 0; i < params.domains.size(); ++i)
+		for (int i = 0; i < domains.size(); ++i)
 		{
-			DomainValues dv = params.domains.get(i);
+			DomainValues dv = domains.get(i);
 			AutomatonMode newMode = mode;
 			
 			if (i != 0)
@@ -519,16 +495,16 @@ public class ContinuizationPass extends TransformationPass
 		}
 		
 		// update the invariants and transitions for each mode
-		for (int i = 0; i < params.domains.size(); ++i)
+		for (int i = 0; i < domains.size(); ++i)
 		{
-			DomainValues dv = params.domains.get(i);
+			DomainValues dv = domains.get(i);
 			double minTime = dv.startTime;
 			double maxTime = dv.endTime;
 			AutomatonMode am = dv.mode;
 			
-			Operation minTimeCond = new Operation(Operator.GREATEREQUAL, new Variable(params.timeVarName), new Constant(minTime));
-			Operation maxTimeCond = new Operation(Operator.LESSEQUAL, new Variable(params.timeVarName), 
-					new Constant(maxTime + params.period));
+			Operation minTimeCond = new Operation(Operator.GREATEREQUAL, new Variable(timeVarName), new Constant(minTime));
+			Operation maxTimeCond = new Operation(Operator.LESSEQUAL, new Variable(timeVarName), 
+					new Constant(maxTime + period));
 			
 			Operation timeCond = new Operation(Operator.AND, minTimeCond, maxTimeCond);
 			
@@ -536,12 +512,12 @@ public class ContinuizationPass extends TransformationPass
 			am.invariant = new Operation(Operator.AND, am.invariant, timeCond);
 			
 			// add the outgoing time transition
-			if (i + 1 < params.domains.size())
+			if (i + 1 < domains.size())
 			{
-				AutomatonMode nextAm = params.domains.get(i + 1).mode;
+				AutomatonMode nextAm = domains.get(i + 1).mode;
 				
 				AutomatonTransition at = ha.createTransition(am, nextAm);
-				at.guard = new Operation(Operator.GREATEREQUAL, new Variable(params.timeVarName), new Constant(maxTime));
+				at.guard = new Operation(Operator.GREATEREQUAL, new Variable(timeVarName), new Constant(maxTime));
 			}
 		}
 	}
@@ -573,7 +549,7 @@ public class ContinuizationPass extends TransformationPass
 	 * @param ha the two-mode automaton
 	 * @param params <in/out> the time divisions and where the resultant ranges are stored
 	 */
-	private void estimateRanges(final BaseComponent ha, final ParamValues params, final AutomatonMode approxMode)
+	private void estimateRanges(final BaseComponent ha, final AutomatonMode approxMode)
 	{
 		int SIM_STEPS = 1000; // maybe make this a parameter
 		
@@ -581,7 +557,7 @@ public class ContinuizationPass extends TransformationPass
 		double minRange = Double.MAX_VALUE;
 		
 		// initialize return data structure and compute minimum range
-		for (DomainValues dv : params.domains)
+		for (DomainValues dv : domains)
 		{
 			double range = dv.endTime - dv.startTime;
 			
@@ -604,7 +580,7 @@ public class ContinuizationPass extends TransformationPass
 			Hyst.log("Init point after urgent transition: " + initPt);
 		}
 		
-		double simTime = params.domains.get(params.domains.size() - 1).endTime;
+		double simTime = domains.get(domains.size() - 1).endTime;
 		int numSteps = (int)(Math.ceil(simTime / stepTime));
 		
 		Simulator.simulateFor(simTime, initPt, numSteps, approxMode.flowDynamics, ha.variables, new StepListener()
@@ -614,12 +590,12 @@ public class ContinuizationPass extends TransformationPass
 			{
 				double curTime = numStepsCompleted * stepTime; 
 				
-				for (DomainValues dv : params.domains)
+				for (DomainValues dv : domains)
 				{
 					if (curTime < dv.startTime || curTime > dv.endTime)
 						continue;
 					
-					ExpressionInterval ei = approxMode.flowDynamics.get(params.varName);
+					ExpressionInterval ei = approxMode.flowDynamics.get(varName);
 					Interval valInterval = ei.evaluate(hp, ha.variables);
 					
 					if (dv.range == null)
@@ -631,88 +607,79 @@ public class ContinuizationPass extends TransformationPass
 		});
 		
 		Hyst.log("Ranges from simulation were:");
-		logAllRanges(params);
+		logAllRanges();
 		
 		// bloat ranges
-		for (DomainValues dv : params.domains)
+		for (DomainValues dv : domains)
 		{
 			dv.range.max += dv.bloat;
 			dv.range.min -= dv.bloat;
 		}
 		
 		Hyst.log("Ranges after bloating were:");
-		logAllRanges(params);
+		logAllRanges();
 	}
 
-	private void logAllRanges(ParamValues params)
+	private void logAllRanges()
 	{
-		for (DomainValues dv : params.domains)
+		for (DomainValues dv : domains)
 			Hyst.log("time [" + dv.startTime + ", " + dv.endTime + "]: " + dv.range);
 	}
 
-	private ParamValues parseParams(String params)
+	/**
+	 * Parses the pass params
+	 * @param params the pass param string
+	 */
+	private void parseParams(String params)
 	{
-		ParamValues rv = new ParamValues();
-		
 		String[] args = AutomatonUtil.extractArgs(params);
-		CommandLineParser parser = new DefaultParser();
 		
 		try
 		{
-			CommandLine line = parser.parse(options, args);
-			
-			rv.varName = line.getOptionValue("var");
-			rv.period = parsePositiveDouble(line.getOptionValue("period"), "period");
-			
-			String[] times = line.getOptionValue("times").split(":");
-			String[] bloats = line.getOptionValue("bloats").split(":");
-			
-			String timeVar = line.getOptionValue("timevar"); // may be null
-			rv.skipErrorModes = line.hasOption("noerrormodes");
-		
-			if (timeVar == null && times.length > 1)
-				throw new ParseException("Multiple times given but timevar was not defined.");
-			else
-				rv.timeVarName = timeVar;
-			
-			// make sure variables exists in automaton
-			if (!config.root.variables.contains(rv.varName))
-				throw new ParseException("Varname '" + rv.varName + "' not found in automaton.");
-			
-			if (rv.timeVarName != null && !config.root.variables.contains(rv.timeVarName))
-			{
-				// time variable doesn't exist, add it
-				Hyst.log("Adding non-existant time variable: " + timeVar);
-				addTimeVar(timeVar);
-			}
-			
-			// for every time domain, you should have a corresponding bloat defined
-			if (times.length != bloats.length)
-				throw new ParseException("Number of bloat values (" + bloats.length + ") must match number of time domains (" 
-						+ times.length + ").");
-			
-			double lastTime = 0;
-			
-			for (int i = 0; i < times.length; ++i)
-			{	
-				DomainValues dv = new DomainValues();
-				rv.domains.add(dv);
-				
-				dv.startTime = lastTime;
-				lastTime = dv.endTime = parsePositiveDouble(times[i], "time domain boundary");
-				
-				if (dv.startTime >= dv.endTime)
-					throw new ParseException("Time domains must be created along with increasing times.");
-			
-				dv.bloat = parsePositiveDouble(bloats[i], "bloating term for time=[" + dv.startTime + ", " + dv.endTime + "]");
-			}
-		} 
-		catch (ParseException e)
+			parser.parseArgument(args);
+		}
+		catch (CmdLineException e)
 		{
-			throw new AutomatonExportException("Error parsing Continuization Pass parameters: " + e.getLocalizedMessage(), e);
+			String message = "Error parsing Continuization Pass arguments: " + e.getMessage() + "\n" +
+					getParamHelp();
+			
+			throw new AutomatonExportException(message);
 		}
 		
-		return rv;
+		// make sure variables exists in automaton
+		if (!config.root.variables.contains(varName))
+			throw new AutomatonExportException("Varname '" + varName + "' not found in automaton.");
+		
+		if (timeVarName != null && !config.root.variables.contains(timeVarName))
+		{
+			// time variable doesn't exist, add it
+			Hyst.log("Adding non-existant time variable: " + timeVarName);
+			addTimeVar(timeVarName);
+		}
+		
+		// for every time domain, you should have a corresponding bloat defined
+		if (times.size() != bloats.size())
+			throw new AutomatonExportException("Number of bloat values (" + bloats.size() 
+					+ ") must match number of time domains (" + times.size() + ").");
+		
+		double lastTime = 0;
+		
+		for (int i = 0; i < times.size(); ++i)
+		{	
+			String time = times.get(i);
+			String bloat = bloats.get(i);
+			
+			DomainValues dv = new DomainValues();
+			domains.add(dv);
+			
+			dv.startTime = lastTime;
+			lastTime = dv.endTime = parsePositiveDouble(time, "time domain boundary");
+			
+			if (dv.startTime >= dv.endTime)
+				throw new AutomatonExportException("Time domains must be created along with increasing times.");
+		
+			dv.bloat = parsePositiveDouble(bloat, "bloating term for time=[" + dv.startTime + ", " + dv.endTime + "]");
+		}
 	}
 
 	/**
@@ -737,7 +704,7 @@ public class ContinuizationPass extends TransformationPass
 		config.validate();
 	}
 
-	private static double parsePositiveDouble(String val, String desc) throws ParseException
+	private static double parsePositiveDouble(String val, String desc)
 	{
 		double rv = 0;
 		
@@ -747,7 +714,8 @@ public class ContinuizationPass extends TransformationPass
 		}
 		catch (NumberFormatException e)
 		{
-			throw new ParseException("Error parsing " + desc + " as double: " + val + ". " + e.getLocalizedMessage());
+			throw new AutomatonExportException("Continuization Pass - Error parsing " + desc + " as double: " 
+					+ val + ". " + e.getLocalizedMessage());
 		}
 		
 		return rv;
