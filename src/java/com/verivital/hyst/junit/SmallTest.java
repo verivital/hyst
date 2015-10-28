@@ -15,6 +15,7 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Lut;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -165,7 +166,7 @@ public class SmallTest
 	}
 
 	@Test
-    public void testLocSingle() 
+    public void testLocSingle()
 	{
 		String t = "loc(x) = y & x > 5";
 		
@@ -810,10 +811,30 @@ public class SmallTest
     }
 	
 	/**
-	 * Test using LUT in flow
+	 * Test that functions get parsed as expected
 	 */
-	/*@Test
-	public void testLut()
+	public void testFunctionExpressions()
+	{
+		/*
+		 * LOC : 'loc';
+		SIN : 'sin';
+		COS : 'cos';
+		TAN : 'tan';
+		EXP : 'exp';
+		SQRT : 'sqrt';
+		LN : 'ln';
+		LUT : 'lut';
+		 */
+		
+		// also test for generation Operator.FUNCTION
+		Assert.fail("unimplemented test");
+	}
+	
+	/**
+	 * Test a 1-d LUT in flow
+	 */
+	@Test
+	public void testLut1d()
 	{
 		Expression e = FormulaParser.parseFlow("y' = lut([t], [0,0,1,1,0], [1,2,3,4,8])");
 		
@@ -822,6 +843,6 @@ public class SmallTest
 			System.out.println("LUT flow not parsed correctly: " + e);
 			Assert.fail("LUT flow not parsed correctly");
 		}
-	}*/
+	}
 }
 

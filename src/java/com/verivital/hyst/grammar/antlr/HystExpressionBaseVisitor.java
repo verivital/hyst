@@ -1,5 +1,4 @@
-// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
-package com.verivital.hyst.grammar.antlr;
+// Generated from HystExpression.g4 by ANTLR 4.4
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
@@ -18,397 +17,313 @@ public class HystExpressionBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitVarList(HystExpressionParser.VarListContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFlow(@NotNull HystExpressionParser.FlowContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMatrixRow(HystExpressionParser.MatrixRowContext ctx) { return visitChildren(ctx); }
+	@Override public T visitOrExpression(@NotNull HystExpressionParser.OrExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMatrix(HystExpressionParser.MatrixContext ctx) { return visitChildren(ctx); }
+	@Override public T visitParentheses(@NotNull HystExpressionParser.ParenthesesContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLut(HystExpressionParser.LutContext ctx) { return visitChildren(ctx); }
+	@Override public T visitLocFalse(@NotNull HystExpressionParser.LocFalseContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitResetSubEq(HystExpressionParser.ResetSubEqContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToAnd(@NotNull HystExpressionParser.ToAndContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitResetSubOp(HystExpressionParser.ResetSubOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToTimesDiv(@NotNull HystExpressionParser.ToTimesDivContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitResetBlank(HystExpressionParser.ResetBlankContext ctx) { return visitChildren(ctx); }
+	@Override public T visitPowExpression(@NotNull HystExpressionParser.PowExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitReset(HystExpressionParser.ResetContext ctx) { return visitChildren(ctx); }
+	@Override public T visitResetSubOp(@NotNull HystExpressionParser.ResetSubOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitGuardBlank(HystExpressionParser.GuardBlankContext ctx) { return visitChildren(ctx); }
+	@Override public T visitGreaterEqualOp(@NotNull HystExpressionParser.GreaterEqualOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitGuard(HystExpressionParser.GuardContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNotEqualOp(@NotNull HystExpressionParser.NotEqualOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitInvariantBlank(HystExpressionParser.InvariantBlankContext ctx) { return visitChildren(ctx); }
+	@Override public T visitLocExp(@NotNull HystExpressionParser.LocExpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitInvariant(HystExpressionParser.InvariantContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToNot(@NotNull HystExpressionParser.ToNotContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFlowBlank(HystExpressionParser.FlowBlankContext ctx) { return visitChildren(ctx); }
+	@Override public T visitResetSubEq(@NotNull HystExpressionParser.ResetSubEqContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFlow(HystExpressionParser.FlowContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNotExpression(@NotNull HystExpressionParser.NotExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitFlowFalse(HystExpressionParser.FlowFalseContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToPow(@NotNull HystExpressionParser.ToPowContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitDotVar(HystExpressionParser.DotVarContext ctx) { return visitChildren(ctx); }
+	@Override public T visitGuard(@NotNull HystExpressionParser.GuardContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocSubExp(HystExpressionParser.LocSubExpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDotVar(@NotNull HystExpressionParser.DotVarContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocSubBlankExp(HystExpressionParser.LocSubBlankExpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitConstTrue(@NotNull HystExpressionParser.ConstTrueContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocAndExp(HystExpressionParser.LocAndExpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitBoolParentheses(@NotNull HystExpressionParser.BoolParenthesesContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocExp(HystExpressionParser.LocExpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitMultiplication(@NotNull HystExpressionParser.MultiplicationContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLocFalse(HystExpressionParser.LocFalseContext ctx) { return visitChildren(ctx); }
+	@Override public T visitPlus(@NotNull HystExpressionParser.PlusContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitOrExpression(HystExpressionParser.OrExpressionContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFunctionExpression(@NotNull HystExpressionParser.FunctionExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToAnd(HystExpressionParser.ToAndContext ctx) { return visitChildren(ctx); }
+	@Override public T visitMinus(@NotNull HystExpressionParser.MinusContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitAndExpression(HystExpressionParser.AndExpressionContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDottedVariable(@NotNull HystExpressionParser.DottedVariableContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToNot(HystExpressionParser.ToNotContext ctx) { return visitChildren(ctx); }
+	@Override public T visitAndExpression(@NotNull HystExpressionParser.AndExpressionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitNotExpression(HystExpressionParser.NotExpressionContext ctx) { return visitChildren(ctx); }
+	@Override public T visitLessOp(@NotNull HystExpressionParser.LessOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitBoolParentheses(HystExpressionParser.BoolParenthesesContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNumber(@NotNull HystExpressionParser.NumberContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToCompare(HystExpressionParser.ToCompareContext ctx) { return visitChildren(ctx); }
+	@Override public T visitBoolOp(@NotNull HystExpressionParser.BoolOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitEqualOp(HystExpressionParser.EqualOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFlowFalse(@NotNull HystExpressionParser.FlowFalseContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLessOp(HystExpressionParser.LessOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToUnary(@NotNull HystExpressionParser.ToUnaryContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitLessEqualOp(HystExpressionParser.LessEqualOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFuncExp(@NotNull HystExpressionParser.FuncExpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitGreaterOp(HystExpressionParser.GreaterOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitConstFalse(@NotNull HystExpressionParser.ConstFalseContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitGreaterEqualOp(HystExpressionParser.GreaterEqualOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitFlowBlank(@NotNull HystExpressionParser.FlowBlankContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitNotEqualOp(HystExpressionParser.NotEqualOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitLessEqualOp(@NotNull HystExpressionParser.LessEqualOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitBoolOp(HystExpressionParser.BoolOpContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToNegativeUnary(@NotNull HystExpressionParser.ToNegativeUnaryContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitConstTrue(HystExpressionParser.ConstTrueContext ctx) { return visitChildren(ctx); }
+	@Override public T visitEqualOp(@NotNull HystExpressionParser.EqualOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitConstFalse(HystExpressionParser.ConstFalseContext ctx) { return visitChildren(ctx); }
+	@Override public T visitNegative(@NotNull HystExpressionParser.NegativeContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitPlus(HystExpressionParser.PlusContext ctx) { return visitChildren(ctx); }
+	@Override public T visitGreaterOp(@NotNull HystExpressionParser.GreaterOpContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToTimesDiv(HystExpressionParser.ToTimesDivContext ctx) { return visitChildren(ctx); }
+	@Override public T visitResetBlank(@NotNull HystExpressionParser.ResetBlankContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMinus(HystExpressionParser.MinusContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToCompare(@NotNull HystExpressionParser.ToCompareContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMultiplication(HystExpressionParser.MultiplicationContext ctx) { return visitChildren(ctx); }
+	@Override public T visitInvariant(@NotNull HystExpressionParser.InvariantContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitDivision(HystExpressionParser.DivisionContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDivision(@NotNull HystExpressionParser.DivisionContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToPow(HystExpressionParser.ToPowContext ctx) { return visitChildren(ctx); }
+	@Override public T visitGuardBlank(@NotNull HystExpressionParser.GuardBlankContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToNegativeUnary(HystExpressionParser.ToNegativeUnaryContext ctx) { return visitChildren(ctx); }
+	@Override public T visitInvariantBlank(@NotNull HystExpressionParser.InvariantBlankContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitPowExpression(HystExpressionParser.PowExpressionContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitNegative(HystExpressionParser.NegativeContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitToUnary(HystExpressionParser.ToUnaryContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitLutFunc(HystExpressionParser.LutFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitTanFunc(HystExpressionParser.TanFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitSqrtFunc(HystExpressionParser.SqrtFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitSinFunc(HystExpressionParser.SinFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitCosFunc(HystExpressionParser.CosFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitExpFunc(HystExpressionParser.ExpFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitLnFunc(HystExpressionParser.LnFuncContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitNumber(HystExpressionParser.NumberContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitDottedVariable(HystExpressionParser.DottedVariableContext ctx) { return visitChildren(ctx); }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation returns the result of calling
-	 * {@link #visitChildren} on {@code ctx}.</p>
-	 */
-	@Override public T visitParentheses(HystExpressionParser.ParenthesesContext ctx) { return visitChildren(ctx); }
+	@Override public T visitReset(@NotNull HystExpressionParser.ResetContext ctx) { return visitChildren(ctx); }
 }

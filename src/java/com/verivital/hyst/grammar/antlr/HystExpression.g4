@@ -3,26 +3,14 @@ grammar HystExpression;
 WS : [ \t\r\n]+ -> skip;
 TICK : '\'';
 
-SIN : 'sin';
-COS : 'cos';
-TAN : 'tan';
-EXP : 'exp';
-SQRT : 'sqrt';
-LN : 'ln';
-LUT : 'lut';
-
-LOC : 'loc';
 TRUE : 'true';
 FALSE : 'false';
 
-
 NUM : (([0-9]+ ('.' [0-9]+)?) | ('.' [0-9]+)) (('E' | 'e') [+|-]? [0-9]+)?;
-
 VAR : [a-zA-Z_][a-zA-Z_0-9]*;
 
 LPAR : '(';
 RPAR : ')';
-
 LBRAC : '[';
 RBRAC : ']';
 COMMA : ',';
@@ -47,22 +35,10 @@ NOTEQUAL : '!=';
 EQUAL : '=='|'=';
 EQUAL_RESET : ':=';
 
-varListExpression
-	: LBRAC VAR (COMMA? VAR)* RBRAC # VarList
-	;
+functionExpression
+	: VAR LPAR (addSub COMMA?)* RPAR ;
 
-matrixRowExpression
-	: (NUM COMMA?)+		# MatrixRow
-	;
-
-matrixExpression
-	: LBRAC matrixRowExpression (SEMICOLON matrixRowExpression)* (SEMICOLON)? RBRAC # Matrix
-	;
-
-lutExpression
-	: LUT LPAR varListExpression COMMA matrixExpression COMMA matrixExpression RPAR # Lut
-	;
-
+// transition resets (guards)
 resetSubExpression
 	: VAR EQUAL_RESET addSub # ResetSubEq
 	| addSub op addSub (op addSub)* # ResetSubOp
@@ -93,15 +69,9 @@ dottedVar
 	: VAR (DOT VAR)* TICK?	# DotVar
 	;
 
-locSubExpression
-	: LOC LPAR dottedVar RPAR EQUAL VAR # LocSubExp
-	| LOC LPAR RPAR EQUAL VAR # LocSubBlankExp
-	| and # LocAndExp
-	;
-
 locExpression
-	: locSubExpression (AND locSubExpression)* EOF # LocExp
-	| FALSE # LocFalse
+	: and EOF # LocExp
+	| EOF # LocFalse
     ;
 
 or
@@ -158,13 +128,7 @@ negativeUnary
 	;
 
 unary
-    : lutExpression 		  # LutFunc
-	| TAN LPAR addSub RPAR    # TanFunc
-    | SQRT LPAR addSub RPAR   # SqrtFunc
-    | SIN LPAR addSub RPAR    # SinFunc
-    | COS LPAR addSub RPAR    # CosFunc
-    | EXP LPAR addSub RPAR    # ExpFunc
-    | LN  LPAR addSub RPAR    # LnFunc
+    : functionExpression #FuncExp
     | NUM      	   	      	  # Number
 	| dottedVar				  # DottedVariable
     | LPAR addSub RPAR	      # Parentheses
