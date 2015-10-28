@@ -1,4 +1,4 @@
-function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(varargin)
+function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 %SPACEEXTOSTATEFLOW SpaceEx to Stateflow conversion
 %
 % example call without semantics preservation:
@@ -31,8 +31,9 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
 
     %Ex: how to instantiate java objects into Matlab
     %add java library for spaceex parsing library (from spaceex2boogie)
-    javaaddpath(['..', filesep, '..', filesep, 'lib', filesep, 'Hyst.jar']);
-    addpath(['..', filesep, '..', filesep, 'lib', filesep]);
+    %javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
+    javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'Hyst.jar']);
+    addpath(['..', filesep, 'lib', filesep]);
     
     % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
     %javaaddpath(['..', filesep, 'lib', filesep, 'commons-cli-1.3.1.jar']);
@@ -66,8 +67,8 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
     import com.verivital.hyst.util.*;
     
 %     % DO NOT IMPORT THESE
-    % import org.apache.commons.cli.*;
-     %import org.apache.commons.cli.CommandLine;
+%     import org.apache.commons.cli.*;
+% %     import org.apache.commons.cli.CommandLine;
 % %     import org.apache.commons.cli.CommandLineParser;
 % %     import org.apache.commons.cli.DefaultParser;
 % %     import org.apache.commons.cli.HelpFormatter;
@@ -125,7 +126,8 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
                 config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
                 
                 %if opt_debug
-                %config
+                %components = config.root.template.children
+
                 %end
                 
             catch exception
@@ -155,28 +157,30 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
     output_path = ['.', filesep, 'output_slsf_models', filesep];
  
     % Import hybidautomaton into SLSF
-    try
-        com.verivital.hyst.main.Hyst.setModeNoValidate();
-    catch ex
-        'Error: cannot set no validate for some reason via com.verivital.hyst.main.Hyst.setModeNoValidate();'
-        ex
-        ex.stack
-    end
-    try
-        com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
-    catch ex
-        'Error: cannot call com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);'
-        ex
-        ex.stack
-    end
-    com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
+%     try
+%         com.verivital.hyst.main.Hyst.setModeNoValidate();
+%     catch ex
+%         'Error: cannot set no validate for some reason via com.verivital.hyst.main.Hyst.setModeNoValidate();'
+%         ex
+%         ex.stack
+%     end
+%     try
+%         com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
+%     catch ex
+%         'Error: cannot call com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);'
+%         ex
+%         ex.stack
+%     end
+  
+    %com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
     
     %ha = ... flatten here
-    ha = config.root
-    config
+    %ha = config.root;
+    %config;
     
     bdclose(name); % close model (uncoditionally, careful in case this is called and open diagrams are not saved!)
-    
+    %
+    isNetwork = false;
     % Reference: http://blogs.mathworks.com/seth/2010/01/21/building-models-with-matlab-code/
     % Reference: http://www.mathworks.com/help/stateflow/api/quick-start-for-the-stateflow-api.html
     rt = sfroot;
@@ -199,21 +203,16 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
     ch.Name = strcat('SF_',name);  
     % Update chart method type to be continuous
     ch.ChartUpdate='CONTINUOUS';
-    
     % LUAN TODO next: refactor and merge these, all of this should be the same
     % for the semantics vs. non-semantics preserving converters
     %basecomponent
     if (opt_semantics)
+        com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
+        %ha = ... flatten here
+        ha = config.root;
         semanticTranslation(ch, config, ha, name, opt_eager_violation);
-    else
-        printer = com.verivital.hyst.printers.StateflowSpPrinter;
-        printer.setConfig(config);
-        printer.ha = ha;
-        printer.isSP = false;
-        printer.PREFIX_ASSIGNMENT ='';
-        printer.PREFIX_VARIABLE ='';
-        [sF] = Location_SpaceExToStateflow(m,ch,printer,config,ha,name,opt_cfg_reader,opt_display_flow,opt_display_invariant);
-        Transition_SpaceExToStateflow(sF,ch,printer,ha,opt_display_guard);
+    else     
+        [sF] = nonsemanticTranslation(isNetwork,m,ch,config,opt_cfg_reader);
     end
     
     % Save model file
@@ -222,5 +221,5 @@ function [out_slsf_model, out_ha, out_slsf_model_path] = SpaceExToStateflow(vara
     % output
     out_slsf_model_path = slsf_model_path;
     out_slsf_model = m;
-    out_ha = ha;
+    %out_ha = ha;
 end
