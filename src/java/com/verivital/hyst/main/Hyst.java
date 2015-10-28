@@ -26,6 +26,7 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
+import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.RegularizePass;
@@ -102,7 +103,7 @@ public class Hyst
 					new RemoveSimpleUnsatInvariantsPass(),
 					new ShortenModeNamesPass(),
 					new RegularizePass(),
-					//new ContinuizationPass(), // TODO: add back, but the commons-cli stuff is breaking the stateflow converter
+					new ContinuizationPass(),
 					new HybridizeGridPass(),
 					new HybridizeMixedTriggeredPass(),
 					new FlattenAutomatonPass(),

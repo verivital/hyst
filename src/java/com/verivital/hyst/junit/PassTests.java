@@ -20,6 +20,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -29,7 +30,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
@@ -54,7 +55,6 @@ public class PassTests
 	}
 	
 	private String UNIT_BASEDIR = "tests/unit/models/";
-	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	 
 	/**
 	 * make a sample network configuration, which is used in multiple tests
@@ -162,80 +162,54 @@ public class PassTests
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
 	}
 	
-	public List <PassRun> makePassList()
-	{
-		ArrayList <PassRun> rv = new ArrayList <PassRun>();
-		
-		String path = REGRESSION_BASEDIR + "continuization/";
-		String spaceExFile = path + "cont_approx.xml";
-		String configFile = path + "cont_approx.cfg";
-		
-		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(configFile, spaceExFile);
-		Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(spaceExDoc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
-				
-			/*{
-				new PseudoInvariantPass(),
-				new PseudoInvariantSimulatePass(),
-				new TimeScalePass(),
-				new SubstituteConstantsPass(),
-				new SimplifyExpressionsPass(),
-				new SplitDisjunctionGuardsPass(),
-				new RemoveSimpleUnsatInvariantsPass(),
-				new ShortenModeNamesPass(),
-				new RegularizePass(),
-				new ContinuizationPass(),
-				new HybridizePass(),
-				new FlattenAutomatonPass(),
-			};*/
-		
-		String continuizationParam = "-var a -period 0.05 -times 5 -timevar t -bloats 0.1";
-		rv.add(new PassRun(new ContinuizationPass(), continuizationParam, config.copy()));
-		
-		return rv;
-	}
-	
-	@Test
-	public void testPassesRun()
-	{
-		for (PassRun pr : makePassList())
-		{
-			pr.run();
-		}
-	}
-	
-	@Test
 	/**
-	 * A null-pointer exception is thrown if the printer tries to use expressionPrinter without setting it
+	 * Create a single-mode confiruation
+	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
+	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would corespond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 * @return the constructed configuration
 	 */
-	public void testPassesNoPrinterAssumption()
+	private Configuration makeDebugConfiguration(String[][] dynamics) 
 	{
-		for (PassRun pr : makePassList())
-		{
-			Expression.expressionPrinter = null;
-			pr.run();
-		}
-	}
-	
-	private class PassRun
-	{
-		public TransformationPass tp;
-		public String params;
-		public Configuration config;
+		final int VAR_INDEX = 0;
+		final int FLOW_INDEX = 1;
+		final int INIT_INDEX = 2;
+		BaseComponent ha = new BaseComponent();
+		AutomatonMode am = ha.createMode("running");
+		StringBuilder initStringBuilder = new StringBuilder();
 		
-		public PassRun(TransformationPass pass, String params, Configuration c)
+		for (int i = 0; i < dynamics.length; ++i)
 		{
-			tp = pass;
-			this.params = params;
-			this.config = c;
+			if (dynamics[i].length < 2 || dynamics[i].length > 3)
+				throw new AutomatonExportException("expected 2 or 3 values in passed-in array (varname, flow, init)");
+			
+			String var = dynamics[i][VAR_INDEX];
+			String flow = var + "' == " + dynamics[i][FLOW_INDEX];
+			
+			ha.variables.add(var);
+			
+			String initVal = dynamics[i].length == 3 ? dynamics[i][INIT_INDEX] : "0";
+			String initStr = var + " == " + initVal;
+					
+			if (initStringBuilder.length() > 0)
+				initStringBuilder.append(" & " + initStr);
+			else
+				initStringBuilder.append(initStr);
+			
+			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			am.flowDynamics.put(var, new ExpressionInterval(flowExp));
 		}
 		
-		public void run()
-		{
-			tp.runTransformationPass(config, params);
-		}
+		Configuration c = new Configuration(ha);
+
+		am.invariant = Constant.TRUE;
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
+		c.init.put("running", FormulaParser.parseLoc(initStringBuilder.toString()));
+			
+		c.validate();
+		return c;
 	}
-	
+
 	/**
 	 * An ExpresssionPrinter which prints constants to a certain number of digits after the decimel
 	 *
@@ -643,5 +617,74 @@ public class PassTests
 		Assert.assertTrue("pi guard is exists" , m0.invariant.toDefaultString().contains("1 * x <= 1.0500"));
 		
 		Assert.assertTrue("second mode's invariant starts at 1.04", m1.invariant.toDefaultString().contains("x >= 1.040000"));
+	}
+	
+	@Test 
+	public void testContinuizationPassSineWave()
+	{
+		String[][] dynamics = {{"y", "cos(t)"}, {"t", "1"}};
+		Configuration c = makeDebugConfiguration(dynamics);
+		
+		String continuizationParam = "-var y -period 0.1 -times 1.57:3.14 -timevar t -bloats 0.1:0.2";
+		
+		new ContinuizationPass().runTransformationPass(c, continuizationParam);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		// we should have four error modes, and two normal modes
+		AutomatonMode running1 = null, running2 = null;
+		int numErrorModes = 0;
+		
+		for (AutomatonMode am : ha.modes.values())
+		{
+			if (am.name.equals("running"))
+				running1 = am;
+			else if (am.name.equals("running_2"))
+				running2 = am;
+			else if (am.name.contains("error"))
+				++numErrorModes;
+		}
+		
+		Assert.assertNotEquals("running found", null, running1);
+		Assert.assertNotEquals("running_2 found", null, running2);
+		Assert.assertEquals("four error modes", numErrorModes, 4);
+	}
+	
+	@Test 
+	public void testContinuizationPassDoubleIntegrator()
+	{
+		String[][] dynamics = {{"x", "v", "0.05"}, {"v", "a", "0"}, {"a", "-10 * v - 3 * a", "9.5"}};
+		Configuration c = makeDebugConfiguration(dynamics);
+		
+		String continuizationParam = "-var a -period 0.005 -times 1.5:5 -timevar t -bloats 4:4";
+		
+		new ContinuizationPass().runTransformationPass(c, continuizationParam);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		// we should have four error modes, and two normal modes
+		AutomatonMode running1 = null, running2 = null;
+		int numErrorModes = 0;
+		
+		for (AutomatonMode am : ha.modes.values())
+		{
+			if (am.name.equals("running"))
+				running1 = am;
+			else if (am.name.equals("running_2"))
+				running2 = am;
+			else if (am.name.contains("error"))
+				++numErrorModes;
+		}
+		
+		Assert.assertNotEquals("running found", null, running1);
+		Assert.assertNotEquals("running_2 found", null, running2);
+		Assert.assertEquals("four error modes", numErrorModes, 4);
+		
+		Assert.assertTrue("time-triggered invariant is correct", running1.invariant.toDefaultString().contains("t <= 1.505"));
+		
+		Assert.assertEquals("mode1 v_der.max is 0.163", 0.163, running1.flowDynamics.get("v").getInterval().max, 1e-3);
+		Assert.assertEquals("mode1 v_der.min is -0.046", -0.046, running1.flowDynamics.get("v").getInterval().min, 1e-3);
+		
+		Assert.assertEquals("mode2 a_der.max is 0.109", 0.109, running2.flowDynamics.get("a").getInterval().max, 1e-3);
+		Assert.assertEquals("mode2 a_der.min is -0.075", -0.075, running2.flowDynamics.get("a").getInterval().min, 1e-3);
+		
 	}
 }

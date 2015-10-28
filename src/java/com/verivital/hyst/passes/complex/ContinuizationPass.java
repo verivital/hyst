@@ -3,7 +3,6 @@ package com.verivital.hyst.passes.complex;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
@@ -19,7 +18,6 @@ import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -62,9 +60,6 @@ public class ContinuizationPass extends TransformationPass
 		options.addOption(Option.builder("bloats").argName( "val1:val2:..." ).hasArg()
 				.desc("bloating values for each time domain").required().build());
 		
-		options.addOption(Option.builder("noerrorresets")
-				.desc("skip creating error-indicating resets").build());
-		
 		options.addOption(Option.builder("noerrormodes")
 				.desc("skip created error modes").build());
 	}
@@ -91,7 +86,6 @@ public class ContinuizationPass extends TransformationPass
 		double period;
 		
 		boolean skipErrorModes;
-		boolean errorIndication;
 		
 		ArrayList <DomainValues> domains = new ArrayList <DomainValues>();
 	}
@@ -104,34 +98,37 @@ public class ContinuizationPass extends TransformationPass
 		// check for single-mode automation, with single initial urgent initialization mode
 		BaseComponent bc = (BaseComponent)c.root;
 		
-		if (bc.modes.size() != 2)
-			throw new PreconditionsFailedException("Expected two modes.");
+		if (bc.modes.size() != 2 && bc.modes.size() != 1)
+			throw new PreconditionsFailedException("Expected one or two (urgent + normal) modes.");
 		
 		if (c.init.size() != 1)
 			throw new PreconditionsFailedException("Expected single initial mode.");
 		
-		String firstModeName = c.init.keySet().iterator().next();
-		AutomatonMode firstMode = bc.modes.get(firstModeName);
-		
-		if (!firstMode.urgent)
-			throw new PreconditionsFailedException("First mode should be urgent.");
-		
-		if (bc.transitions.size() != 1)
-			throw new PreconditionsFailedException("Expected single transition.");
-		
-		AutomatonTransition at = bc.transitions.get(0);
-		
-		if (at.from != firstMode)
-			throw new PreconditionsFailedException("Expected transition to be from initial mode.");
-		
-		if (at.to == firstMode)
-			throw new PreconditionsFailedException("Expected transition to be to noninitial mode.");
-		
-		if (at.to.urgent)
-			throw new PreconditionsFailedException("Noninitial mode shouldn't be urgent.");
-		
-		if (at.guard != Constant.TRUE)
-			throw new PreconditionsFailedException("Transition from initial state shouldn't have a guard.");
+		if (bc.modes.size() == 2)
+		{
+			String firstModeName = c.init.keySet().iterator().next();
+			AutomatonMode firstMode = bc.modes.get(firstModeName);
+			
+			if (!firstMode.urgent)
+				throw new PreconditionsFailedException("First mode should be urgent.");
+			
+			if (bc.transitions.size() != 1)
+				throw new PreconditionsFailedException("Expected single transition.");
+			
+			AutomatonTransition at = bc.transitions.get(0);
+			
+			if (at.from != firstMode)
+				throw new PreconditionsFailedException("Expected transition to be from initial mode.");
+			
+			if (at.to == firstMode)
+				throw new PreconditionsFailedException("Expected transition to be to noninitial mode.");
+			
+			if (at.to.urgent)
+				throw new PreconditionsFailedException("Noninitial mode shouldn't be urgent.");
+			
+			if (at.guard != Constant.TRUE)
+				throw new PreconditionsFailedException("Transition from initial state shouldn't have a guard.");
+		}
 	}
 	
 	@Override
@@ -164,7 +161,7 @@ public class ContinuizationPass extends TransformationPass
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		
-		String header = "Currently, this pass assumes a two-mode automaton, where the first mode is urgent and the reset does any" +
+		String header = "Currently, this pass assumes a one or two-mode automaton, where the first mode is urgent and the reset does any" +
 				"initialization. The second mode is the continuous approximation of the system." +
 				"the 'range_adders' are combined with a simulation to determine the ranges of" +
 				"the variables. The ranges are initially estimated from a simulation, then this gets increased by" +
@@ -181,8 +178,15 @@ public class ContinuizationPass extends TransformationPass
 	public void runPass(String paramStr)
 	{
 		BaseComponent ha = (BaseComponent)config.root;
-		AutomatonTransition trans = ha.transitions.get(0);
-		AutomatonMode approxMode = trans.to; // mode of the continuous approximation
+		AutomatonMode approxMode = null; // mode of the continuous approximation
+		
+		if (ha.modes.size() == 1)
+			approxMode = ha.modes.values().iterator().next();
+		else
+		{
+			AutomatonTransition trans = ha.transitions.get(0);
+			approxMode = trans.to; 
+		}
 		
 		ParamValues params = parseParams(paramStr);
 		
@@ -194,7 +198,7 @@ public class ContinuizationPass extends TransformationPass
 			throw new AutomatonExportException("flow not found for variable " + params.varName + " in mode " + approxMode.name);
 		
 		// estimate ranges based on simulation, stored in params.ranges
-		estimateRanges(ha, params);
+		estimateRanges(ha, params, approxMode);
 		
 		if (params.timeVarName != null)
 			createModesWithTimeConditions(ha, params, approxMode);
@@ -463,18 +467,12 @@ public class ContinuizationPass extends TransformationPass
 			AutomatonTransition t1 = ha.createTransition(am, errorModeAbove);
 			t1.guard = new Operation(Operator.GREATEREQUAL, maxDerivative, new Constant(dv.range.max));
 			
-			if (params.errorIndication)
-				addErrorIndication(t1, true, params);
-			
 			AutomatonMode errorModeBelow = getErrorMode(ha, "error_" + am.name + "_below");
 			AutomatonTransition t2 = ha.createTransition(am, errorModeBelow);
 			t2.guard = new Operation(Operator.LESSEQUAL, minDerivative, new Constant(dv.range.min));
 			
-			if (params.errorIndication)
-				addErrorIndication(t2, false, params);
-			
 			// adjust invariant
-			Expression belowTop = new Operation(Operator.LESSEQUAL, maxDerivative, new Constant(dv.range.max));
+			/*Expression belowTop = new Operation(Operator.LESSEQUAL, maxDerivative, new Constant(dv.range.max));
 			Expression aboveBottom = new Operation(Operator.GREATEREQUAL, minDerivative, new Constant(dv.range.min));
 			
 			am.invariant = Expression.and(am.invariant, Expression.and(belowTop, aboveBottom));
@@ -490,43 +488,10 @@ public class ContinuizationPass extends TransformationPass
 					AutomatonTransition t3 = ha.createTransition(at.from, getErrorMode(ha, "error_" + am.name + "_initially_above"));
 					t3.guard = Expression.and(at.guard.copy(), t1.guard.copy());
 					
-					if (params.errorIndication)
-						addErrorIndication(t3, true, params);
-					
 					AutomatonTransition t4 = ha.createTransition(at.from, getErrorMode(ha, "error_" + am.name + "_initially_below"));
 					t4.guard = Expression.and(at.guard.copy(), t2.guard.copy());
-					
-					if (params.errorIndication)
-						addErrorIndication(t4, false, params);
 				}
-			}
-		}
-	}
-
-	/**
-	 * Set the transition and destination error mode to make it obvious from the plot where the variable when out of bounds. 
-	 * This sets the trajectory of every non-time variable to be (from 1 down to 0) or (from -1 up to 0) depending on if we went
-	 * over or under.
-	 * @param at the transition to the error mode
-	 * @param above did it go too high?
-	 * @param params the pass parameters
-	 */
-	private void addErrorIndication(AutomatonTransition at, boolean above, ParamValues params)
-	{
-		//if (params.timeVarName != null)
-		//	at.to.flowDynamics.put(params.timeVarName, new ExpressionInterval(1));
-		
-		for (String v : at.parent.variables)
-		{
-			if (!v.equals(params.timeVarName))
-			{
-				at.reset.put(v, new ExpressionInterval(new Constant(above ? 1 : -1)));
-				at.to.flowDynamics.put(v, new ExpressionInterval(new Constant(above ? -10 : 10)));
-				at.to.invariant = Expression.and(at.to.invariant, 
-						FormulaParser.parseInvariant(v + (above ? ">=" : "<=") + "0"));
-			}
-			else
-				at.to.flowDynamics.put(v, new ExpressionInterval(new Constant(1)));
+			}*/
 		}
 	}
 
@@ -608,11 +573,8 @@ public class ContinuizationPass extends TransformationPass
 	 * @param ha the two-mode automaton
 	 * @param params <in/out> the time divisions and where the resultant ranges are stored
 	 */
-	private void estimateRanges(final BaseComponent ha, final ParamValues params)
+	private void estimateRanges(final BaseComponent ha, final ParamValues params, final AutomatonMode approxMode)
 	{
-		AutomatonTransition t = ha.transitions.get(0);
-		final AutomatonMode approxMode = t.to;
-		
 		int SIM_STEPS = 1000; // maybe make this a parameter
 		
 		// minimum range is used to determine step size
@@ -634,9 +596,13 @@ public class ContinuizationPass extends TransformationPass
 		// simulate from initial state
 		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
 		Hyst.log("Init point from config: " + initPt);
-		
-		initPt = Simulator.processReset(initPt, ha.variables, t.reset);
-		Hyst.log("Init point after urgent transition: " + initPt);
+
+		if (ha.transitions.size() != 0) // if initial urgent transition exists
+		{
+			AutomatonTransition t = ha.transitions.get(0);
+			initPt = Simulator.processReset(initPt, ha.variables, t.reset);
+			Hyst.log("Init point after urgent transition: " + initPt);
+		}
 		
 		double simTime = params.domains.get(params.domains.size() - 1).endTime;
 		int numSteps = (int)(Math.ceil(simTime / stepTime));
@@ -702,7 +668,6 @@ public class ContinuizationPass extends TransformationPass
 			String[] bloats = line.getOptionValue("bloats").split(":");
 			
 			String timeVar = line.getOptionValue("timevar"); // may be null
-			rv.errorIndication = !line.hasOption("noerrorresets");
 			rv.skipErrorModes = line.hasOption("noerrormodes");
 		
 			if (timeVar == null && times.length > 1)
@@ -715,7 +680,11 @@ public class ContinuizationPass extends TransformationPass
 				throw new ParseException("Varname '" + rv.varName + "' not found in automaton.");
 			
 			if (rv.timeVarName != null && !config.root.variables.contains(rv.timeVarName))
-				throw new ParseException("Time varname '" + rv.timeVarName + "' not found in automaton.");
+			{
+				// time variable doesn't exist, add it
+				Hyst.log("Adding non-existant time variable: " + timeVar);
+				addTimeVar(timeVar);
+			}
 			
 			// for every time domain, you should have a corresponding bloat defined
 			if (times.length != bloats.length)
@@ -744,6 +713,28 @@ public class ContinuizationPass extends TransformationPass
 		}
 		
 		return rv;
+	}
+
+	/**
+	 * Add a time variable to the automaton
+	 * @param timeVar
+	 */
+	private void addTimeVar(String timeVar)
+	{
+		BaseComponent ha = (BaseComponent)config.root;
+		ha.variables.add(timeVar);
+		
+		for (AutomatonMode am : ha.modes.values())
+		{
+			if (!am.urgent)
+				am.flowDynamics.put(timeVar, new ExpressionInterval("1"));
+		}
+		
+		Entry<String, Expression> e = config.init.entrySet().iterator().next();
+		Expression init = Expression.and(e.getValue(), new Operation(timeVar, Operator.EQUAL, 0));
+		e.setValue(init);
+		
+		config.validate();
 	}
 
 	private static double parsePositiveDouble(String val, String desc) throws ParseException
