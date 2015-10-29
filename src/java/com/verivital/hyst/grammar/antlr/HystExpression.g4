@@ -35,8 +35,17 @@ NOTEQUAL : '!=';
 EQUAL : '=='|'=';
 EQUAL_RESET : ':=';
 
+matrixRow
+	: (addSub COMMA?)*  # MatrixRowExp
+	;
+
+matrixExpression
+	: LBRAC matrixRow (SEMICOLON matrixRow)* RBRAC # Matrix
+	;
+
 functionExpression
-	: VAR LPAR (addSub COMMA?)* RPAR ;
+	: VAR LPAR (addSub (COMMA addSub)*)? RPAR # Function
+	;
 
 // transition resets (guards)
 resetSubExpression
@@ -128,7 +137,8 @@ negativeUnary
 	;
 
 unary
-    : functionExpression #FuncExp
+    : matrixExpression        # MatrixExp
+	| functionExpression      # FuncExp
     | NUM      	   	      	  # Number
 	| dottedVar				  # DottedVariable
     | LPAR addSub RPAR	      # Parentheses

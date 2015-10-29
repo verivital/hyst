@@ -1,4 +1,5 @@
 // Generated from HystExpression.g4 by ANTLR 4.4
+package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -52,6 +53,13 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitToTimesDiv(@NotNull HystExpressionParser.ToTimesDivContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Matrix}
+	 * labeled alternative in {@link HystExpressionParser#matrixExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMatrix(@NotNull HystExpressionParser.MatrixContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code PowExpression}
 	 * labeled alternative in {@link HystExpressionParser#pow}.
@@ -137,6 +145,13 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstTrue(@NotNull HystExpressionParser.ConstTrueContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code MatrixRowExp}
+	 * labeled alternative in {@link HystExpressionParser#matrixRow}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMatrixRowExp(@NotNull HystExpressionParser.MatrixRowExpContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code BoolParentheses}
 	 * labeled alternative in {@link HystExpressionParser#not}.
 	 * @param ctx the parse tree
@@ -158,12 +173,6 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPlus(@NotNull HystExpressionParser.PlusContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link HystExpressionParser#functionExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFunctionExpression(@NotNull HystExpressionParser.FunctionExpressionContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code Minus}
 	 * labeled alternative in {@link HystExpressionParser#addSub}.
 	 * @param ctx the parse tree
@@ -178,19 +187,19 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDottedVariable(@NotNull HystExpressionParser.DottedVariableContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code AndExpression}
-	 * labeled alternative in {@link HystExpressionParser#and}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitAndExpression(@NotNull HystExpressionParser.AndExpressionContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code LessOp}
 	 * labeled alternative in {@link HystExpressionParser#op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitLessOp(@NotNull HystExpressionParser.LessOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code AndExpression}
+	 * labeled alternative in {@link HystExpressionParser#and}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAndExpression(@NotNull HystExpressionParser.AndExpressionContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Number}
 	 * labeled alternative in {@link HystExpressionParser#unary}.
@@ -205,6 +214,13 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBoolOp(@NotNull HystExpressionParser.BoolOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Function}
+	 * labeled alternative in {@link HystExpressionParser#functionExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunction(@NotNull HystExpressionParser.FunctionContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code FlowFalse}
 	 * labeled alternative in {@link HystExpressionParser#flowExpression}.
@@ -234,19 +250,19 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitConstFalse(@NotNull HystExpressionParser.ConstFalseContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code FlowBlank}
-	 * labeled alternative in {@link HystExpressionParser#flowExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitFlowBlank(@NotNull HystExpressionParser.FlowBlankContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code LessEqualOp}
 	 * labeled alternative in {@link HystExpressionParser#op}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitLessEqualOp(@NotNull HystExpressionParser.LessEqualOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code FlowBlank}
+	 * labeled alternative in {@link HystExpressionParser#flowExpression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFlowBlank(@NotNull HystExpressionParser.FlowBlankContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ToNegativeUnary}
 	 * labeled alternative in {@link HystExpressionParser#pow}.
@@ -261,6 +277,13 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitEqualOp(@NotNull HystExpressionParser.EqualOpContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code MatrixExp}
+	 * labeled alternative in {@link HystExpressionParser#unary}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMatrixExp(@NotNull HystExpressionParser.MatrixExpContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Negative}
 	 * labeled alternative in {@link HystExpressionParser#negativeUnary}.
