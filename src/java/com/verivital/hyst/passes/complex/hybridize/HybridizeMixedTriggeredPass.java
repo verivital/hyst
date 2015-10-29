@@ -110,6 +110,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		// single mode
 		if (((BaseComponent)c.root).modes.size() != 1)
 			throw new PreconditionsFailedException(name + " requires a single mode.");
+		
+		if (!PythonBridge.hasPython())
+			throw new PreconditionsFailedException("Python (and required libraries) needed to run Hybridize Mixed Triggered pass.");
 	}
     
     private void parseParams(String params)
@@ -348,15 +351,12 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		sim.run(timeMax);
 		long simEndMs = System.currentTimeMillis();
 		
-		final PythonBridge pb = new PythonBridge(-1);
-		pb.open();
+		PythonBridge pb = PythonBridge.getInstance(-1);
 
 		long optStartMs = System.currentTimeMillis();
 		hybridizeFlows(sim.modes, sim.rects, pb);
 		long optTime = System.currentTimeMillis() - optStartMs;
 		long simTime = simEndMs - simStartMs;
-		
-		pb.close();
 		
 		int numOpt = sim.modes.size() * (sim.modes.get(0).flowDynamics.size() - 1);
 		

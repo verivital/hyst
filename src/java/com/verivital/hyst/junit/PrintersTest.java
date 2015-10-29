@@ -41,7 +41,6 @@ public class PrintersTest
 	}
 	
 	private String UNIT_BASEDIR = "tests/unit/models/";
-	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	
 	// tools to test here. Each test will run all of these
 	private static final ArrayList <ToolPrinter> printers; 

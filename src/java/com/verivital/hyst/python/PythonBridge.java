@@ -14,28 +14,26 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.util.FileOperations;
 
 /**
- * This class is a java <-> python interface using stdin / stdout
- * Each instance represents a process. For reasonable performance, you should use an single 
- * session for multiple calls, and not spawn a process for each function you need to call.
+ * This class is java <-> python interface using stdin / stdout and python interactive mode
  * 
- * Use open() to open the process, which should be called before interacting with python, and close() to close it.
- * Failure to call close() will leave the python process running, which is a bug.
- * 
- * DO NOT INSTANTIATE THIS CLASS IN A STATIC CONTEXT. If you do this, running Hyst will be dependent on having python installed, 
- * which we don't want.
+ * It is a singleton, use getInstance() to get an instance of the bridge. The bridge is reused for any passes or printers
+ * which use it, so don't put it into an inconsistent state.
  * 
  * Overhead:
  * In performance tests, I measured around 15000 function calls per second using this bridge
  * In native python, I measured 5.5 million function calls per second
  * 
  * You can reduce overhead by passing all of your data to python at once (or as much as is possible), and then having python 
- * do an extended computation (even in parallel) and only then print back the result. 
+ * do an extended computation (even in parallel) and only then printing back the result. 
  * 
  * @author Stanley Bak (May 2015)
  *
  */
 public class PythonBridge
 {
+	private static PythonBridge instance = null;
+	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy"};
+	
 	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
 	private int timeoutMs;
 	private Process process = null;
@@ -43,9 +41,71 @@ public class PythonBridge
 	private BufferedReader stderr = null;
 	private Writer stdin = null;
 	
-	public PythonBridge()
+	public enum Status
 	{
-		this(DEFAULT_TIMEOUT);
+		FALSE,
+		TRUE,
+		UNKNOWN
+	}
+
+	// these static flags 
+	private static boolean blockPython = false;
+	private static Status pythonStatus = Status.UNKNOWN;
+	
+	/**
+	 * This sets whether python should be blocked (pretend it doesn't exist). This is useful for unit testing.
+	 * @param val
+	 */
+	public static void setBlockPython(boolean val)
+	{
+		blockPython = val;
+	}
+	
+	public static boolean hasPython()
+	{
+		boolean rv = false;
+		
+		if (!blockPython)
+		{
+			if (pythonStatus == Status.UNKNOWN)
+			{
+				try
+				{
+					getInstance();
+				}
+				catch (AutomatonExportException e)
+				{
+					pythonStatus = Status.FALSE;
+				}
+			}
+			
+			rv = pythonStatus == Status.TRUE;
+		}
+		
+		return rv;
+	}
+	
+	public static PythonBridge getInstance()
+	{
+		return getInstance(DEFAULT_TIMEOUT);
+	}
+	
+	public static PythonBridge getInstance(int timeoutMs)
+	{
+		if (blockPython)
+		{
+			// this occurs if the user programatically called setBlockPython(true), and then tries to call getInstance()
+			// for example, if we're unit testing we may want to check that we're correctly checking if python
+			// exists before calling getInstance(). If not, this exception may be thrown. Use hasPython() to check.
+			throw new AutomatonExportException("PythonBridge.getInstance() was called, but blockPython was set to true.");
+		}
+		
+		if (instance == null)
+			instance = new PythonBridge(timeoutMs);
+		else
+			instance.setTimeout(timeoutMs);
+		
+		return instance;
 	}
 	
 	/**
@@ -55,6 +115,23 @@ public class PythonBridge
 	public PythonBridge(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
+		
+		if (instance != null)
+			throw new RuntimeException("Multiple instances of PythonBridge were created.");
+
+		open();
+		
+		final PythonBridge bridge = this;
+
+		Runtime.getRuntime().addShutdownHook(new Thread()
+		{
+			 public void run() 
+			 {
+				 bridge.close();
+			 }
+		});
+		
+		pythonStatus = Status.TRUE;
 	}
 	
 	/**
@@ -66,7 +143,7 @@ public class PythonBridge
 		this.timeoutMs = timeoutMs;
 	}
 	
-	public void open()
+	private void open()
 	{
 		log("Opening Python process in interactive mode.");
 		openProcess();
@@ -82,7 +159,19 @@ public class PythonBridge
 		
 		// remove the continuation prompt on multi-line commands in interactive mode "... "
 		send("import sys");
-		send("sys.ps2 = ''"); 
+		send("sys.ps2 = ''");
+		
+		for (String pack : REQUIRED_PACKAGES)
+		{
+			try
+			{
+				send("import " + pack);
+			}
+			catch (AutomatonExportException e)
+			{
+				error("Python import failed on required package '" + pack + "'");
+			}
+		}
 	}
 	
 	private static void log(String description)
@@ -119,7 +208,7 @@ public class PythonBridge
 		System.err.println("Warning: " + description);
 	}
 	
-	public void close()
+	private void close()
 	{
 		if (process != null)
 		{
@@ -151,7 +240,7 @@ public class PythonBridge
 			error("openProcess called but process is already open.");
 			
 		String processNames[] = {"python2.7", "python"};
-		final String ENV_VAR = "HYST_PATH";
+		final String ENV_VAR = "HYST_PYTHON_PATH";
 		String loc = null;
 		
 		for (String processName : processNames)
