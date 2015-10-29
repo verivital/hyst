@@ -14,8 +14,8 @@ import com.verivital.hyst.ir.AutomatonExportException;
 public class Lut extends Expression 
 {
 	public String[] variables;
-	public double[][] values; // at least 1x2, equal in size to breakpoints
-	public double[][] breakpoints; // at least 1x2
+	public MatrixExpression values; // at least 1x2, equal in size to breakpoints
+	public MatrixExpression breakpoints; // at least 1x2
 
 	/**
 	 * Look up table constructor. Shallow copies of the passed-in arrays are stored
@@ -23,7 +23,7 @@ public class Lut extends Expression
 	 * @param vals
 	 * @param breakpoints
 	 */
-	public Lut(String vars[], double[][] vals, double[][] breakpoints) 
+	public Lut(String vars[], MatrixExpression vals, MatrixExpression breakpoints) 
 	{
 		int len = vars.length;
 		

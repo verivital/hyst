@@ -69,6 +69,9 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
 			Preconditions.convertDisjunctiveGuards(c);
 		
+		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
+			Preconditions.convertBasicOperators(c);
+		
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
 			Preconditions.convertToFlat(c);
@@ -78,6 +81,7 @@ public class Preconditions
 		}
 		
 		// conversions should be done before checks
+		
 		
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
@@ -321,6 +325,131 @@ public class Preconditions
 			for (ComponentInstance ci : nc.children.values())
 				noUrgentDynamics(ci.child);
 		}
+	}
+	
+	
+	/**
+	 * Check that there are no non-basic operators in the given component's expressions.
+	 * This will try to convert, if such a conversion is supported.
+	 * 
+	 * basic operators are things like +, *, ^, sine, ln
+	 * non-basic are things like matrices, lookup-tables
+	 * @param c the configuration to check
+	 */
+	public static void convertBasicOperators(Configuration config)
+	{
+		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
+		
+		for (Entry<String, Expression> entry : config.init.entrySet())
+		{
+			String mode = entry.getKey();
+			Expression e = entry.getValue();
+			
+			if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+				throw new PreconditionsFailedException("Initial states for mode " + mode + " contains unsupported " +
+						"expression operation: " + e.toDefaultString());
+		}
+		
+		for (Entry<String, Expression> entry : config.forbidden.entrySet())
+		{
+			String mode = entry.getKey();
+			Expression e = entry.getValue();
+			
+			if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+				throw new PreconditionsFailedException("Forbidden states for mode " + mode + " contains unsupported " +
+						"expression operation: " + e.toDefaultString());
+		}
+		
+		for (AutomatonMode convertMode = convertBasicOperatorsInComponents(config.root); convertMode != null;
+												convertMode = convertBasicOperatorsInComponents(config.root))
+		{
+			Hyst.log("Attemtping to convert look-up-table in mode " + convertMode.name);
+			
+			HERE();
+		}
+	}
+	
+	/**
+	 * Recursive part of convertBasicOperators(config). This returns null of no conversion is required, or
+	 * an AutomatonMode which contains a look-up-table in the flow dynamics if we want to attempt conversion.
+	 * 
+	 * Notice only a single mode is returned, which means that you may have to attempt conversion multiple times
+	 * if multiple modes have look-up-tables
+	 * 
+	 * @param comp the component to try to convert
+	 * @return null if no conversion is needed, or an AutomatonMode which contains a look-up-table, if we want
+	 * to convert
+	 */
+	private static AutomatonMode convertBasicOperatorsInComponents(Component c)
+	{
+		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
+		AutomatonMode rv = null;
+		
+		if (c instanceof BaseComponent)
+		{
+			// base case
+			BaseComponent ha = (BaseComponent)c;
+			
+			for (AutomatonMode am : ha.modes.values())
+			{
+				if (!AutomatonUtil.checkExpressionOps(am.invariant, BASIC))
+					throw new PreconditionsFailedException("Invariant in mode " + am.name + " of automaton " + 
+							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
+							am.invariant.toDefaultString());
+				
+				if (am.flowDynamics != null)
+				{
+					for (Entry<String, ExpressionInterval> entry : am.flowDynamics.entrySet())
+					{
+						String var = entry.getKey();
+						Expression e = entry.getValue().getExpression();
+						
+						byte cl = AutomatonUtil.classifyExpressionOps(e);
+						
+						if ((cl | AutomatonUtil.OPS_LUT) != 0)
+							rv = am; // attempt a conversion of the look-up-table
+						else
+						{
+							cl &= ~BASIC; // turn off BASIC bits in the mask
+							
+							if (cl != 0) // unsupported
+								throw new PreconditionsFailedException("Flow for variable " + var + " in mode " + am.name + 
+										" of automaton " + ha.getPrintableInstanceName() + 
+										" contains unsupported expression operation: " + e.toDefaultString());
+						}
+					}
+				}
+			}
+			
+			for (AutomatonTransition at : ha.transitions)
+			{
+				if (!AutomatonUtil.checkExpressionOps(at.guard, BASIC))
+					throw new PreconditionsFailedException("Guard in transition " + at.from + "->" + at.to + " of automaton " + 
+							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
+							at.guard.toDefaultString());
+				
+				for (Entry<String, ExpressionInterval> entry : at.reset.entrySet())
+				{
+					String var = entry.getKey();
+					Expression e = entry.getValue().getExpression();
+					
+					if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+						throw new PreconditionsFailedException("Reset in transition " + at.from + "->" + at.to +
+							"for variable " + var + " in automaton " + ha.getPrintableInstanceName() 
+							+ " contains unsupported expression operation: " + at.guard.toDefaultString());
+				}
+			}
+		}
+		else
+		{
+			// recursive case
+			NetworkComponent nc = (NetworkComponent)c;
+			
+			for (ComponentInstance ci : nc.children.values())
+				rv = convertBasicOperatorsInComponents(ci.child);
+		}
+		
+		return rv;
 	}
 	
 	@SuppressWarnings("serial")

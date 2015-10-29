@@ -379,14 +379,10 @@ public class FlowPrinter extends ToolPrinter
 			byte classification = AutomatonUtil.classifyExpressionOps(e);
 			
 			if ((classification | AutomatonUtil.OPS_NONLINEAR) != 0)
+			{
 				rv = true;
-			
-			// check if there are any unsupported functions
-			classification &= ~AutomatonUtil.OPS_LINEAR;
-			classification &= ~AutomatonUtil.OPS_LINEAR;
-			
-			if (classification != 0)
-				throw new AutomatonExportException("Dynamics in flow not supported by Flow* printer: " + e.toDefaultString());
+				break;
+			}
 		}
 		
 		return rv;

@@ -11,8 +11,6 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.Map;
 
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
-import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.main.Hyst;
