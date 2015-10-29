@@ -81,7 +81,7 @@ public class PassTests
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
 		c.settings.plotVariableNames[1] = "x"; 
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & t == 0"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t == 0"));
 		
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
@@ -115,7 +115,7 @@ public class PassTests
 		
 		c.settings.plotVariableNames[0] = "x";
 		c.settings.plotVariableNames[1] = "y"; 
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & y == 0"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & y == 0"));
 		
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
@@ -203,7 +203,7 @@ public class PassTests
 		am.invariant = Constant.TRUE;
 		c.settings.plotVariableNames[0] = ha.variables.get(0);
 		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
-		c.init.put("running", FormulaParser.parseLoc(initStringBuilder.toString()));
+		c.init.put("running", FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
 			
 		c.validate();
 		return c;
@@ -324,7 +324,7 @@ public class PassTests
 		ha.variables.add("x");
 		c.settings.plotVariableNames[0] = "x";
 		c.settings.plotVariableNames[1] = "x"; 
-		c.init.put("running", FormulaParser.parseLoc("x = 0"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0"));
 		am.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
 		am.invariant = Constant.TRUE;
 		c.validate();
@@ -450,7 +450,7 @@ public class PassTests
 	
 		am.flowDynamics.put("x", new ExpressionInterval("y"));
 		am.flowDynamics.put("y", new ExpressionInterval("(1-x*x)*y-x"));
-		c.init.put("running", FormulaParser.parseLoc("-0.51 <= x & x <= -0.5 & -2.61 <= y & y <= -2.6"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("-0.51 <= x & x <= -0.5 & -2.61 <= y & y <= -2.6"));
 		c.validate();
 		
 		String params = "step=0.01,maxtime=0.02,epsilon=0.01,addforbidden=false";

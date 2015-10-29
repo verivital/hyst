@@ -689,7 +689,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
 				{
-					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval(0));
 					
 					preMode.invariant = Constant.TRUE;
 					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
@@ -760,7 +760,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
 				{
-					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval(0));
 					
 					preMode.invariant = Constant.TRUE;
 					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
@@ -993,7 +993,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		ha.variables.add(TT_VARIABLE);
 		ttVarIndex = ha.variables.size() - 1;
 		
-		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval("0"));
+		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(0));
 	}
 
 	/**
@@ -1007,7 +1007,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		errorMode.invariant = Constant.TRUE;
 		
 		for (String v : ha.variables)
-			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
+			errorMode.flowDynamics.put(v, new ExpressionInterval(0));
 		
 		return errorMode;
 	}

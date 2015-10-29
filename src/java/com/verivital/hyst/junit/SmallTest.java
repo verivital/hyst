@@ -150,7 +150,7 @@ public class SmallTest
 		Assert.assertEquals("x = 10 ^ -1", DefaultExpressionPrinter.instance.print(e));
 		
 		sampleExpression = "A == 7.89*10^-10.1"; // from E5/E5.xml example from ODE/DAE test set
-		e = FormulaParser.parseLoc(sampleExpression);
+		e = FormulaParser.parseInitialForbidden(sampleExpression);
 		Assert.assertEquals("A = 7.89 * 10 ^ -10.1", DefaultExpressionPrinter.instance.print(e));
     }
 	
@@ -170,7 +170,7 @@ public class SmallTest
 	{
 		String t = "loc(x) = y & x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -180,7 +180,7 @@ public class SmallTest
 	{
 		String t = "x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -190,7 +190,7 @@ public class SmallTest
 	{
 		String t = "x = boy & boy <= 5 & boy >= cat & cat = 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 		
 		try
 		{
@@ -211,7 +211,7 @@ public class SmallTest
 	{
 		String t = "loc(automaton.x) = y & x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -221,7 +221,7 @@ public class SmallTest
 	{
 		String t = "loc(automaton.x) = y & x > 5 & loc(automatonTwo.z) = jump";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -233,7 +233,7 @@ public class SmallTest
 		
 		try
 		{
-			FormulaParser.parseLoc(t);
+			FormulaParser.parseInitialForbidden(t);
 			
 			Assert.fail("ors are not allowed in loc statements");
 		}
@@ -245,7 +245,7 @@ public class SmallTest
 	{
 		String t = "x==0 & y==0 & loc()==one";
 		
-		FormulaParser.parseLoc(t);
+		FormulaParser.parseInitialForbidden(t);
     }
 	
 	@Test
@@ -810,24 +810,41 @@ public class SmallTest
         }
     }
 	
-	/**
-	 * Test that functions get parsed as expected
-	 */
-	public void testFunctionExpressions()
+	private class ExpressionClassification
 	{
-		/*
-		 * LOC : 'loc';
-		SIN : 'sin';
-		COS : 'cos';
-		TAN : 'tan';
-		EXP : 'exp';
-		SQRT : 'sqrt';
-		LN : 'ln';
-		LUT : 'lut';
-		 */
+		public String exp;
+		public byte[] classes;
 		
-		// also test for generation Operator.FUNCTION
-		Assert.fail("unimplemented test");
+		public ExpressionClassification(String exp, byte ... classification)
+		{
+			this.exp = exp;
+			this.classes = classification;
+		}
+	}
+	
+	/**
+	 * Test that functions get classified as expected
+	 */
+	public void testClassifyExpressions()
+	{
+		final ExpressionClassification[] tests = 
+		{
+			new ExpressionClassification("x", (byte)0),
+			new ExpressionClassification("x + 1", AutomatonUtil.HAS_LINEAR),
+			new ExpressionClassification("x^2", AutomatonUtil.HAS_NONLINEAR),
+			new ExpressionClassification("sin(x)^2.5", AutomatonUtil.HAS_NONLINEAR),
+			new ExpressionClassification("ln(x + 1)", AutomatonUtil.HAS_NONLINEAR, AutomatonUtil.HAS_LINEAR),
+			new ExpressionClassification("lut([t], [0,0,1,1,0], [1,2,3,4,8])", 
+					AutomatonUtil.HAS_LUT, AutomatonUtil.HAS_MATRIX),
+		};
+		
+		for (ExpressionClassification test : tests)
+		{
+			String expStr = test.exp;
+			Expression e = FormulaParser.parseNumber(expStr);
+			
+			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.checkExpression(e, test.classes)); 
+		}
 	}
 	
 	/**

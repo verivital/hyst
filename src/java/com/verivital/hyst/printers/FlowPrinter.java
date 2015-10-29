@@ -375,7 +375,7 @@ public class FlowPrinter extends ToolPrinter
 		
 		for (ExpressionInterval e : flowDynamics.values())
 		{
-			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.EXP))
+			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.POW))
 			{
 				rv = true;
 				break;

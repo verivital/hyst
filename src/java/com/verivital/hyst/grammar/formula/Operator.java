@@ -18,7 +18,10 @@ public enum Operator
 	AND, OR, EQUAL, LESS, GREATER, LESSEQUAL, GREATEREQUAL, NOTEQUAL, // two children 
 	NEGATIVE, LOGICAL_NOT, // one child 
 	SIN, COS, TAN, EXP, SQRT, LN, // one child
-	LOC; // loc() function in initial modes, these are removed after model is parsed
+	LOC, // loc() function in initial/forbidden modes, these are removed after model is parsed 
+	LUT, // look-up-table
+	MATRIX, // 2-d matrix expression
+	; 
 	
 	/**
 	 * Higher values = higher parse priority

@@ -1,6 +1,7 @@
 package com.verivital.hyst.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -739,5 +740,70 @@ public abstract class AutomatonUtil
 		}
 		
 		return rv;
+	}
+	
+	// these are the flags for the bitmask returned by classifyExpression
+	public static final byte HAS_LINEAR = 1 << 0; // has operations like add, subtract, multiply, negative
+	public static final byte HAS_NONLINEAR = 1 << 1; // has division, exponentiation, or sine, sqrt, ln, ...
+	public static final byte HAS_LOC = 1 << 2; // has loc() functions
+	public static final byte HAS_LUT = 1 << 3; // has look up table subexpressions
+	public static final byte HAS_MATRIX = 1 << 4; // has matrix subexpressions
+	
+	/**
+	 * Classify an Expression. This returns a bitmask, which you can use to check for various parts of the expression.
+	 * For example, val = classifyExpression(e);   if (val | NONLINEAR) {expression has nonlinear elements}.
+	 * 
+	 * Each category is classified separately, for example classifying 'x^2' will set HAS_NONLINEAR, but 
+	 * not HAS_LINEAR, since there are no linear operations in the expression.
+	 * 
+	 * @param e the expression to check
+	 * @return a bitmask composed of HAS_* values binary or'd ('|') together like (HAS_LINEAR | HAS_NONLINEAR)
+	 */
+	public static byte classifyExpression(Expression e)
+	{
+		byte rv = 0;
+		
+		final Collection <Operator> LINEAR_OPS = Arrays.asList(new Operator[]{Operator.ADD, Operator.SUBTRACT, 
+				Operator.MULTIPLY, Operator.NEGATIVE});
+		
+		final Collection <Operator> NONLINEAR_OPS = Arrays.asList(new Operator[]{Operator.POW, Operator.DIVIDE, 
+				Operator.COS, Operator.SIN, Operator.SQRT, Operator.TAN, Operator.EXP, Operator.LN});
+		
+		Operation o = e.asOperation();
+		
+		if (o != null)
+		{
+			if (LINEAR_OPS.contains(o.op))
+				rv |= HAS_LINEAR;
+			else if (NONLINEAR_OPS.contains(o.op))
+				rv |= HAS_NONLINEAR;
+			else if (o.op == Operator.LOC)
+				rv |= HAS_LOC;
+			else if (o.op == Operator.LUT)
+				rv |= HAS_LUT;
+			else if (o.op == Operator.MATRIX)
+				rv |= HAS_MATRIX;
+			
+			for (Expression child : o.children)
+				rv |= classifyExpression(child);
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Check if an Expression contains only operations from a set of allowed classes (linear, nonlinear, ect.)
+	 * @param e the expression
+	 * @param allowedClasses a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR, HAS_NONLINEAR
+	 * @return
+	 */
+	public static boolean checkExpression(Expression e, byte ... allowedClasses)
+	{
+		byte val = classifyExpression(e);
+		
+		for (byte b : allowedClasses)
+			val &= ~b; // turns off bits in b if they were on
+		
+		return val == 0;
 	}
 }

@@ -694,7 +694,7 @@ public class ContinuizationPass extends TransformationPass
 		for (AutomatonMode am : ha.modes.values())
 		{
 			if (!am.urgent)
-				am.flowDynamics.put(timeVar, new ExpressionInterval("1"));
+				am.flowDynamics.put(timeVar, new ExpressionInterval(1));
 		}
 		
 		Entry<String, Expression> e = config.init.entrySet().iterator().next();

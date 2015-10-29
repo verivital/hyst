@@ -12,6 +12,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.simulation.RungeKutta;
+import com.verivital.hyst.util.AutomatonUtil;
 
 /**
  * An ExpressionInterval an expression plus an Interval. It is used, for example, to specify
@@ -32,6 +33,11 @@ public class ExpressionInterval
 	{
 		if (e == null)
 			throw new AutomatonExportException("Attempted to define ExpressionInterval with null expression.");
+		
+		// only allow LINEAR and NONLINEAR expressions (for now)
+		if (AutomatonUtil.checkExpression(e, AutomatonUtil.HAS_LINEAR, AutomatonUtil.HAS_NONLINEAR))
+			throw new AutomatonExportException("ExpressionIntervals only allow linear and simple nonlinear expressions: "
+					+ e.toDefaultString());
 		
 		this.e = e;
 		this.i = i;
