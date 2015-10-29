@@ -97,7 +97,7 @@ public class Preconditions
 	 * Checks if all flows are assigned in the flat automaton. If not runs the havoc transformation pass to ensure this.
 	 * @param c
 	 */
-	public static void convertAllFlowAssigned(Configuration c)
+	private static void convertAllFlowAssigned(Configuration c)
 	{
 		boolean convert = false;
 		BaseComponent bc = (BaseComponent)c.root;
@@ -134,7 +134,7 @@ public class Preconditions
 	 * two, each with one of the conditions
 	 * @param c the configuration to check and modify
 	 */
-	public static void convertDisjunctiveGuards(Configuration c)
+	private static void convertDisjunctiveGuards(Configuration c)
 	{
 		new SplitDisjunctionGuardsPass().runVanillaPass(c, SplitDisjunctionGuardsPass.PRINT_PARAM);
 	}
@@ -143,7 +143,7 @@ public class Preconditions
 	 * Checks if the model has at least one variable. Raises PrinterPreconditionException if not.
 	 * @param c the configuration to check
 	 */
-	public static void hasAtLeastOneVariable(Configuration c)
+	private static void hasAtLeastOneVariable(Configuration c)
 	{
 		if (c.root.getAllVariables().size() == 0)
 			throw new PreconditionsFailedException("Printer requires at least one continuous variable in the model.");
@@ -153,7 +153,7 @@ public class Preconditions
 	 * Checks if the model is flat. If not, prints a log message and runs the flattening pass to conver it
 	 * @param c the configuration to check
 	 */
-	public static void convertToFlat(Configuration c)
+	private static void convertToFlat(Configuration c)
 	{
 		if (!(c.root instanceof BaseComponent))
 		{
@@ -168,7 +168,7 @@ public class Preconditions
 	 * constants to variables
 	 * @param c the configuration to check
 	 */
-	public static void convertIntervalConstants(Configuration c)
+	private static void convertIntervalConstants(Configuration c)
 	{
 		if (containsIntervalConstants(c.root))
 		{
@@ -184,7 +184,7 @@ public class Preconditions
 	 * @param c the component to check 
 	 * @return true iff c or any of its children contains interval-valued constants
 	 */
-	public static boolean containsIntervalConstants(Component c)
+	private static boolean containsIntervalConstants(Component c)
 	{
 		boolean rv = false;
 		
@@ -222,7 +222,7 @@ public class Preconditions
 	 * Check that there are no nondeterministic resets
 	 * @param c
 	 */
-	public static void convertNondeterministicResets(Component c)
+	private static void convertNondeterministicResets(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -267,7 +267,7 @@ public class Preconditions
 	 * Check if there are non-deterministic dynamics (interval-expressions with nonnull intervals) in the model
 	 * @param c the component to check
 	 */
-	public static void noNondeterministicDynamics(Component c)
+	private static void noNondeterministicDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -303,7 +303,7 @@ public class Preconditions
 	 * Check that there are no urgent dynamics (instant mode changes)
 	 * @param c
 	 */
-	public static void noUrgentDynamics(Component c)
+	private static void noUrgentDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -336,7 +336,7 @@ public class Preconditions
 	 * non-basic are things like matrices, lookup-tables
 	 * @param c the configuration to check
 	 */
-	public static void convertBasicOperators(Configuration config)
+	private static void convertBasicOperators(Configuration config)
 	{
 		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
 		
@@ -360,30 +360,28 @@ public class Preconditions
 						"expression operation: " + e.toDefaultString());
 		}
 		
-		for (AutomatonMode convertMode = convertBasicOperatorsInComponents(config.root); convertMode != null;
-												convertMode = convertBasicOperatorsInComponents(config.root))
+		if (checkBasicOperatorsInComponents(config.root))
 		{
-			Hyst.log("Attemtping to convert look-up-table in mode " + convertMode.name);
-			
-			HERE();
+			Hyst.log("Preconditions check detected look-up-tables in dynamics. ");
+			Hyst.log("Running conversion pass to split them, as required by the preconditions.");
+		
+			// TODO implement this pass
+			throw new PreconditionsFailedException("LUT conversion in flows is not yet implemented");
 		}
 	}
 	
 	/**
-	 * Recursive part of convertBasicOperators(config). This returns null of no conversion is required, or
-	 * an AutomatonMode which contains a look-up-table in the flow dynamics if we want to attempt conversion.
+	 * Recursive part of convertBasicOperators(config). This returns true if there are look-up-table dynamics that
+	 * should be attempted to be converted. It may also raise a PreconditionsFailedException if, for example, there
+	 * are look-up-table dynamics in other parts of the automaton.
 	 * 
-	 * Notice only a single mode is returned, which means that you may have to attempt conversion multiple times
-	 * if multiple modes have look-up-tables
-	 * 
-	 * @param comp the component to try to convert
-	 * @return null if no conversion is needed, or an AutomatonMode which contains a look-up-table, if we want
-	 * to convert
+	 * @param comp the component to check for basic operation (linear and simple nonlinear)
+	 * @return false if no conversion is needed, true if we should try to convert
 	 */
-	private static AutomatonMode convertBasicOperatorsInComponents(Component c)
+	private static boolean checkBasicOperatorsInComponents(Component c)
 	{
 		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
-		AutomatonMode rv = null;
+		boolean rv = false;
 		
 		if (c instanceof BaseComponent)
 		{
@@ -407,7 +405,7 @@ public class Preconditions
 						byte cl = AutomatonUtil.classifyExpressionOps(e);
 						
 						if ((cl | AutomatonUtil.OPS_LUT) != 0)
-							rv = am; // attempt a conversion of the look-up-table
+							rv = true; // should attempt to convert this
 						else
 						{
 							cl &= ~BASIC; // turn off BASIC bits in the mask
@@ -446,7 +444,7 @@ public class Preconditions
 			NetworkComponent nc = (NetworkComponent)c;
 			
 			for (ComponentInstance ci : nc.children.values())
-				rv = convertBasicOperatorsInComponents(ci.child);
+				rv = checkBasicOperatorsInComponents(ci.child);
 		}
 		
 		return rv;
