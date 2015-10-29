@@ -1,6 +1,8 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +11,9 @@ import java.util.TreeMap;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
@@ -36,6 +41,7 @@ import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.RangeExtractor;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -45,6 +51,7 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  * @author sbak
  *
  */
+@RunWith(Parameterized.class)
 public class PassTests
 {
 	@Before 
@@ -52,6 +59,17 @@ public class PassTests
 	{
 	    Expression.expressionPrinter = null;
 	}
+	
+	@Parameters
+    public static Collection<Object[]> data() 
+    {
+    	return Arrays.asList(new Object[][]{{false}, {true}});
+    }
+	
+    public PassTests(boolean block) 
+	{
+    	PythonBridge.setBlockPython(block);
+    }
 	
 	private String UNIT_BASEDIR = "tests/unit/models/";
 	 
@@ -228,6 +246,9 @@ public class PassTests
 	@Test
 	public void testHybridGridPass()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
 		
@@ -259,6 +280,9 @@ public class PassTests
 	@Test
 	public void testHybridMixedTriggeredPass()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
@@ -342,6 +366,8 @@ public class PassTests
 		AutomatonMode piFinal = ha.modes.get("running_final");
 		
 		Assert.assertTrue("init mode is urgent", piInit.urgent == true);
+		Assert.assertTrue("first mode is not null", pi0 != null);
+		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
 		Assert.assertTrue("first mode's invariant is x <= 2", pi0.invariant.toDefaultString().contains("-1 * x >= -2.0000"));
 		Assert.assertTrue("second mode's invariant is x <= 5", pi1.invariant.toDefaultString().contains("-1 * x >= -4.9999"));
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
@@ -363,6 +389,9 @@ public class PassTests
 	@Test
 	public void testHybridizeMixedTriggeredPassWithPremodes()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
 		BaseComponent ha = (BaseComponent)c.root;
@@ -442,6 +471,9 @@ public class PassTests
 	@Test
 	public void testHybridizeMixedTriggeredPassVanderpol()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		// test that dynamics in mode zero should be exactly x' == y
 		// params: step=0.01,maxtime=0.02,epsilon=0.001,addforbidden=false
 		Configuration c = makeSampleBaseConfiguration();
@@ -540,6 +572,9 @@ public class PassTests
 	@Test
 	public void testMixedTriggeredHybridizeWithPi()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		// time-triggered hybridized pass tests with pseudo-invariants
 		// 1d system with x'==1, init box is [0, 1], use star to construct guide simulation
 		// pseudo-invariant count is 1, which means it should be constructed right around x == 1 (the edge of the box)

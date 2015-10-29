@@ -29,7 +29,7 @@ import com.verivital.hyst.passes.TransformationPass;
  */
 public class PseudoInvariantPass extends TransformationPass
 {
-	private static int UNIQUE_ID = 0;
+	private int UNIQUE_ID = 0;
 	BaseComponent ha;
 	public List <String> vars;
 	

@@ -1,6 +1,8 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,92 +10,46 @@ import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 
+/**
+ * All these tests require python, so if it fails to load, they will be skipped
+ * @author sbak
+ *
+ */
+@RunWith(Parameterized.class)
 public class PythonTests
 {
-	@Test
-	public void testPythonFuncs()
-	{
-		PythonBridge pb = new PythonBridge();
-		boolean runTests = true;
-
-		try
-		{
-			pb.open();
-		}
-		catch (AutomatonExportException e) 
-		{
-			// skip these tests if python doesn't open correctly
-			runTests = false; 
-			System.out.println("Couldn't open python bridge; skipping tests " + e);
-		}
-		
-		if (runTests)
-		{
-			sympyTests(pb);
-			scipyTests(pb);
-		
-			pb.close();
-		}
-	}
-
-	private void sympyTests(PythonBridge pb)
-	{
-		boolean skip = false;
-		
-		try
-		{
-			pb.send("import sympy");
-		}
-		catch (AutomatonExportException e)
-		{
-			System.out.println("Sympy import failed; skipping tests: " + e);
-			skip = true;
-		}
-		
-		if (!skip)
-		{
-			testIntervalOptBranchAndBound(pb);
-			testIntervalOpt(pb);
-			testIntervalOptMulti(pb);
-		}
-	}
-
-	private void scipyTests(PythonBridge pb)
-	{
-		boolean skip = false;
-		
-		try
-		{
-			pb.send("import scipy");
-		}
-		catch (AutomatonExportException e)
-		{
-			System.out.println("Scipy import failed; skipping tests: " + e);
-			skip = true;
-		}
-		
-		if (!skip)
-		{
-			testVanderpolOptimize(pb);
-			testAffineHybridized(pb);
-			testMultiOptimizeSciPy(pb);
-			testOptimizeSqrt(pb);
-		}
-	}
+	@Parameters
+    public static Collection<Object[]> data() 
+    {
+    	return Arrays.asList(new Object[][]{{false}, {true}});
+    }
 	
-	private void testAffineHybridized(PythonBridge pb)
+    public PythonTests(boolean block) 
 	{
+    	PythonBridge.setBlockPython(block);
+    }
+	
+	@Test
+	public void testAffineHybridized()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		LinkedHashMap<String, ExpressionInterval> dy = new LinkedHashMap<String, ExpressionInterval>();
 		dy.put("x", new ExpressionInterval(FormulaParser.parseNumber("2 * x + y")));
 		dy.put("y", new ExpressionInterval(FormulaParser.parseNumber("3 * y * x + y")));
@@ -119,8 +75,14 @@ public class PythonTests
 		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y + -12 + [0, 1.5]", yEi.toDefaultString());
 	}
 
-	private void testIntervalOptBranchAndBound(PythonBridge pb)
+	@Test
+	public void testIntervalOptBranchAndBound()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		Expression e = FormulaParser.parseFlow("var' == x^2 - 2*x").asOperation().getRight();
 		double maxWidth = 0.1;
 		
@@ -136,8 +98,14 @@ public class PythonTests
 			Assert.fail("bounds was too pessimistic (not inside [-1.1,0]): " + rv);
 	}
 	
-	private void testIntervalOpt(PythonBridge pb)
+	@Test
+	public void testIntervalOpt()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		Expression e = FormulaParser.parseFlow("var' == 2*x + y - x").asOperation().children.get(1);
 		
 		Map <String, Interval> ranges = new HashMap <String, Interval>();
@@ -152,8 +120,14 @@ public class PythonTests
 			Assert.fail("Computed bounds were wrong. Expected [-0.2, 0.9], got " + rv);
 	}
 	
-	private void testIntervalOptMulti(PythonBridge pb)
+	@Test
+	public void testIntervalOptMulti()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		Expression e = FormulaParser.parseFlow("var' == 2*x + y - x").asOperation().children.get(1);
 		
 		Map <String, Interval> range1 = new HashMap <String, Interval>();
@@ -182,8 +156,14 @@ public class PythonTests
 			Assert.fail("Computed bounds were wrong. Expected [-0.2, 1.4], got " + rv);
 	}
 	
-	private void testVanderpolOptimize(PythonBridge pb)
+	@Test
+	public void testVanderpolOptimize()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		// (1-x*x)*y-x has critical points at (1, 0.5) and (-1, -0.5)
 		Expression e = FormulaParser.parseNumber("(1-x*x)*y-x");
 		HashMap<String, Interval> bounds = new HashMap<String, Interval>();
@@ -195,8 +175,14 @@ public class PythonTests
 		Assert.assertTrue("optimization included 1.0", sciPi.contains(1.0));
 	}
 	
-	private void testOptimizeSqrt(PythonBridge pb)
+	@Test
+	public void testOptimizeSqrt()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		ArrayList <Expression> expList = new ArrayList <Expression>(); 
 		expList.add(FormulaParser.parseNumber("sqrt(x)"));
 		
@@ -215,8 +201,14 @@ public class PythonTests
 		Assert.assertEquals("upper bound of sqrt([1, 4]) = 2", 2, i0.max, TOL);
 	}
 	
-	private void testMultiOptimizeSciPy(PythonBridge pb)
+	@Test
+	public void testMultiOptimizeSciPy()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		
 		ArrayList <Expression> expList = new ArrayList <Expression>(); 
 		expList.add(FormulaParser.parseNumber("x * x"));
 		expList.add(FormulaParser.parseNumber("x * y"));
