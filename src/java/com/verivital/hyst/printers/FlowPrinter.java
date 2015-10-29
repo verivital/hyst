@@ -5,7 +5,6 @@ package com.verivital.hyst.printers;
 
 
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -373,37 +372,21 @@ public class FlowPrinter extends ToolPrinter
 	{
 		boolean rv = false;
 		
-		for (ExpressionInterval e : flowDynamics.values())
+		for (ExpressionInterval entry : flowDynamics.values())
 		{
-			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.POW))
-			{
+			Expression e = entry.getExpression();
+			
+			byte classification = AutomatonUtil.classifyExpressionOps(e);
+			
+			if ((classification | AutomatonUtil.OPS_NONLINEAR) != 0)
 				rv = true;
-				break;
-			}
-		}
-		
-		return rv;
-	}
-
-	private boolean expressionContainsOperator(Expression e, Operator ... operators)
-	{
-		boolean rv = false;
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (Arrays.asList(operators).contains(o.op))
-				rv = true;
-			else
-			{
-				for (Expression child : o.children)
-				{
-					rv = expressionContainsOperator(child, operators);
-					
-					if (rv)
-						break;
-				}
-			}
+			
+			// check if there are any unsupported functions
+			classification &= ~AutomatonUtil.OPS_LINEAR;
+			classification &= ~AutomatonUtil.OPS_LINEAR;
+			
+			if (classification != 0)
+				throw new AutomatonExportException("Dynamics in flow not supported by Flow* printer: " + e.toDefaultString());
 		}
 		
 		return rv;
