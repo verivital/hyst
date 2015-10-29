@@ -222,7 +222,7 @@ public class Preconditions
 	 * Check that there are no nondeterministic resets
 	 * @param c
 	 */
-	private static void convertNondeterministicResets(Component c)
+	public static void convertNondeterministicResets(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
