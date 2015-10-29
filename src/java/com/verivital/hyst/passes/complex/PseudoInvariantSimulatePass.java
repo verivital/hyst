@@ -80,9 +80,6 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			piParams += commaSeparated(pt) + ";" + commaSeparated(invariantDir);
 		}
 		
-		//System.out.println("params = " + piParams);
-		//System.exit(1);
-		
 		// run the traditional pseudo-invariants pass
 		new PseudoInvariantPass().runTransformationPass(config, piParams);
 	}

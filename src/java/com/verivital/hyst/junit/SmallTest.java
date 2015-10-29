@@ -796,21 +796,16 @@ public class SmallTest
         SpaceExNetworkComponent net = new SpaceExNetworkComponent(sed);
         Bind bind = new Bind(net);
         
-        ParamMap varMapA = new ParamMap(bind, "test_var", "test_var");
+        new ParamMap(bind, "key", "reference");
         
-        // TODO: faked passing test for now, uncomment will cause it to fail, need to fix this in binds to check
-        // if param with duplicate name exists or not
-        //
-        //ParamMap varMapB = new ParamMap(bind, "test_var", "test_var");
-        
-        boolean duplicate = false;
-        for (int i = 0; i < bind.getMapCount(); i++) {
-        	for (int j = 0; j < bind.getMapCount(); j++) {
-        		if (i != j) {
-	        		//if (bind.getMap(i).getKey() == bind.getMap(j).getKey())
-	        		Assert.assertNotEquals(bind.getMap(i).getKey(), bind.getMap(j).getKey());
-        		}
-        	}
+        try
+        {
+        	new ParamMap(bind, "key", "reference");
+        	Assert.fail("inserting duplicate bind did not raise exception");
+        }
+        catch (AutomatonExportException e)
+        {
+        	// expected
         }
     }
 	
