@@ -743,23 +743,26 @@ public abstract class AutomatonUtil
 	}
 	
 	// these are the flags for the bitmask returned by classifyExpression
-	public static final byte HAS_LINEAR = 1 << 0; // has operations like add, subtract, multiply, negative
-	public static final byte HAS_NONLINEAR = 1 << 1; // has division, exponentiation, or sine, sqrt, ln, ...
-	public static final byte HAS_LOC = 1 << 2; // has loc() functions
-	public static final byte HAS_LUT = 1 << 3; // has look up table subexpressions
-	public static final byte HAS_MATRIX = 1 << 4; // has matrix subexpressions
+	public static final byte OPS_LINEAR = 1 << 0; // operators like add, subtract, multiply, negative
+	public static final byte OPS_NONLINEAR = 1 << 1; // division, exponentiation, or sine, sqrt, ln, ...
+	public static final byte OPS_LOC = 1 << 2; // loc() functions
+	public static final byte OPS_LUT = 1 << 3; // look up table subexpressions
+	public static final byte OPS_MATRIX = 1 << 4; // matrix subexpressions
 	
 	/**
-	 * Classify an Expression. This returns a bitmask, which you can use to check for various parts of the expression.
-	 * For example, val = classifyExpression(e);   if (val | NONLINEAR) {expression has nonlinear elements}.
+	 * Classify an Expression's operators. This returns a bitmask, which you can use to check for various parts 
+	 * of the expression. For example, val = classifyExpression(e);   if (val | NONLINEAR) {expression has nonlinear operators}.
 	 * 
 	 * Each category is classified separately, for example classifying 'x^2' will set HAS_NONLINEAR, but 
 	 * not HAS_LINEAR, since there are no linear operations in the expression.
 	 * 
+	 * Notice that the operator classification is NOT the same as the expression classification, 
+	 * for example "x*y" is a nonlinear expression, but only uses linear operators (multiplication)
+	 * 
 	 * @param e the expression to check
-	 * @return a bitmask composed of HAS_* values binary or'd ('|') together like (HAS_LINEAR | HAS_NONLINEAR)
+	 * @return a bitmask composed of OPS_* values binary or'd ('|') together like (OPS_LINEAR | OPS_NONLINEAR)
 	 */
-	public static byte classifyExpression(Expression e)
+	public static byte classifyExpressionOps(Expression e)
 	{
 		byte rv = 0;
 		
@@ -774,18 +777,18 @@ public abstract class AutomatonUtil
 		if (o != null)
 		{
 			if (LINEAR_OPS.contains(o.op))
-				rv |= HAS_LINEAR;
+				rv |= OPS_LINEAR;
 			else if (NONLINEAR_OPS.contains(o.op))
-				rv |= HAS_NONLINEAR;
+				rv |= OPS_NONLINEAR;
 			else if (o.op == Operator.LOC)
-				rv |= HAS_LOC;
+				rv |= OPS_LOC;
 			else if (o.op == Operator.LUT)
-				rv |= HAS_LUT;
+				rv |= OPS_LUT;
 			else if (o.op == Operator.MATRIX)
-				rv |= HAS_MATRIX;
+				rv |= OPS_MATRIX;
 			
 			for (Expression child : o.children)
-				rv |= classifyExpression(child);
+				rv |= classifyExpressionOps(child);
 		}
 		
 		return rv;
@@ -797,9 +800,9 @@ public abstract class AutomatonUtil
 	 * @param allowedClasses a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR, HAS_NONLINEAR
 	 * @return
 	 */
-	public static boolean checkExpression(Expression e, byte ... allowedClasses)
+	public static boolean checkExpressionOps(Expression e, byte ... allowedClasses)
 	{
-		byte val = classifyExpression(e);
+		byte val = classifyExpressionOps(e);
 		
 		for (byte b : allowedClasses)
 			val &= ~b; // turns off bits in b if they were on

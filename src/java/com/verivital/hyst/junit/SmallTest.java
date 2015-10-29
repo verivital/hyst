@@ -830,12 +830,12 @@ public class SmallTest
 		final ExpressionClassification[] tests = 
 		{
 			new ExpressionClassification("x", (byte)0),
-			new ExpressionClassification("x + 1", AutomatonUtil.HAS_LINEAR),
-			new ExpressionClassification("x^2", AutomatonUtil.HAS_NONLINEAR),
-			new ExpressionClassification("sin(x)^2.5", AutomatonUtil.HAS_NONLINEAR),
-			new ExpressionClassification("ln(x + 1)", AutomatonUtil.HAS_NONLINEAR, AutomatonUtil.HAS_LINEAR),
+			new ExpressionClassification("x + 1", AutomatonUtil.OPS_LINEAR),
+			new ExpressionClassification("x^2", AutomatonUtil.OPS_NONLINEAR),
+			new ExpressionClassification("sin(x)^2.5", AutomatonUtil.OPS_NONLINEAR),
+			new ExpressionClassification("ln(x + 1)", AutomatonUtil.OPS_NONLINEAR, AutomatonUtil.OPS_LINEAR),
 			new ExpressionClassification("lut([t], [0,0,1,1,0], [1,2,3,4,8])", 
-					AutomatonUtil.HAS_LUT, AutomatonUtil.HAS_MATRIX),
+					AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX),
 		};
 		
 		for (ExpressionClassification test : tests)
@@ -843,7 +843,7 @@ public class SmallTest
 			String expStr = test.exp;
 			Expression e = FormulaParser.parseNumber(expStr);
 			
-			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.checkExpression(e, test.classes)); 
+			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.checkExpressionOps(e, test.classes)); 
 		}
 	}
 	
