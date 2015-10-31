@@ -148,6 +148,19 @@ A copy of the expected model files and plot files produced is in the expected_re
 ### DEVELOPER USAGE
 *******************************
 
+#### HYST Version Control:
+
+We are using a forking repository workflow, more details are here: https://www.atlassian.com/git/tutorials/comparing-workflows/forking-workflow
+
+The basic process is:
+
+1) fork https://github.com/verivital/hyst
+2) commit changes to your fork (if you already made changes to the main repository line, just copy/paste the source files in the new fork and commit them)
+3) push changes to your fork
+4) issue pull request, we will review it and then approve if it looks good
+
+Please create unit tests and possibly regression tests for any changes submitted (e.g., see unit tests here: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/junit and see regression tests here: https://github.com/verivital/hyst/tree/master/src/tests/regression ), this way we will know if we accidentally break any changes you've committed through other changes in Hyst.
+
 #### BUILDING HYST: 
 
 To build Hyst, proceed to the hyst/src/ directory and run "ant". This will create the Hyst.jar file.
@@ -223,6 +236,12 @@ DEPENDENCIES:
 * sympy: https://github.com/sympy/sympy/releases
 
 pip install sympy
+
+For plotting:
+
+* matplotlib: http://matplotlib.org/
+
+pip install matplotlib
 
 *******************************************************************************
 MODEL TRANSFORMATION PASSES:

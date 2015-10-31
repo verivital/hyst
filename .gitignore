@@ -4,6 +4,18 @@ src/tests/regression/result/*
 src/bin/*
 .classpath
 .project
-.hyst.xml
+.settings*
+.*.xml
+
+*.bbl
+*.aux
+*.blg
+*.log
+main.pdf
+*output.txt
+*screen.txt
+*auto*/
+
+*.flow
 
 /bin/

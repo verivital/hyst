@@ -25,6 +25,9 @@ import com.verivital.hyst.ir.Configuration;
  */
 public class NetworkComponent extends Component
 {
+	// should printing using toString() be recursive?
+	public static boolean PRINT_RECURSIVE = true; 
+	
 	// map instance name -> sub-component
 	public LinkedHashMap <String, ComponentInstance> children = new LinkedHashMap <String, ComponentInstance>();
 	

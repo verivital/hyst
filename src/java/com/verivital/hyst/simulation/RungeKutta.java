@@ -60,6 +60,16 @@ public class RungeKutta
 	}
 	
 	/**
+	 * a public version of a single-step function
+	 */
+	public static void singleStepRk(Map <String, Expression> flowDynamics, List <String> varNames, HyperPoint hp, double h)
+	{
+		assignDynamics(flowDynamics, varNames);
+		
+		stepRK(hp, h);
+	}
+	
+	/**
 	 * Do some steps of the Runge-Kutta method
 	 * @param dy the dynamics to use
 	 * @param hp the point where to start, this is modified during the function call to be the result

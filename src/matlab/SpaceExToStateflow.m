@@ -31,14 +31,22 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 
     %Ex: how to instantiate java objects into Matlab
     %add java library for spaceex parsing library (from spaceex2boogie)
-    %javaaddpath(['..', filesep, 'lib', filesep, 'Hyst.jar']);
+    addpath(['..', filesep, '..', filesep, 'lib', filesep]);
     javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'Hyst.jar']);
-    addpath(['..', filesep,'..', filesep, 'lib', filesep]);
+    javaaddpath(['..', filesep,'..', filesep, 'lib', filesep, 'args4j-2.32.jar']);
     
-    % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO HYST
+    % DO NOT LOAD EXTERNAL LIBRARIES HERE, MUST BE LOADED VIA LINK INTO
+    % HYST (apparently...?)
     %javaaddpath(['..', filesep, 'lib', filesep, 'commons-cli-1.3.1.jar']);
     
     % check if next works with: javaclasspath
+    % NOTE: we don't seem to need to do this here... I guess whether we
+    % need to load the jar depends on how they are loaded (e.g., statically
+    % vs. dynamically) in the main Hyst.jar calls
+    % For example, we apparently don't have to load ANTLR to be able to 
+    % call parsing functions that use ANTLR from within matlab, e.g., the
+    % following test works without loading the ANTLR jar:
+    % test = com.verivital.hyst.grammar.formula.FormulaParser.parseGuard('x <= 5')
     %javaaddpath(['..', filesep, 'lib', filesep, 'antlr-runtime-4.4.jar']);
     %javaaddpath(['..', filesep, 'lib', filesep, 'junit-4.11.jar']);
     %javaaddpath(['.', filesep, 'lib', filesep, 'spaceex-converter.jar']);

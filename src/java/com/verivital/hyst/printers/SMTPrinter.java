@@ -32,7 +32,6 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-//import com.microsoft.z3.*;
 
 
 /**

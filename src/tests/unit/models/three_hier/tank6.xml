@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="first">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="xn" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="on" x="465.0" y="72.0" width="350.0" height="70.0">
+      <flow>x1'== 0.1 + 4 - xn - 0.015 * sqrt(2*9.81*x1)</flow>
+    </location>
+  </component>
+  <component id="mid">
+    <param name="x_im1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="x_i" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="on" x="393.0" y="106.0" width="378.0" height="92.0">
+      <flow>x_i'== 0.015 * sqrt(2*9.81*x_im1) - 0.015 * sqrt(2*9.81*x_i)</flow>
+    </location>
+  </component>
+  <component id="mid2">
+    <param name="xin" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="mid" as="mid_1" x="386.0" y="10.0">
+      <map key="x_im1">xin</map>
+      <map key="x_i">x1</map>
+    </bind>
+    <bind component="mid" as="mid_2" x="384.0" y="101.0">
+      <map key="x_im1">x1</map>
+      <map key="x_i">x2</map>
+    </bind>
+  </component>
+  <component id="mid4">
+    <param name="xin" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="mid2" as="mid2_1" x="398.0" y="3.0">
+      <map key="xin">xin</map>
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+    </bind>
+    <bind component="mid2" as="mid2_2" x="396.0" y="124.0">
+      <map key="xin">x2</map>
+      <map key="x1">x3</map>
+      <map key="x2">x4</map>
+    </bind>
+  </component>
+  <component id="mid5">
+    <param name="xin" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x5" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="mid4" as="mid4_1" x="439.0" y="1.0">
+      <map key="xin">xin</map>
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+      <map key="x3">x3</map>
+      <map key="x4">x4</map>
+    </bind>
+    <bind component="mid" as="mid_1" x="443.0" y="179.0">
+      <map key="x_im1">x4</map>
+      <map key="x_i">x5</map>
+    </bind>
+  </component>
+  <component id="net">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x5" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x6" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <bind component="first" as="first_1" x="348.0" y="10.0">
+      <map key="x1">x1</map>
+      <map key="xn">x6</map>
+    </bind>
+    <bind component="mid5" as="mid5_1" x="345.0" y="140.0">
+      <map key="xin">x1</map>
+      <map key="x1">x2</map>
+      <map key="x2">x3</map>
+      <map key="x3">x4</map>
+      <map key="x4">x5</map>
+      <map key="x5">x6</map>
+    </bind>
+  </component>
+</sspaceex>
+

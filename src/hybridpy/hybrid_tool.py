@@ -34,7 +34,7 @@ def get_script_path():
 def valid_image(s):
     '''check if the given string is a valid output image (.png) path'''
 
-    if not s.endswith(".png"):
+    if not s.endswith(".png") and not s == '-':
         raise argparse.ArgumentTypeError('Image does not end in .png: ' + s)
 
     return s
@@ -48,8 +48,9 @@ def tool_main(tool_obj, extra_args=None):
 
     parser = argparse.ArgumentParser(description='Run ' + tool_obj.tool_name)
     parser.add_argument('model', help='input model file')
-    parser.add_argument('image', nargs='?', help='output image file', type=valid_image)
+    parser.add_argument('image', nargs='?', help='output image file (use "-" to skip)', type=valid_image)
     parser.add_argument('--debug', '-d', action='store_true', help='save intermediate files directory')
+    parser.add_argument('--explicit_temp_dir', '-e', nargs='?', help='specify explicitly the temp dir')
 
     if extra_args is not None:
         for flag, help_text in extra_args:
@@ -64,11 +65,16 @@ def tool_main(tool_obj, extra_args=None):
 
     code = tool_obj.run()
 
-    print "Exit code: " + str(code)
+    print "Tool script exit code: " + str(code)
     sys.exit(code)
 
-def run_tool(tool_obj, model, image, timeout, print_pipe):
+def _kill_pg(p):
+    '''kill a process' processgroup'''
+    os.killpg(os.getpgid(p.pid), signal.SIGKILL)
+
+def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None):
     '''run a tool by creating a subprocess and directing output to print_pipe
+    image may be None
 
     returns a value in RunCode.*
     '''
@@ -81,15 +87,21 @@ def run_tool(tool_obj, model, image, timeout, print_pipe):
 
     script_file = inspect.getfile(tool_obj.__class__)
 
+    if image is None:
+        image = "-" # no image indicator
+    
     # -u is unbuffered stdout, may affect performance if there is a lot of output
     params = [sys.executable, "-u", script_file, model, image]
+    
+    if explicit_temp_dir is not None:
+        params.append("--explicit_temp_dir")
+        params.append(explicit_temp_dir)
 
     try:
         proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         if timeout is not None:
-            kill_pg = lambda p: os.killpg(os.getpgid(p.pid), signal.SIGKILL)
-            timer = threading.Timer(timeout, kill_pg, [proc])
+            timer = threading.Timer(timeout, _kill_pg, [proc])
             timer.daemon = True
             timer.start()
 
@@ -160,7 +172,11 @@ def get_env_var_path(basename, default_path):
         rv = default_path
 
     if not os.path.exists(rv):
-        print basename + ' not found at path: ' + rv + '. Did you set ' + var + '? ',
+        print basename + ' not found at path: ' + rv + '.',
+
+        if os.environ.get(var) is None:
+            print 'Environment variable ' + var + ' was NOT set.',
+
         print "Tool will be set as non-runnable."
         rv = None
 
@@ -180,6 +196,9 @@ class HybridTool(object):
     debug = False # if set to true, will copy temp work folder back to model folder
 
     default_extension = None
+    explicit_temp_dir = None
+    output_obj = None
+    start_timestamp = None
 
     def __init__(self, tool_name, default_ext, path):
         '''Initialize the tool for running. This checks if the tool exists
@@ -193,13 +212,26 @@ class HybridTool(object):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
 
         self.original_model_path = args.model
-        self.image_path = os.path.realpath(args.image)
+
+        if args.image != "-":
+            self.image_path = os.path.realpath(args.image)
 
         if not os.path.exists(self.original_model_path):
             raise RuntimeError('Model file not found at path: ' + self.original_model_path)
 
-        if args.debug is not None:
-            self.debug = args.debug
+        if args.debug == True:
+            self.set_debug(True)
+
+        if args.explicit_temp_dir is not None:
+            self.set_explicit_temp_dir(args.explicit_temp_dir)
+
+    def set_debug(self, d):
+        '''set the debug flag (will copy temp directory to current working directory)'''
+        self.debug = d
+
+    def set_explicit_temp_dir(self, directory):
+        '''set the temp directory where computation will be performed'''
+        self.explicit_temp_dir = directory
 
     def run(self):
         '''runs the tool and visualization
@@ -218,6 +250,7 @@ class HybridTool(object):
 
         rv = RunCode.SUCCESS
         old_dir = os.getcwd()
+        real_path = os.path.realpath(self.original_model_path)
         temp_dir = self._make_temp_dir()
 
         try:
@@ -233,7 +266,7 @@ class HybridTool(object):
         finally:
             if self.debug:
                 # copy the temp folder to the current working directory
-                dest_dir = os.path.dirname(os.path.realpath(self.original_model_path))
+                dest_dir = os.path.dirname(real_path)
                 dest = dest_dir + "/debug"
 
                 if os.path.exists(dest):
@@ -242,13 +275,19 @@ class HybridTool(object):
                 shutil.copytree(temp_dir, dest)
 
             os.chdir(old_dir)
-            shutil.rmtree(temp_dir)
+
+            # delete the temp dir, if it wasn't explicitly provided
+            if self.explicit_temp_dir is None:
+                shutil.rmtree(temp_dir)
 
         return rv
 
     def _make_temp_dir(self):
         '''make a temporary directory for the computation and return its path'''
-        name = os.path.join(tempfile.gettempdir(), self.tool_name + \
+        if self.explicit_temp_dir is not None:
+            name = self.explicit_temp_dir
+        else:
+            name = os.path.join(tempfile.gettempdir(), self.tool_name + \
                         "_" + str(time.time()) + "_" + str(random.random()))
 
         os.makedirs(name)
@@ -265,6 +304,32 @@ class HybridTool(object):
     def default_ext(self):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
+
+    def got_tool_output(self, line):
+        '''a line of output was produced by the tool process. This only gets called if
+        an output object is being created. This comes from a call to readline, so it's
+        always a single line of output.
+        '''
+
+        # add (line, timestamp) to output_obj['lines']
+        lines = self.output_obj['lines']
+        
+        if len(lines) == 0: # no output yet
+            self.start_timestamp = time.time()
+
+        timestamp = time.time() - self.start_timestamp
+        lines.append((line, timestamp))
+
+    def create_output(self, _):
+        '''Assigns to the output object (self.output_obj). It is a dictionary;
+        add to it, don't assign the whole object since other parts are made
+        while the tool was running, for example using got_tool_output().
+
+        For all tools, obj.lines contains a list of tuples, where the first part is
+        a line of stdout output, and the second part is a timestamp in seconds (from time.time())
+        
+        Tool working files are stored in the passed-in directory.'''
+        raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
 
     @abc.abstractmethod
     def _run_tool(self):

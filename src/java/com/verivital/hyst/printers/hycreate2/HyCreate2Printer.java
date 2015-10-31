@@ -679,6 +679,7 @@ public class HyCreate2Printer extends ToolPrinter
 			opNames.put(Operator.SIN, "Math.sin");
 			opNames.put(Operator.TAN, "Math.tan");
 			opNames.put(Operator.LN, "Math.ln");
+			opNames.put(Operator.SQRT, "Math.sqrt");
 			
 			opNames.put(Operator.AND, "&&");
 			opNames.put(Operator.OR, "||");

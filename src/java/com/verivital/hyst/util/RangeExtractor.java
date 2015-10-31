@@ -42,16 +42,6 @@ public class RangeExtractor
 			throw new AutomatonExportException("Error while parsing expression: " + 
 					DefaultExpressionPrinter.instance.print(expression), e);
 		}
-		catch (EmptyRangeException e)
-		{
-			throw new EmptyRangeException("Could not get all variable ranges for in expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
-		}
-		catch (ConstantMismatchException e)
-		{
-			throw new ConstantMismatchException("Constant mismatch in expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
-		}
 	}
 	
 	public static Map<String, Double> getConstants(Expression expression) throws ConstantMismatchException
@@ -511,5 +501,31 @@ public class RangeExtractor
 		{
 			super(msg, e);
 		}
+	}
+
+	/**
+	 * get the variable ranges from an expression, throwing an AutomatonExportException on error
+	 * @param e the expression
+	 * @param description the description to print in case of error
+	 * @return the extracted ranges for all the variables
+	 */
+	public static TreeMap<String, Interval> getVariableRanges(Expression e, String description)
+	{
+		TreeMap<String, Interval> ranges = new TreeMap<String, Interval>(); 
+		
+		try
+		{
+			getVariableRanges(e, ranges);
+		} 
+		catch (EmptyRangeException ex)
+		{
+			throw new AutomatonExportException(description + " variable range was empty", ex);
+		}
+		catch (ConstantMismatchException ex)
+		{
+			throw new AutomatonExportException(description + " variable range was contradictory", ex);
+		}
+
+		return ranges;
 	}
 }

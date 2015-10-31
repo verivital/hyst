@@ -26,11 +26,13 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
-import com.verivital.hyst.passes.complex.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.RegularizePass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
@@ -86,7 +88,7 @@ public class Hyst
 					new PythonQBMCPrinter(),
 					new SpaceExPrinter(),
 					new SMTPrinter(),
-					new StateflowSpPrinter()
+					new StateflowSpPrinter(),
 			};
 
 	// passes that are run only if the user selects them
@@ -102,8 +104,9 @@ public class Hyst
 					new RemoveSimpleUnsatInvariantsPass(),
 					new ShortenModeNamesPass(),
 					new RegularizePass(),
-					//new ContinuizationPass(), // TODO: add back, but the commons-cli stuff is breaking the stateflow converter
+					new ContinuizationPass(),
 					new HybridizeGridPass(),
+					new HybridizeMixedTriggeredPass(),
 					new FlattenAutomatonPass(),
 					new OrderReductionPass(),
 			};
@@ -239,7 +242,8 @@ public class Hyst
 		}
 		catch (Exception ex)
 		{
-			logError("Exception while exporting: " + ex.getLocalizedMessage());
+			String message = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : ex.toString();
+			logError("Exception in Hyst while exporting: " + message);
 
 			if (verboseMode)
 			{
@@ -250,6 +254,8 @@ public class Hyst
 				ex.printStackTrace(pw);
 				log(sw.toString());
 			}
+			else
+				logError("For more information about the error, use the -verbose or -debug flag.");
 
 			return ExitCode.EXPORT_EXCEPTION.ordinal();
 		}

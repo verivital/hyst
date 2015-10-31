@@ -1,5 +1,8 @@
 package com.verivital.hyst.geometry;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 /**
  * A Hyperrectangle is an n-dimensional rectangle representing a portion of the state space
@@ -20,9 +23,10 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		dimensionNames.add("Z");
 	}
 	
-	public static void setDimensionNames(ArrayList <String> names)
+	public static void setDimensionNames(List <String> names)
 	{
-		dimensionNames = names;
+		dimensionNames.clear();
+		dimensionNames.addAll(names);
 	}
 	
 	/**
@@ -77,6 +81,19 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		}
 	}
 	
+	public HyperRectangle(Interval ... intervals)
+	{
+		int len = intervals.length;
+		
+		dims = new Interval[len];
+		
+		// for every dimension d
+		for (int d = 0; d < len; ++d)
+		{
+			dims[d] = intervals[d].copy();
+		}
+	}
+	
 	/**
 	 * Creates a hyperrectangle with one additional dimension using a shallow copy of the passed-in one
 	 * @param hr the orignal hyperrectangle
@@ -90,29 +107,6 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 			dims[d] = hr.dims[d]; // shallow copy
 		
 		dims[hr.dims.length] = new Interval(time, time);
-	}
-
-	public String toString()
-	{
-		String s = "{HyperRectangle: ";
-		
-		for (int x = 0; x < dims.length; ++x)
-		{
-			Interval i = dims[x];
-			String name = "Dim #" + x;
-			
-			if (x < dimensionNames.size())
-				name = dimensionNames.get(x);
-			
-			s += name + " = [" + i.min + ", " + i.max + "]";
-			
-			if (x + 1 < dims.length)
-				s += "; ";			
-		}
-		
-		s += "}";
-		
-		return s;
 	}
 
 	public boolean contains(HyperPoint p)
@@ -279,32 +273,44 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 	}
 	
 	/**
-	 * bloat this hyperrectangle by some factor
+	 * bloat a hyperrectangle by some factor
 	 * @param factor the factor to bloat by. 1.0 means will return the same rectangle
 	 */
-	public void bloatMultiplicative(double factor)
+	public static HyperRectangle bloatMultiplicative(HyperRectangle rect, double factor)
 	{
-		for (int d = 0; d < dims.length; ++d)
+		HyperRectangle rv = new HyperRectangle(rect.dims.length);
+		
+		for (int d = 0; d < rect.dims.length; ++d)
 		{
-			double halfW = dims[d].width() / 2.0;
-			double mid = dims[d].middle();
+			double halfW = rect.dims[d].width() / 2.0;
+			double mid = rect.dims[d].middle();
 			
-			dims[d].min = mid - (halfW * factor);
-			dims[d].max = mid + (halfW * factor);
+			double min = mid - (halfW * factor);
+			double max = mid + (halfW * factor);
+			
+			rv.dims[d] = new Interval(min, max);
 		}
+		
+		return rv;
 	}
 	
 	/**
 	 * bloat this hyperrectangle by some additive amount
 	 * @param factor the factor to bloat by. 0.0 means will return the same rectangle
 	 */
-	public void bloatAdditive(double amount)
+	public static HyperRectangle bloatAdditive(HyperRectangle rect, double amount)
 	{
-		for (int d = 0; d < dims.length; ++d)
+		HyperRectangle rv = new HyperRectangle(rect.dims.length);
+		
+		for (int d = 0; d < rect.dims.length; ++d)
 		{
-			dims[d].min -= amount;
-			dims[d].max += amount;
+			double min = rect.dims[d].min - amount;
+			double max = rect.dims[d].max + amount;
+			
+			rv.dims[d] = new Interval(min, max);
 		}
+		
+		return rv;
 	}
 	
 	/**
@@ -431,31 +437,26 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		
 		// first construct the maximum (2^dim)
 		int maxIterator = 1;
-		int[] dimensionIndex = new int[dims.length];
-		int curDimensionIndex = 0;
+		ArrayList <Integer> dimensionIndex = new ArrayList <Integer>(dims.length);
 		
 		for (int dimIndex = 0; dimIndex < dims.length; ++dimIndex)
 		{
 			if (!dims[dimIndex].isPoint())
 			{
 				maxIterator *= 2;
-				dimensionIndex[curDimensionIndex++] = dimIndex;
+				dimensionIndex.add(dimIndex);
 			}
 		}
-		
-		// next iterate from 0 to maxIterator (try each bit-array combination)
 		
 		for (int iterator = 0; iterator < maxIterator; ++iterator)
 		{
 			// extract each dimension's boolean true/false values from iterator
 			HyperPoint point = center();
 			
-			// assign all the dimensnions that are not flat
+			// assign all the dimensions that are not flat
 			int mask = 0x01;
-			for (int d = 0; d < dimensionIndex.length; ++d)
+			for (int actualDim : dimensionIndex)
 			{
-				int actualDim = dimensionIndex[d];
-				
 				boolean isMin = (iterator & mask) == 0;
 				mask = mask << 1;
 				
@@ -473,13 +474,16 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 	 * @param r the rectangle we're interesecting with
 	 * @return the intersection hyperrectangle, or null if intersection is empty
 	 */
-	public HyperRectangle intersection(HyperRectangle r)
+	public static HyperRectangle intersection(HyperRectangle a, HyperRectangle b)
 	{
-		HyperRectangle rv = new HyperRectangle(dims.length);
+		if (a.dims.length != b.dims.length)
+			throw new RuntimeException("HyperRectange intersection requires same number of dimensions");
 		
-		for (int d = 0; d < r.dims.length; ++d)
+		HyperRectangle rv = new HyperRectangle(a.dims.length);
+		
+		for (int d = 0; d < a.dims.length; ++d)
 		{
-			Interval intersection = dims[d].intersection(r.dims[d]);
+			Interval intersection = Interval.intersection(a.dims[d], b.dims[d]);
 			
 			if (intersection == null)
 			{
@@ -488,6 +492,79 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 			}
 			
 			rv.dims[d] = intersection;
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Compute the bounding box of the union of the HyperRectangles, and return it
+	 * @param r the other box
+	 * @return the tightest bounding box which contains both input boxes
+	 */
+	public static HyperRectangle union(HyperRectangle a, HyperRectangle b)
+	{
+		if (a.dims.length != b.dims.length)
+			throw new RuntimeException("HyperRectange union requires same number of dimensions");
+		
+		HyperRectangle rv = new HyperRectangle(a.dims.length);
+		
+		for (int d = 0; d < a.dims.length; ++d)
+			rv.dims[d] = Interval.union(a.dims[d], b.dims[d]);
+		
+		return rv;
+	}
+	
+	public String toString()
+	{
+		String s = "{HyperRectangle: ";
+		
+		for (int x = 0; x < dims.length; ++x)
+		{
+			Interval i = dims[x];
+			String name = "Dim #" + x;
+			
+			if (x < dimensionNames.size())
+				name = dimensionNames.get(x);
+			
+			s += name + " = [" + i.min + ", " + i.max + "]";
+			
+			if (x + 1 < dims.length)
+				s += "; ";			
+		}
+		
+		s += "}";
+		
+		return s;
+	}
+
+	public HyperRectangle copy()
+	{
+		return new HyperRectangle(this);
+	}
+
+	/**
+	 * Get the unique star points from this HyperRectangle. Star points are ones where, from the center point, a single coordinate
+	 * is modified to be at a face. There are at most 2*d star points, where d is the number of dimensions
+	 * 
+	 * @return the collection of HyperPoints
+	 */
+	public Collection <HyperPoint> getStarPoints()
+	{
+		LinkedHashSet <HyperPoint> rv = new LinkedHashSet <HyperPoint>();
+		HyperPoint center = center();
+		
+		for (int d = 0; d < dims.length; ++d)
+		{
+			Interval range = dims[d];
+			HyperPoint left = new HyperPoint(center);
+			HyperPoint right = new HyperPoint(center);
+			
+			left.dims[d] = range.min;
+			right.dims[d] = range.max;
+			
+			rv.add(left);
+			rv.add(right);
 		}
 		
 		return rv;
