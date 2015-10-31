@@ -79,6 +79,9 @@ public class StateflowSpPrinter extends ToolPrinter {
     //private String invCoeff = "0";
     private boolean invFound = false;
     private boolean first = false;
+    public LinkedHashMap <String, Integer> varID;
+    public double [][] linearMatrix; 
+
     // ------------- variable wrappers -------------
     
     // stopping signal
@@ -242,80 +245,99 @@ public class StateflowSpPrinter extends ToolPrinter {
 
         //proxy = factory.getProxy();
     }    
+   
+    public void getVarID(BaseComponent ha) 
+    {
+            varID = new LinkedHashMap<String, Integer>(); 
+            int id = 0;  
+            for (String v : ha.variables) 
+                    varID.put(v, id++);
+            for (String c : ha.constants.keySet())
+                    varID.put(c, id++);  
+    }
     
-    /*
+    public void getLinearMatrix(AutomatonMode m) {
+            int size = varID.size();
+            //linearMatrix = new double [3][3];
+            int i = 0;
+            linearMatrix = new double[ha.variables.size()][size];
+            for (ExpressionInterval ei : m.flowDynamics.values()){
+                    Expression e = ei.getExpression();
+                    getCoefficient(i,e);
+                    i++;
+            }
+        //return linearMatrix;
+    }
+    
+    
+    private void getCoefficient(int i, Expression e) {
+   
+            if (e instanceof Variable) {
+                    linearMatrix[i][varID.get(e.toString())] = 1;
+            } else if (e instanceof Operation) {
+
+                    Operation o = (Operation) e;
+                    if (o.op == Operator.MULTIPLY) {
+                            Expression l = o.getLeft();
+                            Expression r = o.getRight();
+                            //extract input coefficient                                
+                            if (r instanceof Variable && l instanceof Constant) {
+                                    linearMatrix[i][varID.get(r.toString())] = ((Constant) l).getVal();
+                                    if (o.getParent() != null) {
+                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+                                                    linearMatrix[i][varID.get(r.toString())] = -linearMatrix[i][varID.get(r.toString())];
+                                    }
+                            } else if (l instanceof Variable && r instanceof Constant) {
+                                    linearMatrix[i][varID.get(l.toString())] = ((Constant) r).getVal();
+                                    if (o.getParent() != null) {
+                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+                                                    linearMatrix[i][varID.get(l.toString())] = -linearMatrix[i][varID.get(l.toString())];
+                                    }
+                            }
+                    } else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
+                            if (o.getRight() instanceof Variable)
+                                    linearMatrix[i][varID.get(o.getRight().toString())] = 1;
+                            if (o.getLeft() instanceof Variable)
+                                    linearMatrix[i][varID.get(o.getLeft().toString())] = 1;
+                            if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+                                    getCoefficient(i, o.getRight());
+                                    getCoefficient(i, o.getLeft());
+                            }
+                    }
+            }
+	}
+    
     public String FlowToMatrix(AutomatonMode m) {
-        String rv = "";
-        
-        for (ExpressionInterval ei : m.flowDynamics.values()){
-                Expression e = ei.getExpression();
-                rv = rv + e.toString()+ ";\n";
-        }
-        rv = rv + ";"; 
-      
-        return rv;
+            String rv = "";
+
+            for (ExpressionInterval ei : m.flowDynamics.values()){
+                    Expression e = ei.getExpression();
+                    rv = rv + e.toString()+ ";\n";
+            }
+            rv = rv + ";"; 
+
+            return rv;
     } 
     /**
     * 
-    * @return invariant matrix C for each location
- 
-	public String convertInvariantMatrix(AutomatonMode m) {
+    * 
+    * @return the dynamic matrix A for each location
+    */
+	public String convertFlowToMatrix(AutomatonMode m) {
 		String rv = "";
-                Expression e = m.invariant;
-		for (String v : ha.variables) {
-                        if (!(m.flowDynamics.containsKey(v))){
-                        
-                            getInvCoefficient(v, e);
-                            rv = rv + coeff + " ";
-                            //rv = rv + c;
-                            invFound = false;
-                            coeff = "0";
+                Integer size = ha.variables.size();
+                for (int i = 0; i < size; i++){
+                        for (int j = 0; j < size; j++)  {
+                                //getCoefficient(c, e);
+                                rv = rv +  Double.toString(linearMatrix[j][i]) + " ";
                         }
+                        rv = rv + ";";
                 }
-			rv = rv + ";";
-
 		rv = "[" + rv + "]";
-
 		return rv;
 	}
-        private void getInvCoefficient(String v, Expression e) {
-
-		if (!invFound) {
-			if (e instanceof Operation) {
-
-				Operation o = (Operation) e;
-				if (o.op == Operator.EQUAL ) {
-					Expression l = o.getLeft();
-					Expression r = o.getRight();
-                                        //extract input coefficient                                
-                                        if (l instanceof Variable && r instanceof Constant) {
-							coeff = "0";
-							invFound = true;
-					} else if (l instanceof Variable && r instanceof Variable) {
-						if (l.toString().equals(v)) {                                                   
-                                                        coeff = "1";
-							invFound = true;
-						}
-					} else if (l instanceof Variable && r instanceof Operation){
-                                                getCoefficient(v, o.getRight());
-                                        }
-                                }
-				else if (o.op == Operator.AND || o.op == Operator.OR) {
-                                    
-                                        if (o.getRight() instanceof Variable || o.getLeft() instanceof Variable) {
-						if (o.getRight().toString().equals(v) || o.getLeft().toString().equals(v) ) {
-							coeff = "1";
-							invFound = true;
-						}
-					}
-                                        else if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
-						getInvCoefficient(v, o.getRight());
-						getInvCoefficient(v, o.getLeft());
-					}
-				}
-			}
-		}
-	}
+    /**
+    * 
     /**
     * 	
     * @return input matrix B for each location
@@ -323,19 +345,18 @@ public class StateflowSpPrinter extends ToolPrinter {
 	// TODO: please have this actually construct a java object of a matrix, this will make our lives much easier
         public String convertInputToMatrix(AutomatonMode m) {
 		String rv = "";
-		for (String c : ha.constants.keySet()) {
-                        for (ExpressionInterval ei : m.flowDynamics.values()) {
-                                Expression e = ei.getExpression();
-                                getCoefficient(c, e);
-                                rv = rv + coeff + " ";
-                                //rv = rv + c;
-                                found = false;
-                                coeff = "0";
+                Integer colLength = ha.variables.size();
+                Integer rowLength = ha.variables.size() + ha.constants.size();
+                if (rowLength > colLength){
+                        for (int j = colLength; j < rowLength; j++){
+                                for (int i = 0; i < colLength; i++)  {
+                                        //getCoefficient(c, e);
+                                        rv = rv +  Double.toString(linearMatrix[i][j]) + " ";
+                                }
+                                rv = rv + ";";
                         }
-			rv = rv + ";";
-		}
+                }
 		rv = "[" + rv + "]";
-
 		return rv;
 	}
     /**
@@ -355,7 +376,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 					
 					Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
                                         for (String s : m.flowDynamics.keySet()){
-                                                getCoefficient(s, subEquality.asOperation().getRight());
+                                                getInvCoefficient(s, subEquality.asOperation().getRight());
                                                 rv = rv + coeff + " ";
                                                 found = false;
                                                 coeff = "0";
@@ -399,35 +420,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 		}
 		return null;
 	}
-     /**
-    * 
-    * @return the dynamic matrix A for each location
-    */
-	public String convertFlowToMatrix(AutomatonMode m) {
-		String rv = "";
-		for (String v : ha.variables) {
-			//if (!(m.flowDynamics.keySet().contains(v)))
-                        if (m.flowDynamics.keySet().contains(v)){
-				//throw new AutomatonValidationException("flow for variables " + v + " is empty");
-                                //coeff = "0";
-			//else {
-				for (ExpressionInterval ei : m.flowDynamics.values()) {
-					Expression e = ei.getExpression();
-					getCoefficient(v, e);
-					rv = rv + coeff + " ";
-					found = false;
-					coeff = "0";
-				}
-                                
-			rv = rv + ";";
-                        }
-		}
-		rv = "[" + rv + "]";
-
-		return rv;
-	}
-        // 
-	private void getCoefficient(String v, Expression e) {
+    
+	private void getInvCoefficient(String v, Expression e) {
 
 		if (!found) {
 			if (e instanceof Variable) {
@@ -467,8 +461,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 						}
 					}
                                         if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
-						getCoefficient(v, o.getRight());
-						getCoefficient(v, o.getLeft());
+						getInvCoefficient(v, o.getRight());
+						getInvCoefficient(v, o.getLeft());
 					}
 				}
 			}

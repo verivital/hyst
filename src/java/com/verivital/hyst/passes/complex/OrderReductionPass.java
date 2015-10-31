@@ -75,7 +75,7 @@ public class OrderReductionPass extends TransformationPass
 
         StateflowSpPrinter sp = new StateflowSpPrinter();
         sp.ha = ha;
-        
+        sp.getVarID(ha);    
         MatlabProxy proxy;
 		try {
 			proxy = factory.getProxy();
@@ -94,6 +94,7 @@ public class OrderReductionPass extends TransformationPass
 	        proxy.eval("X = [" + variableString + "]");
 	        
 	        for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
+                        sp.getLinearMatrix(e.getValue());
 	        	String matlabAMatrix = sp.convertFlowToMatrix(e.getValue());
 	        	proxy.eval("A_" + e.getKey() + " = " + matlabAMatrix + ";");
 	        	proxy.eval("A_" + e.getKey() + " * X.'");

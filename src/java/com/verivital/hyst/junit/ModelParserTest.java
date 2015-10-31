@@ -941,25 +941,6 @@ public class ModelParserTest
 	}
         
         @Test
-	public void testConvertLinearDynamicThreeVars()
-	{
-		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
-		SpaceExDocument test1 = SpaceExImporter.importModels(
-				path + "three_var.cfg",
-				path + "three_var.xml");
-		
-		Configuration c = flatten(test1);
-		BaseComponent ha = (BaseComponent)c.root;
-
-		StateflowSpPrinter sp = new StateflowSpPrinter();
-		AutomatonMode mode = ha.modes.get("running");
-		sp.ha = ha;
-		String s = sp.convertFlowToMatrix(mode);
-		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0 2.0 4.0 ;]";
-		Assert.assertEquals(s, result);
-	}
-         @Test
 	public void testConvertLinearDynamicTwoVars()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
@@ -972,12 +953,38 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
+                sp.ha = ha;
+                sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-		sp.ha = ha;
+                sp.getLinearMatrix(mode);
 		String s = sp.convertFlowToMatrix(mode);
-		String result = "[2.0 4.0 ;0 -3.0 ;]";
+		String result = "[2.0 4.0 ;0.0 -3.0 ;]";
 		Assert.assertEquals(s, result);    	
 	}
+        
+        @Test
+	public void testConvertLinearDynamicThreeVars()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "three_var.cfg",
+				path + "three_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                sp.ha = ha;
+                sp.getVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                sp.getLinearMatrix(mode);
+		String s = sp.convertFlowToMatrix(mode);
+		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0.0 2.0 4.0 ;]";
+		Assert.assertEquals(s, result);
+	}
+        
+         
         @Test
 	public void testConvertLinearDynamicOneVar()
 	{
@@ -991,10 +998,12 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
-                AutomatonMode mode = ha.modes.get("running");
                 sp.ha = ha;
-                String s = sp.convertFlowToMatrix(mode);
-                String result = "[1 ;]";
+                sp.getVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                sp.getLinearMatrix(mode);
+		String s = sp.convertFlowToMatrix(mode);
+                String result = "[1.0 ;]";
                 Assert.assertEquals(s, result);        	
 	}
          
@@ -1011,12 +1020,40 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
+                sp.ha = ha;
+                sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-		sp.ha = ha;
+                sp.getLinearMatrix(mode);
 		String s = sp.convertFlowToMatrix(mode);
-		String result = "[0 ;]";
+		String result = "[0.0 ;]";
 		Assert.assertEquals(s, result);     	
 	}
+         @Test
+	public void testConvertLinearDynamicTwoVarsOneInput()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		System.out.println(path);
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "two_var_one_input.cfg",
+				path + "two_var_one_input.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		StateflowSpPrinter sp = new StateflowSpPrinter();
+                sp.ha = ha;
+                sp.getVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                sp.getLinearMatrix(mode);
+		String A = sp.convertFlowToMatrix(mode);
+		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
+                Assert.assertEquals(A, resultA);
+                String B = sp.convertInputToMatrix(mode);
+		String resultB = "[-0.2 2.0 ;]";
+		Assert.assertEquals(B, resultB);
+		    	
+	}
+        
 	@Test
 	public void testConvertLinearDynamicTwoVarTwoHavocTwoInput()
 	{
@@ -1025,27 +1062,35 @@ public class ModelParserTest
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "four_var_two_input.cfg",
 				path + "four_var_two_input.xml");
-                /*
-                Configuration c = flatten(test1);
-                
+                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(test1);
+		
+		Configuration c = ConfigurationMaker.fromSpaceEx(test1, componentTemplates);
+
+                new FlattenAutomatonPass().runVanillaPass(c, null);
 		BaseComponent ha = (BaseComponent)c.root;
+            
+                //Configuration c = flatten(test1);
+                
+		//BaseComponent ha = (BaseComponent)c.root;
                 
 		StateflowSpPrinter sp = new StateflowSpPrinter();
+                sp.ha = ha;
+                sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-		sp.ha = ha;
+                sp.getLinearMatrix(mode);
                 // test A matrix
 		String A = sp.convertFlowToMatrix(mode);
-		String resultA = "[1 4.0 ;0.5 -3.0 ;]";
+		String resultA = "[1.0 4.0 0.0 0.0 ;0.5 -3.0 0.0 0.0 ;0.0 0.0 0.0 0.0 ;0.0 0.0 0.0 0.0 ;]";
 		Assert.assertEquals(A, resultA);  
                 // test B matrix
 		String B = sp.convertInputToMatrix(mode);
-		String resultB = "[0.5 -2.0 ;-0.2 3.0 ;]";
+		String resultB = "[0.5 -2.0 0.0 0.0 ;-0.2 3.0 0.0 0.0 ;]";
 		Assert.assertEquals(B, resultB);
                 // test A matrix
 		String C = sp.convertInvToMatrix(mode);
 		String resultC = "[1 2.0 ;0 1 ;]";
 		Assert.assertEquals(C, resultC);
-		*/
+		
 		
 	}
 	/*@Test
