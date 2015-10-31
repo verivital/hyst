@@ -993,53 +993,6 @@ public class ModelParserTest
 		}
     }
 	
-	@Test
-	public void testInputOutput()
-	{
-		// test model with input and output variables
-		String cfgPath = UNIT_BASEDIR + "comp_in_out/sys.cfg";
-		String xmlPath = UNIT_BASEDIR + "comp_in_out/sys.xml";
-		
-		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		
-		NetworkComponent nc = (NetworkComponent)config.root;
-		
-		BaseComponent bcX = (BaseComponent)nc.children.get("out_x_1").child;
-		BaseComponent bcY = (BaseComponent)nc.children.get("out_y_1").child;
-		
-		Assert.assertEquals("two variables in out_x component", 2, bcX.variables.size());
-		Assert.assertEquals("one defined flow in out_x component", 1, bcX.modes.values().iterator().next().flowDynamics.size());
-		
-		// also test AutomatonUtil.isOutputVariable()
-		Assert.assertTrue("x is an output variable of base component 'out_x_1'", AutomatonUtil.isOutputVariable(bcX,"x"));
-		Assert.assertTrue("y is NOT an output variable of base component 'out_x_1'", !AutomatonUtil.isOutputVariable(bcX,"y"));
-		
-		Assert.assertTrue("x is NOT an output variable of base component 'out_y_1'", !AutomatonUtil.isOutputVariable(bcY,"x"));
-		Assert.assertTrue("y is an output variable of base component 'out_y_1'", AutomatonUtil.isOutputVariable(bcY,"y"));
-	}
-	
-	@Test
-	public void testInputOutputError()
-	{
-		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
-		String cfgPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.cfg";
-		String xmlPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.xml";
-		
-		try
-		{
-			SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-			Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-			ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-			
-			Assert.fail("Validation exception not raised on invalid input / output automaton");
-		}
-		catch (AutomatonValidationException e)
-		{
-			// expected
-		}
-	}
         
         @Test
 	public void testConvertLinearDynamicTwoVars()
