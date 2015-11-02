@@ -16,15 +16,17 @@ public abstract class ExpressionPrinter
 			rv = printOperation((Operation) e);
 		else if (e instanceof Variable)
 			rv = printVariable((Variable) e);
+		else if (e instanceof MatrixExpression)
+			rv = printMatrix((MatrixExpression) e);
 		else
-			rv = printOther(e);
+			throw new RuntimeException("No default printer for expression of type " + e.getClass().getName());
 		
 		return rv;
 	}
 	
-	public String printOther(Expression e)
+	private String printMatrix(MatrixExpression m)
 	{
-		return e.toString();
+		return m.toString();
 	}
 	
 	public String printVariable(Variable v)
@@ -71,11 +73,15 @@ public abstract class ExpressionPrinter
 	 */
 	public String printOperation(Operation o)
 	{
-		String childrenStr = "";
+		StringBuilder sb = new StringBuilder();
+		sb.append(printOperator(o.op));
 		
 		for (Expression e : o.children)
-			childrenStr += " " + print(e);
+		{
+			sb.append(" ");
+			sb.append(print(e));
+		}
 		
-		return "(" + printOperator(o.op) + childrenStr + ")";
+		return "(" + sb.toString() + ")";
 	}
 }

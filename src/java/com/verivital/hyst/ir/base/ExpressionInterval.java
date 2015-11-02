@@ -35,7 +35,7 @@ public class ExpressionInterval
 			throw new AutomatonExportException("Attempted to define ExpressionInterval with null expression.");
 		
 		// only allow LINEAR and NONLINEAR operators (for now)
-		if (AutomatonUtil.checkExpressionOps(e, AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
+		if (!AutomatonUtil.expressionContainsAllowsOps(e, AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
 			throw new AutomatonExportException("ExpressionIntervals only allow linear and basic nonlinear operators: "
 					+ e.toDefaultString());
 		

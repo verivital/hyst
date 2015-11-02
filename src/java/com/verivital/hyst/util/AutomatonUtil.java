@@ -800,7 +800,7 @@ public abstract class AutomatonUtil
 	 * @param allowedClasses a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR, HAS_NONLINEAR
 	 * @return
 	 */
-	public static boolean checkExpressionOps(Expression e, byte ... allowedClasses)
+	public static boolean expressionContainsAllowsOps(Expression e, byte ... allowedClasses)
 	{
 		byte val = classifyExpressionOps(e);
 		

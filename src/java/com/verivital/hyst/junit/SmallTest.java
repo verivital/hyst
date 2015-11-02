@@ -16,6 +16,7 @@ import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Lut;
+import com.verivital.hyst.grammar.formula.MatrixExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -768,21 +769,10 @@ public class SmallTest
 		// 7.5 5.5
 		
 		double TOL = 1e-6;
-		Assert.assertTrue("Entry 0, 0 is correct", Math.abs(rv[0][0] - 2.0) < TOL);
-		Assert.assertTrue("Entry 0, 1 is correct", Math.abs(rv[0][1] - 1.0) < TOL);
-		Assert.assertTrue("Entry 1, 0 is correct", Math.abs(rv[1][0] - 7.5) < TOL);
-		Assert.assertTrue("Entry 1, 1 is correct", Math.abs(rv[1][1] - 5.5) < TOL);
-		
-		/*System.out.println("Estimated Jacobian:");
-		for (int y = 0; y < rv.length; ++y)
-		{
-			for (int x = 0; x < rv[0].length; ++x)
-			{
-				System.out.print(rv[y][x] + " ");
-			}
-			
-			System.out.println();
-		}*/
+		Assert.assertEquals("Entry 0, 0 is correct", 2.0, rv[0][0], TOL);
+		Assert.assertEquals("Entry 0, 1 is correct", 1.0, rv[0][1], TOL);
+		Assert.assertEquals("Entry 1, 0 is correct", 7.5, rv[1][0], TOL);
+		Assert.assertEquals("Entry 1, 1 is correct", 5.5, rv[1][1], TOL);
 	}
 	
 	@Test
@@ -843,7 +833,7 @@ public class SmallTest
 			String expStr = test.exp;
 			Expression e = FormulaParser.parseNumber(expStr);
 			
-			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.checkExpressionOps(e, test.classes)); 
+			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.expressionContainsAllowsOps(e, test.classes)); 
 		}
 	}
 	
@@ -860,6 +850,75 @@ public class SmallTest
 			System.out.println("LUT flow not parsed correctly: " + e);
 			Assert.fail("LUT flow not parsed correctly");
 		}
+	}
+	
+	/**
+	 * Test a 2-d LUT in flow
+	 */
+	@Test
+	public void testLut2d()
+	{
+		String data = "reshape([0.8,0.6,0.4,0.3,0.2,0.4,0.3,0.2,0.2,0.2,0.3,0.25,0.2,0.2,0.2,0.25,0.2,0.2,0.2,0.2],5,4)";
+		String breakPoints1 = "[800,1000,1500,2000,3000]";
+		String breakPoints2 = "[0.05,0.15,0.2,0.25]";
+		String lutExpStr = "lut([x,y], " + data + ", " + breakPoints1 + ", " + breakPoints2 + ")";
+		Expression e = FormulaParser.parseFlow("y' = " + lutExpStr);
+		
+		if (!e.asOperation().getRight().getClass().equals(Lut.class))
+		{
+			System.out.println("LUT flow not parsed correctly: " + e);
+			Assert.fail("LUT flow not parsed correctly");
+		}
+	}
+	
+	/**
+	 * Test matrix expressions (general n-dimensional arrays) 
+	 */
+	@Test
+	public void testMatrixExpression2d()
+	{
+		double TOL = 1e-9;
+		double[][] dblArray = {{1, 2}, {10, 20}, {100, 200} };
+		// 1 2 ; 10 20 ; 100 200
+		
+		Expression[][] expArray = {{new Constant(1), new Constant(2)},
+				{new Constant(10), new Constant(20)},
+				{new Constant(100), new Constant(200)}};
+		MatrixExpression m1 = new MatrixExpression(expArray);
+		
+		// the internal representation for 
+		String str = "reshape([1, 10, 100, 2, 20, 200],3,2)";
+		MatrixExpression m2 = (MatrixExpression)FormulaParser.parseNumber(str);
+		
+		String str2 = "[1 2 ; 10 20 ; 100 200]";
+		MatrixExpression m3 = (MatrixExpression)FormulaParser.parseNumber(str2);
+		
+		Expression[] expArray1d = {new Constant(1), new Constant(10), new Constant(100), 
+				new Constant(2), new Constant(20), new Constant(200)};
+		MatrixExpression m4 = new MatrixExpression(expArray1d, new int[]{3, 2});
+		
+		for (int y = 0; y < 3; ++y)
+		{
+			for (int x = 0; x < 2; ++x)
+			{
+				double val = dblArray[y][x];
+				
+				Assert.assertEquals("value in m1.get(" + y + ", " + x + ") was wrong", val, ((Constant)m1.get(y,x)).getVal(), TOL);
+				Assert.assertEquals("value in m2.get(" + y + ", " + x + ") was wrong", val, ((Constant)m2.get(y,x)).getVal(), TOL);
+				Assert.assertEquals("value in m3.get(" + y + ", " + x + ") was wrong", val, ((Constant)m3.get(y,x)).getVal(), TOL);
+				Assert.assertEquals("value in m4.get(" + y + ", " + x + ") was wrong", val, ((Constant)m4.get(y,x)).getVal(), TOL);
+			}
+		}
+	}
+	
+	/**
+	 * Test matrix expressions (general n-dimensional arrays) 
+	 */
+	@Test
+	public void testMatrixExpression3d()
+	{
+		String str = "reshape([1.0, 1.1, 1.2, ],3,2,2)";
+		// TODO
 	}
 }
 

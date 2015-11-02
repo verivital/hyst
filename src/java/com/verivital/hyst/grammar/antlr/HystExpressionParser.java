@@ -1,4 +1,4 @@
-// Generated from HystExpression.g4 by ANTLR 4.4
+// Generated from HystExpression.g4 by ANTLR 4.5
 package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class HystExpressionParser extends Parser {
-	static { RuntimeMetaData.checkVersion("4.4", RuntimeMetaData.VERSION); }
+	static { RuntimeMetaData.checkVersion("4.5", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
 	protected static final PredictionContextCache _sharedContextCache =
@@ -21,11 +21,6 @@ public class HystExpressionParser extends Parser {
 		RBRAC=10, COMMA=11, SEMICOLON=12, PLUS=13, MINUS=14, TIMES=15, DIV=16, 
 		POW=17, DOT=18, AND=19, OR=20, NOT=21, LESS=22, GREATER=23, LESSEQUAL=24, 
 		GREATEREQUAL=25, NOTEQUAL=26, EQUAL=27, EQUAL_RESET=28;
-	public static final String[] tokenNames = {
-		"<INVALID>", "WS", "'''", "'true'", "'false'", "NUM", "VAR", "'('", "')'", 
-		"'['", "']'", "','", "';'", "'+'", "'-'", "'*'", "'/'", "'^'", "'.'", 
-		"AND", "OR", "'!'", "'<'", "'>'", "'<='", "'>='", "'!='", "EQUAL", "':='"
-	};
 	public static final int
 		RULE_matrixRow = 0, RULE_matrixExpression = 1, RULE_functionExpression = 2, 
 		RULE_resetSubExpression = 3, RULE_resetExpression = 4, RULE_guardExpression = 5, 
@@ -40,11 +35,52 @@ public class HystExpressionParser extends Parser {
 		"timesDiv", "pow", "negativeUnary", "unary"
 	};
 
-	@Override
-	public String getGrammarFileName() { return "HystExpression.g4"; }
+	private static final String[] _LITERAL_NAMES = {
+		null, null, "'''", "'true'", "'false'", null, null, "'('", "')'", "'['", 
+		"']'", "','", "';'", "'+'", "'-'", "'*'", "'/'", "'^'", "'.'", null, null, 
+		"'!'", "'<'", "'>'", "'<='", "'>='", "'!='", null, "':='"
+	};
+	private static final String[] _SYMBOLIC_NAMES = {
+		null, "WS", "TICK", "TRUE", "FALSE", "NUM", "VAR", "LPAR", "RPAR", "LBRAC", 
+		"RBRAC", "COMMA", "SEMICOLON", "PLUS", "MINUS", "TIMES", "DIV", "POW", 
+		"DOT", "AND", "OR", "NOT", "LESS", "GREATER", "LESSEQUAL", "GREATEREQUAL", 
+		"NOTEQUAL", "EQUAL", "EQUAL_RESET"
+	};
+	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+
+	/**
+	 * @deprecated Use {@link #VOCABULARY} instead.
+	 */
+	@Deprecated
+	public static final String[] tokenNames;
+	static {
+		tokenNames = new String[_SYMBOLIC_NAMES.length];
+		for (int i = 0; i < tokenNames.length; i++) {
+			tokenNames[i] = VOCABULARY.getLiteralName(i);
+			if (tokenNames[i] == null) {
+				tokenNames[i] = VOCABULARY.getSymbolicName(i);
+			}
+
+			if (tokenNames[i] == null) {
+				tokenNames[i] = "<INVALID>";
+			}
+		}
+	}
 
 	@Override
-	public String[] getTokenNames() { return tokenNames; }
+	@Deprecated
+	public String[] getTokenNames() {
+		return tokenNames;
+	}
+
+	@Override
+
+	public Vocabulary getVocabulary() {
+		return VOCABULARY;
+	}
+
+	@Override
+	public String getGrammarFileName() { return "HystExpression.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -74,10 +110,10 @@ public class HystExpressionParser extends Parser {
 		public List<AddSubContext> addSub() {
 			return getRuleContexts(AddSubContext.class);
 		}
-		public List<TerminalNode> COMMA() { return getTokens(HystExpressionParser.COMMA); }
 		public AddSubContext addSub(int i) {
 			return getRuleContext(AddSubContext.class,i);
 		}
+		public List<TerminalNode> COMMA() { return getTokens(HystExpressionParser.COMMA); }
 		public TerminalNode COMMA(int i) {
 			return getToken(HystExpressionParser.COMMA, i);
 		}
@@ -103,12 +139,14 @@ public class HystExpressionParser extends Parser {
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << NUM) | (1L << VAR) | (1L << LPAR) | (1L << LBRAC) | (1L << MINUS))) != 0)) {
 				{
 				{
-				setState(40); addSub(0);
+				setState(40);
+				addSub(0);
 				setState(42);
 				_la = _input.LA(1);
 				if (_la==COMMA) {
 					{
-					setState(41); match(COMMA);
+					setState(41);
+					match(COMMA);
 					}
 				}
 
@@ -143,18 +181,18 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class MatrixContext extends MatrixExpressionContext {
-		public List<TerminalNode> SEMICOLON() { return getTokens(HystExpressionParser.SEMICOLON); }
+		public TerminalNode LBRAC() { return getToken(HystExpressionParser.LBRAC, 0); }
 		public List<MatrixRowContext> matrixRow() {
 			return getRuleContexts(MatrixRowContext.class);
-		}
-		public TerminalNode SEMICOLON(int i) {
-			return getToken(HystExpressionParser.SEMICOLON, i);
 		}
 		public MatrixRowContext matrixRow(int i) {
 			return getRuleContext(MatrixRowContext.class,i);
 		}
-		public TerminalNode LBRAC() { return getToken(HystExpressionParser.LBRAC, 0); }
 		public TerminalNode RBRAC() { return getToken(HystExpressionParser.RBRAC, 0); }
+		public List<TerminalNode> SEMICOLON() { return getTokens(HystExpressionParser.SEMICOLON); }
+		public TerminalNode SEMICOLON(int i) {
+			return getToken(HystExpressionParser.SEMICOLON, i);
+		}
 		public MatrixContext(MatrixExpressionContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -171,23 +209,28 @@ public class HystExpressionParser extends Parser {
 			_localctx = new MatrixContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(49); match(LBRAC);
-			setState(50); matrixRow();
+			setState(49);
+			match(LBRAC);
+			setState(50);
+			matrixRow();
 			setState(55);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==SEMICOLON) {
 				{
 				{
-				setState(51); match(SEMICOLON);
-				setState(52); matrixRow();
+				setState(51);
+				match(SEMICOLON);
+				setState(52);
+				matrixRow();
 				}
 				}
 				setState(57);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(58); match(RBRAC);
+			setState(58);
+			match(RBRAC);
 			}
 		}
 		catch (RecognitionException re) {
@@ -213,16 +256,16 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class FunctionContext extends FunctionExpressionContext {
+		public TerminalNode VAR() { return getToken(HystExpressionParser.VAR, 0); }
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
 		public List<AddSubContext> addSub() {
 			return getRuleContexts(AddSubContext.class);
 		}
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
-		public List<TerminalNode> COMMA() { return getTokens(HystExpressionParser.COMMA); }
-		public TerminalNode VAR() { return getToken(HystExpressionParser.VAR, 0); }
 		public AddSubContext addSub(int i) {
 			return getRuleContext(AddSubContext.class,i);
 		}
+		public List<TerminalNode> COMMA() { return getTokens(HystExpressionParser.COMMA); }
 		public TerminalNode COMMA(int i) {
 			return getToken(HystExpressionParser.COMMA, i);
 		}
@@ -242,21 +285,26 @@ public class HystExpressionParser extends Parser {
 			_localctx = new FunctionContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(60); match(VAR);
-			setState(61); match(LPAR);
+			setState(60);
+			match(VAR);
+			setState(61);
+			match(LPAR);
 			setState(70);
 			_la = _input.LA(1);
 			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << NUM) | (1L << VAR) | (1L << LPAR) | (1L << LBRAC) | (1L << MINUS))) != 0)) {
 				{
-				setState(62); addSub(0);
+				setState(62);
+				addSub(0);
 				setState(67);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==COMMA) {
 					{
 					{
-					setState(63); match(COMMA);
-					setState(64); addSub(0);
+					setState(63);
+					match(COMMA);
+					setState(64);
+					addSub(0);
 					}
 					}
 					setState(69);
@@ -266,7 +314,8 @@ public class HystExpressionParser extends Parser {
 				}
 			}
 
-			setState(72); match(RPAR);
+			setState(72);
+			match(RPAR);
 			}
 		}
 		catch (RecognitionException re) {
@@ -292,11 +341,11 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class ResetSubEqContext extends ResetSubExpressionContext {
+		public TerminalNode VAR() { return getToken(HystExpressionParser.VAR, 0); }
+		public TerminalNode EQUAL_RESET() { return getToken(HystExpressionParser.EQUAL_RESET, 0); }
 		public AddSubContext addSub() {
 			return getRuleContext(AddSubContext.class,0);
 		}
-		public TerminalNode EQUAL_RESET() { return getToken(HystExpressionParser.EQUAL_RESET, 0); }
-		public TerminalNode VAR() { return getToken(HystExpressionParser.VAR, 0); }
 		public ResetSubEqContext(ResetSubExpressionContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -308,14 +357,14 @@ public class HystExpressionParser extends Parser {
 		public List<AddSubContext> addSub() {
 			return getRuleContexts(AddSubContext.class);
 		}
+		public AddSubContext addSub(int i) {
+			return getRuleContext(AddSubContext.class,i);
+		}
 		public List<OpContext> op() {
 			return getRuleContexts(OpContext.class);
 		}
 		public OpContext op(int i) {
 			return getRuleContext(OpContext.class,i);
-		}
-		public AddSubContext addSub(int i) {
-			return getRuleContext(AddSubContext.class,i);
 		}
 		public ResetSubOpContext(ResetSubExpressionContext ctx) { copyFrom(ctx); }
 		@Override
@@ -336,26 +385,34 @@ public class HystExpressionParser extends Parser {
 				_localctx = new ResetSubEqContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(74); match(VAR);
-				setState(75); match(EQUAL_RESET);
-				setState(76); addSub(0);
+				setState(74);
+				match(VAR);
+				setState(75);
+				match(EQUAL_RESET);
+				setState(76);
+				addSub(0);
 				}
 				break;
 			case 2:
 				_localctx = new ResetSubOpContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(77); addSub(0);
-				setState(78); op();
-				setState(79); addSub(0);
+				setState(77);
+				addSub(0);
+				setState(78);
+				op();
+				setState(79);
+				addSub(0);
 				setState(85);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS) | (1L << GREATER) | (1L << LESSEQUAL) | (1L << GREATEREQUAL) | (1L << NOTEQUAL) | (1L << EQUAL))) != 0)) {
 					{
 					{
-					setState(80); op();
-					setState(81); addSub(0);
+					setState(80);
+					op();
+					setState(81);
+					addSub(0);
 					}
 					}
 					setState(87);
@@ -398,16 +455,16 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class ResetContext extends ResetExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
-		public List<TerminalNode> AND() { return getTokens(HystExpressionParser.AND); }
+		public List<ResetSubExpressionContext> resetSubExpression() {
+			return getRuleContexts(ResetSubExpressionContext.class);
+		}
 		public ResetSubExpressionContext resetSubExpression(int i) {
 			return getRuleContext(ResetSubExpressionContext.class,i);
 		}
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
+		public List<TerminalNode> AND() { return getTokens(HystExpressionParser.AND); }
 		public TerminalNode AND(int i) {
 			return getToken(HystExpressionParser.AND, i);
-		}
-		public List<ResetSubExpressionContext> resetSubExpression() {
-			return getRuleContexts(ResetSubExpressionContext.class);
 		}
 		public ResetContext(ResetExpressionContext ctx) { copyFrom(ctx); }
 		@Override
@@ -428,7 +485,8 @@ public class HystExpressionParser extends Parser {
 				_localctx = new ResetBlankContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(90); match(EOF);
+				setState(90);
+				match(EOF);
 				}
 				break;
 			case NUM:
@@ -439,22 +497,26 @@ public class HystExpressionParser extends Parser {
 				_localctx = new ResetContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(91); resetSubExpression();
+				setState(91);
+				resetSubExpression();
 				setState(96);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==AND) {
 					{
 					{
-					setState(92); match(AND);
-					setState(93); resetSubExpression();
+					setState(92);
+					match(AND);
+					setState(93);
+					resetSubExpression();
 					}
 					}
 					setState(98);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
-				setState(99); match(EOF);
+				setState(99);
+				match(EOF);
 				}
 				break;
 			default:
@@ -484,10 +546,10 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class GuardContext extends GuardExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
 		}
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public GuardContext(GuardExpressionContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -515,7 +577,8 @@ public class HystExpressionParser extends Parser {
 				_localctx = new GuardBlankContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(103); match(EOF);
+				setState(103);
+				match(EOF);
 				}
 				break;
 			case TRUE:
@@ -529,8 +592,10 @@ public class HystExpressionParser extends Parser {
 				_localctx = new GuardContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(104); or();
-				setState(105); match(EOF);
+				setState(104);
+				or();
+				setState(105);
+				match(EOF);
 				}
 				break;
 			default:
@@ -560,10 +625,10 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class InvariantContext extends InvariantExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
 		}
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public InvariantContext(InvariantExpressionContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -591,7 +656,8 @@ public class HystExpressionParser extends Parser {
 				_localctx = new InvariantBlankContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(109); match(EOF);
+				setState(109);
+				match(EOF);
 				}
 				break;
 			case TRUE:
@@ -605,8 +671,10 @@ public class HystExpressionParser extends Parser {
 				_localctx = new InvariantContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(110); or();
-				setState(111); match(EOF);
+				setState(110);
+				or();
+				setState(111);
+				match(EOF);
 				}
 				break;
 			default:
@@ -636,26 +704,26 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class FlowContext extends FlowExpressionContext {
+		public List<TerminalNode> VAR() { return getTokens(HystExpressionParser.VAR); }
 		public TerminalNode VAR(int i) {
 			return getToken(HystExpressionParser.VAR, i);
 		}
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
-		public List<AddSubContext> addSub() {
-			return getRuleContexts(AddSubContext.class);
-		}
-		public List<TerminalNode> AND() { return getTokens(HystExpressionParser.AND); }
+		public List<TerminalNode> EQUAL() { return getTokens(HystExpressionParser.EQUAL); }
 		public TerminalNode EQUAL(int i) {
 			return getToken(HystExpressionParser.EQUAL, i);
 		}
-		public List<TerminalNode> VAR() { return getTokens(HystExpressionParser.VAR); }
-		public List<TerminalNode> TICK() { return getTokens(HystExpressionParser.TICK); }
+		public List<AddSubContext> addSub() {
+			return getRuleContexts(AddSubContext.class);
+		}
 		public AddSubContext addSub(int i) {
 			return getRuleContext(AddSubContext.class,i);
 		}
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
+		public List<TerminalNode> TICK() { return getTokens(HystExpressionParser.TICK); }
 		public TerminalNode TICK(int i) {
 			return getToken(HystExpressionParser.TICK, i);
 		}
-		public List<TerminalNode> EQUAL() { return getTokens(HystExpressionParser.EQUAL); }
+		public List<TerminalNode> AND() { return getTokens(HystExpressionParser.AND); }
 		public TerminalNode AND(int i) {
 			return getToken(HystExpressionParser.AND, i);
 		}
@@ -696,56 +764,68 @@ public class HystExpressionParser extends Parser {
 				_localctx = new FlowBlankContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(115); match(EOF);
+				setState(115);
+				match(EOF);
 				}
 				break;
 			case VAR:
 				_localctx = new FlowContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(116); match(VAR);
+				setState(116);
+				match(VAR);
 				setState(118);
 				_la = _input.LA(1);
 				if (_la==TICK) {
 					{
-					setState(117); match(TICK);
+					setState(117);
+					match(TICK);
 					}
 				}
 
-				setState(120); match(EQUAL);
-				setState(121); addSub(0);
+				setState(120);
+				match(EQUAL);
+				setState(121);
+				addSub(0);
 				setState(131);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while (_la==AND) {
 					{
 					{
-					setState(122); match(AND);
-					setState(123); match(VAR);
+					setState(122);
+					match(AND);
+					setState(123);
+					match(VAR);
 					setState(125);
 					_la = _input.LA(1);
 					if (_la==TICK) {
 						{
-						setState(124); match(TICK);
+						setState(124);
+						match(TICK);
 						}
 					}
 
-					setState(127); match(EQUAL);
-					setState(128); addSub(0);
+					setState(127);
+					match(EQUAL);
+					setState(128);
+					addSub(0);
 					}
 					}
 					setState(133);
 					_errHandler.sync(this);
 					_la = _input.LA(1);
 				}
-				setState(134); match(EOF);
+				setState(134);
+				match(EOF);
 				}
 				break;
 			case FALSE:
 				_localctx = new FlowFalseContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(136); match(FALSE);
+				setState(136);
+				match(FALSE);
 				}
 				break;
 			default:
@@ -775,15 +855,15 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class DotVarContext extends DottedVarContext {
+		public List<TerminalNode> VAR() { return getTokens(HystExpressionParser.VAR); }
 		public TerminalNode VAR(int i) {
 			return getToken(HystExpressionParser.VAR, i);
 		}
 		public List<TerminalNode> DOT() { return getTokens(HystExpressionParser.DOT); }
-		public List<TerminalNode> VAR() { return getTokens(HystExpressionParser.VAR); }
-		public TerminalNode TICK() { return getToken(HystExpressionParser.TICK, 0); }
 		public TerminalNode DOT(int i) {
 			return getToken(HystExpressionParser.DOT, i);
 		}
+		public TerminalNode TICK() { return getToken(HystExpressionParser.TICK, 0); }
 		public DotVarContext(DottedVarContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -800,7 +880,8 @@ public class HystExpressionParser extends Parser {
 			_localctx = new DotVarContext(_localctx);
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(139); match(VAR);
+			setState(139);
+			match(VAR);
 			setState(144);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,15,_ctx);
@@ -808,8 +889,10 @@ public class HystExpressionParser extends Parser {
 				if ( _alt==1 ) {
 					{
 					{
-					setState(140); match(DOT);
-					setState(141); match(VAR);
+					setState(140);
+					match(DOT);
+					setState(141);
+					match(VAR);
 					}
 					} 
 				}
@@ -821,7 +904,8 @@ public class HystExpressionParser extends Parser {
 			switch ( getInterpreter().adaptivePredict(_input,16,_ctx) ) {
 			case 1:
 				{
-				setState(147); match(TICK);
+				setState(147);
+				match(TICK);
 				}
 				break;
 			}
@@ -850,10 +934,10 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class LocExpContext extends LocExpressionContext {
-		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public AndContext and() {
 			return getRuleContext(AndContext.class,0);
 		}
+		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public LocExpContext(LocExpressionContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -888,15 +972,18 @@ public class HystExpressionParser extends Parser {
 				_localctx = new LocExpContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(150); and();
-				setState(151); match(EOF);
+				setState(150);
+				and();
+				setState(151);
+				match(EOF);
 				}
 				break;
 			case EOF:
 				_localctx = new LocFalseContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(153); match(EOF);
+				setState(153);
+				match(EOF);
 				}
 				break;
 			default:
@@ -926,10 +1013,10 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class OrExpressionContext extends OrContext {
-		public TerminalNode OR() { return getToken(HystExpressionParser.OR, 0); }
 		public AndContext and() {
 			return getRuleContext(AndContext.class,0);
 		}
+		public TerminalNode OR() { return getToken(HystExpressionParser.OR, 0); }
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
 		}
@@ -962,16 +1049,20 @@ public class HystExpressionParser extends Parser {
 				_localctx = new OrExpressionContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(156); and();
-				setState(157); match(OR);
-				setState(158); or();
+				setState(156);
+				and();
+				setState(157);
+				match(OR);
+				setState(158);
+				or();
 				}
 				break;
 			case 2:
 				_localctx = new ToAndContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(160); and();
+				setState(160);
+				and();
 				}
 				break;
 			}
@@ -1010,12 +1101,12 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class AndExpressionContext extends AndContext {
+		public NotContext not() {
+			return getRuleContext(NotContext.class,0);
+		}
 		public TerminalNode AND() { return getToken(HystExpressionParser.AND, 0); }
 		public AndContext and() {
 			return getRuleContext(AndContext.class,0);
-		}
-		public NotContext not() {
-			return getRuleContext(NotContext.class,0);
 		}
 		public AndExpressionContext(AndContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1035,16 +1126,20 @@ public class HystExpressionParser extends Parser {
 				_localctx = new AndExpressionContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(163); not();
-				setState(164); match(AND);
-				setState(165); and();
+				setState(163);
+				not();
+				setState(164);
+				match(AND);
+				setState(165);
+				and();
 				}
 				break;
 			case 2:
 				_localctx = new ToNotContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(167); not();
+				setState(167);
+				not();
 				}
 				break;
 			}
@@ -1083,12 +1178,12 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class NotExpressionContext extends NotContext {
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public TerminalNode NOT() { return getToken(HystExpressionParser.NOT, 0); }
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
 		}
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
 		public NotExpressionContext(NotContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -1097,11 +1192,11 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class BoolParenthesesContext extends NotContext {
-		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
 		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public OrContext or() {
 			return getRuleContext(OrContext.class,0);
 		}
+		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
 		public BoolParenthesesContext(NotContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -1120,26 +1215,34 @@ public class HystExpressionParser extends Parser {
 				_localctx = new NotExpressionContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(170); match(NOT);
-				setState(171); match(LPAR);
-				setState(172); or();
-				setState(173); match(RPAR);
+				setState(170);
+				match(NOT);
+				setState(171);
+				match(LPAR);
+				setState(172);
+				or();
+				setState(173);
+				match(RPAR);
 				}
 				break;
 			case 2:
 				_localctx = new BoolParenthesesContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(175); match(LPAR);
-				setState(176); or();
-				setState(177); match(RPAR);
+				setState(175);
+				match(LPAR);
+				setState(176);
+				or();
+				setState(177);
+				match(RPAR);
 				}
 				break;
 			case 3:
 				_localctx = new ToCompareContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(179); compare();
+				setState(179);
+				compare();
 				}
 				break;
 			}
@@ -1231,42 +1334,48 @@ public class HystExpressionParser extends Parser {
 				_localctx = new EqualOpContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(182); match(EQUAL);
+				setState(182);
+				match(EQUAL);
 				}
 				break;
 			case LESS:
 				_localctx = new LessOpContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(183); match(LESS);
+				setState(183);
+				match(LESS);
 				}
 				break;
 			case LESSEQUAL:
 				_localctx = new LessEqualOpContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(184); match(LESSEQUAL);
+				setState(184);
+				match(LESSEQUAL);
 				}
 				break;
 			case GREATER:
 				_localctx = new GreaterOpContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(185); match(GREATER);
+				setState(185);
+				match(GREATER);
 				}
 				break;
 			case GREATEREQUAL:
 				_localctx = new GreaterEqualOpContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(186); match(GREATEREQUAL);
+				setState(186);
+				match(GREATEREQUAL);
 				}
 				break;
 			case NOTEQUAL:
 				_localctx = new NotEqualOpContext(_localctx);
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(187); match(NOTEQUAL);
+				setState(187);
+				match(NOTEQUAL);
 				}
 				break;
 			default:
@@ -1299,14 +1408,14 @@ public class HystExpressionParser extends Parser {
 		public List<AddSubContext> addSub() {
 			return getRuleContexts(AddSubContext.class);
 		}
+		public AddSubContext addSub(int i) {
+			return getRuleContext(AddSubContext.class,i);
+		}
 		public List<OpContext> op() {
 			return getRuleContexts(OpContext.class);
 		}
 		public OpContext op(int i) {
 			return getRuleContext(OpContext.class,i);
-		}
-		public AddSubContext addSub(int i) {
-			return getRuleContext(AddSubContext.class,i);
 		}
 		public BoolOpContext(CompareContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1349,17 +1458,22 @@ public class HystExpressionParser extends Parser {
 				_localctx = new BoolOpContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(190); addSub(0);
-				setState(191); op();
-				setState(192); addSub(0);
+				setState(190);
+				addSub(0);
+				setState(191);
+				op();
+				setState(192);
+				addSub(0);
 				setState(198);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 				while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << LESS) | (1L << GREATER) | (1L << LESSEQUAL) | (1L << GREATEREQUAL) | (1L << NOTEQUAL) | (1L << EQUAL))) != 0)) {
 					{
 					{
-					setState(193); op();
-					setState(194); addSub(0);
+					setState(193);
+					op();
+					setState(194);
+					addSub(0);
 					}
 					}
 					setState(200);
@@ -1372,14 +1486,16 @@ public class HystExpressionParser extends Parser {
 				_localctx = new ConstTrueContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(201); match(TRUE);
+				setState(201);
+				match(TRUE);
 				}
 				break;
 			case FALSE:
 				_localctx = new ConstFalseContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(202); match(FALSE);
+				setState(202);
+				match(FALSE);
 				}
 				break;
 			default:
@@ -1470,7 +1586,8 @@ public class HystExpressionParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(206); timesDiv(0);
+			setState(206);
+			timesDiv(0);
 			}
 			_ctx.stop = _input.LT(-1);
 			setState(216);
@@ -1489,8 +1606,10 @@ public class HystExpressionParser extends Parser {
 						pushNewRecursionContext(_localctx, _startState, RULE_addSub);
 						setState(208);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(209); match(PLUS);
-						setState(210); timesDiv(0);
+						setState(209);
+						match(PLUS);
+						setState(210);
+						timesDiv(0);
 						}
 						break;
 					case 2:
@@ -1499,8 +1618,10 @@ public class HystExpressionParser extends Parser {
 						pushNewRecursionContext(_localctx, _startState, RULE_addSub);
 						setState(211);
 						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-						setState(212); match(MINUS);
-						setState(213); timesDiv(0);
+						setState(212);
+						match(MINUS);
+						setState(213);
+						timesDiv(0);
 						}
 						break;
 					}
@@ -1535,12 +1656,12 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class MultiplicationContext extends TimesDivContext {
+		public TimesDivContext timesDiv() {
+			return getRuleContext(TimesDivContext.class,0);
+		}
 		public TerminalNode TIMES() { return getToken(HystExpressionParser.TIMES, 0); }
 		public PowContext pow() {
 			return getRuleContext(PowContext.class,0);
-		}
-		public TimesDivContext timesDiv() {
-			return getRuleContext(TimesDivContext.class,0);
 		}
 		public MultiplicationContext(TimesDivContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1550,12 +1671,12 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class DivisionContext extends TimesDivContext {
+		public TimesDivContext timesDiv() {
+			return getRuleContext(TimesDivContext.class,0);
+		}
 		public TerminalNode DIV() { return getToken(HystExpressionParser.DIV, 0); }
 		public PowContext pow() {
 			return getRuleContext(PowContext.class,0);
-		}
-		public TimesDivContext timesDiv() {
-			return getRuleContext(TimesDivContext.class,0);
 		}
 		public DivisionContext(TimesDivContext ctx) { copyFrom(ctx); }
 		@Override
@@ -1596,7 +1717,8 @@ public class HystExpressionParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(220); pow(0);
+			setState(220);
+			pow(0);
 			}
 			_ctx.stop = _input.LT(-1);
 			setState(230);
@@ -1615,8 +1737,10 @@ public class HystExpressionParser extends Parser {
 						pushNewRecursionContext(_localctx, _startState, RULE_timesDiv);
 						setState(222);
 						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-						setState(223); match(TIMES);
-						setState(224); pow(0);
+						setState(223);
+						match(TIMES);
+						setState(224);
+						pow(0);
 						}
 						break;
 					case 2:
@@ -1625,8 +1749,10 @@ public class HystExpressionParser extends Parser {
 						pushNewRecursionContext(_localctx, _startState, RULE_timesDiv);
 						setState(225);
 						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-						setState(226); match(DIV);
-						setState(227); pow(0);
+						setState(226);
+						match(DIV);
+						setState(227);
+						pow(0);
 						}
 						break;
 					}
@@ -1672,13 +1798,13 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class PowExpressionContext extends PowContext {
-		public NegativeUnaryContext negativeUnary() {
-			return getRuleContext(NegativeUnaryContext.class,0);
-		}
 		public PowContext pow() {
 			return getRuleContext(PowContext.class,0);
 		}
 		public TerminalNode POW() { return getToken(HystExpressionParser.POW, 0); }
+		public NegativeUnaryContext negativeUnary() {
+			return getRuleContext(NegativeUnaryContext.class,0);
+		}
 		public PowExpressionContext(PowContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -1707,7 +1833,8 @@ public class HystExpressionParser extends Parser {
 			_ctx = _localctx;
 			_prevctx = _localctx;
 
-			setState(234); negativeUnary();
+			setState(234);
+			negativeUnary();
 			}
 			_ctx.stop = _input.LT(-1);
 			setState(241);
@@ -1723,8 +1850,10 @@ public class HystExpressionParser extends Parser {
 					pushNewRecursionContext(_localctx, _startState, RULE_pow);
 					setState(236);
 					if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-					setState(237); match(POW);
-					setState(238); negativeUnary();
+					setState(237);
+					match(POW);
+					setState(238);
+					negativeUnary();
 					}
 					} 
 				}
@@ -1768,10 +1897,10 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class NegativeContext extends NegativeUnaryContext {
+		public TerminalNode MINUS() { return getToken(HystExpressionParser.MINUS, 0); }
 		public NegativeUnaryContext negativeUnary() {
 			return getRuleContext(NegativeUnaryContext.class,0);
 		}
-		public TerminalNode MINUS() { return getToken(HystExpressionParser.MINUS, 0); }
 		public NegativeContext(NegativeUnaryContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -1790,8 +1919,10 @@ public class HystExpressionParser extends Parser {
 				_localctx = new NegativeContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(244); match(MINUS);
-				setState(245); negativeUnary();
+				setState(244);
+				match(MINUS);
+				setState(245);
+				negativeUnary();
 				}
 				break;
 			case NUM:
@@ -1801,7 +1932,8 @@ public class HystExpressionParser extends Parser {
 				_localctx = new ToUnaryContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(246); unary();
+				setState(246);
+				unary();
 				}
 				break;
 			default:
@@ -1842,11 +1974,11 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class ParenthesesContext extends UnaryContext {
+		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public AddSubContext addSub() {
 			return getRuleContext(AddSubContext.class,0);
 		}
 		public TerminalNode RPAR() { return getToken(HystExpressionParser.RPAR, 0); }
-		public TerminalNode LPAR() { return getToken(HystExpressionParser.LPAR, 0); }
 		public ParenthesesContext(UnaryContext ctx) { copyFrom(ctx); }
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
@@ -1896,37 +2028,44 @@ public class HystExpressionParser extends Parser {
 				_localctx = new MatrixExpContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(249); matrixExpression();
+				setState(249);
+				matrixExpression();
 				}
 				break;
 			case 2:
 				_localctx = new FuncExpContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(250); functionExpression();
+				setState(250);
+				functionExpression();
 				}
 				break;
 			case 3:
 				_localctx = new NumberContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(251); match(NUM);
+				setState(251);
+				match(NUM);
 				}
 				break;
 			case 4:
 				_localctx = new DottedVariableContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(252); dottedVar();
+				setState(252);
+				dottedVar();
 				}
 				break;
 			case 5:
 				_localctx = new ParenthesesContext(_localctx);
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(253); match(LPAR);
-				setState(254); addSub(0);
-				setState(255); match(RPAR);
+				setState(253);
+				match(LPAR);
+				setState(254);
+				addSub(0);
+				setState(255);
+				match(RPAR);
 				}
 				break;
 			}
@@ -1944,29 +2083,37 @@ public class HystExpressionParser extends Parser {
 
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 15: return addSub_sempred((AddSubContext)_localctx, predIndex);
-		case 16: return timesDiv_sempred((TimesDivContext)_localctx, predIndex);
-		case 17: return pow_sempred((PowContext)_localctx, predIndex);
-		}
-		return true;
-	}
-	private boolean pow_sempred(PowContext _localctx, int predIndex) {
-		switch (predIndex) {
-		case 4: return precpred(_ctx, 2);
+		case 15:
+			return addSub_sempred((AddSubContext)_localctx, predIndex);
+		case 16:
+			return timesDiv_sempred((TimesDivContext)_localctx, predIndex);
+		case 17:
+			return pow_sempred((PowContext)_localctx, predIndex);
 		}
 		return true;
 	}
 	private boolean addSub_sempred(AddSubContext _localctx, int predIndex) {
 		switch (predIndex) {
-		case 0: return precpred(_ctx, 3);
-		case 1: return precpred(_ctx, 2);
+		case 0:
+			return precpred(_ctx, 3);
+		case 1:
+			return precpred(_ctx, 2);
 		}
 		return true;
 	}
 	private boolean timesDiv_sempred(TimesDivContext _localctx, int predIndex) {
 		switch (predIndex) {
-		case 2: return precpred(_ctx, 3);
-		case 3: return precpred(_ctx, 2);
+		case 2:
+			return precpred(_ctx, 3);
+		case 3:
+			return precpred(_ctx, 2);
+		}
+		return true;
+	}
+	private boolean pow_sempred(PowContext _localctx, int predIndex) {
+		switch (predIndex) {
+		case 4:
+			return precpred(_ctx, 2);
 		}
 		return true;
 	}

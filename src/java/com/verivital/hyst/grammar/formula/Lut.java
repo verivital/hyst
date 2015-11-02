@@ -13,68 +13,87 @@ import com.verivital.hyst.ir.AutomatonExportException;
  */
 public class Lut extends Expression 
 {
-	public String[] variables;
-	public MatrixExpression values; // at least 1x2, equal in size to breakpoints
-	public MatrixExpression breakpoints; // at least 1x2
+	public String[] variables; // length >= 1
+	public MatrixExpression table; 
+	public double[][] breakpoints; // height = number of variables, width[i] = length of dimension i of table
 
 	/**
 	 * Look up table constructor. Shallow copies of the passed-in arrays are stored
-	 * @param vars
-	 * @param vals
-	 * @param breakpoints
+	 * @param vars the variables
+	 * @param data the table data
+	 * @param breakpoints the breakpoints for each variable
 	 */
-	public Lut(String vars[], MatrixExpression vals, MatrixExpression breakpoints) 
+	public Lut(String vars[], MatrixExpression data, MatrixExpression ... breakpoints) 
 	{
 		int len = vars.length;
 		
-		if (len < 1 || len > 2)
-			throw new AutomatonExportException("Only 1 or 2d lookup tables are supported");
+		if (len == 0)
+			throw new AutomatonExportException("vars length must be at least 1");
 		
-		if (len == 1 && vals.length != 1)
-			throw new AutomatonExportException("values must be a 1-d matrix");
+		if (len != data.numDims())
+			throw new AutomatonExportException("nums vars must equal the number of dimensions in lookup table data");
 		
-		if (len == 1 && breakpoints.length != 1)
-			throw new AutomatonExportException("breakpoints must be a 1-d matrix");
+		if (len != breakpoints.length)
+			throw new AutomatonExportException("nums vars must equal the number of breakpoint arrays");
 		
-		if (len == 2 && vals.length < 2)
-			throw new AutomatonExportException("values must be a 2-d matrix");
+		this.variables = new String[len];
 		
-		if (len == 2 && breakpoints.length < 2)
-			throw new AutomatonExportException("breakpoints must be a 2-d matrix");
+		for (int v = 0; v < len; ++v)
+			this.variables[v] = vars[v];
 		
-		int h = vals.length;
-		int w = vals[0].length;
+		this.table = new MatrixExpression(data);
 		
-		if (h != breakpoints.length)
-			throw new AutomatonExportException("values and breakpoints matricies have different heights");
+		this.breakpoints = new double[len][];
+		for (int d = 0; d < len; ++d)
+		{
+			MatrixExpression bp = breakpoints[d];
+			
+			if (bp.numDims() != 1)
+				throw new RuntimeException("breakpoints must be 1-d arrays");
+			
+			if (bp.getDimWidth(0) < 2)
+				throw new RuntimeException("breakpoints[" + d + "] must be at least of size 2");
+					
+			if (bp.getDimWidth(0) + 1 != data.getDimWidth(d))
+				throw new RuntimeException("breakpoints[" + d + "] must be one less than data in table for that dimension");
+			
+			double[] row = new double[bp.getDimWidth(0)];
+			for (int i = 0; i < bp.getDimWidth(0); ++i)
+			{
+				Expression e = bp.get(i);
+				
+				if (!(e instanceof Constant))
+					throw new AutomatonExportException("breakpoint in LUT must be a numeric constant: " + e.toDefaultString());
+				
+				row[i] = ((Constant)e).getVal();
+			}
+			
+			this.breakpoints[d] = row;
+		}
+	}
+	
+	private static MatrixExpression[] convertBreakPoints(Lut l)
+	{
+		MatrixExpression[] bps = new MatrixExpression[l.breakpoints.length];
 		
-		if (w != breakpoints[0].length)
-			throw new AutomatonExportException("values and breakpoints matricies have different widths");
+		for (int i = 0; i < l.breakpoints.length; ++i)
+			bps[i] = new MatrixExpression(l.breakpoints[i]);
 		
-		this.variables = vars;
-		this.values = vals;
-		this.breakpoints = breakpoints;
+		return bps;
+	}
+
+	/**
+	 * Copy constuctore
+	 * @param lut
+	 */
+	public Lut(Lut l)
+	{		
+		this(l.variables, l.table, convertBreakPoints(l));
 	}
 
 	@Override
 	public Expression copy() 
 	{
-		// deep copy
-		String vars[] = new String[variables.length];
-		double vals[][] = new double[values.length][values[0].length];
-		double bps[][] = new double[breakpoints.length][breakpoints[0].length];
-		
-		for (int i = 0; i < variables.length; ++i)
-			vars[i] = variables[i];
-		
-		for (int i = 0; i < values.length; ++i)
-			for (int j = 0; j < values[0].length; ++j)
-				vals[i][j] = values[i][j];
-		
-		for (int i = 0; i < breakpoints.length; ++i)
-			for (int j = 0; j < breakpoints[0].length; ++j)
-				bps[i][j] = breakpoints[i][j];
-		
-		return new Lut(vars, vals, bps);
+		return new Lut(this);
 	}
 }

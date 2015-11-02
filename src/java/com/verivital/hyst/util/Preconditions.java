@@ -345,7 +345,7 @@ public class Preconditions
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
 				throw new PreconditionsFailedException("Initial states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -355,7 +355,7 @@ public class Preconditions
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
 				throw new PreconditionsFailedException("Forbidden states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -390,7 +390,7 @@ public class Preconditions
 			
 			for (AutomatonMode am : ha.modes.values())
 			{
-				if (!AutomatonUtil.checkExpressionOps(am.invariant, BASIC))
+				if (!AutomatonUtil.expressionContainsAllowsOps(am.invariant, BASIC))
 					throw new PreconditionsFailedException("Invariant in mode " + am.name + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							am.invariant.toDefaultString());
@@ -404,16 +404,15 @@ public class Preconditions
 						
 						byte cl = AutomatonUtil.classifyExpressionOps(e);
 						
-						if ((cl | AutomatonUtil.OPS_LUT) != 0)
+						cl &= ~BASIC; // turn off BASIC bits in the mask
+						
+						if (cl == AutomatonUtil.OPS_LUT)
 							rv = true; // should attempt to convert this
-						else
+						else if (cl != 0) // unsupported
 						{
-							cl &= ~BASIC; // turn off BASIC bits in the mask
-							
-							if (cl != 0) // unsupported
-								throw new PreconditionsFailedException("Flow for variable " + var + " in mode " + am.name + 
-										" of automaton " + ha.getPrintableInstanceName() + 
-										" contains unsupported expression operation: " + e.toDefaultString());
+							throw new PreconditionsFailedException("Flow for variable " + var + " in mode " + am.name + 
+									" of automaton " + ha.getPrintableInstanceName() + 
+									" contains unsupported expression operation: " + e.toDefaultString());
 						}
 					}
 				}
@@ -421,7 +420,7 @@ public class Preconditions
 			
 			for (AutomatonTransition at : ha.transitions)
 			{
-				if (!AutomatonUtil.checkExpressionOps(at.guard, BASIC))
+				if (!AutomatonUtil.expressionContainsAllowsOps(at.guard, BASIC))
 					throw new PreconditionsFailedException("Guard in transition " + at.from + "->" + at.to + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							at.guard.toDefaultString());
@@ -431,7 +430,7 @@ public class Preconditions
 					String var = entry.getKey();
 					Expression e = entry.getValue().getExpression();
 					
-					if (!AutomatonUtil.checkExpressionOps(e, BASIC))
+					if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
 						throw new PreconditionsFailedException("Reset in transition " + at.from + "->" + at.to +
 							"for variable " + var + " in automaton " + ha.getPrintableInstanceName() 
 							+ " contains unsupported expression operation: " + at.guard.toDefaultString());

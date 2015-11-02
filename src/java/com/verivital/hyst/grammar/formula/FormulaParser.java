@@ -15,7 +15,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 
 public class FormulaParser
 {
-	public static Expression getExpression(String text, String part)
+	private static Expression getExpression(String text, String part)
 	{
 		Expression rv = null;
 		HystExpressionParser par = null;
@@ -140,8 +140,6 @@ public class FormulaParser
 			throw new AutomatonExportException("Parser Error; " + msg + "; sample expected syntax: x >= 0 & x <= 1 | y >= x & y <= x + 1", e);
 		}
 		
-		checkSubExpressions(rv, DEFAULT, "invariant");
-		
 		return rv;
 	}
 	
@@ -160,8 +158,6 @@ public class FormulaParser
 			throw new AutomatonExportException("Parser Error; " + msg + "; sample expected syntax: x' := x + y & y' := 0", e);
 		}
 		
-		checkSubExpressions(rv, DEFAULT, "reset");
-		
 		return rv;
 	}
 	
@@ -179,8 +175,6 @@ public class FormulaParser
 			
 			throw new AutomatonExportException("Parser Error; " + msg + "; sample expected syntax: x >= 0 & x <= 1 | y >= x & y <= x + 1", e);
 		}
-		
-		checkSubExpressions(rv, DEFAULT, "guard");
 		
 		return rv;
 	}
@@ -218,7 +212,6 @@ public class FormulaParser
 		try
 		{
 			rv = getExpression(text, "initial/forbidden");
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
