@@ -1011,7 +1011,7 @@ public class ModelParserTest
                 sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
-		String s = sp.convertFlowToMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[2.0 4.0 ;0.0 -3.0 ;]";
 		Assert.assertEquals(s, result);    	
 	}
@@ -1033,7 +1033,7 @@ public class ModelParserTest
                 sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
-		String s = sp.convertFlowToMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0.0 2.0 4.0 ;]";
 		Assert.assertEquals(s, result);
 	}
@@ -1056,7 +1056,7 @@ public class ModelParserTest
                 sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
-		String s = sp.convertFlowToMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
                 String result = "[1.0 ;]";
                 Assert.assertEquals(s, result);        	
 	}
@@ -1078,7 +1078,7 @@ public class ModelParserTest
                 sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
-		String s = sp.convertFlowToMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[0.0 ;]";
 		Assert.assertEquals(s, result);     	
 	}
@@ -1099,10 +1099,10 @@ public class ModelParserTest
                 sp.getVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
-		String A = sp.convertFlowToMatrix(mode);
+		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
                 Assert.assertEquals(A, resultA);
-                String B = sp.convertInputToMatrix(mode);
+                String B = sp.convertInputToBMatrix(mode);
 		String resultB = "[-0.2 2.0 ;]";
 		Assert.assertEquals(B, resultB);
 		    	
@@ -1133,19 +1133,18 @@ public class ModelParserTest
 		AutomatonMode mode = ha.modes.get("running");
                 sp.getLinearMatrix(mode);
                 // test A matrix
-		String A = sp.convertFlowToMatrix(mode);
-		String resultA = "[1.0 4.0 0.0 0.0 ;0.5 -3.0 0.0 0.0 ;0.0 0.0 0.0 0.0 ;0.0 0.0 0.0 0.0 ;]";
+		String A = sp.convertFlowToAMatrix(mode);
+		String resultA = "[1.0 4.0 ;0.5 -3.0 ;]";
 		Assert.assertEquals(A, resultA);  
                 // test B matrix
-		String B = sp.convertInputToMatrix(mode);
-		String resultB = "[0.5 -2.0 0.0 0.0 ;-0.2 3.0 0.0 0.0 ;]";
+		String B = sp.convertInputToBMatrix(mode);
+		String resultB = "[0.5 -2.0 ;-0.2 3.0 ;]";
 		Assert.assertEquals(B, resultB);
                 // test A matrix
 		String C = sp.convertInvToMatrix(mode);
 		String resultC = "[1 2.0 ;0 1 ;]";
 		Assert.assertEquals(C, resultC);
-		
-		
+			
 	}
 	/*@Test
     public void testVariableRenaming() 

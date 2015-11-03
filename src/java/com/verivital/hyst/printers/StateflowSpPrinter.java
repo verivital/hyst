@@ -76,11 +76,7 @@ public class StateflowSpPrinter extends ToolPrinter {
     // random counter (how many random values are needed at one time?)
     private int m_randoms;
     private String coeff = "0";
-    private String coeffInput = "0";
     private boolean found = false;
-    //private String invCoeff = "0";
-    private boolean invFound = false;
-    private boolean first = false;
     public LinkedHashMap <String, Integer> varID;
     public double [][] linearMatrix; 
 
@@ -247,7 +243,9 @@ public class StateflowSpPrinter extends ToolPrinter {
 
         //proxy = factory.getProxy();
     }    
-   
+    /**
+    * merge all variables and constants 
+    */
     public void getVarID(BaseComponent ha) 
     {
             varID = new LinkedHashMap<String, Integer>(); 
@@ -257,10 +255,27 @@ public class StateflowSpPrinter extends ToolPrinter {
             for (String c : ha.constants.keySet())
                     varID.put(c, id++);  
     }
-    
+    /**
+    * return the size of A matrix depending on a set of variable X 
+    */
+    public int getAMatrixSize(AutomatonMode m) 
+    {
+            Integer size = m.flowDynamics.keySet().size();
+            for (String v : ha.variables) {			                       
+                    if (m.flowDynamics.containsKey(v) && m.flowDynamics.get(v).asExpression().equals(new Constant(0))) {
+                            size = size - 1;
+                    } 
+            }
+            if (m.flowDynamics.keySet().contains("t")){
+                    size = size - 1;
+            }
+            return size;
+    }
+    /**
+    * set general A matrix for each mode
+    */
     public void getLinearMatrix(AutomatonMode m) {
             int size = varID.size();
-            //linearMatrix = new double [3][3];
             int i = 0;
             linearMatrix = new double[ha.variables.size()][size];
             for (ExpressionInterval ei : m.flowDynamics.values()){
@@ -268,7 +283,6 @@ public class StateflowSpPrinter extends ToolPrinter {
                     getCoefficient(i,e);
                     i++;
             }
-        //return linearMatrix;
     }
     
     
@@ -281,8 +295,7 @@ public class StateflowSpPrinter extends ToolPrinter {
                     Operation o = (Operation) e;
                     if (o.op == Operator.MULTIPLY) {
                             Expression l = o.getLeft();
-                            Expression r = o.getRight();
-                            //extract input coefficient                                
+                            Expression r = o.getRight();                             
                             if (r instanceof Variable && l instanceof Constant) {
                                     linearMatrix[i][varID.get(r.toString())] = ((Constant) l).getVal();
                                     if (o.getParent() != null) {
@@ -308,33 +321,22 @@ public class StateflowSpPrinter extends ToolPrinter {
                     }
             }
 	}
-    
-    public String FlowToMatrix(AutomatonMode m) {
-            String rv = "";
-
-            for (ExpressionInterval ei : m.flowDynamics.values()){
-                    Expression e = ei.getExpression();
-                    rv = rv + e.toString()+ ";\n";
-            }
-            rv = rv + ";"; 
-
-            return rv;
-    } 
     /**
     * 
     * 
-    * @return the dynamic matrix A for each location
+    * 
+    * @return the dynamic matrix A of the set of variable X
     */
-	public String convertFlowToMatrix(AutomatonMode m) {
+	public String convertFlowToAMatrix(AutomatonMode m) {
 		String rv = "";
-                Integer size = ha.variables.size();
+                //Integer size = ha.variables.size();
+                Integer size = getAMatrixSize(m);
                 for (int i = 0; i < size; i++){
                         for (int j = 0; j < size; j++)  {
-                                //getCoefficient(c, e);
                                 rv = rv +  Double.toString(linearMatrix[j][i]) + " ";
                         }
                         rv = rv + ";";
-                }
+                    }
 		rv = "[" + rv + "]";
 		return rv;
 	}
@@ -342,20 +344,25 @@ public class StateflowSpPrinter extends ToolPrinter {
     * 
     /**
     * 	
-    * @return input matrix B for each location
+    * @return non zero input matrix B for each location 
     */
-	// TODO: please have this actually construct a java object of a matrix, this will make our lives much easier
-        public String convertInputToMatrix(AutomatonMode m) {
+        public String convertInputToBMatrix(AutomatonMode m) {
 		String rv = "";
-                Integer colLength = ha.variables.size();
-                Integer rowLength = ha.variables.size() + ha.constants.size();
-                if (rowLength > colLength){
-                        for (int j = colLength; j < rowLength; j++){
-                                for (int i = 0; i < colLength; i++)  {
-                                        //getCoefficient(c, e);
-                                        rv = rv +  Double.toString(linearMatrix[i][j]) + " ";
+                Integer rowLength = getAMatrixSize(m);
+                boolean allzero = true;
+                String tmp = "";
+                Integer colLength = ha.variables.size() + ha.constants.size();
+                if (colLength > ha.variables.size()){
+                        for (int j = ha.variables.size(); j < colLength; j++){                           
+                                for (int i = 0; i < rowLength; i++)  {
+                                        tmp = tmp +  Double.toString(linearMatrix[i][j]) + " ";
+                                        if (linearMatrix[i][j] != 0 )
+                                                allzero = false;    
                                 }
-                                rv = rv + ";";
+                                if (!allzero)
+                                    rv = rv + tmp + ";";
+                                allzero = true;
+                                tmp = "";                    
                         }
                 }
 		rv = "[" + rv + "]";
@@ -377,18 +384,18 @@ public class StateflowSpPrinter extends ToolPrinter {
 				//if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
 					
 					Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
-                                        for (String s : m.flowDynamics.keySet()){
-                                                getInvCoefficient(s, subEquality.asOperation().getRight());
-                                                rv = rv + coeff + " ";
-                                                found = false;
-                                                coeff = "0";
-                                                
+                                        for (String s : ha.variables){
+                                                if (varID.get(s) < getAMatrixSize(m)){
+                                                        getInvCoefficient(s, subEquality.asOperation().getRight());
+                                                        rv = rv + coeff + " ";
+                                                        found = false;
+                                                        coeff = "0";
+                                                }
                                         }
                                         rv = rv + ";";
 					// TODO: really need to have objects for the vectors and matrices around, we can find this coefficient of 1
 					// but now how do we know where to set it...?
-                        }
-                        
+                        }                       
 
 		}
 		rv = "[" + rv + "]";
@@ -401,9 +408,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 			if (e.toString().equals(v)) {
 				return e.getParent();
 			}
-			else {
-                            
-                            
+			else {                     
 				return null;
 			}
 		}
@@ -437,8 +442,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 				Operation o = (Operation) e;
 				if (o.op == Operator.MULTIPLY) {
 					Expression l = o.getLeft();
-					Expression r = o.getRight();
-                                        //extract input coefficient                                
+					Expression r = o.getRight();                          
                                         if (r instanceof Variable && l instanceof Constant) {
 						if (r.toString().equals(v)) {
 							coeff = Double.toString(((Constant) l).getVal());

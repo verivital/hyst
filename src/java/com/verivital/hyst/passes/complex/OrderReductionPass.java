@@ -85,25 +85,27 @@ public class OrderReductionPass extends TransformationPass
 	        
 	        // todo: refactor, move to stateflow printer
 	        // todo: test to ensure order of this vector is the same as the matrix below, could be ensured by construction if done in matrix construction function
-	        String variableString = "";
-	        for (String v : ha.variables) {
-	        	variableString = variableString + " " + v;
-	        }
-	        
-	        proxy.eval("syms " + variableString);
-	        proxy.eval("X = [" + variableString + "]");
-	        
-	        for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
+	         for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
+                        // declare x variable
+                        String variableString = "";
+                        for (String v : ha.variables) {
+                                if (sp.varID.get(v) < sp.getAMatrixSize(e.getValue()))
+                                        variableString = variableString + " " + v;
+                        }
+
+                        proxy.eval("syms " + variableString);
+                        proxy.eval("X = [" + variableString + "]");
+                        
                         sp.getLinearMatrix(e.getValue());
-	        	String matlabAMatrix = sp.convertFlowToMatrix(e.getValue());
+	        	String matlabAMatrix = sp.convertFlowToAMatrix(e.getValue());
 	        	proxy.eval("A_" + e.getKey() + " = " + matlabAMatrix + ";");
 	        	proxy.eval("A_" + e.getKey() + " * X.'");
 	        	
-	        	String matlabBMatrix = sp.convertInputToMatrix(e.getValue());
-	        	proxy.eval("B_" + e.getKey() + " = " + matlabBMatrix + ";");
+	        	String matlabBMatrix = sp.convertInputToBMatrix(e.getValue());
+	        	proxy.eval("B_" + e.getKey() + " = " + matlabBMatrix + "';");
 	        	
 	        	String matlabCMatrix = sp.convertInvToMatrix(e.getValue());
-	        	proxy.eval("C_" + e.getKey() + " = " + matlabCMatrix + "';");
+	        	proxy.eval("C_" + e.getKey() + " = " + matlabCMatrix + ";");
 	        }
 	        
 	        // TODO: get inputs, I guess these are going to be constants from looking at the example model (e.g., u has constant dynamics for building) ; do the same dynamics matrix function to get the B vector, etc.
