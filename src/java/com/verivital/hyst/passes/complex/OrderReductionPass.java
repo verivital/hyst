@@ -81,8 +81,10 @@ public class OrderReductionPass extends TransformationPass
 		try {
 			proxy = factory.getProxy();
 			
-			//Display 'hello world' just like when using the demo
 	        proxy.eval("disp('hello world'); disp('test123'); clock");
+                proxy.eval("[path_parent,path_current] = fileparts(pwd)");
+                proxy.eval("if ~strcmp(path_current, 'pass_order_reduction') cd ./matlab/pass_order_reduction; end");
+
 	        
 	        // todo: refactor, move to stateflow printer
 	        // todo: test to ensure order of this vector is the same as the matrix below, could be ensured by construction if done in matrix construction function
@@ -116,6 +118,11 @@ public class OrderReductionPass extends TransformationPass
                         
                         String inputBound = sp.parseInitialInputBound(e.getValue());
 	        	proxy.eval("ib_" + e.getKey() + " = " + inputBound+ ";");
+                        
+                        
+                        proxy.eval("sys_" + e.getKey() + " = ss(" + "A_" + e.getKey() + ", " + "B_" + e.getKey() + ", " + "C_" + e.getKey() + ", " +  "0)");
+                        String cmd_string = "[sys_r,lb_r,ub_r,e] = find_specified_reduced_model(sys_"+ e.getKey()+ ",lb_" + e.getKey()+",ub_" + e.getKey()+",ib_" + e.getKey()+ "," + reducedOrder+")";
+                        proxy.eval(cmd_string); 
                         
 	        }
 	        
