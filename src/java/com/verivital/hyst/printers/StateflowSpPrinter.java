@@ -7,6 +7,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -14,6 +15,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.util.RangeExtractor;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -474,7 +476,94 @@ public class StateflowSpPrinter extends ToolPrinter {
 			}
 		}
 	}
-   
+    
+        
+    public String parseInitialLowerBound(AutomatonMode m){
+            String rv = "";
+            for (Expression ex: config.init.values()){
+                TreeMap <String, Interval> ranges =  getBound(ex);
+                for (String s : ha.variables)
+                {
+                        if (varID.get(s) < getAMatrixSize(m)){
+                                for (Entry<String, Interval> e : ranges.entrySet())
+                                {
+                                        if (e.getKey().equals(s)) 
+                                            rv = rv + Double.toString(e.getValue().min) + " ";
+                                }
+                        }
+                }
+                rv =  rv +";";             	
+            }
+            rv = "[" + rv + "]"; 
+            return rv;
+    } 
+    public String parseInitialUpperBound(AutomatonMode m){
+            String rv = "";
+            for (Expression ex: config.init.values()){
+                TreeMap <String, Interval> ranges =  getBound(ex);
+                for (String s : ha.variables)
+                {
+                        if (varID.get(s) < getAMatrixSize(m)){
+                                for (Entry<String, Interval> e : ranges.entrySet())
+                                {
+                                        if (e.getKey().equals(s)) 
+                                            rv = rv + Double.toString(e.getValue().max) + " ";
+                                }
+                        }
+                }
+                rv =  rv +";";             	
+            }
+            rv = "[" + rv + "]"; 
+            return rv;
+    }  
+    public String parseInitialInputBound(AutomatonMode m){
+            String rv = "";
+            boolean allzero = true;
+            for (Expression ex: config.init.values()){
+                TreeMap <String, Interval> ranges =  getBound(ex);
+                for (String s : ha.constants.keySet())
+                {
+                        for (int i = 0; i < getAMatrixSize(m); i++){
+                            if (linearMatrix[i][varID.get(s)] != 0 )
+                                                allzero = false;  
+                        }                 
+                        if (!allzero){
+                                for (Entry<String, Interval> e : ranges.entrySet())
+                                {
+                                        if (e.getKey().equals(s)) 
+                                            rv = rv + Double.toString(e.getValue().min) + " " + Double.toString(e.getValue().max) + " ";
+                                }
+                                rv =  rv +";";     
+                        }
+                        allzero = true;
+                }                   	
+            }
+            rv = "[" + rv + "]"; 
+            return rv;
+    }
+    /**
+    * 
+    * @return 
+    */
+    private TreeMap<String,Interval> getBound(Expression ex)          
+    {
+            TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getVariableRanges(ex, ranges);
+		} 
+		catch (RangeExtractor.EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (RangeExtractor.ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+            
+            return ranges;    
+    }    
     /**
     * 
     * @return modeName to id for non-semantics preservation converter

@@ -75,7 +75,8 @@ public class OrderReductionPass extends TransformationPass
 
         StateflowSpPrinter sp = new StateflowSpPrinter();
         sp.ha = ha;
-        sp.getVarID(ha);    
+        sp.setConfig(config);
+        sp.getVarID(ha); 
         MatlabProxy proxy;
 		try {
 			proxy = factory.getProxy();
@@ -106,6 +107,16 @@ public class OrderReductionPass extends TransformationPass
 	        	
 	        	String matlabCMatrix = sp.convertInvToMatrix(e.getValue());
 	        	proxy.eval("C_" + e.getKey() + " = " + matlabCMatrix + ";");
+                        
+                        String lowerBound = sp.parseInitialLowerBound(e.getValue());
+	        	proxy.eval("lb_" + e.getKey() + " = " + lowerBound + ";");
+                        
+                        String upperBound = sp.parseInitialUpperBound(e.getValue());
+	        	proxy.eval("ub_" + e.getKey() + " = " + upperBound+ ";");
+                        
+                        String inputBound = sp.parseInitialInputBound(e.getValue());
+	        	proxy.eval("ib_" + e.getKey() + " = " + inputBound+ ";");
+                        
 	        }
 	        
 	        // TODO: get inputs, I guess these are going to be constants from looking at the example model (e.g., u has constant dynamics for building) ; do the same dynamics matrix function to get the B vector, etc.
