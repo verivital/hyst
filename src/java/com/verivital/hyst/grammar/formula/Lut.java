@@ -30,7 +30,7 @@ public class Lut extends Expression
 		if (len == 0)
 			throw new AutomatonExportException("vars length must be at least 1");
 		
-		if (len != data.numDims())
+		if (len != data.getNumDims())
 			throw new AutomatonExportException("nums vars must equal the number of dimensions in lookup table data");
 		
 		if (len != breakpoints.length)
@@ -48,14 +48,15 @@ public class Lut extends Expression
 		{
 			MatrixExpression bp = breakpoints[d];
 			
-			if (bp.numDims() != 1)
+			if (bp.getNumDims() != 1)
 				throw new RuntimeException("breakpoints must be 1-d arrays");
 			
 			if (bp.getDimWidth(0) < 2)
 				throw new RuntimeException("breakpoints[" + d + "] must be at least of size 2");
 					
-			if (bp.getDimWidth(0) + 1 != data.getDimWidth(d))
-				throw new RuntimeException("breakpoints[" + d + "] must be one less than data in table for that dimension");
+			if (bp.getDimWidth(0) != data.getDimWidth(d))
+				throw new RuntimeException("breakpoints[" + d + "] size(" + bp.getDimWidth(0) + 
+						") must be equal to width of data in table for that dimension (" + data.getDimWidth(d) + ")");
 			
 			double[] row = new double[bp.getDimWidth(0)];
 			for (int i = 0; i < bp.getDimWidth(0); ++i)

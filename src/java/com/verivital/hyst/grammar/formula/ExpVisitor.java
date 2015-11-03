@@ -380,11 +380,12 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		
 		MatrixExpression data = (MatrixExpression)(visit(args.get(0)));
 		
-		if (data.numDims() != 1)
-			throw new AutomatonExportException("Function 'reshape' expects fist argument to be a 1-d matrix. Got: " 
+		if (data.getNumDims() != 1)
+			throw new AutomatonExportException("Function 'reshape' expects fist argument to be a 1-d matrix. Instead got " +
+					data.getNumDims() + "-d data: " 
 					+ data.toDefaultString());
 		
-		Expression[] expressions = new Expression[data.numDims()];
+		Expression[] expressions = new Expression[data.getDimWidth(0)];
 		
 		for (int i = 0; i < data.getDimWidth(0); ++i)
 			expressions[i] = data.get(i);
@@ -419,7 +420,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		
 		MatrixExpression vars = (MatrixExpression)(visit(args.get(0)));
 		
-		if (vars.numDims() != 1)
+		if (vars.getNumDims() != 1)
 			throw new AutomatonExportException("Function 'lut' expects fist argument to be a 1-d list of variables");
 		
 		String[] varList = new String[vars.getDimWidth(0)];

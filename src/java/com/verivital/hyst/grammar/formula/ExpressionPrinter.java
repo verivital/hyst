@@ -1,5 +1,7 @@
 package com.verivital.hyst.grammar.formula;
 
+import com.verivital.hyst.ir.AutomatonExportException;
+
 
 
 public abstract class ExpressionPrinter
@@ -19,22 +21,31 @@ public abstract class ExpressionPrinter
 		else if (e instanceof MatrixExpression)
 			rv = printMatrix((MatrixExpression) e);
 		else
-			throw new RuntimeException("No default printer for expression of type " + e.getClass().getName());
+		{
+			try
+			{
+				rv = e.toString();
+			}
+			catch (AutomatonExportException ex)
+			{
+				throw new RuntimeException("No default printer for expression of type " + e.getClass().getName());
+			}
+		}
 		
 		return rv;
 	}
-	
-	private String printMatrix(MatrixExpression m)
+
+	protected String printMatrix(MatrixExpression m)
 	{
-		return m.toString();
+		return m.toString(this);
 	}
 	
-	public String printVariable(Variable v)
+	protected String printVariable(Variable v)
 	{
 		return v.name;
 	}
 	
-	public String printConstant(Constant c)
+	protected String printConstant(Constant c)
 	{
 		String rv = null;
 		
@@ -48,17 +59,17 @@ public abstract class ExpressionPrinter
 		return rv;
 	}
 	
-	public String printConstantValue(double d)
+	protected String printConstantValue(double d)
 	{
 		return "" + d;
 	}
 	
-	public String printTrue()
+	protected String printTrue()
 	{
 		return "true";
 	}
 	
-	public String printFalse()
+	protected String printFalse()
 	{
 		return "false";
 	}
@@ -71,7 +82,7 @@ public abstract class ExpressionPrinter
 	 * @param o
 	 * @return
 	 */
-	public String printOperation(Operation o)
+	protected String printOperation(Operation o)
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append(printOperator(o.op));

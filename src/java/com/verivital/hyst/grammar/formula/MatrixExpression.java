@@ -20,6 +20,8 @@ public class MatrixExpression extends Expression
 	private int[] sizes; // the size of each dimension, x y z
 	private Expression[] data; // the data for each cell (should be length size[0] * size[1] * ...)
 	
+	// internally, the data array is in the same order as the call to reshape()
+	
 	/**
 	 * Copy constructor
 	 * @param other
@@ -66,25 +68,42 @@ public class MatrixExpression extends Expression
 		if (data.length == 0 || data[0].length == 0)
 			throw new AutomatonExportException("Matrix width must be at least 1");
 		
-		// sizes order is from last index to first index
-		sizes = new int[2];
-		sizes[0] = data[0].length; // arg!
-		sizes[1] = data.length;
+		int total;
 		
-		int total = sizes[0] * sizes[1];
+		if (data.length == 1)
+		{
+			// its acutally a 1-d matrix 
+			sizes = new int[1];
+			sizes[0] = data[0].length;
+			
+			total = sizes[0];
+		}
+		else
+		{
+			// sizes order is from last index to first index
+			sizes = new int[2];
+			sizes[0] = data.length;
+			sizes[1] = data[0].length;
+			
+			total = sizes[0] * sizes[1];
+		}
+		
 		this.data = new Expression[total];
 		int index = 0;
 		
-		for (int r = 0; r < data.length; ++r)
+		int numRows = data.length;
+		int numCols = data[0].length;
+		
+		for (int col = 0; col < numCols; ++col)
 		{
-			int w = data[r].length;
-			
-			if (w != sizes[0])
-				throw new AutomatonExportException("Matrix width mismatch: row " + r + " is of length " + w 
-						+ " but expected " + sizes[0]);
-			
-			for (int c = 0; c < w; ++c)
-				this.data[index++] = data[r][c].copy();
+			for (int row = 0; row < numRows; ++row)
+			{
+				if (col == 0 && data[row].length != numCols)
+					throw new AutomatonExportException("Passed-in Expression[][] is not square, expected " + numCols 
+							+ " columns in row #" + row + ", but instead got " + data[row].length);
+				
+				this.data[index++] = data[row][col].copy();
+			}
 		}
 	}
 	
@@ -121,7 +140,7 @@ public class MatrixExpression extends Expression
 		return new MatrixExpression(data, sizes);
 	}
 	
-	public int numDims()
+	public int getNumDims()
 	{
 		return sizes.length;
 	}
@@ -133,33 +152,116 @@ public class MatrixExpression extends Expression
 	
 	/**
 	 * Get an expression from this matrix
-	 * @param index the index for each dimension, ordered from largest offset to smallest offset
+	 * @param indices the index for each dimension, ordered from largest offset to smallest offset
 	 * @return
 	 */
-	public Expression get(int ... indicies)
+	public Expression get(int ... indices)
 	{
-		if (sizes.length != indicies.length)
-			throw new IndexOutOfBoundsException("Expected " + sizes.length + " indicies, got " + indicies.length);
-		
+		if (sizes.length != indices.length)
+			throw new IndexOutOfBoundsException("Expected " + sizes.length + " indicies, got " + indices.length);
+	
 		int finalIndex = 0;
 		int multiplier = 1;
 		
-		for (int j = sizes.length-1; j >= 0 ; --j)
+		for (int j = indices.length - 1; j >= 0; --j)
 		{
-			int index = indicies[j];
+			int index = indices[j];
 			
 			finalIndex += multiplier * index;
-			multiplier *= sizes[j];
+			multiplier *= sizes[indices.length - 1-j];
 		}
 		
 		return data[finalIndex];
 	}
 	
+	public String toString(ExpressionPrinter printer)
+	{
+		StringBuilder rv = new StringBuilder(); 
+		
+		if (sizes.length == 1)
+			makeString1d(rv, printer);
+		else if (sizes.length == 2)
+			makeString2d(rv, printer);
+		else
+			makeStringReshape(rv, printer);
+			
+		return rv.toString();
+	}
+	
 	/**
 	 * Get the string representation of this matrix
 	 */
-	public String toString()
+	public String toDefaultString()
 	{
-		WORKING HERE
+		return toString(DefaultExpressionPrinter.instance);
+	}
+	
+	public void makeStringReshape(StringBuilder rv, ExpressionPrinter printer)
+	{
+		rv.append("reshape([");
+		boolean first = true;
+		
+		for (Expression e : data)
+		{
+			if (first)
+				first = false;
+			else
+				rv.append(", ");
+			
+			rv.append(printer.print(e));
+		}
+		
+		rv.append("]");
+		
+		for (int s : sizes)
+			rv.append(", " + s);
+		
+		rv.append(")");
+	}
+	
+	public void makeString2d(StringBuilder rv, ExpressionPrinter printer)
+	{
+		rv.append("[");
+		int numCols = sizes[1];
+		int numRows = sizes[0];
+		
+		for (int row = 0; row < numRows; ++row)
+		{
+			for (int col = 0; col < numCols; ++col)
+			{
+				if (col != 0)
+					rv.append(", ");
+				
+				Expression e = data[col * numRows + row];
+				rv.append(printer.print(e));
+			}
+			
+			if (row != numRows - 1)
+				rv.append(" ; ");
+		}
+		
+		rv.append("]");
+	}
+
+	/**
+	 * Get the table data as a 1-d array 
+	 * @param rv where to store the string
+	 */
+	public void makeString1d(StringBuilder rv, ExpressionPrinter printer)
+	{
+		rv.append("[");
+		boolean first = true;
+		
+		for (Expression e : data)
+		{
+			if (first)
+				first = false;
+			else
+				rv.append(", ");
+			
+			rv.append(printer.print(e));
+		}
+		
+		rv.append("]");
 	}
 }

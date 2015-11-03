@@ -108,7 +108,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 	}
 	
 	@Override
-	public String printConstantValue(double d)
+	protected String printConstantValue(double d)
 	{
 		return constFormatter.format(d);
 	}
@@ -123,7 +123,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 	 * Usually inline printing
 	 */
 	@Override
-	public String printOperation(Operation o)
+	protected String printOperation(Operation o)
 	{
 		String rv;
 		List <Expression> children = o.children;
