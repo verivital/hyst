@@ -88,7 +88,7 @@ public class Lut extends Expression
 	 * @param lut
 	 */
 	public Lut(Lut l)
-	{		
+	{
 		this(l.variables, l.table, convertBreakPoints(l));
 	}
 

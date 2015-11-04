@@ -11,7 +11,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Lut;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
 
-public class MatrixLutTest
+public class LutMatrixTest
 {
 	@Before 
 	public void setUpClass() 
