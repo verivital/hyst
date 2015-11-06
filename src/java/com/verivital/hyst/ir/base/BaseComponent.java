@@ -100,7 +100,8 @@ public class BaseComponent extends Component
 	}
 	
 	/**
-	 * Create a new transition in this hybrid automaton. Guard is initially null, be sure to assign it or validation will fail.
+	 * Create a new transition in this hybrid automaton. 
+	 * Guard is initially null; be sure to assign it or validation will fail.
 	 * @param from the source
 	 * @param to the destination
 	 * @return the created AutomatonTransition object

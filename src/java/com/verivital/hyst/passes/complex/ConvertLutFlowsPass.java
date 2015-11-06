@@ -1,7 +1,9 @@
 package com.verivital.hyst.passes.complex;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.geometry.HyperPoint;
@@ -12,12 +14,14 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
+import com.verivital.hyst.grammar.formula.MatrixValueEnumerator;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
@@ -155,18 +159,117 @@ public class ConvertLutFlowsPass extends TransformationPass
 
 	/**
 	 * Convert a lut expression which is part of a flow. This modifies am's parent base-component.
-	 * @param am
-	 * @param variable
-	 * @param lut
+	 * @param am the mode where we're applying the conversiopn
+	 * @param variable the lut is in which variable's derivative
+	 * @param lut the LUT sub-expression to convert
 	 */
 	public void convertFlowInMode(AutomatonMode am, String variable, LutExpression lut)
 	{
-		checkNotInitialForbidden(am);
+		Collection <AutomatonMode> newModes = makeLutModes(am, variable, lut);
 		
-		// TODO implement
+		makeOriginalModeUrgent(am, newModes);
+		fixOutgoingTransitions(am, newModes);
+		
 		throw new AutomatonExportException("unimplemented");
 	}
-	
+
+	/**
+	 * Create an automaton mode between the entries in the LUT
+	 * @param am the original mode we're copying
+	 * @param variable the variable who's flow contains a LUT subexpression
+	 * @param lut the LUT subexpression to replace
+	 * @return a collection of modes that was created (with transitions between them)
+	 */
+	private Collection<AutomatonMode> makeLutModes(AutomatonMode am, String variable, final LutExpression lut)
+	{
+		final ArrayList <AutomatonMode> rv = new ArrayList <AutomatonMode>();
+		final int numDims = lut.table.getNumDims();
+		
+		// well, we have to iterate over the matrix expression lut.table
+		lut.table.enumerateValues(new MatrixValueEnumerator()
+		{
+			@Override
+			public void enumerateValue(Expression value, int[] indexList)
+			{
+				if (!shouldSkip(indexList))
+				{
+					
+				}
+			}
+
+			/**
+			 * Should this value be skipped? We create modes between two table values, i and i + 1, so if the
+			 * current value is the last one in any dimension, we skip it
+			 * @param indexList
+			 * @return
+			 */
+			private boolean shouldSkip(int[] indexList)
+			{
+				boolean skip = false;
+			
+				for (int d = 0; d < numDims; ++d)
+				{
+					if (indexList[d] == lut.table.getDimWidth(d) - 1)
+					{
+						skip = true;
+						break;
+					}
+				}
+				
+				return skip;
+			}
+		});
+		
+		return rv;
+	}
+
+	/**
+	 * Make the original mode an initial one with transitions to each of the newly-created ones
+	 * @param am the original mode
+	 * @param newModes the newly-created modes
+	 */
+	private void makeOriginalModeUrgent(AutomatonMode am, Collection<AutomatonMode> newModes)
+	{
+		BaseComponent ha = am.automaton;
+		am.flowDynamics = null;
+		am.urgent = true;
+
+		for (AutomatonMode newMode : newModes)
+		{
+			AutomatonTransition at = ha.createTransition(am, newMode);
+			at.guard = newMode.invariant.copy();
+		}
+	}
+
+	/**
+	 * Copy the outgoing transitions to each of the created modes
+	 * @param am the original mode
+	 * @param newModes the new modes in the table
+	 */
+	private void fixOutgoingTransitions(AutomatonMode am, Collection<AutomatonMode> newModes)
+	{
+		BaseComponent ha = am.automaton;
+		ArrayList <AutomatonTransition> outgoing = new ArrayList<AutomatonTransition>();
+		
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from.name.equals(am.name))
+				outgoing.add(at);
+		}
+		
+		ha.transitions.removeAll(outgoing);
+		
+		for (AutomatonTransition at : outgoing)
+		{
+			for (AutomatonMode mode : newModes)
+			{
+				// copy transition at
+				AutomatonTransition newAt = at.copy(ha);
+				newAt.from = mode; // change where the transition is coming from
+			}
+		}
+	}
+
 	/**
 	 * Perform n-linear interpolation. This is a generalization of the tri-linear scheme given in
 	 * http://paulbourke.net/miscellaneous/interpolation/
@@ -268,17 +371,4 @@ public class ConvertLutFlowsPass extends TransformationPass
 				accumulator = new Operation(Operator.ADD, term, accumulator);
 		}
 	};
-
-	private void checkNotInitialForbidden(AutomatonMode am)
-	{
-		String realModeName = am.name;
-
-		// TODO, update this to work for network components
-		
-		if (config.init.containsKey(realModeName))
-			throw new AutomatonExportException("Initial mode '" + realModeName + "' contains LUT, which is not supported.");
-		
-		if (config.forbidden.containsKey(realModeName))
-			throw new AutomatonExportException("Forbidden mode '" + realModeName + "' contains LUT, which is not supported.");
-	}
 }

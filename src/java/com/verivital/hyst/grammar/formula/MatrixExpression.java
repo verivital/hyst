@@ -3,6 +3,8 @@
  */
 package com.verivital.hyst.grammar.formula;
 
+import java.util.Arrays;
+
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
@@ -20,7 +22,7 @@ public class MatrixExpression extends Expression
 	private int[] sizes; // the size of each dimension, x y z
 	private Expression[] data; // the data for each cell (should be length size[0] * size[1] * ...)
 	
-	// internally, the data array is in the same order as the call to reshape()
+	// internally, the sizes and data arrays are the same order as the call to reshape() (matlab's order)
 	
 	/**
 	 * Copy constructor
@@ -81,7 +83,6 @@ public class MatrixExpression extends Expression
 		}
 		else
 		{
-			// sizes order is from last index to first index
 			sizes = new int[2];
 			sizes[0] = data.length;
 			sizes[1] = data[0].length;
@@ -108,6 +109,11 @@ public class MatrixExpression extends Expression
 		}
 	}
 	
+	/**
+	 * Create a new MatrixExpression from values given in the same order as matlab's reshape command
+	 * @param data the matrix data, in the same order as matlab's reshape() command
+	 * @param sizes the sizes for each dimension
+	 */
 	public MatrixExpression(Expression[] data, int[] sizes)
 	{
 		int total = 1;
@@ -116,15 +122,16 @@ public class MatrixExpression extends Expression
 		{
 			if (s <= 0)
 				throw new AutomatonExportException("Invalid matrix row width: " + s);
+			
 			total *= s;
 		}
 		
 		if (data.length != total)
 			throw new AutomatonExportException("Invalid matrix data. Expected " + total + " entries, got " + data.length);
 		
-		// copy sizes
 		this.sizes = new int[sizes.length];
 		
+		// copy sizes
 		for (int i = 0; i < sizes.length; ++i)
 			this.sizes[i] = sizes[i];
 		
@@ -160,16 +167,25 @@ public class MatrixExpression extends Expression
 	{
 		if (sizes.length != indices.length)
 			throw new IndexOutOfBoundsException("Expected " + sizes.length + " indicies, got " + indices.length);
+		
+		for (int d = 0; d < sizes.length; ++d)
+		{
+			if (indices[d] < 0 || indices[d] >= sizes[d])
+			{
+				throw new IndexOutOfBoundsException("got " + Arrays.toString(indices) + " with sizes " 
+													+ Arrays.toString(sizes));
+			}
+		}
 	
 		int finalIndex = 0;
 		int multiplier = 1;
 		
-		for (int j = indices.length - 1; j >= 0; --j)
+		for (int j = 0; j < indices.length; ++j)
 		{
 			int index = indices[j];
 			
 			finalIndex += multiplier * index;
-			multiplier *= sizes[indices.length - 1-j];
+			multiplier *= sizes[j];
 		}
 		
 		return data[finalIndex];
@@ -214,8 +230,8 @@ public class MatrixExpression extends Expression
 		
 		rv.append("]");
 		
-		for (int s : sizes)
-			rv.append(", " + s);
+		for (int i = 0; i < sizes.length; ++i)
+			rv.append(", " + sizes[i]);
 		
 		rv.append(")");
 	}
@@ -223,8 +239,8 @@ public class MatrixExpression extends Expression
 	public void makeString2d(StringBuilder rv, ExpressionPrinter printer)
 	{
 		rv.append("[");
-		int numCols = sizes[1];
 		int numRows = sizes[0];
+		int numCols = sizes[1];
 		
 		for (int row = 0; row < numRows; ++row)
 		{
@@ -233,7 +249,7 @@ public class MatrixExpression extends Expression
 				if (col != 0)
 					rv.append(", ");
 				
-				Expression e = data[col * numRows + row];
+				Expression e = get(row, col);
 				rv.append(printer.print(e));
 			}
 			
@@ -264,5 +280,48 @@ public class MatrixExpression extends Expression
 		}
 		
 		rv.append("]");
+	}
+
+	/**
+	 * Enumerate all values in this matrix
+	 * @param en the object which gets called for each value in the matrix
+	 */
+	public void enumerateValues(MatrixValueEnumerator en)
+	{
+		int[] iterator = new int[sizes.length];
+		
+		while (true)
+		{
+			en.enumerateValue(get(iterator), iterator);
+			
+			if (!increment(iterator))
+				break;
+		}
+	}
+
+	/**
+	 * Increment an index list (with overflowing to the next dimension if necessary
+	 * @param iterator [inout] an index list, incremented in place
+	 * @return true if it was updated to a valid index, false if we reached the end
+	 */
+	private boolean increment(int[] iterator)
+	{
+		boolean rv = true;
+		++iterator[0];
+		
+		for (int d = 0; d < sizes.length; ++d)
+		{
+			if (iterator[d] >= sizes[d])
+			{
+				iterator[d] -= sizes[d];
+				
+				if (d == sizes.length - 1)
+					rv = false;
+				else
+					++iterator[d+1];
+			}
+		}
+		
+		return rv;
 	}
 }

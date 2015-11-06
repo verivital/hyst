@@ -401,9 +401,7 @@ public class PythonUtil
 		PythonBridge pb = PythonBridge.getInstance();
 		StringBuilder s = new StringBuilder();
 		
-		
 		s.append(makeExpressionVariableSymbols(e));
-		
 		
 		s.append("sympy.simplify(");
 		s.append(pySympyPrinter.print(e));

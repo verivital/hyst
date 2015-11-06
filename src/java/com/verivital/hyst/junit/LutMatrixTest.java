@@ -16,6 +16,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
+import com.verivital.hyst.grammar.formula.MatrixValueEnumerator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -50,6 +51,25 @@ public class LutMatrixTest
 		Assert.assertEquals("larger matrix num dims is 1", 1, m.getNumDims());
 	}
 	
+	@Test
+	public void testMatrixEnumerateValues()
+	{
+		String str = "[1, 2; 3, 4; 5, 6]";
+		MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(str);
+		final double[] total = {0}; // array so that it the value is mutable
+		
+		m.enumerateValues(new MatrixValueEnumerator()
+		{
+			@Override
+			public void enumerateValue(Expression value, int[] indexList)
+			{
+				total[0] += ((Constant)value).getVal();
+			}
+		});
+		
+		double TOL = 1e-9;
+		Assert.assertEquals("matrix total is correct", 21, total[0], TOL);
+	}
 	
 	/**
 	 * Test printing 1-d, 2-d and 3-d matrices
@@ -91,6 +111,34 @@ public class LutMatrixTest
 		Assert.assertEquals("2-d matrix prints incorrectly", expected2d, m.toDefaultString());
 	}
 	
+	@Test
+	public void testMatrixDereferenceOrder()
+	{
+		String str2d = "[1 2 ; 10 20 ; 100 200]";
+		MatrixExpression m2d = (MatrixExpression)FormulaParser.parseValue(str2d);
+		
+		// make sure the internal representation matches what matlab uses (from reshape)
+		String correct = "reshape([1, 10, 100, 2, 20, 200], 3, 2)";
+		StringBuilder sb = new StringBuilder();
+		m2d.makeStringReshape(sb, DefaultExpressionPrinter.instance);
+		Assert.assertEquals("matrix internals should be same as matlab's reshape", correct, sb.toString());
+		
+		Assert.assertEquals("2d matrix size doesn't match matlab", 3, m2d.getDimWidth(0));
+		Assert.assertEquals("2d matrix size doesn't match matlab", 2, m2d.getDimWidth(1));
+		
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 2d matrix", "100", m2d.get(2, 0).toDefaultString());
+
+		// try 3d matrix
+		String str3d = "reshape([1, 2, 3, 11, 12, 13, 101, 102, 103, 111, 112, 113], 3, 2, 2)";
+		MatrixExpression m3d = (MatrixExpression)FormulaParser.parseValue(str3d);
+		Assert.assertEquals("3d matrix size doesn't match matlab", 3, m3d.getDimWidth(0));
+		Assert.assertEquals("3d matrix size doesn't match matlab", 2, m3d.getDimWidth(1));
+		Assert.assertEquals("3d matrix size doesn't match matlab", 2, m3d.getDimWidth(2));
+		
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "113", m3d.get(2, 1, 1).toDefaultString());
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "13", m3d.get(2, 1, 0).toDefaultString());
+	}
+	
 	/**
 	 * Test matrix expressions (general n-dimensional arrays) 
 	 */
@@ -116,12 +164,12 @@ public class LutMatrixTest
 		Expression[] expArray1d = {new Constant(1), new Constant(10), new Constant(100), 
 				new Constant(2), new Constant(20), new Constant(200)};
 		MatrixExpression m4 = new MatrixExpression(expArray1d, new int[]{3, 2});
-
-		for (int y = 0; y < 3; ++y)
+		
+		for (int y = 0; y < 2; ++y)
 		{
-			for (int x = 0; x < 2; ++x)
+			for (int x = 0; x < 3; ++x)
 			{
-				double val = dblArray[y][x]; // array indices and matrix indices are reversed
+				double val = dblArray[x][y]; 
 				
 				Assert.assertEquals("value in m1.get(" + x + ", " + y + ") was wrong", val, ((Constant)m1.get(x,y)).getVal(), TOL);
 				Assert.assertEquals("value in m2.get(" + x + ", " + y + ") was wrong", val, ((Constant)m2.get(x,y)).getVal(), TOL);
@@ -361,8 +409,6 @@ public class LutMatrixTest
 		Expression expected = FormulaParser.parseValue("3+(a-1)*1 + (b-10)/20 * (5+(a-1)*2.5 - (3+(a-1)*1))");
 		Expression got = ConvertLutFlowsPass.nLinearInterpolation(vars, lut.table, indexList, rangeList);
 		
-		System.out.println("got: " + got.toDefaultString());
-
 		List <String> varList = Arrays.asList(vars);
 		
 		// the test points
