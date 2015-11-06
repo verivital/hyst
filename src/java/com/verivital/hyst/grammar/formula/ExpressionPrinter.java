@@ -20,6 +20,8 @@ public abstract class ExpressionPrinter
 			rv = printVariable((Variable) e);
 		else if (e instanceof MatrixExpression)
 			rv = printMatrix((MatrixExpression) e);
+		else if (e instanceof LutExpression)
+			rv = printLut((LutExpression) e);
 		else
 		{
 			try
@@ -28,11 +30,16 @@ public abstract class ExpressionPrinter
 			}
 			catch (AutomatonExportException ex)
 			{
-				throw new RuntimeException("No default printer for expression of type " + e.getClass().getName());
+				throw new RuntimeException("No print method defined in ExpressionPrinter for type " + e.getClass().getName());
 			}
 		}
 		
 		return rv;
+	}
+	
+	protected String printLut(LutExpression l)
+	{
+		return l.toString(this);
 	}
 
 	protected String printMatrix(MatrixExpression m)

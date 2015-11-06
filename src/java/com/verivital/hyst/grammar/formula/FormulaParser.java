@@ -107,7 +107,7 @@ public class FormulaParser
 	 * @param text the number text
 	 * @return a parsed Expression
 	 */
-	public static Expression parseNumber(String text)
+	public static Expression parseValue(String text)
 	{
 		Expression rv = null;
 		

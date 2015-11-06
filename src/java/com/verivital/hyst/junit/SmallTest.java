@@ -15,8 +15,6 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.grammar.formula.Lut;
-import com.verivital.hyst.grammar.formula.MatrixExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -516,7 +514,7 @@ public class SmallTest
 	@Test
 	public void testNumber()
 	{
-		Expression e = FormulaParser.parseNumber("3.0");
+		Expression e = FormulaParser.parseValue("3.0");
 		
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 		
@@ -530,7 +528,7 @@ public class SmallTest
 	@Test
 	public void testSimplifyPow()
 	{
-		Expression e = FormulaParser.parseNumber("3 * 10^7");
+		Expression e = FormulaParser.parseValue("3 * 10^7");
 		
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 		
@@ -663,7 +661,7 @@ public class SmallTest
 	{
 		String exp = "(1.0 - x * x) * y - x";
 		
-		Expression e = FormulaParser.parseNumber(exp);
+		Expression e = FormulaParser.parseValue(exp);
 		
 		if (FlowPrinter.isLinearExpression(e))
 			Assert.fail("expression was detected as linear: " + exp);
@@ -684,7 +682,7 @@ public class SmallTest
 	@Test
 	public void testSubstituteExpression()
 	{
-		Expression e = FormulaParser.parseNumber("5 * c + 2");
+		Expression e = FormulaParser.parseValue("5 * c + 2");
 		Expression sub = new Operation(Operator.ADD, new Variable("c"), new IntervalTerm(new Interval(0, 1)));
 		Expression result = AutomatonUtil.substituteVariable(e, "c", sub);
 		
@@ -702,7 +700,7 @@ public class SmallTest
 	@Test
 	public void testHarderExpression()
 	{
-		Expression e = FormulaParser.parseNumber("-10 * v - 3 * a");
+		Expression e = FormulaParser.parseValue("-10 * v - 3 * a");
 		Expression sub = new Operation(Operator.ADD, new Variable("a"), new IntervalTerm(new Interval(-1, 2)));
 		Expression result = AutomatonUtil.substituteVariable(e, "a", sub);
 		
@@ -740,7 +738,7 @@ public class SmallTest
 	@Test
 	public void testSimplifyCos()
 	{
-		Expression e = FormulaParser.parseNumber("cos(t)");
+		Expression e = FormulaParser.parseValue("cos(t)");
 		
 		ExpressionInterval ei = ContinuizationPass.simplifyExpressionWithIntervalsRec(e);
 		
@@ -755,8 +753,8 @@ public class SmallTest
 	{
 		
 		LinkedHashMap<String, ExpressionInterval> dy = new LinkedHashMap<String, ExpressionInterval>();
-		dy.put("x", new ExpressionInterval(FormulaParser.parseNumber("2 * x + y")));
-		dy.put("y", new ExpressionInterval(FormulaParser.parseNumber("3 * y * x + y")));
+		dy.put("x", new ExpressionInterval(FormulaParser.parseValue("2 * x + y")));
+		dy.put("y", new ExpressionInterval(FormulaParser.parseValue("3 * y * x + y")));
 		
 		HashMap<String, Interval> bounds = new 	HashMap<String, Interval>();
 		bounds.put("x", new Interval(1, 2));
@@ -815,7 +813,8 @@ public class SmallTest
 	/**
 	 * Test that functions get classified as expected
 	 */
-	public void testClassifyExpressions()
+	@Test
+	public void testClassifyOperators()
 	{
 		final ExpressionClassification[] tests = 
 		{
@@ -831,9 +830,25 @@ public class SmallTest
 		for (ExpressionClassification test : tests)
 		{
 			String expStr = test.exp;
-			Expression e = FormulaParser.parseNumber(expStr);
+			Expression e = FormulaParser.parseValue(expStr);
 			
-			Assert.assertTrue("Misclassified expression: '" + expStr + "'", AutomatonUtil.expressionContainsAllowsOps(e, test.classes)); 
+			boolean result = AutomatonUtil.expressionContainsOnlyAllowedOps(e, test.classes);
+			Assert.assertTrue("Misclassified expression: '" + expStr + "'", result); 
+		}
+	}
+	
+	/**
+	 * Test that every operator in Hyst gets classified somewhere
+	 */
+	@Test
+	public void testAllOperatorsHaveSomeClassification()
+	{
+		for (Operator o : Operator.values())
+		{
+			Operation op = new Operation(o);
+			
+			Assert.assertTrue("Operator " + DefaultExpressionPrinter.instance.printOperator(o) 
+					+ " has no classification.", AutomatonUtil.classifyExpressionOps(op) != 0);
 		}
 	}
 }

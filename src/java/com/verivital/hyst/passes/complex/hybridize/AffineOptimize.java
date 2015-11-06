@@ -14,7 +14,6 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -37,11 +36,9 @@ public class AffineOptimize
 	 * Create affine dynamics which encompass the original dynamics in some rectangle
 	 * This function is called on several dynamics and several rectangles
 	 * 
-	 * @param pb the PythonBridge to use
 	 * @param params [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
-	public static void createAffineDynamics( PythonBridge pb,
-			List<OptimizationParams> params)
+	public static void createAffineDynamics(List<OptimizationParams> params)
 	{
 		if (params.size() == 0)
 			throw new AutomatonExportException("createAffineDynamics was called with params list of length 0");
@@ -51,7 +48,7 @@ public class AffineOptimize
 		
 		createOptimizationParams(params, expList, boundsList);
 		
-		List<Interval> result = PythonUtil.scipyOptimize(pb, expList, boundsList);
+		List<Interval> result = PythonUtil.scipyOptimize(expList, boundsList);
 		
 		createOptimizationResult(params, result);
 	}

@@ -3,6 +3,8 @@
  */
 package com.verivital.hyst.grammar.formula;
 
+import java.util.Arrays;
+
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
@@ -11,7 +13,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
  * @author Stanley Bak
  *
  */
-public class Lut extends Expression 
+public class LutExpression extends Expression 
 {
 	public String[] variables; // length >= 1
 	public MatrixExpression table; 
@@ -23,7 +25,7 @@ public class Lut extends Expression
 	 * @param data the table data
 	 * @param breakpoints the breakpoints for each variable
 	 */
-	public Lut(String vars[], MatrixExpression data, MatrixExpression ... breakpoints) 
+	public LutExpression(String vars[], MatrixExpression data, MatrixExpression ... breakpoints) 
 	{
 		int len = vars.length;
 		
@@ -58,6 +60,29 @@ public class Lut extends Expression
 				throw new RuntimeException("breakpoints[" + d + "] size(" + bp.getDimWidth(0) + 
 						") must be equal to width of data in table for that dimension (" + data.getDimWidth(d) + ")");
 			
+			// breakpoints should be strictly increasing
+			Expression first = bp.get(0);
+			
+			if (!(first instanceof Constant))
+				throw new AutomatonExportException("Breakpoints must be numeric constants: " + first.toDefaultString());
+			
+			double last = ((Constant)first).getVal();
+			
+			for (int bi = 0; bi < bp.getDimWidth(0); ++bi)
+			{
+				Expression curExp = bp.get(0);
+				
+				if (!(curExp instanceof Constant))
+					throw new AutomatonExportException("Breakpoints must be numeric constants: " + curExp.toDefaultString());
+				
+				double cur = ((Constant)curExp).getVal();
+				
+				if (cur < last)
+					throw new AutomatonExportException("Breakpoints must be strictly increasing: " + bp);
+				
+				last = cur;
+			}
+			
 			double[] row = new double[bp.getDimWidth(0)];
 			for (int i = 0; i < bp.getDimWidth(0); ++i)
 			{
@@ -73,7 +98,7 @@ public class Lut extends Expression
 		}
 	}
 	
-	private static MatrixExpression[] convertBreakPoints(Lut l)
+	private static MatrixExpression[] convertBreakPoints(LutExpression l)
 	{
 		MatrixExpression[] bps = new MatrixExpression[l.breakpoints.length];
 		
@@ -87,7 +112,7 @@ public class Lut extends Expression
 	 * Copy constuctore
 	 * @param lut
 	 */
-	public Lut(Lut l)
+	public LutExpression(LutExpression l)
 	{
 		this(l.variables, l.table, convertBreakPoints(l));
 	}
@@ -95,6 +120,44 @@ public class Lut extends Expression
 	@Override
 	public Expression copy() 
 	{
-		return new Lut(this);
+		return new LutExpression(this);
+	}
+
+	public String toString(ExpressionPrinter printer)
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append("lut([");
+		
+		boolean first = true;
+		
+		for (String var : variables)
+		{
+			if (first)
+				first = false;
+			else
+				sb.append(", ");
+			
+			sb.append(var);
+		}
+		
+		sb.append("], ");
+		sb.append(table.toString(printer));
+		
+		for (int i = 0; i < breakpoints.length; ++i)
+		{
+			double[] bp = breakpoints[i];
+			
+			sb.append(", ");
+			sb.append(Arrays.toString(bp));
+		}
+		
+		sb.append(")");
+		
+		return sb.toString();
+	}
+	
+	public String toDefaultString()
+	{
+		return toString(DefaultExpressionPrinter.instance);
 	}
 }

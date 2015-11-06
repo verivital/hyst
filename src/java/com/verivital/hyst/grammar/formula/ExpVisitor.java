@@ -445,7 +445,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 			breakPoints[a-2] = bp;
 		}
 		
-		return new Lut(varList, data, breakPoints);
+		return new LutExpression(varList, data, breakPoints);
 	}
 	
 	@Override public Expression visitMatrix(@NotNull HystExpressionParser.MatrixContext ctx) 

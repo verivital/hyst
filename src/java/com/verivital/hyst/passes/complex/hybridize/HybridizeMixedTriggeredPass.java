@@ -290,7 +290,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			initBox.enumerateCornersUnique(new HyperRectangleCornerEnumerator()
 			{
 				@Override
-				public void enumerate(HyperPoint p)
+				protected void enumerate(HyperPoint p)
 				{
 					rv.add(p);
 				}
@@ -351,10 +351,10 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		sim.run(timeMax);
 		long simEndMs = System.currentTimeMillis();
 		
-		PythonBridge pb = PythonBridge.getInstance(-1);
+		PythonBridge.getInstance().setTimeout(-1);
 
 		long optStartMs = System.currentTimeMillis();
-		hybridizeFlows(sim.modes, sim.rects, pb);
+		hybridizeFlows(sim.modes, sim.rects);
 		long optTime = System.currentTimeMillis() - optStartMs;
 		long simTime = simEndMs - simStartMs;
 		
@@ -845,10 +845,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	/**
 	 * Change the (nonlinear) flow in each mode to a hybridized one with affine dynamics
 	 * @param am the mode to change 
-	 * @param hr the constraint set, in the order of ha.variablenames
+	 * @param rects the constraint rectangle, in the order of ha.variablenames
 	 */
-	private void hybridizeFlows(ArrayList<AutomatonMode> modes,
-			ArrayList<HyperRectangle> rects, PythonBridge pb)
+	private void hybridizeFlows(ArrayList<AutomatonMode> modes,	ArrayList<HyperRectangle> rects)
 	{
 		if (modes.size() == 0)
 			throw new AutomatonExportException("hybridizeFlows was called 0 modes");
@@ -872,7 +871,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			params.add(op);
 		}
 		
-		 AffineOptimize.createAffineDynamics(pb, params);
+		 AffineOptimize.createAffineDynamics(params);
 		
 		 for (int i = 0; i < modes.size(); ++i)
 		 {

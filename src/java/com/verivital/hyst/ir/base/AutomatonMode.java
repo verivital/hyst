@@ -98,7 +98,8 @@ public class AutomatonMode
 			}
 		}
 		
-		Configuration.validateExpression(invariant, "mode " + name + " invariant: " + DefaultExpressionPrinter.instance.print(invariant));
+		if (invariant == null)
+			throw new AutomatonValidationException("mode " + name + " invariant is null ");
 		
 		if (!urgent)
 		{
@@ -108,9 +109,6 @@ public class AutomatonMode
 				
 				if (ei == null)
 					throw new AutomatonValidationException("Flow for " + entry.getKey() + " was null");
-				
-				Expression e = ei.getExpression();
-				Configuration.validateExpression(e, "mode " + name + " dynamics: " + DefaultExpressionPrinter.instance.print(e));
 			}
 		}
 	}

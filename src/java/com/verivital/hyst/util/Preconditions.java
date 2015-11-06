@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
+import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 
@@ -345,7 +346,7 @@ public class Preconditions
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
 				throw new PreconditionsFailedException("Initial states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -355,7 +356,7 @@ public class Preconditions
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
 				throw new PreconditionsFailedException("Forbidden states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -365,8 +366,7 @@ public class Preconditions
 			Hyst.log("Preconditions check detected look-up-tables in dynamics. ");
 			Hyst.log("Running conversion pass to split them, as required by the preconditions.");
 		
-			// TODO implement this pass
-			throw new PreconditionsFailedException("LUT conversion in flows is not yet implemented");
+			new ConvertLutFlowsPass().runTransformationPass(config, null);
 		}
 	}
 	
@@ -390,7 +390,7 @@ public class Preconditions
 			
 			for (AutomatonMode am : ha.modes.values())
 			{
-				if (!AutomatonUtil.expressionContainsAllowsOps(am.invariant, BASIC))
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(am.invariant, BASIC))
 					throw new PreconditionsFailedException("Invariant in mode " + am.name + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							am.invariant.toDefaultString());
@@ -420,7 +420,7 @@ public class Preconditions
 			
 			for (AutomatonTransition at : ha.transitions)
 			{
-				if (!AutomatonUtil.expressionContainsAllowsOps(at.guard, BASIC))
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(at.guard, BASIC))
 					throw new PreconditionsFailedException("Guard in transition " + at.from + "->" + at.to + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							at.guard.toDefaultString());
@@ -430,7 +430,7 @@ public class Preconditions
 					String var = entry.getKey();
 					Expression e = entry.getValue().getExpression();
 					
-					if (!AutomatonUtil.expressionContainsAllowsOps(e, BASIC))
+					if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
 						throw new PreconditionsFailedException("Reset in transition " + at.from + "->" + at.to +
 							"for variable " + var + " in automaton " + ha.getPrintableInstanceName() 
 							+ " contains unsupported expression operation: " + at.guard.toDefaultString());

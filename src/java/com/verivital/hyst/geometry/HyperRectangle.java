@@ -403,6 +403,7 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		
 		// next iterate from 0 to maxIterator (try each bit-array combination)
 		HyperPoint point = new HyperPoint(dims.length);
+		boolean isMin[] = new boolean[dims.length];
 		
 		for (int iterator = 0; iterator < maxIterator; ++iterator)
 		{
@@ -410,15 +411,15 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 			int mask = 0x01;
 			for (int dimIndex = 0; dimIndex < dims.length; ++dimIndex)
 			{
-				boolean isMin = (iterator & mask) == 0;
+				isMin[dimIndex] = (iterator & mask) == 0;
 				mask = mask << 1;
 				
 				// assign the current dimension of the point point
-				point.dims[dimIndex] = isMin ? dims[dimIndex].min : dims[dimIndex].max;
+				point.dims[dimIndex] = isMin[dimIndex] ? dims[dimIndex].min : dims[dimIndex].max;
 			}
 			
 			// enumerate!
-			e.enumerate(point);
+			e.enumerateWithCoord(point, isMin);
 		}
 	}
 	
@@ -452,20 +453,23 @@ public class HyperRectangle implements Comparable <HyperRectangle>
 		{
 			// extract each dimension's boolean true/false values from iterator
 			HyperPoint point = center();
+			boolean isMin[] = new boolean[dims.length];
 			
 			// assign all the dimensions that are not flat
 			int mask = 0x01;
-			for (int actualDim : dimensionIndex)
+			for (int d = 0; d < dimensionIndex.size(); ++d)
 			{
-				boolean isMin = (iterator & mask) == 0;
+				int actualDim = dimensionIndex.get(d);
+				
+				isMin[actualDim] = (iterator & mask) == 0;
 				mask = mask << 1;
 				
 				// assign the current dimension of the point point
-				point.dims[actualDim] = isMin ? dims[actualDim].min : dims[actualDim].max;
+				point.dims[actualDim] = isMin[actualDim] ? dims[actualDim].min : dims[actualDim].max;
 			}
 			
 			// enumerate!
-			e.enumerate(point);
+			e.enumerateWithCoord(point, isMin);
 		}
 	}
 

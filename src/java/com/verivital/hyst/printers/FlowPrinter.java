@@ -545,7 +545,7 @@ public class FlowPrinter extends ToolPrinter
 					
 					rv += getFlowConditionExpression(o.getLeft());
 					rv += " - (" + getFlowConditionExpression(o.getRight());
-					rv += ")" + Expression.expressionPrinter.printOperator(op) + "0";
+					rv += ") " + Expression.expressionPrinter.printOperator(op) + " 0";
 				}
 			}
 			else

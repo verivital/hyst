@@ -42,6 +42,7 @@ import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -177,54 +178,6 @@ public class PassTests
 		
 		new SubstituteConstantsPass().runTransformationPass(config, null);
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
-	}
-	
-	/**
-	 * Create a single-mode confiruation
-	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
-	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would corespond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
-	 * @return the constructed configuration
-	 */
-	private Configuration makeDebugConfiguration(String[][] dynamics) 
-	{
-		final int VAR_INDEX = 0;
-		final int FLOW_INDEX = 1;
-		final int INIT_INDEX = 2;
-		BaseComponent ha = new BaseComponent();
-		AutomatonMode am = ha.createMode("running");
-		StringBuilder initStringBuilder = new StringBuilder();
-		
-		for (int i = 0; i < dynamics.length; ++i)
-		{
-			if (dynamics[i].length < 2 || dynamics[i].length > 3)
-				throw new AutomatonExportException("expected 2 or 3 values in passed-in array (varname, flow, init)");
-			
-			String var = dynamics[i][VAR_INDEX];
-			String flow = var + "' == " + dynamics[i][FLOW_INDEX];
-			
-			ha.variables.add(var);
-			
-			String initVal = dynamics[i].length == 3 ? dynamics[i][INIT_INDEX] : "0";
-			String initStr = var + " == " + initVal;
-					
-			if (initStringBuilder.length() > 0)
-				initStringBuilder.append(" & " + initStr);
-			else
-				initStringBuilder.append(initStr);
-			
-			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
-			am.flowDynamics.put(var, new ExpressionInterval(flowExp));
-		}
-		
-		Configuration c = new Configuration(ha);
-
-		am.invariant = Constant.TRUE;
-		c.settings.plotVariableNames[0] = ha.variables.get(0);
-		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
-		c.init.put("running", FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
-			
-		c.validate();
-		return c;
 	}
 
 	/**
@@ -687,7 +640,7 @@ public class PassTests
 	public void testContinuizationPassSineWave()
 	{
 		String[][] dynamics = {{"y", "cos(t)"}, {"t", "1"}};
-		Configuration c = makeDebugConfiguration(dynamics);
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		
 		String continuizationParam = "-var y -period 0.1 -times 1.57 3.14 -timevar t -bloats 0.1 0.2";
 		
@@ -717,7 +670,7 @@ public class PassTests
 	public void testContinuizationPassDoubleIntegrator()
 	{
 		String[][] dynamics = {{"x", "v", "0.05"}, {"v", "a", "0"}, {"a", "-10 * v - 3 * a", "9.5"}};
-		Configuration c = makeDebugConfiguration(dynamics);
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		
 		String continuizationParam = "-var a -period 0.005 -times 1.5 5 -timevar t -bloats 4 4";
 		

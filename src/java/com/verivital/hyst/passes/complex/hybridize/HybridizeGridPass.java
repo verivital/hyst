@@ -126,6 +126,8 @@ public class HybridizeGridPass extends TransformationPass
 	@Override
 	protected void runPass(String params)
 	{
+		PythonBridge.getInstance().setTimeout(-1);
+		
 		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
 		ha = (BaseComponent)config.root;
 		AutomatonMode mode = ha.modes.values().iterator().next();
@@ -240,10 +242,9 @@ public class HybridizeGridPass extends TransformationPass
 			params.add(op);
 		}
 		
-		PythonBridge pb = PythonBridge.getInstance();
 		long start = System.currentTimeMillis();
 
-		AffineOptimize.createAffineDynamics(pb, params);
+		AffineOptimize.createAffineDynamics(params);
 		
 		long dif = System.currentTimeMillis() - start;
 		
@@ -263,12 +264,10 @@ public class HybridizeGridPass extends TransformationPass
 
 	private void linearOptimize()
 	{
-		PythonBridge pb = PythonBridge.getInstance();
-
-		linearOptimizeScipy(pb);
+		linearOptimizeScipy();
 	}
 
-	private void linearOptimizeScipy(PythonBridge pb)
+	private void linearOptimizeScipy()
 	{
 		int optCount = 0;
 		long start = System.currentTimeMillis();
@@ -281,7 +280,7 @@ public class HybridizeGridPass extends TransformationPass
 
 			for(Entry<String, ExpressionInterval> e : am.flowDynamics.entrySet())
 			{
-				Interval i = PythonUtil.scipyOptimize(pb, e.getValue().asExpression(), bounds);
+				Interval i = PythonUtil.scipyOptimize(e.getValue().asExpression(), bounds);
 				
 				e.setValue(new ExpressionInterval(new Constant(0), i));
 				optCount++;

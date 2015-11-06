@@ -18,6 +18,7 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -745,9 +746,10 @@ public abstract class AutomatonUtil
 	// these are the flags for the bitmask returned by classifyExpression
 	public static final byte OPS_LINEAR = 1 << 0; // operators like add, subtract, multiply, negative
 	public static final byte OPS_NONLINEAR = 1 << 1; // division, exponentiation, or sine, sqrt, ln, ...
-	public static final byte OPS_LOC = 1 << 2; // loc() functions
-	public static final byte OPS_LUT = 1 << 3; // look up table subexpressions
-	public static final byte OPS_MATRIX = 1 << 4; // matrix subexpressions
+	public static final byte OPS_BOOLEAN = 1 << 2; // boolean expression operators (==, >=, &&, !)
+	public static final byte OPS_LOC = 1 << 3; // loc() functions
+	public static final byte OPS_LUT = 1 << 4; // look up table subexpressions
+	public static final byte OPS_MATRIX = 1 << 5; // matrix subexpressions
 	
 	/**
 	 * Classify an Expression's operators. This returns a bitmask, which you can use to check for various parts 
@@ -769,6 +771,10 @@ public abstract class AutomatonUtil
 		final Collection <Operator> LINEAR_OPS = Arrays.asList(new Operator[]{Operator.ADD, Operator.SUBTRACT, 
 				Operator.MULTIPLY, Operator.NEGATIVE});
 		
+		final Collection <Operator> BOOLEAN_OPS = Arrays.asList(new Operator[]{Operator.AND, Operator.OR, 
+				Operator.EQUAL, Operator.LESS, Operator.GREATER, Operator.LESSEQUAL, Operator.GREATEREQUAL, 
+				Operator.NOTEQUAL, Operator.LOGICAL_NOT});
+		
 		final Collection <Operator> NONLINEAR_OPS = Arrays.asList(new Operator[]{Operator.POW, Operator.DIVIDE, 
 				Operator.COS, Operator.SIN, Operator.SQRT, Operator.TAN, Operator.EXP, Operator.LN});
 		
@@ -780,6 +786,8 @@ public abstract class AutomatonUtil
 				rv |= OPS_LINEAR;
 			else if (NONLINEAR_OPS.contains(o.op))
 				rv |= OPS_NONLINEAR;
+			else if (BOOLEAN_OPS.contains(o.op))
+				rv |= OPS_BOOLEAN;
 			else if (o.op == Operator.LOC)
 				rv |= OPS_LOC;
 			else if (o.op == Operator.LUT)
@@ -800,7 +808,7 @@ public abstract class AutomatonUtil
 	 * @param allowedClasses a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR, HAS_NONLINEAR
 	 * @return
 	 */
-	public static boolean expressionContainsAllowsOps(Expression e, byte ... allowedClasses)
+	public static boolean expressionContainsOnlyAllowedOps(Expression e, byte ... allowedClasses)
 	{
 		byte val = classifyExpressionOps(e);
 		
@@ -808,5 +816,53 @@ public abstract class AutomatonUtil
 			val &= ~b; // turns off bits in b if they were on
 		
 		return val == 0;
+	}
+	
+	/**
+	 * Create a single-mode configuration with a mode named "on", for unit testing
+	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
+	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 * @return the constructed configuration
+	 */
+	public static Configuration makeDebugConfiguration(String[][] dynamics) 
+	{
+		final int VAR_INDEX = 0;
+		final int FLOW_INDEX = 1;
+		final int INIT_INDEX = 2;
+		BaseComponent ha = new BaseComponent();
+		AutomatonMode am = ha.createMode("on");
+		StringBuilder initStringBuilder = new StringBuilder();
+		
+		for (int i = 0; i < dynamics.length; ++i)
+		{
+			if (dynamics[i].length < 2 || dynamics[i].length > 3)
+				throw new AutomatonExportException("expected 2 or 3 values in passed-in array (varname, flow, init)");
+			
+			String var = dynamics[i][VAR_INDEX];
+			String flow = var + "' == " + dynamics[i][FLOW_INDEX];
+			
+			ha.variables.add(var);
+			
+			String initVal = dynamics[i].length == 3 ? dynamics[i][INIT_INDEX] : "0";
+			String initStr = var + " == " + initVal;
+					
+			if (initStringBuilder.length() > 0)
+				initStringBuilder.append(" & " + initStr);
+			else
+				initStringBuilder.append(initStr);
+			
+			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			am.flowDynamics.put(var, new ExpressionInterval(flowExp));
+		}
+		
+		Configuration c = new Configuration(ha);
+
+		am.invariant = Constant.TRUE;
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
+		c.init.put("on", FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
+			
+		c.validate();
+		return c;
 	}
 }

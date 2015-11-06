@@ -60,7 +60,8 @@ public class MatrixExpression extends Expression
 	}
 	
 	/**
-	 * Create a 2-d matrix
+	 * Create a 2-d matrix. The order used in get() is BACKWARDS from the matrix order. This is to preserve the
+	 * behavior in matlab
 	 * @param data
 	 */
 	public MatrixExpression(Expression[][] data)
@@ -72,7 +73,7 @@ public class MatrixExpression extends Expression
 		
 		if (data.length == 1)
 		{
-			// its acutally a 1-d matrix 
+			// its actually a 1-d matrix 
 			sizes = new int[1];
 			sizes[0] = data[0].length;
 			
