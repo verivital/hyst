@@ -71,8 +71,8 @@ public class Configuration
 		if (root.parent != null)
 			throw new AutomatonValidationException("root component vannot have a defined parent");
 		
-		// if root is a network component, initial and forbidden states MUST contain dots
-		if (root instanceof NetworkComponent)
+		// if root is a network component, initial and forbidden states MUST contain underscores
+		if (root instanceof NetworkComponent && ((NetworkComponent)root).children.size() > 1)
 		{
 			for (String mode : init.keySet())
 			{

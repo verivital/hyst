@@ -194,6 +194,17 @@ public class PassTests
 	}
 	
 	/**
+	 * Check two expressions for equality, raising an assertion exception if there are errors
+	 */
+	void assertExpressionsEqual(String message, Expression expected, Expression actual)
+	{
+		String msg = AutomatonUtil.areExpressionsEqual(expected, actual);
+		
+		if (msg != null)
+			Assert.fail(message + "\n" + msg);
+	}
+	
+	/**
 	 * Test hybridization (grid) pass
 	 */
 	@Test
@@ -224,7 +235,11 @@ public class PassTests
 			// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
 			Expression.expressionPrinter = new RoundPrinter(3);
 			ExpressionInterval ei = m.flowDynamics.get("x");
-			Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + -12 + [0, 1.5]", ei.toString());
+			
+			Assert.assertEquals("interval was correct in Hybridized mode", new Interval(0, 1.5), ei.getInterval());
+			
+			assertExpressionsEqual("expression was correct in mode m_1_2", 
+					FormulaParser.parseValue("7.5 * x + 5.5 * y + -12"), ei.getExpression());
 			
 			Assert.assertEquals("single initial state", c.init.size(), 1);
 			}
@@ -275,14 +290,14 @@ public class PassTests
 			Expression.expressionPrinter = rp;
 			
 			// dynamics should be approximately x' =.536*x - 0.0718 + [0, 0.0046]
-			String correctDynamics = "0.5357 * x + -0.0717 + [0, 0.0046]";
+			String correctDynamics = "0.5357 * x - 0.0717 + [0, 0.0046]";
 			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
 	
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
 			
 			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x + -0.0958 + [0, 0.0054]";
+			correctDynamics = "0.619 * x - 0.0958 + [0, 0.0054]";
 			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
 	
 			// invariant x <= 10 should be present in first mode
@@ -387,14 +402,14 @@ public class PassTests
 			Expression.expressionPrinter = rp;
 			
 			// dynamics should be approximately x' =.536*x - 0.0718 + [0, 0.0046]
-			String correctDynamics = "0.5357 * x + -0.0717 + [0, 0.0046]";
+			String correctDynamics = "0.5357 * x - 0.0717 + [0, 0.0046]";
 			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
 	
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
 			
 			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x + -0.0958 + [0, 0.0054]";
+			correctDynamics = "0.619 * x - 0.0958 + [0, 0.0054]";
 			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
 	
 			// invariant x <= 10 should be present in first mode
@@ -653,9 +668,9 @@ public class PassTests
 		
 		for (AutomatonMode am : ha.modes.values())
 		{
-			if (am.name.equals("running"))
+			if (am.name.equals("on"))
 				running1 = am;
-			else if (am.name.equals("running_2"))
+			else if (am.name.equals("on_2"))
 				running2 = am;
 			else if (am.name.contains("error"))
 				++numErrorModes;
@@ -685,17 +700,16 @@ public class PassTests
 			
 			for (AutomatonMode am : ha.modes.values())
 			{
-				if (am.name.equals("running"))
+				if (am.name.equals("on"))
 					running1 = am;
-				else if (am.name.equals("running_2"))
+				else if (am.name.equals("on_2"))
 					running2 = am;
 				else if (am.name.contains("error"))
 					++numErrorModes;
 			}
 		
-		
-			Assert.assertNotEquals("running found", null, running1);
-			Assert.assertNotEquals("running_2 found", null, running2);
+			Assert.assertNotEquals("on found", null, running1);
+			Assert.assertNotEquals("on_2 found", null, running2);
 			Assert.assertEquals("four error modes", numErrorModes, 4);
 			
 			Assert.assertTrue("time-triggered invariant is correct", running1.invariant.toDefaultString().contains("t <= 1.505"));

@@ -92,7 +92,7 @@ public class SimplifyExpressionsPass extends TransformationPass
 			{
 				Expression child = o.children.get(i);
 				
-				o.children.set(i, simplifyExpression(child));
+				o.children.set(i, simplifyExpressionRec(child));
 			}
 
 			if (op == Operator.AND && o.getLeft() instanceof Constant)

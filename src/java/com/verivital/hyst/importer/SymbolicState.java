@@ -371,8 +371,9 @@ public class SymbolicState
 		}
 		else if (o.op == Operator.EQUAL && o.getLeft() instanceof Operation && o.getLeft().asOperation().op == Operator.LOC)
 		{
-			// base case: discrete (loc) constraint			
-			String instance = ((Variable)o.getLeft().asOperation().children.get(0)).name;
+			Operation locFunction = o.getLeft().asOperation();
+			// base case: discrete (loc) constraint
+			String instance = locFunction.children.size() == 0 ? "" : ((Variable)locFunction.children.get(0)).name;
 			String state = ((Variable)o.getRight()).name;
 			
 			for (SymbolicState ss : rv)

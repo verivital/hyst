@@ -350,7 +350,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		if (name.equals("loc"))
 		{
 			if (args.size() == 0)
-				rv = new Operation(Operator.LOC, new Variable(""));
+				rv = new Operation(Operator.LOC);
 			else if (args.size() == 1)
 				rv = new Operation(Operator.LOC, visit(args.get(0)));
 			else

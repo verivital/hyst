@@ -70,7 +70,7 @@ public class PythonTests
 		ExpressionInterval yEi = params.get(0).result.get("y");
 		
 		// the interval is offset to start at 0
-		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y + -12 + [0, 1.5]", yEi.toDefaultString());
+		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y - 12 + [0, 1.5]", yEi.toDefaultString());
 	}
 
 	@Test

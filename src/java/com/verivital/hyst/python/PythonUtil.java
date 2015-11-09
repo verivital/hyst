@@ -12,6 +12,7 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -197,7 +198,6 @@ public class PythonUtil
 				prefix = ",";
 				s.append(var);
 			}
-	
 	
 			s.append("=sympy.symbols('");
 	
@@ -398,21 +398,31 @@ public class PythonUtil
 	 */
 	public static Expression pythonSimplifyExpression(Expression e)
 	{
-		PythonBridge pb = PythonBridge.getInstance();
-		StringBuilder s = new StringBuilder();
+		Expression rv = e;
 		
-		s.append(makeExpressionVariableSymbols(e));
+		// optimization: only simplify if it's an operation
+		if (e instanceof Operation)
+		{
+			PythonBridge pb = PythonBridge.getInstance();
+			StringBuilder s = new StringBuilder();
+			
+			String symbols = makeExpressionVariableSymbols(e);
+			
+			if (symbols.length() > 0)
+				s.append(symbols);
+			
+			s.append("sympy.simplify(");
+			s.append(pySympyPrinter.print(e));
+			s.append(")");
+			
+			String result = pb.send(s.toString());
+			
+			// substitute back
+			result = result.replace("**", "^");
+			rv = FormulaParser.parseValue(result);
+		}
 		
-		s.append("sympy.simplify(");
-		s.append(pySympyPrinter.print(e));
-		s.append(")");
-		
-		String result = pb.send(s.toString());
-		
-		// substitute back
-		result = result.replace("**", "^");
-		
-		return FormulaParser.parseValue(result);
+		return rv;
 	}
 
 	/**

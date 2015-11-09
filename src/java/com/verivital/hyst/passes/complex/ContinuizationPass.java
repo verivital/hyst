@@ -538,7 +538,7 @@ public class ContinuizationPass extends TransformationPass
 				rv.flowDynamics.put(v, new ExpressionInterval(new Constant(0)));
 			
 			// update forbidden states
-			config.forbidden.put(badModeName, null);
+			config.forbidden.put(badModeName, Constant.TRUE);
 		}
 		
 		return rv;

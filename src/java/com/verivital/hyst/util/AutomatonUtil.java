@@ -799,6 +799,8 @@ public abstract class AutomatonUtil
 			for (Expression child : o.children)
 				rv |= classifyExpressionOps(child);
 		}
+		else if (e == Constant.TRUE || e == Constant.FALSE)
+			rv |= OPS_BOOLEAN;
 		
 		return rv;
 	}
@@ -870,13 +872,15 @@ public abstract class AutomatonUtil
 	/**
 	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
 	 * a counter-example description string if they are not.
+	 * @param expected the expected expression
+	 * @param actual the actual expression
 	 */
-	public static String areExpressionsEqual(Expression a, Expression b)
+	public static String areExpressionsEqual(Expression expected, Expression actual)
 	{
 		String rv = null;
 	
-		Set <String> varSet = AutomatonUtil.getVariablesInExpression(a);
-		varSet.addAll(AutomatonUtil.getVariablesInExpression(b));
+		Set <String> varSet = AutomatonUtil.getVariablesInExpression(expected);
+		varSet.addAll(AutomatonUtil.getVariablesInExpression(actual));
 		
 		ArrayList <String> varList = new ArrayList <String>();
 		varList.addAll(varSet);
@@ -929,13 +933,14 @@ public abstract class AutomatonUtil
 		
 		for (HyperPoint hp : samples)
 		{
-			double aVal = RungeKutta.evaluateExpression(a, hp, varList);
-			double bVal = RungeKutta.evaluateExpression(b, hp, varList);
+			double expectedVal = RungeKutta.evaluateExpression(expected, hp, varList);
+			double actualVal = RungeKutta.evaluateExpression(actual, hp, varList);
 			
-			if (Math.abs(aVal - bVal) > TOL)
+			if (Math.abs(expectedVal - actualVal) > TOL)
 			{
-				rv = "Expressions a='" + a.toDefaultString() + "' and b='" + b.toDefaultString() + "' differ at point"
-						+ varList + " = " + Arrays.toString(hp.dims) + ".\na evalues to " + aVal + "; b evalutes to " + bVal;
+				rv = "Expressions expected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
+						"' differ at point" + varList + " = " + Arrays.toString(hp.dims) + 
+						".\nexpected evalues to " + expectedVal + "; actual evalutes to " + actualVal;
 				break;
 			}
 		}

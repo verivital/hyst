@@ -339,14 +339,14 @@ public class Preconditions
 	 */
 	private static void convertBasicOperators(Configuration config)
 	{
-		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
+		final byte SUPPORTED = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR | AutomatonUtil.OPS_BOOLEAN;
 		
 		for (Entry<String, Expression> entry : config.init.entrySet())
 		{
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, SUPPORTED))
 				throw new PreconditionsFailedException("Initial states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -356,7 +356,7 @@ public class Preconditions
 			String mode = entry.getKey();
 			Expression e = entry.getValue();
 			
-			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, SUPPORTED))
 				throw new PreconditionsFailedException("Forbidden states for mode " + mode + " contains unsupported " +
 						"expression operation: " + e.toDefaultString());
 		}
@@ -390,7 +390,7 @@ public class Preconditions
 			
 			for (AutomatonMode am : ha.modes.values())
 			{
-				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(am.invariant, BASIC))
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(am.invariant, BASIC, AutomatonUtil.OPS_BOOLEAN))
 					throw new PreconditionsFailedException("Invariant in mode " + am.name + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							am.invariant.toDefaultString());
@@ -420,7 +420,7 @@ public class Preconditions
 			
 			for (AutomatonTransition at : ha.transitions)
 			{
-				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(at.guard, BASIC))
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(at.guard, BASIC, AutomatonUtil.OPS_BOOLEAN))
 					throw new PreconditionsFailedException("Guard in transition " + at.from + "->" + at.to + " of automaton " + 
 							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
 							at.guard.toDefaultString());

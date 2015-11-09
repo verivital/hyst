@@ -662,9 +662,11 @@ public class ModelParserTest
 	{
 		String path = UNIT_BASEDIR + "urgent_simple/";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
+		SpaceExDocument doc = SpaceExImporter.importModels(
 				path + "urgent_simple.cfg",
-				path + "urgent_simple.xml"));
+				path + "urgent_simple.xml");
+		
+		Configuration c = flatten(doc);
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		if (!AutomatonUtil.hasUrgentMode(ha))
