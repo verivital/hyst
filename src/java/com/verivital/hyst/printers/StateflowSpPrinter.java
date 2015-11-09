@@ -13,8 +13,9 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
+import static com.verivital.hyst.util.AutomatonUtil.simplifyExpression;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
 import java.io.File;
 import java.util.ArrayList;
@@ -79,8 +80,7 @@ public class StateflowSpPrinter extends ToolPrinter {
     private int m_randoms;
     private String coeff = "0";
     private boolean found = false;
-    public LinkedHashMap <String, Integer> varID;
-    public double [][] linearMatrix; 
+    public Classification cls = new Classification();
 
     // ------------- variable wrappers -------------
     
@@ -246,18 +246,6 @@ public class StateflowSpPrinter extends ToolPrinter {
         //proxy = factory.getProxy();
     }    
     /**
-    * merge all variables and constants 
-    */
-    public void getVarID(BaseComponent ha) 
-    {
-            varID = new LinkedHashMap<String, Integer>(); 
-            int id = 0;  
-            for (String v : ha.variables) 
-                    varID.put(v, id++);
-            for (String c : ha.constants.keySet())
-                    varID.put(c, id++);  
-    }
-    /**
     * return the size of A matrix depending on a set of variable X 
     */
     public int getAMatrixSize(AutomatonMode m) 
@@ -273,277 +261,250 @@ public class StateflowSpPrinter extends ToolPrinter {
             }
             return size;
     }
-    /**
-    * set general A matrix for each mode
-    */
-    public void getLinearMatrix(AutomatonMode m) {
-            int size = varID.size();
-            int i = 0;
-            linearMatrix = new double[ha.variables.size()][size];
-            for (ExpressionInterval ei : m.flowDynamics.values()){
-                    Expression e = ei.getExpression();
-                    getCoefficient(i,e);
-                    i++;
-            }
-    }
     
-    
-    private void getCoefficient(int i, Expression e) {
-   
-            if (e instanceof Variable) {
-                    linearMatrix[i][varID.get(e.toString())] = 1;
-            } else if (e instanceof Operation) {
-
-                    Operation o = (Operation) e;
-                    if (o.op == Operator.MULTIPLY) {
-                            Expression l = o.getLeft();
-                            Expression r = o.getRight();                             
-                            if (r instanceof Variable && l instanceof Constant) {
-                                    linearMatrix[i][varID.get(r.toString())] = ((Constant) l).getVal();
-                                    if (o.getParent() != null) {
-                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
-                                                    linearMatrix[i][varID.get(r.toString())] = -linearMatrix[i][varID.get(r.toString())];
-                                    }
-                            } else if (l instanceof Variable && r instanceof Constant) {
-                                    linearMatrix[i][varID.get(l.toString())] = ((Constant) r).getVal();
-                                    if (o.getParent() != null) {
-                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
-                                                    linearMatrix[i][varID.get(l.toString())] = -linearMatrix[i][varID.get(l.toString())];
-                                    }
-                            }
-                    } else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
-                            if (o.getRight() instanceof Variable)
-                                    linearMatrix[i][varID.get(o.getRight().toString())] = 1;
-                            if (o.getLeft() instanceof Variable)
-                                    linearMatrix[i][varID.get(o.getLeft().toString())] = 1;
-                            if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
-                                    getCoefficient(i, o.getRight());
-                                    getCoefficient(i, o.getLeft());
-                            }
-                    }
-            }
-	}
+ 
     /**
     * 
     * 
     * 
     * @return the dynamic matrix A of the set of variable X
     */
-	public String convertFlowToAMatrix(AutomatonMode m) {
-		String rv = "";
-                //Integer size = ha.variables.size();
-                Integer size = getAMatrixSize(m);
-                for (int i = 0; i < size; i++){
-                        for (int j = 0; j < size; j++)  {
-                                rv = rv +  Double.toString(linearMatrix[j][i]) + " ";
-                        }
-                        rv = rv + ";";
+    public String convertFlowToAMatrix(AutomatonMode m) {
+            String rv = "";
+            //Classification cls = new Classification();
+            double[][] linearMatrix = cls.linearMatrix;
+            //Integer size = ha.variables.size();
+            Integer size = getAMatrixSize(m);
+            for (int i = 0; i < size; i++){
+                    for (int j = 0; j < size; j++)  {
+                            rv = rv +  Double.toString(linearMatrix[j][i]) + " ";
                     }
-		rv = "[" + rv + "]";
-		return rv;
-	}
+                    rv = rv + ";";
+                }
+            rv = "[" + rv + "]";
+            return rv;
+    }
     /**
     * 
     /**
     * 	
     * @return non zero input matrix B for each location 
     */
-        public String convertInputToBMatrix(AutomatonMode m) {
-		String rv = "";
-                Integer rowLength = getAMatrixSize(m);
-                boolean allzero = true;
-                String tmp = "";
-                Integer colLength = ha.variables.size() + ha.constants.size();
-                if (colLength > ha.variables.size()){
-                        for (int j = ha.variables.size(); j < colLength; j++){                           
-                                for (int i = 0; i < rowLength; i++)  {
-                                        tmp = tmp +  Double.toString(linearMatrix[i][j]) + " ";
-                                        if (linearMatrix[i][j] != 0 )
-                                                allzero = false;    
-                                }
-                                if (!allzero)
-                                    rv = rv + tmp + ";";
-                                allzero = true;
-                                tmp = "";                    
-                        }
-                }
-		rv = "[" + rv + "]";
-		return rv;
-	}
+    public String convertInputToBMatrix(AutomatonMode m) {
+            String rv = "";
+            //Classification cls = new Classification();
+            double[][] linearMatrix = cls.linearMatrix;
+            Integer rowLength = getAMatrixSize(m);
+            boolean allzero = true;
+            String tmp = "";
+            Integer colLength = ha.variables.size() + ha.constants.size();
+            if (colLength > ha.variables.size()){
+                    for (int j = ha.variables.size(); j < colLength; j++){                           
+                            for (int i = 0; i < rowLength; i++)  {
+                                    tmp = tmp +  Double.toString(linearMatrix[i][j]) + " ";
+                                    if (linearMatrix[i][j] != 0 )
+                                            allzero = false;    
+                            }
+                            if (!allzero)
+                                rv = rv + tmp + ";";
+                            allzero = true;
+                            tmp = "";                    
+                    }
+            }
+            rv = "[" + rv + "]";
+            return rv;
+    }
     /**
     * 
     * @return invariant matrix C for each location
     */
-        public String convertInvToMatrix(AutomatonMode m) {
-		String rv = "";
-		Expression eInv = m.invariant;
-		for (String v : ha.variables) {			
-			// skip all variables with non-null dynamics
-			// outputs (y = Cx) are those with non defined (havoc) dynamics
-                        
-			if (!(m.flowDynamics.containsKey(v))|| m.flowDynamics.get(v).asExpression().equals(new Constant(0))) {
-				//Expression e = m.flowDynamics.get(v).asExpression();
-				//if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
-					
-					Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
-                                        for (String s : ha.variables){
-                                                if (varID.get(s) < getAMatrixSize(m)){
-                                                        getInvCoefficient(s, subEquality.asOperation().getRight());
-                                                        rv = rv + coeff + " ";
-                                                        found = false;
-                                                        coeff = "0";
-                                                }
-                                        }
-                                        rv = rv + ";";
-					// TODO: really need to have objects for the vectors and matrices around, we can find this coefficient of 1
-					// but now how do we know where to set it...?
-                        }                       
+    public String convertInvToMatrix(AutomatonMode m) {
+            String rv = "";
+            //Classification cls = new Classification();
+            LinkedHashMap <String, Integer> varID = cls.varID ;
+            Expression eInv = m.invariant;
+            for (String v : ha.variables) {			
+                    // skip all variables with non-null dynamics
+                    // outputs (y = Cx) are those with non defined (havoc) dynamics
 
-		}
-		rv = "[" + rv + "]";
+                    if (!(m.flowDynamics.containsKey(v))|| m.flowDynamics.get(v).asExpression().equals(new Constant(0))) {
+                            //Expression e = m.flowDynamics.get(v).asExpression();
+                            //if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
 
-		return rv;
-	}
+                                    Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
+                                    for (String s : ha.variables){
+                                            if (varID.get(s) < getAMatrixSize(m)){
+                                                    findInvCoefficient(s, subEquality.asOperation().getRight());
+                                                    rv = rv + coeff + " ";
+                                                    found = false;
+                                                    coeff = "0";
+                                            }
+                                    }
+                                    rv = rv + ";";
+                                    // TODO: really need to have objects for the vectors and matrices around, we can find this coefficient of 1
+                                    // but now how do we know where to set it...?
+                    }                       
+
+            }
+            rv = "[" + rv + "]";
+
+            return rv;
+    }
 	
-	private Expression getSubEquality(String v, Expression e, Expression s) {
-		if (e instanceof Variable) {
-			if (e.toString().equals(v)) {
-				return e.getParent();
-			}
-			else {                     
-				return null;
-			}
-		}
-		else if (e instanceof Constant) {
-			return s;
-		}
-		else if (e instanceof Operation) {
-			s = getSubEquality(v, e.asOperation().getLeft(), s);
-			if (s != null) {
-				return s;
-			}
-			s = getSubEquality(v, e.asOperation().getRight(), s);
-			if (s != null) {
-				return s;
-			}
-		}
-		return null;
-	}
+    private Expression getSubEquality(String v, Expression e, Expression s) {
+            if (e instanceof Variable) {
+                    if (e.toString().equals(v)) {
+                            return e.getParent();
+                    }
+                    else {                     
+                            return null;
+                    }
+            }
+            else if (e instanceof Constant) {
+                    return s;
+            }
+            else if (e instanceof Operation) {
+                    s = getSubEquality(v, e.asOperation().getLeft(), s);
+                    if (s != null) {
+                            return s;
+                    }
+                    s = getSubEquality(v, e.asOperation().getRight(), s);
+                    if (s != null) {
+                            return s;
+                    }
+            }
+            return null;
+    }
     
-	private void getInvCoefficient(String v, Expression e) {
+    private void findInvCoefficient(String v, Expression e) {
 
-		if (!found) {
-			if (e instanceof Variable) {
-				if (e.toString().equals(v)) {
-					coeff = "1";
-				}
-			} else if (e instanceof Constant) {
-				coeff = "0";
-			} else if (e instanceof Operation) {
+            if (!found) {
+                    if (e instanceof Variable) {
+                            if (e.toString().equals(v)) {
+                                    coeff = "1";
+                            }
+                    } else if (e instanceof Constant) {
+                            coeff = "0";
+                    } else if (e instanceof Operation) {
 
-				Operation o = (Operation) e;
-				if (o.op == Operator.MULTIPLY) {
-					Expression l = o.getLeft();
-					Expression r = o.getRight();                          
-                                        if (r instanceof Variable && l instanceof Constant) {
-						if (r.toString().equals(v)) {
-							coeff = Double.toString(((Constant) l).getVal());
-							if (o.getParent() != null) {
-								if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
-									coeff = "-" + coeff;
-							}
-							found = true;
-						}
-					} else if (l instanceof Variable && r instanceof Constant) {
-						if (l.toString().equals(v)) {
-							coeff = Double.toString(((Constant) r).getVal());
-							found = true;
-						}
-					}
-				} else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
-                                    
-                                        if (o.getRight() instanceof Variable || o.getLeft() instanceof Variable) {
-						if (o.getRight().toString().equals(v) || o.getLeft().toString().equals(v) ) {
-							coeff = "1";
-							found = true;
-						}
-					}
-                                        if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
-						getInvCoefficient(v, o.getRight());
-						getInvCoefficient(v, o.getLeft());
-					}
-				}
-			}
-		}
-	}
+                            Operation o = (Operation) e;
+                            if (o.op == Operator.MULTIPLY) {
+                                    Expression l = o.getLeft();
+                                    Expression r = o.getRight();                          
+                                    if (r instanceof Variable && l instanceof Constant) {
+                                            if (r.toString().equals(v)) {
+                                                    coeff = Double.toString(((Constant) l).getVal());
+                                                    if (o.getParent() != null) {
+                                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+                                                                    coeff = "-" + coeff;
+                                                    }
+                                                    found = true;
+                                            }
+                                    } else if (l instanceof Variable && r instanceof Constant) {
+                                            if (l.toString().equals(v)) {
+                                                    coeff = Double.toString(((Constant) r).getVal());
+                                                    found = true;
+                                            }
+                                    }
+                            } else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
+
+                                    if (o.getRight() instanceof Variable || o.getLeft() instanceof Variable) {
+                                            if (o.getRight().toString().equals(v) || o.getLeft().toString().equals(v) ) {
+                                                    coeff = "1";
+                                                    found = true;
+                                            }
+                                    }
+                                    if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+                                            findInvCoefficient(v, o.getRight());
+                                            findInvCoefficient(v, o.getLeft());
+                                    }
+                            }
+                    }
+            }
+    }
     
-        
+    /**
+    * 
+    * @return variables lower bounds
+    */    
     public String parseInitialLowerBound(AutomatonMode m){
             String rv = "";
+            LinkedHashMap <String, Integer> varID = cls.varID ;
             for (Expression ex: config.init.values()){
-                TreeMap <String, Interval> ranges =  getBound(ex);
-                for (String s : ha.variables)
-                {
-                        if (varID.get(s) < getAMatrixSize(m)){
-                                for (Entry<String, Interval> e : ranges.entrySet())
-                                {
-                                        if (e.getKey().equals(s)) 
-                                            rv = rv + Double.toString(e.getValue().min) + " ";
-                                }
-                        }
-                }
-                rv =  rv +";";             	
+                    TreeMap <String, Interval> ranges =  getBound(ex);
+                    for (String s : ha.variables)
+                    {
+                            if (varID.get(s) < getAMatrixSize(m)){
+                                    for (Entry<String, Interval> e : ranges.entrySet())
+                                    {
+                                            if (e.getKey().equals(s)) 
+                                                rv = rv + Double.toString(e.getValue().min) + " ";
+                                    }
+                            }
+                    }
+                    rv =  rv +";";             	
             }
             rv = "[" + rv + "]"; 
             return rv;
     } 
+    /**
+    * 
+    * @return variables upper bounds
+    */
     public String parseInitialUpperBound(AutomatonMode m){
             String rv = "";
+            LinkedHashMap <String, Integer> varID = cls.varID ;
             for (Expression ex: config.init.values()){
-                TreeMap <String, Interval> ranges =  getBound(ex);
-                for (String s : ha.variables)
-                {
-                        if (varID.get(s) < getAMatrixSize(m)){
-                                for (Entry<String, Interval> e : ranges.entrySet())
-                                {
-                                        if (e.getKey().equals(s)) 
-                                            rv = rv + Double.toString(e.getValue().max) + " ";
-                                }
-                        }
-                }
-                rv =  rv +";";             	
+                    TreeMap <String, Interval> ranges =  getBound(ex);
+                    for (String s : ha.variables)
+                    {
+                            if (varID.get(s) < getAMatrixSize(m)){
+                                    for (Entry<String, Interval> e : ranges.entrySet())
+                                    {
+                                            if (e.getKey().equals(s)) 
+                                                rv = rv + Double.toString(e.getValue().max) + " ";
+                                    }
+                            }
+                    }
+                    rv =  rv +";";             	
             }
             rv = "[" + rv + "]"; 
             return rv;
     }  
+    /**
+    * 
+    * @return input bounds as a matrix
+    */
     public String parseInitialInputBound(AutomatonMode m){
             String rv = "";
+            LinkedHashMap <String, Integer> varID = cls.varID;
+            double[][] linearMatrix = cls.linearMatrix;
             boolean allzero = true;
             for (Expression ex: config.init.values()){
-                TreeMap <String, Interval> ranges =  getBound(ex);
-                for (String s : ha.constants.keySet())
-                {
-                        for (int i = 0; i < getAMatrixSize(m); i++){
-                            if (linearMatrix[i][varID.get(s)] != 0 )
-                                                allzero = false;  
-                        }                 
-                        if (!allzero){
-                                for (Entry<String, Interval> e : ranges.entrySet())
-                                {
-                                        if (e.getKey().equals(s)) 
-                                            rv = rv + Double.toString(e.getValue().min) + " " + Double.toString(e.getValue().max) + " ";
-                                }
-                                rv =  rv +";";     
-                        }
-                        allzero = true;
-                }                   	
+                    TreeMap <String, Interval> ranges =  getBound(ex);
+                    for (String s : ha.constants.keySet())
+                    {
+                            for (int i = 0; i < getAMatrixSize(m); i++){
+                                if (linearMatrix[i][varID.get(s)] != 0 )
+                                                    allzero = false;  
+                            }                 
+                            if (!allzero){
+                                    for (Entry<String, Interval> e : ranges.entrySet())
+                                    {
+                                            if (e.getKey().equals(s)) 
+                                                rv = rv + Double.toString(e.getValue().min) + " " + Double.toString(e.getValue().max) + " ";
+                                    }
+                                    rv =  rv +";";     
+                            }
+                            allzero = true;
+                    }                   	
             }
             rv = "[" + rv + "]"; 
             return rv;
     }
     /**
     * 
-    * @return 
+    * @return variables and constants bounds
     */
     private TreeMap<String,Interval> getBound(Expression ex)          
     {

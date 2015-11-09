@@ -1,25 +1,18 @@
 package com.verivital.hyst.passes.complex;
 
 
-import java.io.File;
-import java.util.LinkedHashMap;
+
 import java.util.Map.Entry;
 
-import org.junit.Assert;
 
-import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.Operation;
-import com.verivital.hyst.grammar.formula.Operator;
-import com.verivital.hyst.grammar.formula.Variable;
+
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.printers.StateflowSpPrinter;
+import com.verivital.hyst.util.Classification;
 
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
@@ -72,11 +65,14 @@ public class OrderReductionPass extends TransformationPass
         MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
 
         MatlabProxyFactory factory = new MatlabProxyFactory(options);
-
+        
+        Classification cf = new Classification();
+        cf.ha = ha;
+        cf.setVarID(ha); 
         StateflowSpPrinter sp = new StateflowSpPrinter();
         sp.ha = ha;
         sp.setConfig(config);
-        sp.getVarID(ha); 
+        //sp.setVarID(ha); 
         MatlabProxy proxy;
 		try {
 			proxy = factory.getProxy();
@@ -85,21 +81,21 @@ public class OrderReductionPass extends TransformationPass
                 proxy.eval("[path_parent,path_current] = fileparts(pwd)");
                 proxy.eval("if ~strcmp(path_current, 'pass_order_reduction') cd ./matlab/pass_order_reduction; end");
 
-	        
+	        // currently, only support for continuous linear dynamics
 	        // todo: refactor, move to stateflow printer
 	        // todo: test to ensure order of this vector is the same as the matrix below, could be ensured by construction if done in matrix construction function
 	         for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
                         // declare x variable
                         String variableString = "";
                         for (String v : ha.variables) {
-                                if (sp.varID.get(v) < sp.getAMatrixSize(e.getValue()))
+                                if (cf.varID.get(v) < sp.getAMatrixSize(e.getValue()))
                                         variableString = variableString + " " + v;
                         }
 
                         proxy.eval("syms " + variableString);
                         proxy.eval("X = [" + variableString + "]");
-                        
-                        sp.getLinearMatrix(e.getValue());
+                        cf.setLinearMatrix(e.getValue());
+                        //sp.setLinearMatrix(e.getValue());
 	        	String matlabAMatrix = sp.convertFlowToAMatrix(e.getValue());
 	        	proxy.eval("A_" + e.getKey() + " = " + matlabAMatrix + ";");
 	        	proxy.eval("A_" + e.getKey() + " * X.'");
@@ -123,6 +119,8 @@ public class OrderReductionPass extends TransformationPass
                         proxy.eval("sys_" + e.getKey() + " = ss(" + "A_" + e.getKey() + ", " + "B_" + e.getKey() + ", " + "C_" + e.getKey() + ", " +  "0)");
                         String cmd_string = "[sys_r,lb_r,ub_r,e] = find_specified_reduced_model(sys_"+ e.getKey()+ ",lb_" + e.getKey()+",ub_" + e.getKey()+",ib_" + e.getKey()+ "," + reducedOrder+")";
                         proxy.eval(cmd_string); 
+                        // convert to a spaceex model
+                        proxy.eval("spaceex_model_generation('" + e.getKey()+ "_reduced_to_"+reducedOrder +"',sys_r,lb_r,ub_r," + "ib_" + e.getKey() +",1,'-t')"); 
                         
 	        }
 	        

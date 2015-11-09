@@ -11,11 +11,14 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import static com.verivital.hyst.util.AutomatonUtil.simplifyExpression;
+import java.util.LinkedHashMap;
 
 
 
@@ -65,6 +68,9 @@ public class Classification
     	// TODO: stochastic ones, etc.
     }
     
+    public static LinkedHashMap <String, Integer> varID;
+    public static double [][] linearMatrix; 
+    public static BaseComponent ha;
     /**
      * Classify whether an automaton is deterministic or not
      * @author tjohnson
@@ -91,33 +97,33 @@ public class Classification
     */
     
     public static AutomatonType classifyAutomaton(BaseComponent c) {
-		if (c.variables.size() == 0) {
-			return AutomatonType.DISCRETE_FINITE;
-		}
-		else {
-			boolean allNull = true;
+            if (c.variables.size() == 0) {
+                    return AutomatonType.DISCRETE_FINITE;
+            }
+            else {
+                    boolean allNull = true;
 
-			for (Entry<String, AutomatonMode> m : c.modes.entrySet()) {
-				for (String v : c.variables) {
-					if (m.getValue().flowDynamics.containsKey(v)) {
-						if (m.getValue().flowDynamics.get(v) != null) {
-							ExpressionInterval ei = m.getValue().flowDynamics.get(v);
-							if (!ei.getExpression().equals(new Constant(0)) || ei.getInterval() != null) {
-								allNull = false;
-								break;
-							}
-						}
-					}
-				}
-			}
-			
-			if (allNull) {
-				return AutomatonType.DISCRETE_FINITE;
-			}
-			else {
-				return AutomatonType.HYBRID;
-			}
-		}
+                    for (Entry<String, AutomatonMode> m : c.modes.entrySet()) {
+                            for (String v : c.variables) {
+                                    if (m.getValue().flowDynamics.containsKey(v)) {
+                                            if (m.getValue().flowDynamics.get(v) != null) {
+                                                    ExpressionInterval ei = m.getValue().flowDynamics.get(v);
+                                                    if (!ei.getExpression().equals(new Constant(0)) || ei.getInterval() != null) {
+                                                            allNull = false;
+                                                            break;
+                                                    }
+                                            }
+                                    }
+                            }
+                    }
+
+                    if (allNull) {
+                            return AutomatonType.DISCRETE_FINITE;
+                    }
+                    else {
+                            return AutomatonType.HYBRID;
+                    }
+            }
     }
     
     
@@ -148,5 +154,172 @@ public class Classification
 
         return rv;
     }
-            
+    
+    public static boolean isLinearDynamics(LinkedHashMap<String, ExpressionInterval> flowDynamics)
+    {
+            boolean rv = true;
+
+            for (ExpressionInterval e : flowDynamics.values())
+            {
+                    if (!isLinearExpression(e.getExpression()))
+                    {
+                            rv = false;
+                            break;
+                    }
+            }
+
+            return rv;
+    }
+
+    public static boolean isLinearExpression(Expression e)
+    {
+            boolean rv = true;
+
+            Operation o = e.asOperation();
+
+            if (o != null)
+            {
+                    if (o.op == Operator.MULTIPLY)
+                    {
+                            int numVars = 0;
+
+                            for (Expression c : o.children)
+                            {
+                                    int count = countVariablesMultNeg(c); 
+
+                                    if (count != Integer.MAX_VALUE)
+                                            numVars += count;
+                                    else
+                                    {
+                                            rv = false;
+                                            break;
+                                    }
+                            }
+
+                            if (numVars > 1)
+                                    rv = false;
+                    }
+                    else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT)
+                    {
+                            for (Expression c : o.children)
+                            {
+                                    if (!isLinearExpression(c))
+                                    {
+                                            rv = false;
+                                            break;
+                                    }
+                            }
+                    }
+                    else if (o.op == Operator.NEGATIVE)
+                            rv = isLinearExpression(o.children.get(0));
+                    else
+                            rv = false;
+            }
+
+            return rv;
+    }
+
+    /**
+     * Recursively count the number of variables. only recurse if we have
+     * multiplication, or negation, otherwise return Integer.MAX_VALUE
+     * @param e the expression
+     * @return the number of variables
+     */
+    private static int countVariablesMultNeg(Expression e)
+    {
+            int rv = 0;
+            Operation o = e.asOperation();
+
+            if (o != null)
+            {
+                    if (o.op == Operator.MULTIPLY || o.op == Operator.NEGATIVE)
+                    {
+                            for (Expression c : o.children)
+                            {
+                                    int count = countVariablesMultNeg(c);
+
+                                    if (count == Integer.MAX_VALUE)
+                                            rv = Integer.MAX_VALUE;
+                                    else
+                                            rv += count;
+                            }
+                    }
+                    else
+                            rv = Integer.MAX_VALUE;
+            }
+            else if (e instanceof Variable)
+                    rv = 1;
+
+            return rv;
+    }
+    
+       /**
+    * merge all variables and constants 
+    */
+    public void setVarID(BaseComponent ha) 
+    {
+            varID = new LinkedHashMap<String, Integer>(); 
+            int id = 0;  
+            for (String v : ha.variables) 
+                    varID.put(v, id++);
+            for (String c : ha.constants.keySet())
+                    varID.put(c, id++);  
+    }
+    /**
+    * set general A matrix for each mode
+    */
+    public void setLinearMatrix(AutomatonMode m) {
+            if (!isLinearDynamics(m.flowDynamics))
+                    throw new AutomatonValidationException("this is not a linear automaton");
+            else{
+                    int size = varID.size();
+                    int i = 0;
+                    linearMatrix = new double[ha.variables.size()][size];
+                    for (ExpressionInterval ei : m.flowDynamics.values()){
+                            Expression e = simplifyExpression(ei.getExpression());
+                            findCoefficient(i,e);
+                            i++;
+                    }
+            }
+    }
+    
+    /**
+    * find coefficients for all variables and constants of the linear expressions 
+    */
+    private void findCoefficient(int i, Expression e) {
+   
+            if (e instanceof Variable) {
+                    linearMatrix[i][varID.get(e.toString())] = 1;
+            } else if (e instanceof Operation) {
+
+                    Operation o = (Operation) e;
+                    if (o.op == Operator.MULTIPLY) {
+                            Expression l = o.getLeft();
+                            Expression r = o.getRight();                             
+                            if (r instanceof Variable && l instanceof Constant) {
+                                    linearMatrix[i][varID.get(r.toString())] = ((Constant) l).getVal();
+                                    if (o.getParent() != null) {
+                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+                                                    linearMatrix[i][varID.get(r.toString())] = -linearMatrix[i][varID.get(r.toString())];
+                                    }
+                            } else if (l instanceof Variable && r instanceof Constant) {
+                                    linearMatrix[i][varID.get(l.toString())] = ((Constant) r).getVal();
+                                    if (o.getParent() != null) {
+                                            if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
+                                                    linearMatrix[i][varID.get(l.toString())] = -linearMatrix[i][varID.get(l.toString())];
+                                    }
+                            }
+                    } else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
+                            if (o.getRight() instanceof Variable)
+                                    linearMatrix[i][varID.get(o.getRight().toString())] = 1;
+                            if (o.getLeft() instanceof Variable)
+                                    linearMatrix[i][varID.get(o.getLeft().toString())] = 1;
+                            if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
+                                    findCoefficient(i, o.getRight());
+                                    findCoefficient(i, o.getLeft());
+                            }
+                    }
+            }
+	}
+    
 }

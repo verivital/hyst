@@ -5,13 +5,6 @@ package com.verivital.hyst.printers;
 
 
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -27,11 +20,19 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
+import static com.verivital.hyst.printers.ToolPrinter.doubleToString;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 
 /**
@@ -328,7 +329,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (isNonLinearDynamics(mode.flowDynamics))
 				printLine("nonpoly ode");
-			else if (isLinearDynamics(mode.flowDynamics))
+			else if (Classification.isLinearDynamics(mode.flowDynamics))
 				printLine("linear ode");
 			else if (ha.variables.size() <= 3)
 				printLine("poly ode 1");
@@ -409,103 +410,7 @@ public class FlowPrinter extends ToolPrinter
 		return rv;
 	}
 
-	private boolean isLinearDynamics(LinkedHashMap<String, ExpressionInterval> flowDynamics)
-	{
-		boolean rv = true;
-		
-		for (ExpressionInterval e : flowDynamics.values())
-		{
-			if (!isLinearExpression(e.getExpression()))
-			{
-				rv = false;
-				break;
-			}
-		}
-		
-		return rv;
-	}
 
-	public static boolean isLinearExpression(Expression e)
-	{
-		boolean rv = true;
-		
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (o.op == Operator.MULTIPLY)
-			{
-				int numVars = 0;
-				
-				for (Expression c : o.children)
-				{
-					int count = countVariablesMultNeg(c); 
-					
-					if (count != Integer.MAX_VALUE)
-						numVars += count;
-					else
-					{
-						rv = false;
-						break;
-					}
-				}
-				
-				if (numVars > 1)
-					rv = false;
-			}
-			else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT)
-			{
-				for (Expression c : o.children)
-				{
-					if (!isLinearExpression(c))
-					{
-						rv = false;
-						break;
-					}
-				}
-			}
-			else if (o.op == Operator.NEGATIVE)
-				rv = isLinearExpression(o.children.get(0));
-			else
-				rv = false;
-		}
-		
-		return rv;
-	}
-
-	/**
-	 * Recursively count the number of variables. only recurse if we have
-	 * multiplication, or negation, otherwise return Integer.MAX_VALUE
-	 * @param e the expression
-	 * @return the number of variables
-	 */
-	private static int countVariablesMultNeg(Expression e)
-	{
-		int rv = 0;
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (o.op == Operator.MULTIPLY || o.op == Operator.NEGATIVE)
-			{
-				for (Expression c : o.children)
-				{
-					int count = countVariablesMultNeg(c);
-					
-					if (count == Integer.MAX_VALUE)
-						rv = Integer.MAX_VALUE;
-					else
-						rv += count;
-				}
-			}
-			else
-				rv = Integer.MAX_VALUE;
-		}
-		else if (e instanceof Variable)
-			rv = 1;
-		
-		return rv;
-	}
 
 	public static String getFlowConditionExpression(Expression e)
 	{

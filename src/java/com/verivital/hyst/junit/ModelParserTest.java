@@ -34,6 +34,7 @@ import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -1006,11 +1007,14 @@ public class ModelParserTest
 		Configuration c = flatten(test1);
 		BaseComponent ha = (BaseComponent)c.root;
 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
 		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[2.0 4.0 ;0.0 -3.0 ;]";
 		Assert.assertEquals(s, result);    	
@@ -1028,11 +1032,14 @@ public class ModelParserTest
 		Configuration c = flatten(test1);
 		BaseComponent ha = (BaseComponent)c.root;
 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
 		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0.0 2.0 4.0 ;]";
 		Assert.assertEquals(s, result);
@@ -1051,11 +1058,14 @@ public class ModelParserTest
 		Configuration c = flatten(test1);
 		BaseComponent ha = (BaseComponent)c.root;
 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
 		String s = sp.convertFlowToAMatrix(mode);
                 String result = "[1.0 ;]";
                 Assert.assertEquals(s, result);        	
@@ -1073,11 +1083,14 @@ public class ModelParserTest
 		Configuration c = flatten(test1);
 		BaseComponent ha = (BaseComponent)c.root;
 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
 		String s = sp.convertFlowToAMatrix(mode);
 		String result = "[0.0 ;]";
 		Assert.assertEquals(s, result);     	
@@ -1094,11 +1107,14 @@ public class ModelParserTest
 		Configuration c = flatten(test1);
 		BaseComponent ha = (BaseComponent)c.root;
 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
 		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
                 Assert.assertEquals(A, resultA);
@@ -1127,11 +1143,14 @@ public class ModelParserTest
                 
 		//BaseComponent ha = (BaseComponent)c.root;
                 
-		StateflowSpPrinter sp = new StateflowSpPrinter();
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                StateflowSpPrinter sp = new StateflowSpPrinter();
                 sp.ha = ha;
-                sp.getVarID(ha);
+                //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
-                sp.getLinearMatrix(mode);
+                cls.setLinearMatrix(mode);
                 // test A matrix
 		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[1.0 4.0 ;0.5 -3.0 ;]";
