@@ -1,8 +1,8 @@
 package com.verivital.hyst.junit;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -16,8 +16,6 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
-import com.verivital.hyst.grammar.formula.MatrixValueEnumerator;
-import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -56,19 +54,13 @@ public class LutMatrixTest
 	{
 		String str = "[1, 2; 3, 4; 5, 6]";
 		MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(str);
-		final double[] total = {0}; // array so that it the value is mutable
+		double total = 0;
 		
-		m.enumerateValues(new MatrixValueEnumerator()
-		{
-			@Override
-			public void enumerateValue(Expression value, int[] indexList)
-			{
-				total[0] += ((Constant)value).getVal();
-			}
-		});
-		
+		for (Entry<Expression, int[]> e : m)
+			total += ((Constant)e.getKey()).getVal();
+
 		double TOL = 1e-9;
-		Assert.assertEquals("matrix total is correct", 21, total[0], TOL);
+		Assert.assertEquals("matrix total is correct", 21, total, TOL);
 	}
 	
 	/**
@@ -180,44 +172,6 @@ public class LutMatrixTest
 	}
 	
 	/**
-	 * Creates a new configuration with an initial urgent mode
-	 * @return the constructed Configuration
-	 */
-	private Configuration makeLutConfiguration(String[][] dynamics)
-	{
-		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
-		
-		try
-		{
-			new ConvertLutFlowsPass().runTransformationPass(c, null);
-			Assert.fail("Luts in initial modes should be rejected");
-		}
-		catch (AutomatonExportException e)
-		{
-			// expected, conversions of luts in initial modes are not allowed
-		}
-		
-		// create a new urgent initial mode, and change the initial states to point to it
-		BaseComponent ha = (BaseComponent)c.root;
-		AutomatonMode am = ha.modes.values().iterator().next();
-		AutomatonMode start = ha.createMode("start");
-		start.urgent = true;
-		start.flowDynamics = null;
-		start.invariant = Constant.TRUE;
-		
-		AutomatonTransition at = ha.createTransition(start, am);
-		at.guard = Constant.TRUE;
-		
-		Expression initExpression = c.init.values().iterator().next();
-		c.init.clear();
-		c.init.put("start", initExpression);
-		
-		c.validate();
-		
-		return c;
-	}
-	
-	/**
 	 * Test a 2-d LUT in flow
 	 */
 	@Test
@@ -254,7 +208,7 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([t], [1, 2, 1, 2], [0, 10, 30, 40])";
 		String[][] dynamics = {{"t", "1", "0"}, {"y", lutStr, "15"}};
-		Configuration c = makeLutConfiguration(dynamics);
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		new ConvertLutFlowsPass().runTransformationPass(c, null);
@@ -264,13 +218,13 @@ public class LutMatrixTest
 		Assert.assertEquals("4 modes after conversion", 4, ha.modes.size());
 		
 		// transition from start should point to each of the three (3 transitions)
-		// and there should be bi-directional transitions between each of them (2 * 3 = 6 transitions)
-		Assert.assertEquals("9 transitions after conversion", 9, ha.transitions.size());
+		// and there should be bi-directional transitions between each of them (2 * 2 = 4 transitions)
+		Assert.assertEquals("7 transitions after conversion", 7, ha.transitions.size());
 		
 		// 15 -> 1.75
 		String[] names = {"on_0", "on_1", "on_2"};
 		String[] invariants = {"t <= 10", "t >= 10 & t <= 30", "t >= 30"};
-		String[] flows = {"1 + 1 / 10 * (t - 0)", "2 + -1 / -20 * (t - 10)", "1 + 1 / 10 * (t - 30)"};
+		String[] flows = {"1 + 1 / 10 * (t - 0)", "2 + -1 * (t - 10) / 20", "1 + 1 * (t - 30) / 10"};
 		
 		for (int i = 0; i < names.length; ++i)
 		{
@@ -282,11 +236,19 @@ public class LutMatrixTest
 			Assert.assertNotEquals("mode " + name + " is not supposed to be null", null, am);
 			
 			Assert.assertEquals("invariant in " + name + " is incorrect", invariant, am.invariant.toDefaultString());
-			Assert.assertEquals("flow in " + name + " is incorrect", flow, am.flowDynamics.get("y").asExpression().toDefaultString());
+			
+			Expression gotFlow = am.flowDynamics.get("y").asExpression();
+			Expression expectedFlow = FormulaParser.parseValue(flow);
+			
+			String errorMsg = AutomatonUtil.areExpressionsEqual(expectedFlow, gotFlow);
+			
+			if (errorMsg != null)
+				Assert.fail("In mode '" + name + "', " + errorMsg);
 		}
 		
 		// test the guard from mode 0 to mode 1 (should be t >= 10)
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
+		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
 		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t >= 10", at.guard.toDefaultString());
 		
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
@@ -302,7 +264,7 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([a, b], [1 2 4 ; 2 3 5 ; 3 5 10], [0, 1, 3], [0, 10, 30])";
 		String[][] dynamics = {{"a", "1", "0"}, {"b", "1", "0"}, {"y", lutStr, "15"}};
-		Configuration c = makeLutConfiguration(dynamics);
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		// should have four modes created, with the split at (a,b)=(1,10)
@@ -336,36 +298,11 @@ public class LutMatrixTest
 		// check the flow dynamics for a 'random' point
 		Expression expected = FormulaParser.parseValue("3+(a-1)*1 + (b-10)/20 * (5+(a-1)*2.5 - (3+(a-1)*1))");
 		Expression got = am.flowDynamics.get("y").asExpression();
-		ArrayList <String> vars = new ArrayList <String>();
-		vars.add("a");
-		vars.add("b");
 		
-		// the test points
-		double[][] tests = new double[][]
-		{
-			{1, 10},
-			{3, 10},
-			{1, 30},
-			{3, 30},
-			{2, 20},
-			{32.15, 15.351},
-			{-3.15, -1.351},
-			{0, 0},
-			{Math.PI * 3.44 + 12, Math.E * 7.1 + 834}
-		};
+		String errorMsg = AutomatonUtil.areExpressionsEqual(expected, got);
 		
-		for (double[] test : tests)
-		{
-			double a = test[0];
-			double b = test[1];
-			HyperPoint p = new HyperPoint(a, b);
-			
-			double expectedVal = RungeKutta.evaluateExpression(expected, p, vars);
-			double gotVal = RungeKutta.evaluateExpression(got, p, vars);
-			double TOL = 1e-9;
-			
-			Assert.assertEquals("flow in " + name + " is incorrect at point (" + a + ", " + b + ")", expectedVal, gotVal, TOL);
-		}
+		if (errorMsg != null)
+			Assert.fail("In mode '" + name + "', " + errorMsg);
 	}
 	
 	@Test
@@ -373,12 +310,12 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([t], [1, 2, 1, 2], [0, 10, 30, 40])";
 		LutExpression lut = (LutExpression)FormulaParser.parseValue(lutStr);
-		String[] vars = new String[]{"t"};
+		String[] vars = lut.variables;
 		int[] indexList = new int[]{0};
 		Interval[] rangeList = new Interval[]{new Interval(0,10)};
 		
 		Expression expected = FormulaParser.parseValue("1 + 1 / 10 * (t - 0)");
-		Expression got = ConvertLutFlowsPass.nLinearInterpolation(vars, lut.table, indexList, rangeList);
+		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
 
 		List <String> varList = Arrays.asList(vars);
 		
@@ -402,12 +339,12 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([a, b], [1 2 4 ; 2 3 5 ; 3 5 10], [0, 1, 3], [0, 10, 30])";
 		LutExpression lut = (LutExpression)FormulaParser.parseValue(lutStr);
-		String[] vars = new String[]{"a", "b"};
+		String[] vars = lut.variables;
 		int[] indexList = new int[]{1,1};
 		Interval[] rangeList = new Interval[]{new Interval(1,3), new Interval(10, 30)};
 		
 		Expression expected = FormulaParser.parseValue("3+(a-1)*1 + (b-10)/20 * (5+(a-1)*2.5 - (3+(a-1)*1))");
-		Expression got = ConvertLutFlowsPass.nLinearInterpolation(vars, lut.table, indexList, rangeList);
+		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
 		
 		List <String> varList = Arrays.asList(vars);
 		

@@ -14,7 +14,6 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
-import com.verivital.hyst.grammar.formula.MatrixValueEnumerator;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -165,62 +164,51 @@ public class ConvertLutFlowsPass extends TransformationPass
 	 */
 	public void convertFlowInMode(AutomatonMode am, String variable, LutExpression lut)
 	{
-		Collection <AutomatonMode> newModes = makeLutModes(am, variable, lut);
+		ArrayList <AutomatonMode> newModes = createLutModes(am, lut);
 		
-		makeOriginalModeUrgent(am, newModes);
+		createDynamicsAndTransitions(am, variable, lut);
+		
 		fixOutgoingTransitions(am, newModes);
 		
-		throw new AutomatonExportException("unimplemented");
+		makeOriginalModeUrgent(am, newModes);
+	}
+	
+	private String join(int[] list, String sep)
+	{
+		StringBuilder rv = new StringBuilder();
+		
+		for (int i : list)
+		{
+			if (rv.length() != 0)
+				rv.append(sep);
+			
+			rv.append(i);
+		}
+		
+		return rv.toString();
 	}
 
 	/**
-	 * Create an automaton mode between the entries in the LUT
-	 * @param am the original mode we're copying
-	 * @param variable the variable who's flow contains a LUT subexpression
-	 * @param lut the LUT subexpression to replace
-	 * @return a collection of modes that was created (with transitions between them)
+	 * Should this value be skipped? We create modes between two table values, i and i + 1, so if the
+	 * current value is the last one in any dimension, we skip it
+	 * @param indexList the index
+	 * @param m the table data
+	 * @return true iff we're at the last entry in any dimension
 	 */
-	private Collection<AutomatonMode> makeLutModes(AutomatonMode am, String variable, final LutExpression lut)
+	private boolean shouldSkip(int[] indexList, MatrixExpression m)
 	{
-		final ArrayList <AutomatonMode> rv = new ArrayList <AutomatonMode>();
-		final int numDims = lut.table.getNumDims();
-		
-		// well, we have to iterate over the matrix expression lut.table
-		lut.table.enumerateValues(new MatrixValueEnumerator()
+		boolean skip = false;
+	
+		for (int d = 0; d < indexList.length; ++d)
 		{
-			@Override
-			public void enumerateValue(Expression value, int[] indexList)
+			if (indexList[d] == m.getDimWidth(d) - 1)
 			{
-				if (!shouldSkip(indexList))
-				{
-					
-				}
+				skip = true;
+				break;
 			}
-
-			/**
-			 * Should this value be skipped? We create modes between two table values, i and i + 1, so if the
-			 * current value is the last one in any dimension, we skip it
-			 * @param indexList
-			 * @return
-			 */
-			private boolean shouldSkip(int[] indexList)
-			{
-				boolean skip = false;
-			
-				for (int d = 0; d < numDims; ++d)
-				{
-					if (indexList[d] == lut.table.getDimWidth(d) - 1)
-					{
-						skip = true;
-						break;
-					}
-				}
-				
-				return skip;
-			}
-		});
+		}
 		
-		return rv;
+		return skip;
 	}
 
 	/**
@@ -271,17 +259,176 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
+	 * Create the AutomatonModes corresponding to this lut. This does not create dynamics/invariants or transitions.
+	 *  
+	 * @param original the original location
+	 * @param variableWithLut the variable with dynamics that contains a look up table
+	 * @param lut the subexpression we're splitting
+	 * @return the created modes
+	 */
+	private ArrayList<AutomatonMode> createLutModes(AutomatonMode original, LutExpression lut)
+	{
+		ArrayList<AutomatonMode> rv = new ArrayList<AutomatonMode>();
+		BaseComponent ha = original.automaton;
+		
+		for (Entry<Expression, int[]> e : lut.table)
+		{
+			int[] indexList = e.getValue();
+			
+			if (shouldSkip(indexList, lut.table))
+				continue;
+			
+			// shouldn't skip, construct mode
+			AutomatonMode am = ha.createMode(original.name + "_" + join(indexList, "_"));
+			
+			rv.add(am);
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Create the dynamics, invariants, and transitions among (already-created) lut modes.
+	 * @param original the original mode
+	 * @param variable the variable who's flow contains a LUT subexpression
+	 * @param lut the LUT subexpression to replace
+	 */
+	private void createDynamicsAndTransitions(AutomatonMode original, String variableWithLut, LutExpression lut)
+	{
+		BaseComponent ha = original.automaton;
+		int tableDims = lut.table.getNumDims();
+				
+		for (Entry<Expression, int[]> e : lut.table)
+		{
+			int[] indexList = e.getValue();
+			
+			if (shouldSkip(indexList, lut.table))
+				continue;
+
+			String name = original.name + "_" + join(indexList, "_");
+			AutomatonMode am = ha.modes.get(name);
+			am.invariant = original.invariant.copy(); 
+			
+			Interval[] rangeList = new Interval[tableDims];
+			
+			// this loop populates range list, accumulates the invariant, and creates neighbor transitions
+			for (int varIndex = 0; varIndex < tableDims; ++varIndex)
+			{
+				String varName = lut.variables[varIndex];
+				int indexInTable = indexList[varIndex];
+				double[] breakpoints = lut.breakpoints[varIndex];
+				double leftBreakpoint = breakpoints[indexInTable];
+				double rightBreakpoint = breakpoints[indexInTable + 1]; // in bounds because shouldSkip was false 
+				
+				rangeList[varIndex] = new Interval(leftBreakpoint, rightBreakpoint);
+				
+				// if there's a left neighbor
+				if (indexInTable > 0)
+				{
+					Expression inRange = new Operation(varName, Operator.GREATEREQUAL, leftBreakpoint);
+					
+					// accumulate inRange into invariant
+					am.invariant = Expression.and(am.invariant, inRange);
+					
+					// add transition to left neighbor
+					Expression guard = new Operation(varName, Operator.LESSEQUAL, leftBreakpoint);
+					int[] leftIndexList = Arrays.copyOf(indexList, indexList.length);
+					--leftIndexList[varIndex];
+					String leftName = original.name + "_" + join(leftIndexList, "_");
+					AutomatonMode leftMode = ha.modes.get(leftName);
+					
+					if (leftMode == null)
+						throw new AutomatonExportException("Left mode named '" + leftName + "' not found in automaton");
+					
+					ha.createTransition(am, leftMode).guard = guard;
+				}
+				
+				// if there's a right neighbor (3 breakpoints = 2 modes which means only index 0 has a right neighbor)
+				int numModes = breakpoints.length - 1;
+				
+				if (indexInTable < numModes - 1) 
+				{
+					Expression inRange = new Operation(varName, Operator.LESSEQUAL, rightBreakpoint);
+					
+					// accumulate inRange into invariant
+					am.invariant = Expression.and(am.invariant, inRange);
+					
+					// add transition to right neighbor
+					Expression guard = new Operation(varName, Operator.GREATEREQUAL, rightBreakpoint);
+					int[] rightIndexList = Arrays.copyOf(indexList, indexList.length);
+					++rightIndexList[varIndex];
+					String rightName = original.name + "_" + join(rightIndexList, "_");
+					AutomatonMode rightMode = ha.modes.get(rightName);
+					
+					if (rightMode == null)
+						throw new AutomatonExportException("Right mode named '" + rightName + "' not found in automaton");
+					
+					ha.createTransition(am, rightMode).guard = guard;
+				}
+			}
+			
+			// create dynamics for all other variables
+			for (String var : ha.variables)
+			{
+				if (!var.equals(variableWithLut))
+				{
+					// copy dynamics
+					am.flowDynamics.put(var, original.flowDynamics.get(var).copy());
+					continue;
+				}
+			}
+			
+			// create dynamics for variableWithLut
+			Expression replaceLutExpression = nLinearInterpolation(lut, indexList, rangeList);
+			ExpressionInterval originalExpInt = original.flowDynamics.get(variableWithLut);
+			Expression newFlow = replaceLutSubexpression(originalExpInt.getExpression(), lut, replaceLutExpression);
+			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
+			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
+		}
+	}
+
+	/**
+	 * Replace a lut subexpression with a different expression, and return the complete new expression
+	 * @param complete the complete expression
+	 * @param lut the lut subexpression to replace
+	 * @param replaceExp the expression to use in place of lut
+	 * @return a copy of the complete expression
+	 */
+	private Expression replaceLutSubexpression(Expression expression, LutExpression lut, Expression replaceLutExpression)
+	{
+		Expression rv = null;
+		
+		if (expression == lut)
+			rv = replaceLutExpression;
+		else if (rv instanceof Operation)
+		{
+			Operation o = expression.asOperation();
+			Operation newO = new Operation(o.op);
+			
+			for (Expression child : o.children)
+				newO.children.add(replaceLutSubexpression(child, lut, replaceLutExpression));
+			
+			rv = newO;
+		}
+		else
+			rv = expression.copy();
+		
+		return rv;
+	}
+
+	/**
 	 * Perform n-linear interpolation. This is a generalization of the tri-linear scheme given in
 	 * http://paulbourke.net/miscellaneous/interpolation/
-	 * @param variableList the names of the variables, in order
-	 * @param table the look-up-table of values
+	 * @param lut the lookup table expression
 	 * @param indexList the index values for each dimension we want to interpolate, the interpolation is done between
 	 *                  the elements i and i + 1
 	 * @param rangeList the ranges being interpolated (from the two relevant breakpoints in each dimension) 
 	 * @return an expression which is the n-linear interpolation
 	 */
-	public static Expression nLinearInterpolation(String[] variableList, MatrixExpression table, int[] indexList, Interval[] rangeList)
+	public static Expression nLinearInterpolation(LutExpression lut, int[] indexList, Interval[] rangeList)
 	{
+		String[] variableList = lut.variables;
+		MatrixExpression table = lut.table;
 		int numDims = variableList.length;
 		Expression[] vars = new Expression[numDims];
 		Expression[] oneMinusVars = new Expression[numDims];

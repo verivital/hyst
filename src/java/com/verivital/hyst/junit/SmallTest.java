@@ -713,8 +713,11 @@ public class SmallTest
 		
 		Assert.assertTrue("simplification resulted in correct interval", new Interval(-6, 3).equals(ei.getInterval()));
 		
-		Assert.assertTrue("simplification resulted in correct expression", 
-				DefaultExpressionPrinter.instance.print(ei.getExpression()).equals("-10 * v - 3 * a"));
+		Expression expected = FormulaParser.parseValue("-10 * v - 3 * a");
+		String errorMsg = AutomatonUtil.areExpressionsEqual(expected, ei.getExpression());
+
+		if (errorMsg != null)
+			Assert.fail(errorMsg);
 	}
 	
 	@Test

@@ -3,7 +3,10 @@
  */
 package com.verivital.hyst.grammar.formula;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 
@@ -17,7 +20,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
  * They can be used, for example, to specify look up tables. They must be at least one dimensional, and each
  * dimension must be at least width 1
  */
-public class MatrixExpression extends Expression 
+public class MatrixExpression extends Expression implements Iterable<Entry<Expression, int[]>>
 {
 	private int[] sizes; // the size of each dimension, x y z
 	private Expression[] data; // the data for each cell (should be length size[0] * size[1] * ...)
@@ -282,46 +285,82 @@ public class MatrixExpression extends Expression
 		rv.append("]");
 	}
 
-	/**
-	 * Enumerate all values in this matrix
-	 * @param en the object which gets called for each value in the matrix
-	 */
-	public void enumerateValues(MatrixValueEnumerator en)
+	@Override
+	public Iterator<Entry<Expression, int[]>> iterator()
 	{
-		int[] iterator = new int[sizes.length];
-		
-		while (true)
-		{
-			en.enumerateValue(get(iterator), iterator);
-			
-			if (!increment(iterator))
-				break;
-		}
+		return new MatrixEntryIterator(this);
 	}
-
+	
 	/**
-	 * Increment an index list (with overflowing to the next dimension if necessary
-	 * @param iterator [inout] an index list, incremented in place
-	 * @return true if it was updated to a valid index, false if we reached the end
+	 * An iterator for matrix expressions. Loop over every expression in the matrix.
+	 * @author Stanley Bak (11-2015)
+	 *
 	 */
-	private boolean increment(int[] iterator)
+	private class MatrixEntryIterator implements Iterator<Entry<Expression, int[]>>
 	{
-		boolean rv = true;
-		++iterator[0];
+		private MatrixExpression me;
+		private int[] iterator;
 		
-		for (int d = 0; d < sizes.length; ++d)
+		public MatrixEntryIterator(MatrixExpression me)
 		{
-			if (iterator[d] >= sizes[d])
-			{
-				iterator[d] -= sizes[d];
-				
-				if (d == sizes.length - 1)
-					rv = false;
-				else
-					++iterator[d+1];
-			}
+			this.me = me;
+			iterator = new int[me.getNumDims()];
+		}
+
+		@Override
+		public boolean hasNext()
+		{
+			return iterator != null;
+		}
+
+		@Override
+		public Entry<Expression, int[]> next()
+		{
+			Entry<Expression, int[]> e = new AbstractMap.SimpleEntry<Expression, int[]>(me.get(iterator), iterator);
+
+			iterator = incrementIterator();
+
+			return e;
+		}
+
+		@Override
+		public void remove()
+		{
+			throw new RuntimeException("iteartor.remove() not supported on Matrix");
 		}
 		
-		return rv;
+		/**
+		 * Increment the iterator indexList (with overflowing to the next dimension if necessary)
+		 * This returns null upon overflow (when done)
+		 * @return the incremented indexList
+		 */
+		private int[] incrementIterator()
+		{
+			boolean done = false;
+			int[] rv = Arrays.copyOf(iterator, iterator.length);
+			
+			++rv[0];
+			
+			for (int d = 0; d < me.getNumDims(); ++d)
+			{
+				int size = me.getDimWidth(d);
+				
+				if (rv[d] >= size)
+				{
+					rv[d] -= size;
+					
+					if (d == me.getNumDims() - 1)
+						done = true;
+					else
+						++rv[d+1];
+				}
+			}
+			
+			if (done)
+				rv = null;
+			
+			return rv;
+		}
+
 	}
 }

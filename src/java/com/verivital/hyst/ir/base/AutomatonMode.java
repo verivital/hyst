@@ -108,7 +108,7 @@ public class AutomatonMode
 				ExpressionInterval ei = entry.getValue();
 				
 				if (ei == null)
-					throw new AutomatonValidationException("Flow for " + entry.getKey() + " was null");
+					throw new AutomatonValidationException("Flow for " + entry.getKey() + " was null in mode " + name);
 			}
 		}
 	}

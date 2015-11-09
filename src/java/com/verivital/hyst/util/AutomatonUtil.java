@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -864,5 +865,81 @@ public abstract class AutomatonUtil
 			
 		c.validate();
 		return c;
+	}
+	
+	/**
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
+	 * a counter-example description string if they are not.
+	 */
+	public static String areExpressionsEqual(Expression a, Expression b)
+	{
+		String rv = null;
+	
+		Set <String> varSet = AutomatonUtil.getVariablesInExpression(a);
+		varSet.addAll(AutomatonUtil.getVariablesInExpression(b));
+		
+		ArrayList <String> varList = new ArrayList <String>();
+		varList.addAll(varSet);
+		int numVars = varList.size();
+		
+		ArrayList <HyperPoint> samples = new ArrayList <HyperPoint>(); 
+		samples.add(new HyperPoint(numVars)); // add 0
+		
+		// add 1 for each dimension
+		for (int d = 0; d < numVars; ++d)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			hp.dims[d] = 1;
+			samples.add(hp);
+		}
+		
+		// add -1 for each dimension
+		for (int d = 0; d < numVars; ++d)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			hp.dims[d] = -1;
+			samples.add(hp);
+		}
+		
+		// add 1 for every dimension
+		HyperPoint one = new HyperPoint(numVars);
+		
+		for (int d = 0; d < numVars; ++d)
+			one.dims[d] = 1;
+
+		samples.add(one);
+			
+		// add a few deterministic random points
+		int NUM_RANDOM_SAMPLES = 5;
+		int seed = varList.hashCode();
+		Random r = new Random(seed);
+		
+		for (int n = 0; n < NUM_RANDOM_SAMPLES; ++n)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			
+			for (int d = 0; d < numVars; ++d)
+				hp.dims[d] = r.nextDouble() * 20 - 10;
+			
+			samples.add(hp);
+		}
+		
+		// compare a and b at the constructed sample points
+		double TOL = 1e-9;
+		
+		for (HyperPoint hp : samples)
+		{
+			double aVal = RungeKutta.evaluateExpression(a, hp, varList);
+			double bVal = RungeKutta.evaluateExpression(b, hp, varList);
+			
+			if (Math.abs(aVal - bVal) > TOL)
+			{
+				rv = "Expressions a='" + a.toDefaultString() + "' and b='" + b.toDefaultString() + "' differ at point"
+						+ varList + " = " + Arrays.toString(hp.dims) + ".\na evalues to " + aVal + "; b evalutes to " + bVal;
+				break;
+			}
+		}
+			
+		return rv;
 	}
 }

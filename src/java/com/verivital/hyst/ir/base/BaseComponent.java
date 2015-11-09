@@ -307,7 +307,7 @@ public class BaseComponent extends Component
 		
 		for (AutomatonTransition at : transitions)
 		{
-			if (at.from.equals(from) && at.to.equals(to))
+			if (at.from.name.equals(from) && at.to.name.equals(to))
 			{
 				rv = at;
 				break;
