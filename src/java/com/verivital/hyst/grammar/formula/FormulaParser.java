@@ -37,7 +37,7 @@ public class FormulaParser
 		}
 		catch (AutomatonExportException e)
 		{
-			throw new AutomatonExportException("Could not parse " + part + ": '" + text + "'", e);
+			throw new AutomatonExportException("Could not parse " + part + ": '" + text + "'\n" + e.getLocalizedMessage(), e);
 		}
 		catch (ParseCancellationException e)
 		{

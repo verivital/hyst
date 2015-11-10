@@ -59,6 +59,19 @@ public class LutMatrixTest
 		Assert.assertEquals("matrix total is correct", 21, total, TOL);
 	}
 	
+	@Test
+	/**
+	 * Test a 5x5 reshape expression
+	 */
+	public void testReshape()
+	{
+		String str = "reshape([-2.0000, -1.5000, -1.0000, -0.5000, 0, -1.5000, -1.0000, -0.5000, 0, 0.5000, "
+				+ "-1.0000, -0.5000, 0, 0.5000, 1.0000, -0.5000, 0, 0.5000, 1.0000, 1.5000, 0, 0.5000, "
+				+ "1.0000, 1.5000, 2.0000],5,5)"; 
+		
+		FormulaParser.parseValue(str);
+	}
+	
 	/**
 	 * Test printing 1-d, 2-d and 3-d matrices
 	 */
