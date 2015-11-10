@@ -170,7 +170,7 @@ public class Hyst
 	{
 		resetVars();
 
-		if (parseArgs(args))
+		if (!parseArgs(args))
 			return ExitCode.ARG_PARSE_ERROR.ordinal();
 
 		if (debugMode)
