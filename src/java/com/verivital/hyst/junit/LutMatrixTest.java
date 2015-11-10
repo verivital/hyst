@@ -375,4 +375,7 @@ public class LutMatrixTest
 			Assert.assertEquals("2-d lut interpolation was wrong for (a,b) = (" + a + "," + b + ")", expectedVal, gotVal, TOL);
 		}
 	}
+	
+	// TODO: maybe add one more test, maybe with a 3-d lookup table, which tests specific points using the matlab
+	// script provided by Matt
 }

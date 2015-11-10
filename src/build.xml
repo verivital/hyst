@@ -4,7 +4,7 @@
     <property name="main.package"          value="exporter"/>
     <property name="parser.package"        value="${main.package}/parser"/>
 	<property name="main.src.dir"          value="src/java/com/verivital/hyst"/>
-    <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> <!-- note: did not need src here due to relative paths, check if this works on your setups -->
+    <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> 
     <property name="grammar.file"          value="${grammar.src.dir}/HystExpression.g4"/>
 	<property name="release.path"          value="release"/>
 	<property name="release_slsf.path"     value="release_slsf"/>
@@ -35,7 +35,7 @@
 		<property name="lib.path" value="../lib" />
 	
 		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
-		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar commons-cli*.jar" />
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
 		<property name="regression.path" value="tests/regression" />
