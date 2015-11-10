@@ -1,14 +1,11 @@
 package com.verivital.hyst.junit;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -21,7 +18,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
-import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.AutomatonUtil;
 
 public class LutMatrixTest
@@ -201,6 +197,54 @@ public class LutMatrixTest
 	}
 	
 	/**
+	 * Test a 1-d LUT with expression as input
+	 */
+	@Test
+	public void testLut1dExpressionInput()
+	{
+		String lutStr = "lut([t + 1], [1, 2, 1, 2], [0, 10, 30, 40])";
+		String[][] dynamics = {{"t", "1", "0"}, {"y", lutStr, "15"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// lut([t+1], [1, 2, 1, 2], [0, 10, 30, 40])
+		String[] names = {"on_0", "on_1", "on_2"};
+		String[] invariants = {"t + 1 <= 10", "t + 1 >= 10 & t + 1 <= 30", "t + 1 >= 30"};
+		String[] flows = {"1 + 1 / 10 * ((t+1) - 0)", "2 + -1 * ((t+1) - 10) / 20", "1 + 1 * ((t+1) - 30) / 10"};
+		
+		for (int i = 0; i < names.length; ++i)
+		{
+			String name = names[i];
+			String invariant = invariants[i];
+			String flow = flows[i];
+			
+			AutomatonMode am = ha.modes.get(name);
+			Assert.assertNotEquals("mode " + name + " is not supposed to be null", null, am);
+			
+			Assert.assertEquals("invariant in " + name + " is incorrect", invariant, am.invariant.toDefaultString());
+			
+			Expression gotFlow = am.flowDynamics.get("y").asExpression();
+			Expression expectedFlow = FormulaParser.parseValue(flow);
+			
+			String errorMsg = AutomatonUtil.areExpressionsEqual(expectedFlow, gotFlow);
+			
+			if (errorMsg != null)
+				Assert.fail("In mode '" + name + "', " + errorMsg);
+		}
+		
+		// test the guard from mode 0 to mode 1 (should be t >= 10)
+		AutomatonTransition at = ha.findTransition(names[0], names[1]);
+		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
+		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t + 1 >= 10", at.guard.toDefaultString());
+		
+		// test the guard from mode 2 to mode 1 (should be t <= 30)
+		at = ha.findTransition(names[2], names[1]);
+		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect", "t + 1 <= 30", at.guard.toDefaultString());
+	}
+	
+	/**
 	 * Test a 1-d LUT in flow
 	 */
 	@Test
@@ -310,28 +354,16 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([t], [1, 2, 1, 2], [0, 10, 30, 40])";
 		LutExpression lut = (LutExpression)FormulaParser.parseValue(lutStr);
-		String[] vars = lut.variables;
 		int[] indexList = new int[]{0};
 		Interval[] rangeList = new Interval[]{new Interval(0,10)};
 		
 		Expression expected = FormulaParser.parseValue("1 + 1 / 10 * (t - 0)");
 		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
-
-		List <String> varList = Arrays.asList(vars);
 		
-		// the values to test
-		double[] tests = {0, 1, 10, 2, 5, 1.5, Math.PI * Math.E + 1.3515};
+		String msg = AutomatonUtil.areExpressionsEqual(expected, got);
 		
-		for (double t : tests)
-		{
-			HyperPoint p = new HyperPoint(t);
-			
-			double expectedVal = RungeKutta.evaluateExpression(expected, p, varList);
-			double gotVal = RungeKutta.evaluateExpression(got, p, varList);
-			double TOL = 1e-9;
-			
-			Assert.assertEquals("1-d lut interpolation was wrong for t = " + t, expectedVal, gotVal, TOL);
-		}
+		if (msg != null)
+			Assert.fail("1-d lut interpolation was wrong: " + msg);
 	}
 	
 	@Test
@@ -339,41 +371,16 @@ public class LutMatrixTest
 	{
 		String lutStr = "lut([a, b], [1 2 4 ; 2 3 5 ; 3 5 10], [0, 1, 3], [0, 10, 30])";
 		LutExpression lut = (LutExpression)FormulaParser.parseValue(lutStr);
-		String[] vars = lut.variables;
 		int[] indexList = new int[]{1,1};
 		Interval[] rangeList = new Interval[]{new Interval(1,3), new Interval(10, 30)};
 		
 		Expression expected = FormulaParser.parseValue("3+(a-1)*1 + (b-10)/20 * (5+(a-1)*2.5 - (3+(a-1)*1))");
 		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
 		
-		List <String> varList = Arrays.asList(vars);
+		String msg = AutomatonUtil.areExpressionsEqual(expected, got);
 		
-		// the test points
-		double[][] tests = new double[][]
-		{
-			{1, 10},
-			{3, 10},
-			{1, 30},
-			{3, 30},
-			{2, 20},
-			{32.15, 15.351},
-			{-3.15, -1.351},
-			{0, 0},
-			{Math.PI * 3.44 + 12, Math.E * 7.1 + 834}
-		};
-		
-		for (double[] test : tests)
-		{
-			double a = test[0];
-			double b = test[1];
-			HyperPoint p = new HyperPoint(a, b);
-			
-			double expectedVal = RungeKutta.evaluateExpression(expected, p, varList);
-			double gotVal = RungeKutta.evaluateExpression(got, p, varList);
-			double TOL = 1e-9;
-			
-			Assert.assertEquals("2-d lut interpolation was wrong for (a,b) = (" + a + "," + b + ")", expectedVal, gotVal, TOL);
-		}
+		if (msg != null)
+			Assert.fail("2-d lut interpolation was wrong: " + msg);
 	}
 	
 	// TODO: maybe add one more test, maybe with a 3-d lookup table, which tests specific points using the matlab

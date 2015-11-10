@@ -15,19 +15,19 @@ import com.verivital.hyst.ir.AutomatonExportException;
  */
 public class LutExpression extends Expression 
 {
-	public String[] variables; // length >= 1
+	public Expression[] inputs; // length >= 1
 	public MatrixExpression table; 
 	public double[][] breakpoints; // height = number of variables, width[i] = length of dimension i of table
 
 	/**
 	 * Look up table constructor. Shallow copies of the passed-in arrays are stored
-	 * @param vars the variables
+	 * @param inputs the inputs (usually variables)
 	 * @param data the table data
 	 * @param breakpoints the breakpoints for each variable
 	 */
-	public LutExpression(String vars[], MatrixExpression data, MatrixExpression ... breakpoints) 
+	public LutExpression(Expression inputs[], MatrixExpression data, MatrixExpression ... breakpoints) 
 	{
-		int len = vars.length;
+		int len = inputs.length;
 		
 		if (len == 0)
 			throw new AutomatonExportException("vars length must be at least 1");
@@ -38,10 +38,10 @@ public class LutExpression extends Expression
 		if (len != breakpoints.length)
 			throw new AutomatonExportException("nums vars must equal the number of breakpoint arrays");
 		
-		this.variables = new String[len];
+		this.inputs = new Expression[len];
 		
 		for (int v = 0; v < len; ++v)
-			this.variables[v] = vars[v];
+			this.inputs[v] = inputs[v].copy();
 		
 		this.table = new MatrixExpression(data);
 		
@@ -114,7 +114,7 @@ public class LutExpression extends Expression
 	 */
 	public LutExpression(LutExpression l)
 	{
-		this(l.variables, l.table, convertBreakPoints(l));
+		this(l.inputs, l.table, convertBreakPoints(l));
 	}
 
 	@Override
@@ -130,14 +130,14 @@ public class LutExpression extends Expression
 		
 		boolean first = true;
 		
-		for (String var : variables)
+		for (Expression var : inputs)
 		{
 			if (first)
 				first = false;
 			else
 				sb.append(", ");
 			
-			sb.append(var);
+			sb.append(printer.print(var));
 		}
 		
 		sb.append("], ");

@@ -423,18 +423,10 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		if (vars.getNumDims() != 1)
 			throw new AutomatonExportException("Function 'lut' expects fist argument to be a 1-d list of variables");
 		
-		String[] varList = new String[vars.getDimWidth(0)];
+		Expression[] varList = new Expression[vars.getDimWidth(0)];
 		
 		for (int v = 0; v < vars.getDimWidth(0); ++v)
-		{
-			Expression varExp = vars.get(v);
-			
-			if (!(varExp instanceof Variable))
-				throw new AutomatonExportException("Function 'lut' expects fist argument to be a list of variable names," +
-						" found '" + varExp.toDefaultString() + "'");
-			
-			varList[v] = ((Variable)varExp).name;
-		}
+			varList[v] = vars.get(v);
 		
 		MatrixExpression data = (MatrixExpression)visit(args.get(1));
 		MatrixExpression[] breakPoints = new MatrixExpression[args.size() - 2];

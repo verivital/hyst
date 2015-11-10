@@ -16,7 +16,6 @@ import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
-import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -314,24 +313,24 @@ public class ConvertLutFlowsPass extends TransformationPass
 			// this loop populates range list, accumulates the invariant, and creates neighbor transitions
 			for (int varIndex = 0; varIndex < tableDims; ++varIndex)
 			{
-				String varName = lut.variables[varIndex];
+				Expression inputExpr = lut.inputs[varIndex];
 				int indexInTable = indexList[varIndex];
 				double[] breakpoints = lut.breakpoints[varIndex];
-				double leftBreakpoint = breakpoints[indexInTable];
-				double rightBreakpoint = breakpoints[indexInTable + 1]; // in bounds because shouldSkip was false 
+				Constant leftBreakpoint = new Constant(breakpoints[indexInTable]);
+				Constant rightBreakpoint = new Constant(breakpoints[indexInTable + 1]); // in bounds because shouldSkip was false 
 				
-				rangeList[varIndex] = new Interval(leftBreakpoint, rightBreakpoint);
+				rangeList[varIndex] = new Interval(leftBreakpoint.getVal(), rightBreakpoint.getVal());
 				
 				// if there's a left neighbor
 				if (indexInTable > 0)
 				{
-					Expression inRange = new Operation(varName, Operator.GREATEREQUAL, leftBreakpoint);
+					Expression inRange = new Operation(inputExpr, Operator.GREATEREQUAL, leftBreakpoint);
 					
 					// accumulate inRange into invariant
 					am.invariant = Expression.and(am.invariant, inRange);
 					
 					// add transition to left neighbor
-					Expression guard = new Operation(varName, Operator.LESSEQUAL, leftBreakpoint);
+					Expression guard = new Operation(inputExpr, Operator.LESSEQUAL, leftBreakpoint);
 					int[] leftIndexList = Arrays.copyOf(indexList, indexList.length);
 					--leftIndexList[varIndex];
 					String leftName = original.name + "_" + join(leftIndexList, "_");
@@ -348,13 +347,13 @@ public class ConvertLutFlowsPass extends TransformationPass
 				
 				if (indexInTable < numModes - 1) 
 				{
-					Expression inRange = new Operation(varName, Operator.LESSEQUAL, rightBreakpoint);
+					Expression inRange = new Operation(inputExpr, Operator.LESSEQUAL, rightBreakpoint);
 					
 					// accumulate inRange into invariant
 					am.invariant = Expression.and(am.invariant, inRange);
 					
 					// add transition to right neighbor
-					Expression guard = new Operation(varName, Operator.GREATEREQUAL, rightBreakpoint);
+					Expression guard = new Operation(inputExpr, Operator.GREATEREQUAL, rightBreakpoint);
 					int[] rightIndexList = Arrays.copyOf(indexList, indexList.length);
 					++rightIndexList[varIndex];
 					String rightName = original.name + "_" + join(rightIndexList, "_");
@@ -427,9 +426,9 @@ public class ConvertLutFlowsPass extends TransformationPass
 	 */
 	public static Expression nLinearInterpolation(LutExpression lut, int[] indexList, Interval[] rangeList)
 	{
-		String[] variableList = lut.variables;
+		Expression[] inputList = lut.inputs;
 		MatrixExpression table = lut.table;
-		int numDims = variableList.length;
+		int numDims = inputList.length;
 		Expression[] vars = new Expression[numDims];
 		Expression[] oneMinusVars = new Expression[numDims];
 		
@@ -444,12 +443,12 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		for (int d = 0; d < numDims; ++d)
 		{
-			Variable v = new Variable(variableList[d]);
+			Expression input = inputList[d].copy();
 			Expression minVal = new Constant(rangeList[d].min);
 			Constant scale = new Constant(1.0 / rangeList[d].width());			
 			
 			vars[d] = new Operation(Operator.SUBTRACT, 
-					new Operation(Operator.MULTIPLY, scale, v),
+					new Operation(Operator.MULTIPLY, scale, input),
 					new Operation(Operator.MULTIPLY, minVal, scale));
 			oneMinusVars[d] = new Operation(Operator.SUBTRACT, new Constant(1), vars[d].copy());
 		}

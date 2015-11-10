@@ -35,7 +35,7 @@
 		<property name="lib.path" value="../lib" />
 	
 		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
-		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-*.jar" />
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-top*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
 		<property name="regression.path" value="tests/regression" />
