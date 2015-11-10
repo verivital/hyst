@@ -35,7 +35,7 @@
 		<property name="lib.path" value="../lib" />
 	
 		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
-		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-top*.jar" />
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
 		<property name="regression.path" value="tests/regression" />
@@ -162,6 +162,12 @@
 	
 	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
 	
+	<target name ="run_jar_test" depends="build-config,build,copyjar" description="Test running the .jar">
+		<exec dir="${lib.path}" executable="java" failonerror="true" outputproperty="devnull">
+			<arg line="-jar ${jar.path} -help" />
+		</exec>
+	</target>
+	
 	<!-- This will unit test every class with *Test*.java in it -->
 	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
 		<mkdir dir="${reports.path}"/>
@@ -186,7 +192,7 @@
 	</target>
 	
 	<!-- run all tests (unit and regression) -->
-	<target name ="test" depends="unit_test,regression_test" description="Run the Unit and Regression Tests">
+	<target name ="test" depends="run_jar_test,unit_test,regression_test" description="Run the Unit and Regression Tests">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

@@ -121,7 +121,7 @@ public class Hyst
 		ARG_PARSE_ERROR,
 		INTERNAL_ERROR,
 		GUI_QUIT,
-		EXPORT_AUTOMATON_EXCEPTION,
+		EXPORT_AUTOMATON_EXCEPTION
 	};
 
 	public static void main(String[] args)
@@ -140,7 +140,7 @@ public class Hyst
 			final String loadFilename = (args.length >= 2) ? args[1] : null;
 
 			// use gui
-			System.out.println("Started in GUI mode. For command-line help use the -help flag.");
+			System.out.println("Started in GUI mode. For command-line help use the " + FLAG_HELP + " flag.");
 
 			fixLookAndFeel();
 
@@ -170,7 +170,7 @@ public class Hyst
 	{
 		resetVars();
 
-		if (!parseArgs(args))
+		if (parseArgs(args))
 			return ExitCode.ARG_PARSE_ERROR.ordinal();
 
 		if (debugMode)
@@ -356,6 +356,7 @@ public class Hyst
 	private static boolean parseArgs(String[] args)
 	{
 		boolean rv = true;
+		boolean quitAfterUsage = false;
 
 		for (int i = 0; i < args.length; i++)
 		{
@@ -411,7 +412,7 @@ public class Hyst
 				continue;
 
 			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || arg.endsWith(FLAG_GUI))
-				; // ignore
+				quitAfterUsage = true; // ignore
 			else if (arg.equals(FLAG_VERBOSE) || arg.equals(FLAG_VERBOSE_SHORT))
 				verboseMode = true;
 			else if (arg.equals(FLAG_DEBUG) || arg.equals(FLAG_DEBUG_SHORT))
@@ -541,6 +542,9 @@ public class Hyst
 					+ "be derived from the XML filename if not explicitly stated (*.cfg)");
 			rv = false;
 		}
+		
+		if (quitAfterUsage) // if -help was used
+			System.exit(ExitCode.SUCCESS.ordinal());
 
 		return rv;
 	}
