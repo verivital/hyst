@@ -36,7 +36,7 @@ EQUAL : '=='|'=';
 EQUAL_RESET : ':=';
 
 matrixRow
-	: (addSub COMMA?)*  # MatrixRowExp
+	: (MINUS? addSub COMMA?)*  # MatrixRowExp
 	;
 
 matrixExpression

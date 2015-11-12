@@ -61,15 +61,41 @@ public class LutMatrixTest
 	
 	@Test
 	/**
-	 * Test a 5x5 reshape expression
+	 * Test a matrix expression with negatives that uses spaces as a delimiter
+	 */
+	public void testNegativeMatrix()
+	{
+		// this is not supported, as it makes the underlying grammar whitespace sensitive
+		// matlab also permits expressions like "+50" rather than 50
+		
+		/*String[] strings = {"[1 1]", "[1-1]", "[1 - 1]", "[1 -1]", "[-1 -1]", "[-1 -(1 -1)]" };
+		int widths[] = {2, 1, 1, 2, 2, 2 };
+		
+		for (int i = 0; i < strings.length; ++i)
+		{
+			String s = strings[i];
+			int expected = widths[i];
+			
+			MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(s);
+			
+			Assert.assertEquals("matrix width is incorrect for " + s, expected, m.getDimWidth(0));
+		}*/
+	}
+	
+	@Test
+	/**
+	 * Test a reshape expression
 	 */
 	public void testReshape()
 	{
+		// this uses 
 		String str = "reshape([-2.0000, -1.5000, -1.0000, -0.5000, 0, -1.5000, -1.0000, -0.5000, 0, 0.5000, "
-				+ "-1.0000, -0.5000, 0, 0.5000, 1.0000, -0.5000, 0, 0.5000, 1.0000, 1.5000, 0, 0.5000, "
-				+ "1.0000, 1.5000, 2.0000],5,5)"; 
+				+ "-1.0000, -0.5000, 0, 0.5000, 1.0000, -0.5000, 0, 0.5000, 1.0000, 1.5000],10,2)"; 
 		
-		FormulaParser.parseValue(str);
+		MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(str);
+		
+		Assert.assertEquals(10, m.getDimWidth(0));
+		Assert.assertEquals(2, m.getDimWidth(1));
 	}
 	
 	/**
