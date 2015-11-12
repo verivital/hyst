@@ -1,7 +1,6 @@
 package com.verivital.hyst.junit;
 
 
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -9,18 +8,17 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
@@ -34,6 +32,7 @@ import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
+import de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
@@ -890,106 +889,6 @@ public class ModelParserTest
 		Assert.assertTrue("init string is not null", initString != null);
 	}
 	
-	@Test
-	public void testInputOutput()
-	{
-		// test model with input and output variables
-		String cfgPath = UNIT_BASEDIR + "comp_in_out/sys.cfg";
-		String xmlPath = UNIT_BASEDIR + "comp_in_out/sys.xml";
-		
-		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		
-		NetworkComponent nc = (NetworkComponent)config.root;
-		
-		BaseComponent bcX = (BaseComponent)nc.children.get("out_x_1").child;
-		BaseComponent bcY = (BaseComponent)nc.children.get("out_y_1").child;
-		
-		Assert.assertEquals("two variables in out_x component", 2, bcX.variables.size());
-		Assert.assertEquals("one defined flow in out_x component", 1, bcX.modes.values().iterator().next().flowDynamics.size());
-		
-		// also test AutomatonUtil.isOutputVariable()
-		Assert.assertTrue("x is an output variable of base component 'out_x_1'", AutomatonUtil.isOutputVariable(bcX,"x"));
-		Assert.assertTrue("y is NOT an output variable of base component 'out_x_1'", !AutomatonUtil.isOutputVariable(bcX,"y"));
-		
-		Assert.assertTrue("x is NOT an output variable of base component 'out_y_1'", !AutomatonUtil.isOutputVariable(bcY,"x"));
-		Assert.assertTrue("y is an output variable of base component 'out_y_1'", AutomatonUtil.isOutputVariable(bcY,"y"));
-	}
-	
-	@Test
-	public void testInputOutputError()
-	{
-		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
-		String cfgPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.cfg";
-		String xmlPath = UNIT_BASEDIR + "comp_in_out_mismatch/sys.xml";
-		
-		try
-		{
-			SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-			Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-			ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-			
-			Assert.fail("Validation exception not raised on invalid input / output automaton");
-		}
-		catch (AutomatonValidationException e)
-		{
-			// expected
-		}
-	}
-	
-	@Test
-    public void testTripleNestedModelWithRenaming() 
-	{
-		// network component inside another network component, all with renaming & locals at each level
-		// test that the names are correctly flattened 
-		
-		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
-		String cfgPath = UNIT_BASEDIR + "three_hier/three_hier.cfg";
-		String xmlPath = UNIT_BASEDIR + "three_hier/three_hier.xml";
-		
-		flatten(SpaceExImporter.importModels(
-				cfgPath,
-				xmlPath));
-    }
-	
-	@Test
-    public void testSixTank() 
-	{
-		// network component inside another network component, all with renaming & locals at each level
-		// this is the 6 tank model 
-		
-		// test illegal model with input and output (one of the automata contains a variable that is not defined in all modes)
-		String cfgPath = UNIT_BASEDIR + "three_hier/tank6.cfg";
-		String xmlPath = UNIT_BASEDIR + "three_hier/tank6.xml";
-		
-		// 1. import spaceex doc
-		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath,xmlPath);
-		
-		// 2. convert the SpaceEx data structures to template automata
-		Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		
-		// 3. run any component template passes here (future)
-		
-		// 4. instantiate the component templates into a networked configuration
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		ArrayList <String> originalOrder = new ArrayList <String>();
-		originalOrder.addAll(c.root.variables);
-		
-		FlattenAutomatonPass.flattenAndOptimize(c);
-		
-		Assert.assertEquals("Single mode after flattening", 1, ((BaseComponent)c.root).modes.size());
-		
-		// variable names should remain ordered after flattening
-		for (int i = 0; i < 6; ++i)
-		{
-			String expectedVarName = originalOrder.get(i);
-			String varName = c.root.variables.get(i);
-			
-			Assert.assertEquals("variable name at index " + i + " was incorrect", expectedVarName, varName);
-		}
-    }
-	
 	/*@Test
     public void testVariableRenaming() 
 	{
@@ -997,7 +896,14 @@ public class ModelParserTest
 		Assert.fail("write a test that does variable renaming with two base components with names that conflict " +
 				"(but are renamed in the parent network component so it's okay)"); 
     }
-	*/
+	
+	@Test
+    public void testTripleNestedModelWithRenaming() 
+	{
+		// TODO
+		Assert.fail("write a test that has a network component inside another network component, all with renaming & locals"
+				+ " at each level; test that the names are correctly flattened"); 
+    }*/
 	
 	// TODO write a test with an automaton like this:
 	// if c is a network component,	modename is going to be a dotted version with a mode from each child, in order

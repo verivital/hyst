@@ -2,7 +2,6 @@ package com.verivital.hyst.util;
 
 import java.util.Map.Entry;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
@@ -14,6 +13,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
@@ -59,7 +59,6 @@ public class Preconditions
 	public void check(Configuration c, String name)
 	{
 		Hyst.log("Checking preconditions for " + name);
-		
 		if (!skip[PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS.ordinal()]) 
 			Preconditions.convertNondeterministicResets(c.root); // may create interval constants
 		

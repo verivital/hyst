@@ -14,136 +14,47 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.util.FileOperations;
 
 /**
- * This class is java <-> python interface using stdin / stdout and python interactive mode
+ * This class is a java <-> python interface using stdin / stdout
+ * Each instance represents a process. For reasonable performance, you should use an single 
+ * session for multiple calls, and not spawn a process for each function you need to call.
  * 
- * It is a singleton, use getInstance() to get an instance of the bridge. The bridge is reused for any passes or printers
- * which use it, so don't put it into an inconsistent state.
+ * Use open() to open the process, which should be called before interacting with python, and close() to close it.
+ * Failure to call close() will leave the python process running, which is a bug.
+ * 
+ * DO NOT INSTANTIATE THIS CLASS IN A STATIC CONTEXT. If you do this, running Hyst will be dependent on having python installed, which
+ * we don't want.
  * 
  * Overhead:
  * In performance tests, I measured around 15000 function calls per second using this bridge
  * In native python, I measured 5.5 million function calls per second
- * 
- * You can reduce overhead by passing all of your data to python at once (or as much as is possible), and then having python 
- * do an extended computation (even in parallel) and only then printing back the result. 
  * 
  * @author Stanley Bak (May 2015)
  *
  */
 public class PythonBridge
 {
-	private static PythonBridge instance = null;
-	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy"};
-	
-	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
 	private int timeoutMs;
 	private Process process = null;
 	private BufferedReader stdout = null;
 	private BufferedReader stderr = null;
 	private Writer stdin = null;
 	
-	public enum Status
+	public PythonBridge()
 	{
-		FALSE,
-		TRUE,
-		UNKNOWN
-	}
-
-	// these static flags 
-	private static boolean blockPython = false;
-	private static Status pythonStatus = Status.UNKNOWN;
-	
-	/**
-	 * This sets whether python should be blocked (pretend it doesn't exist). This is useful for unit testing.
-	 * @param val
-	 */
-	public static void setBlockPython(boolean val)
-	{
-		blockPython = val;
+		this(5000);
 	}
 	
-	public static boolean hasPython()
-	{
-		boolean rv = false;
-		
-		if (!blockPython)
-		{
-			if (pythonStatus == Status.UNKNOWN)
-			{
-				try
-				{
-					getInstance();
-				}
-				catch (AutomatonExportException e)
-				{
-					pythonStatus = Status.FALSE;
-				}
-			}
-			
-			rv = pythonStatus == Status.TRUE;
-		}
-		
-		return rv;
-	}
-	
-	public static PythonBridge getInstance()
-	{
-		return getInstance(DEFAULT_TIMEOUT);
-	}
-	
-	public static PythonBridge getInstance(int timeoutMs)
-	{
-		if (blockPython)
-		{
-			// this occurs if the user programatically called setBlockPython(true), and then tries to call getInstance()
-			// for example, if we're unit testing we may want to check that we're correctly checking if python
-			// exists before calling getInstance(). If not, this exception may be thrown. Use hasPython() to check.
-			throw new AutomatonExportException("PythonBridge.getInstance() was called, but blockPython was set to true.");
-		}
-		
-		if (instance == null)
-			instance = new PythonBridge(timeoutMs);
-		else
-			instance.setTimeout(timeoutMs);
-		
-		return instance;
-	}
-	
-	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
-	 * @param timeoutMs
-	 */
 	public PythonBridge(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
-		
-		if (instance != null)
-			throw new RuntimeException("Multiple instances of PythonBridge were created.");
-
-		open();
-		
-		final PythonBridge bridge = this;
-
-		Runtime.getRuntime().addShutdownHook(new Thread()
-		{
-			 public void run() 
-			 {
-				 bridge.close();
-			 }
-		});
-		
-		pythonStatus = Status.TRUE;
 	}
 	
-	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
-	 * @param timeoutMs
-	 */
 	public void setTimeout(int timeoutMs)
 	{
 		this.timeoutMs = timeoutMs;
 	}
 	
-	private void open()
+	public void open()
 	{
 		log("Opening Python process in interactive mode.");
 		openProcess();
@@ -156,22 +67,6 @@ public class PythonBridge
 					"There may be version issues. Preamble:\n" + preamble);
 		
 		log("Python process opened successfully. Preamble: \n" + preamble);
-		
-		// remove the continuation prompt on multi-line commands in interactive mode "... "
-		send("import sys");
-		send("sys.ps2 = ''");
-		
-		for (String pack : REQUIRED_PACKAGES)
-		{
-			try
-			{
-				send("import " + pack);
-			}
-			catch (AutomatonExportException e)
-			{
-				error("Python import failed on required package '" + pack + "'");
-			}
-		}
 	}
 	
 	private static void log(String description)
@@ -190,7 +85,6 @@ public class PythonBridge
 	 */
 	private void error(String description)
 	{
-		Hyst.logDebug(description);
 		close();
 		
 		throw new AutomatonExportException(description);
@@ -208,7 +102,7 @@ public class PythonBridge
 		System.err.println("Warning: " + description);
 	}
 	
-	private void close()
+	public void close()
 	{
 		if (process != null)
 		{
@@ -240,7 +134,7 @@ public class PythonBridge
 			error("openProcess called but process is already open.");
 			
 		String processNames[] = {"python2.7", "python"};
-		final String ENV_VAR = "HYST_PYTHON_PATH";
+		final String ENV_VAR = "HYST_PATH";
 		String loc = null;
 		
 		for (String processName : processNames)
@@ -528,19 +422,13 @@ public class PythonBridge
 		
 		try
 		{
-			String stdOutBefore = readUntilBlocked(stdout);
-			String stdErrBefore = readUntilBlocked(stderr);
-			
-			if (stdOutBefore.length() != 0)
-				error("stdout contained stale text before the send command: '" + stdOutBefore + "'");
-			
-			if (stdErrBefore.length() != 0)
-				error("stderr contained stale text before the send command: '" + stdErrBefore + "'");
-			
-			logDebug("Sending to python: " + s);
-			stdin.write(s);
-			stdin.write("\n");
-			stdin.flush();
+			if (s != null)
+			{
+				logDebug("Sending to python: " + s);
+				stdin.write(s);
+				stdin.write("\n");
+				stdin.flush();
+			}
 			
 			logDebug("Reading from python with timeout " + timeoutMs + " ms");
 			result = readUntilPrompt();
@@ -557,51 +445,22 @@ public class PythonBridge
 	/**
 	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * @param cmd the command to send (without the trailing newline, which is automatically added)
+	 * @param timeoutMs the timeout to use, in milliseconds. If < 0, then no timeout is used.
 	 * @return the output from stdout until the next prompt. May be the empty string, but never null.
 	 */
 	public String send(String s)
-	{
-		return send(s, false);
-	}
-	
-	/**
-	 * Send a string over stdin to the python interpreter and get the result printed from stdout.
-	 * 
-	 * This version allows the string to end with a newline, which is typically an error, but may be
-	 * necessary for things like function declarations
-	 * 
-	 * @param cmd the command to send (trailing newline is automatically added, so that your string will have
-	 * 			  two trailing newlines)
-	 * @return the output from stdout until the next prompt. May be the empty string, but never null.
-	 */
-	public String sendWithTrailingNewline(String s)
-	{
-		if (!s.endsWith("\n"))
-			error("sendNewlineIsOnPurpose() used by command didn't end with newline: " + s);
-			
-		return send(s, true);
-	}
-	
-	private String send(String s, boolean allowNewlineEndings)
 	{
 		String result = null;
 		
 		if (process == null)
 			error("send() called but process is not running (was open() called?)");
 		
-		if (s.length() == 0)
-			error("send() called with empty string");
-		else if (!allowNewlineEndings && s.endsWith("\n"))
-			error("send() ends with \\n; the newline is added automatically and this would " +
-					"cause issues with PythonBridge's prompt detection.\nIf you want to end " +
-					"the command with a \\n, for example to declare a function, use sendWithTrailingNewline().");
-		
 		result = sendAndWait(s);
 		
 		return result;
 	}
 	
-	public void importPythonBridgeModule(String module)
+	public void importModule(String module)
 	{
 		String result = send("from pythonbridge import " + module);
 		

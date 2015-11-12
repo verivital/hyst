@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.ExpressionModifier;
@@ -44,7 +42,7 @@ public class FlattenRenameUtils
 				convertToFullyQualifiedParams(ci, ROOT_PREFIX);
 			}
 		}
-
+		
 		root.validate();
 	}
 
@@ -67,30 +65,23 @@ public class FlattenRenameUtils
 		
 		RenameParamPass.swapNames(child, renameMapping);
 		
+		// also convert the mapping in the parent
+		RenameParamPass.renameMapping(ci.varMapping, renameMapping);
+		RenameParamPass.renameMapping(ci.constMapping, renameMapping);
+		RenameParamPass.renameMapping(ci.labelMapping, renameMapping);
+		
+		// now convert the children's children
 		if (child instanceof NetworkComponent)
 		{
-			NetworkComponent childNc = (NetworkComponent)child;
-			
-			// convert the children's children
-			for (ComponentInstance childCi : childNc.children.values())
-				convertToFullyQualifiedParams(childCi, prefix);
+			for (Entry<String, ComponentInstance> e : ((NetworkComponent) child).children.entrySet())
+			{
+				ComponentInstance child_ci = e.getValue();
+				
+				convertToFullyQualifiedParams(child_ci, prefix);
+			}
 		}
-		
-		// convert parent's mapping of this child's variables
-		ArrayList <ArrayList <ComponentMapping>> mappingLists = new ArrayList <ArrayList <ComponentMapping>>();
-		mappingLists.add(ci.constMapping);
-		mappingLists.add(ci.labelMapping);
-		mappingLists.add(ci.varMapping);
-		
-		for (ArrayList <ComponentMapping> mappingList : mappingLists)
-		{
-			for (ComponentMapping cm : mappingList)
-				cm.childParam = cm.parentParam;
-		}
-		
-		ci.child.validate();
 	}
-
+	
 	/**
 	 * Get a set of rename assignments (oldName->newName) for a single type of parameter. 
 	 * Variables are renamed if they don't have a mapping in the parent, or if the parent uses a different name.
