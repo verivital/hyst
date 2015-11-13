@@ -1,20 +1,5 @@
 package com.verivital.hyst.junit;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
-
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
@@ -38,13 +23,27 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
+import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
+import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.RangeExtractor;
-
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 /**
  * JUnit tests for transformation passes
@@ -757,5 +756,34 @@ public class PassTests
 			Assert.assertEquals(AutomatonExportException.class, ex.getClass()); // vacuously true, but will force failure if different error
 		}
 		
+	}
+        
+        @Test
+	public void testOrderReductionpass()
+	{
+		String path = UNIT_BASEDIR + "order_reduction/";
+		System.out.println(path);
+		SpaceExDocument doc = SpaceExImporter.importModels(
+				path + "building_full_order.cfg",
+				path + "building_full_order.xml");
+                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		
+		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+                String OrderReductionPassParam = "3";
+		
+		new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
+                BaseComponent ha = (BaseComponent)c.root;
+                //check variables
+                Assert.assertEquals("[x1, x2, x3, y1, time]", ha.variables.toString());
+                String flow = "{x1=0.006132 * u1 - 0.00751 * x1 - 5.275 * x2 + 0.0009639 * x3, x2=5.275 * x1 "
+                        + "- 0.06453 * u1 - 0.8575 * x2 + 0.09063 * x3, x3=0.0009639 * x1 - 0.0006972 * u1 - 0.09063 * x2 - 0.0001258 * x3, "
+                        + "time=1}";
+                String invariant = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 && time <= stoptime";
+                
+                for (Map.Entry <String, AutomatonMode> e : ha.modes.entrySet()){
+                    // Check flow and invariant
+                    Assert.assertEquals(flow, e.getValue().flowDynamics.toString());
+                    Assert.assertEquals(invariant, e.getValue().invariant.toString());
+                }
 	}
 }
