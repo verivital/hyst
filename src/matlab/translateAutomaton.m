@@ -107,7 +107,7 @@ function [ chart, inputVars, outputVars ] = addNetworkComponent( model, componen
         % to make it explicit: there should only be one function, you need
         % to merge semanticTranslation and nonsemanticTranslation
 
-        semanticTranslation(chart, config, ha, componentName, options.eager_violation);
+        semanticTranslation(chart, config, ha, model.Name, options.eager_violation);
     else     
         %[sF] = nonsemanticTranslation(model, chart, config, options.cfg);
         [inputVars, outputVars, ~] = nonsemanticTranslation(isContinuous(dynamicType),model, chart, ...

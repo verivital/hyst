@@ -8,7 +8,6 @@ function semanticTranslation( chart, config, ha, modelName, optEagerViolation )
 % ------------------------------------------------------------------------------
 % author: Christian Schilling
 % ------------------------------------------------------------------------------
-
     % Set this option for extra modification of the chart arrangements (size,
     % labels) aka "pretty printing mode".
     global G_IS_PRETTY_PRINT;

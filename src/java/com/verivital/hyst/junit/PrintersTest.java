@@ -1,11 +1,5 @@
 package com.verivital.hyst.junit;
 
-import java.util.ArrayList;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -19,11 +13,21 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
+import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
-
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import java.io.File;
+import java.util.ArrayList;
+import matlabcontrol.MatlabConnectionException;
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxyFactory;
+import matlabcontrol.MatlabProxyFactoryOptions;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * A unit test suite for testing various types of printers. While ModelParserTest focuses on validating that
@@ -325,5 +329,43 @@ public class PrintersTest
 			tp.setOutputNone();
 			tp.print(c, "scenario=" + scenario, loadedFilename);
 		}
+    }
+    
+    @Test
+    public void testNonSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
+    {
+            String example_name = "vanderpol";
+            testStateFlowConverter(example_name,false);
+    }
+    @Test
+    public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
+    {
+            String example_name = "heaterLygeros";
+            testStateFlowConverter(example_name,true);
+    }
+    
+    public void testStateFlowConverter(String example,boolean opt_semantics_preserving) throws MatlabConnectionException, MatlabInvocationException 
+	{
+            MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
+
+            MatlabProxyFactory factory = new MatlabProxyFactory(options);
+
+            MatlabProxy proxy = factory.getProxy();
+            // the current directory can change to ./matlab/pass_order_reduction after running the order reduction pass test 
+            proxy.eval("[path_parent,path_current] = fileparts(pwd)");
+            proxy.eval("if strcmp(path_current, 'pass_order_reduction') cd ../../; end");
+            proxy.eval("[path_parent,path_current] = fileparts(pwd)");
+            proxy.eval("if ~strcmp(path_current, 'matlab') cd ./matlab; end");
+
+            String cmd_string = "SpaceExToStateflow('" + example + ".xml', '" + example + ".cfg', '--folder', '" + example + "'"; 
+            if (opt_semantics_preserving) {
+                cmd_string += ", '-s')";
+            }
+            else {
+                cmd_string += ")";
+            }
+            proxy.eval(cmd_string);
+            //proxy.eval("sim('" + example + "')"); 
+            proxy.disconnect();
     }
 }

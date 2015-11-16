@@ -13,7 +13,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
     modeTotal = 0;
     %
     % Get all constants directly mapped in SpaceEx and constants specified by cfg files  
-    template_constants = config.root.getAllConstants()
+    template_constants = config.root.getAllConstants();
     oldkeyList = template_constants.keySet().toArray;
     const = java.util.HashMap();
     constIncludingGlobals = java.util.HashMap();
@@ -39,7 +39,6 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
         end
     end
     constIncludingGlobals.putAll(const);
-    const
     %
     %position parmameter;
     x = 120;
@@ -167,22 +166,6 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
             end
         end
     end
-%     if ha.modes.size() > 1 && isNetwork
-%         % add state outside each components
-%         [bagState] = addState(chart,x+3/2*w,y-h/4,w*2*position_x+10,h*(position_y+3/2),name);
-%     end
-
-
-%         if i_comp == comp_size && comp_size > 1
-%             % add system state
-%             [system] = addState(chart,x+w,150,2000,2*i_comp*h*(position_y+3/2),model.name);
-%             set(system,'Decomposition','PARALLEL_AND');
-%             xsource = system.Position(1)+sF(i_mode).Position(3)/2;
-%             ysource = system.Position(2)-30;
-%             [defaultTransistion] = addInittransistion(chart,system,xsource,ysource);
-%             intmode = ha.createMode(initLoc);
-%             defaultTransistion.LabelString = char(printer.getTransitionInit2inLabel(intmode,1,const));
-%         end
 
     width = 150;
     heigth = 150;

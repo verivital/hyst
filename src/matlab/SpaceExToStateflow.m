@@ -73,18 +73,7 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     import com.verivital.hyst.python.*;
     import com.verivital.hyst.simulation.*;
     import com.verivital.hyst.util.*;
-    
-%     % DO NOT IMPORT THESE
-%     import org.apache.commons.cli.*;
-% %     import org.apache.commons.cli.CommandLine;
-% %     import org.apache.commons.cli.CommandLineParser;
-% %     import org.apache.commons.cli.DefaultParser;
-% %     import org.apache.commons.cli.HelpFormatter;
-% %     import org.apache.commons.cli.Option;
-% %     import org.apache.commons.cli.Options;
-% %     import org.apache.commons.cli.ParseException;
-    
-    
+   
     import de.uni_freiburg.informatik.swt.spaceexxmlprinter.*;
     import de.uni_freiburg.informatik.swt.spaxeexxmlreader.*;
     import de.uni_freiburg.informatik.swt.sxhybridautomaton.*;

@@ -77,6 +77,8 @@ public class OrderReductionPass extends TransformationPass
 			
 	        proxy.eval("disp('hello world'); disp('test123'); clock");
                 proxy.eval("[path_parent,path_current] = fileparts(pwd)");
+                proxy.eval("if strcmp(path_current, 'matlab') cd ../; end");
+                proxy.eval("[path_parent,path_current] = fileparts(pwd)");
                 proxy.eval("if ~strcmp(path_current, 'pass_order_reduction') cd ./matlab/pass_order_reduction; end");
 
 	        // currently, only support for continuous linear dynamics
