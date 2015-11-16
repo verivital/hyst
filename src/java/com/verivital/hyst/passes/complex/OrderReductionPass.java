@@ -2,10 +2,7 @@ package com.verivital.hyst.passes.complex;
 
 
 
-import java.util.Map.Entry;
-
-
-
+import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
@@ -13,7 +10,7 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.util.Classification;
-
+import java.util.Map.Entry;
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
@@ -30,6 +27,7 @@ import matlabcontrol.MatlabProxyFactoryOptions;
 public class OrderReductionPass extends TransformationPass
 {
 	private int reducedOrder;
+        
 	
 	@Override
 	public String getName()
@@ -84,7 +82,7 @@ public class OrderReductionPass extends TransformationPass
 	        // currently, only support for continuous linear dynamics
 	        // todo: refactor, move to stateflow printer
 	        // todo: test to ensure order of this vector is the same as the matrix below, could be ensured by construction if done in matrix construction function
-	         for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
+                for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) {
                         // declare x variable
                         String variableString = "";
                         for (String v : ha.variables) {
@@ -120,13 +118,48 @@ public class OrderReductionPass extends TransformationPass
                         String cmd_string = "[sys_r,lb_r,ub_r,e] = find_specified_reduced_model(sys_"+ e.getKey()+ ",lb_" + e.getKey()+",ub_" + e.getKey()+",ib_" + e.getKey()+ "," + reducedOrder+")";
                         proxy.eval(cmd_string); 
                         // convert to a spaceex model
-                        proxy.eval("spaceex_model_generation('" + e.getKey()+ "_reduced_to_"+reducedOrder +"',sys_r,lb_r,ub_r," + "ib_" + e.getKey() +",1,'-t')"); 
+                        proxy.eval("[mA,mC,nB,flow,invariant,initialExpression] = spaceex_model_generation('" + e.getKey()+ "_reduced_to_"+reducedOrder +"',sys_r,lb_r,ub_r," + "ib_" + e.getKey() +",1,'-t')"); 
+                        String flow = (String) proxy.getVariable("flow");
+                        String invariant = (String) proxy.getVariable("invariant");
+                        String initialCondition = (String) proxy.getVariable("initialExpression");
+                        double xSize = ((double[]) proxy.getVariable("mA"))[0];
+                        int varXSize = (int)xSize ;
+                        double ySize = ((double[]) proxy.getVariable("mC"))[0];
+                        int varYSize = (int)ySize ;
+                        double iSize = ((double[]) proxy.getVariable("nB"))[0];
+                        int inputSize = (int)iSize ;
+                        // plot output versus time
+                        String[] plotVars = new String[varYSize+1];
+                        plotVars[0] = "time";
+                        ha.modes.clear();
+                        ha.variables.clear();
+                        ha.constants.clear();
+                        for (int i = 1; i <= varXSize; i++){
+                           ha.variables.add("x" + i);
+                        }
                         
-	        }
-	        
-	        // TODO: get inputs, I guess these are going to be constants from looking at the example model (e.g., u has constant dynamics for building) ; do the same dynamics matrix function to get the B vector, etc.
-	        // TODO: do similar for the C matrix from the invariant
+                        for (int j = 1; j <= varYSize; j++){
+                            plotVars[j] = "y" + j;
+                            ha.variables.add(plotVars[j]);
+                        }
+                        
+                        for (int k = 1; k <= inputSize; k++){
+                            ha.constants.put("u" + k, null);
+                        }
+                        // add global time variable
+                        ha.variables.add("time");
+                        ha.constants.put("stoptime", null);
+                        
+                        // generate mode                      
+                        ha.createMode(e.getKey(), invariant, flow);
+                        
+                        // put initial conditions 
+                        config.init.clear();
+                        config.init.put(e.getKey(),FormulaParser.getExpression(initialCondition, "initial/forbidden"));                       
+                        config.settings.plotVariableNames = plotVars;
+                        config.DO_VALIDATION = false;
 
+	        }
 	        //Disconnect the proxy from MATLAB
 	        proxy.disconnect();
 		} catch (MatlabConnectionException e) {
