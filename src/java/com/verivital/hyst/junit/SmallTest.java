@@ -660,62 +660,61 @@ public class SmallTest
 	}
 	
 	@Test
-        public void testStateflowExpressionPrinterOne() 
-    	{
+	public void testStateflowExpressionPrinterOne() {
 		StateflowSpPrinter spprinter = new StateflowSpPrinter();
 		StateflowSpPrinter.StateflowSpExpressionPrinter exp_printer = spprinter.new StateflowSpExpressionPrinter(0);
 		String sampleGuard = "-5 <= x <= 5";
 		FormulaParser.parseGuard(sampleGuard);
-		
+
 		String sampleFlow = "nu1' = sqrt( mu / (p1^3)) * ((1 + e1 * cos(nu1))^2)";
 		Expression e3 = FormulaParser.parseFlow(sampleFlow);
 		Assert.assertEquals("nu1 = sqrt(mu / p1 ^ 3) * (1 + e1 * cos(nu1)) ^ 2", exp_printer.print(e3));
-	
-        }
-        /**
+
+	}
+
+	/**
 	 * small tests to instance Hyst expressions from Matlab matrices
 	 */
-        @Test
-        public void testSpaceExModelGeneration()
-	{
+	@Test
+	public void testSpaceExModelGeneration() {
 		String flow = "x1 = 0.00751 * x1 - 5.275 * x2 + 0.0009639 * x3 - 0.6641 * x4 & x2 = 5.275 * x1 "
-                        + "- 0.8575 * x2 + 0.09063 * x3 - 0.9218 * x4 & x3 = 0.0009639 * x1 - 0.09063 * x2 - 0.0001258 * x3 "
-                        + "+ 13.54 * x4 & x4 = 0.6641 * x1 - 0.9218 * x2 - 13.54 * x3 - 1.004 * x4";
-		
+				+ "- 0.8575 * x2 + 0.09063 * x3 - 0.9218 * x4 & x3 = 0.0009639 * x1 - 0.09063 * x2 - 0.0001258 * x3 "
+				+ "+ 13.54 * x4 & x4 = 0.6641 * x1 - 0.9218 * x2 - 13.54 * x3 - 1.004 * x4";
+
 		Expression e1 = FormulaParser.parseFlow(flow);
 		Assert.assertNotNull(e1);
-                Assert.assertEquals(flow, DefaultExpressionPrinter.instance.print(e1));
-		
-                String inv = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 - 0.06223 * x4";
-                Expression e2 = FormulaParser.parseInvariant(inv);
-		Assert.assertNotNull(e2);
-                Assert.assertEquals(inv, DefaultExpressionPrinter.instance.print(e2));
-                
-                BaseComponent ha = new BaseComponent();
-                String[] strs = {"x1","x2","x3","x4","y1" };
+		Assert.assertEquals(flow, DefaultExpressionPrinter.instance.print(e1));
 
-                for(int i =  0; i < strs.length; i++){
-                     ha.variables.add(strs[i]);  
-                }
-                
-                String name = "location1";
-                ha.createMode(name,inv,flow);             
+		String inv = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 - 0.06223 * x4";
+		Expression e2 = FormulaParser.parseInvariant(inv);
+		Assert.assertNotNull(e2);
+		Assert.assertEquals(inv, DefaultExpressionPrinter.instance.print(e2));
+
+		BaseComponent ha = new BaseComponent();
+		String[] strs = { "x1", "x2", "x3", "x4", "y1" };
+
+		for (int i = 0; i < strs.length; i++) {
+			ha.variables.add(strs[i]);
+		}
+
+		String name = "location1";
+		ha.createMode(name, inv, flow);
 	}
-        @Test
-        public void testLinearDetection()
-	{
+
+	@Test
+	public void testLinearDetection() {
 		String exp1 = "(1.0 - x * x) * y - x";
-		
+
 		Expression e1 = FormulaParser.parseNumber(exp1);
-		
+
 		if (Classification.isLinearExpression(e1))
 			Assert.fail("expression was detected as linear: " + exp1);
-                
-                String exp2 = "1.0 - x * 2 + 3 * y - z";
-		
+
+		String exp2 = "1.0 - x * 2 + 3 * y - z";
+
 		Expression e2 = FormulaParser.parseNumber(exp2);
-                
-                if (!(Classification.isLinearExpression(e2)))
+
+		if (!(Classification.isLinearExpression(e2)))
 			Assert.fail("expression was not detected as linear: " + exp2);
 	}
         
