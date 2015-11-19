@@ -188,7 +188,7 @@ public class StateflowSpPrinter extends ToolPrinter {
             // begin printing the actual program
             //printNewline();
             try {
-                    printProcedure(originalFilename);
+                    printProcedure(originalFilename, false);
             }
             catch (Exception ex) {
 
@@ -197,7 +197,7 @@ public class StateflowSpPrinter extends ToolPrinter {
     /**
      * Calling Matlab from java to
      */
-    private void printProcedure(String originalFilename) throws MatlabConnectionException, MatlabInvocationException
+    public void printProcedure(String originalFilename, boolean opt_semantics_preserving ) throws MatlabConnectionException, MatlabInvocationException
     {
 
         //Create a proxy, which we will use to control MATLAB
@@ -212,25 +212,23 @@ public class StateflowSpPrinter extends ToolPrinter {
         MatlabProxy proxy = factory.getProxy();
 
         //Display 'hello world' just like when using the demo
-        proxy.eval("disp('hello world'); disp('test123'); clock");
-
-        proxy.eval("disp('" + originalFilename + "'); disp('test123'); clock");
+        //proxy.eval("disp('hello world'); disp('test123'); clock");
+        //proxy.eval("disp('" + originalFilename + "'); disp('test123'); clock");
 
         File f = new File(originalFilename);
 
-        Boolean opt_semantics_preserving = false; 
-
         // TODO: get rid of having to change paths, this is nasty
         proxy.eval("[path_parent,path_current] = fileparts(pwd)");
-        proxy.eval("if ~strcmp(path_current, 'spaceex2stateflow') cd ../../spaceex2stateflow; end");
+        proxy.eval("if strcmp(path_current, 'pass_order_reduction') cd ../../; end");
+        proxy.eval("[path_parent,path_current] = fileparts(pwd)");
+        proxy.eval("if ~strcmp(path_current, 'matlab') cd ./matlab; end");
         // TODO: fix paths in stateflow converter, just let them take an arbitrary relative path as input
         // instead of this folder garbage, and this will then be consistent with the rest of the Hyst paths
         // TODO: pull in actual example name from filename string
         String example_name = f.getName().substring(0, f.getName().lastIndexOf('.')); // strip extension
-
         String cmd_string = "SpaceExToStateflow('" + example_name + ".xml', '" + example_name + ".cfg', '--folder', '" + f.getParentFile().getName() + "'";  // TODO: once removing the examples crap from the stateflow converter, use just f.getParent()
         if (opt_semantics_preserving) {
-            cmd_string += ", '-s'')";
+            cmd_string += ", '-s')";
         }
         else {
             cmd_string += ")";
