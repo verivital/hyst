@@ -334,38 +334,15 @@ public class PrintersTest
     @Test
     public void testNonSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
-            String example_name = "vanderpol";
-            testStateFlowConverter(example_name,false);
+            String example_name = "../examples/vanderpol/vanderpol.xml";
+            StateflowSpPrinter sp = new StateflowSpPrinter();
+            sp.printProcedure(example_name,false);
     }
     @Test
     public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
-            String example_name = "heaterLygeros";
-            testStateFlowConverter(example_name,true);
-    }
-    
-    public void testStateFlowConverter(String example,boolean opt_semantics_preserving) throws MatlabConnectionException, MatlabInvocationException 
-	{
-            MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
-
-            MatlabProxyFactory factory = new MatlabProxyFactory(options);
-
-            MatlabProxy proxy = factory.getProxy();
-            // the current directory can change to ./matlab/pass_order_reduction after running the order reduction pass test 
-            proxy.eval("[path_parent,path_current] = fileparts(pwd)");
-            proxy.eval("if strcmp(path_current, 'pass_order_reduction') cd ../../; end");
-            proxy.eval("[path_parent,path_current] = fileparts(pwd)");
-            proxy.eval("if ~strcmp(path_current, 'matlab') cd ./matlab; end");
-
-            String cmd_string = "SpaceExToStateflow('" + example + ".xml', '" + example + ".cfg', '--folder', '" + example + "'"; 
-            if (opt_semantics_preserving) {
-                cmd_string += ", '-s')";
-            }
-            else {
-                cmd_string += ")";
-            }
-            proxy.eval(cmd_string);
-            //proxy.eval("sim('" + example + "')"); 
-            proxy.disconnect();
+            String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
+            StateflowSpPrinter sp = new StateflowSpPrinter();
+            sp.printProcedure(example_name,true);
     }
 }
