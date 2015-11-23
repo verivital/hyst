@@ -9,6 +9,6 @@ antlr4 HystExpression.g4 -visitor -no-listener -package com.verivital.hyst.gramm
 
 # or, for a single-line script that does everything, do: 
 #
-# printf "\n\n\n\nRunning..." && antlr4 HystExpression.g4 -visitor -no-listener && javac *.java && echo "[1 -1]" | grun HystExpression addSub -gui && rm *.class
+# printf "\n\n\n\nRunning..." && antlr4 HystExpression.g4 -visitor -no-listener && javac *.java && echo "[1, -1]" | grun HystExpression addSub -gui && rm *.class
 
 

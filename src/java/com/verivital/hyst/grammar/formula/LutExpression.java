@@ -4,6 +4,7 @@
 package com.verivital.hyst.grammar.formula;
 
 import java.util.Arrays;
+import java.util.List;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 
@@ -13,10 +14,16 @@ import com.verivital.hyst.ir.AutomatonExportException;
  * @author Stanley Bak
  *
  */
-public class LutExpression extends Expression 
+public class LutExpression extends Operation 
 {
-	public Expression[] inputs; // length >= 1
-	public MatrixExpression table; 
+	TOOD: working here, we are converted a lut expression into an Operation
+	We should be using List <Expression> children = null; instead of inputs and table 
+	(maybe create local methods)
+	Before, luts weren't classified as an Operation, because they were an Expression, so it didn't
+	run the conversion on the 1-d lut model
+	
+	//public Expression[] inputs; // length >= 1
+	//public MatrixExpression table; 
 	public double[][] breakpoints; // height = number of variables, width[i] = length of dimension i of table
 
 	/**
@@ -27,6 +34,8 @@ public class LutExpression extends Expression
 	 */
 	public LutExpression(Expression inputs[], MatrixExpression data, MatrixExpression ... breakpoints) 
 	{
+		super(Operator.LUT);
+		
 		int len = inputs.length;
 		
 		if (len == 0)
@@ -118,7 +127,7 @@ public class LutExpression extends Expression
 	}
 
 	@Override
-	public Expression copy() 
+	public Operation copy() 
 	{
 		return new LutExpression(this);
 	}

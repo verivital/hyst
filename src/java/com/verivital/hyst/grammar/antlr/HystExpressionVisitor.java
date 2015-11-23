@@ -1,4 +1,5 @@
 // Generated from HystExpression.g4 by ANTLR 4.5
+package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
@@ -249,19 +250,19 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitPlus(HystExpressionParser.PlusContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Minus}
-	 * labeled alternative in {@link HystExpressionParser#addSub}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMinus(HystExpressionParser.MinusContext ctx);
-	/**
 	 * Visit a parse tree produced by the {@code ToTimesDiv}
 	 * labeled alternative in {@link HystExpressionParser#addSub}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitToTimesDiv(HystExpressionParser.ToTimesDivContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code Minus}
+	 * labeled alternative in {@link HystExpressionParser#addSub}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMinus(HystExpressionParser.MinusContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Multiplication}
 	 * labeled alternative in {@link HystExpressionParser#timesDiv}.

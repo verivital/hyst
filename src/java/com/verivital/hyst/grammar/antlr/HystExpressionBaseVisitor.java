@@ -1,4 +1,5 @@
 // Generated from HystExpression.g4 by ANTLR 4.5
+package com.verivital.hyst.grammar.antlr;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
@@ -255,14 +256,14 @@ public class HystExpressionBaseVisitor<T> extends AbstractParseTreeVisitor<T> im
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitMinus(HystExpressionParser.MinusContext ctx) { return visitChildren(ctx); }
+	@Override public T visitToTimesDiv(HystExpressionParser.ToTimesDivContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitToTimesDiv(HystExpressionParser.ToTimesDivContext ctx) { return visitChildren(ctx); }
+	@Override public T visitMinus(HystExpressionParser.MinusContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -141,7 +141,7 @@ public class LutMatrixTest
 	@Test
 	public void testMatrixDereferenceOrder()
 	{
-		String str2d = "[1 2 ; 10 20 ; 100 200]";
+		String str2d = "[1, 2 ; 10, 20 ; 100, 200]";
 		MatrixExpression m2d = (MatrixExpression)FormulaParser.parseValue(str2d);
 		
 		// make sure the internal representation matches what matlab uses (from reshape)
@@ -185,7 +185,7 @@ public class LutMatrixTest
 		String str2 = "reshape([1, 10, 100, 2, 20, 200],3,2)";
 		MatrixExpression m2 = (MatrixExpression)FormulaParser.parseValue(str2);
 		
-		String str3 = "[1 2 ; 10 20 ; 100 200]";
+		String str3 = "[1, 2 ; 10, 20 ; 100, 200]";
 		MatrixExpression m3 = (MatrixExpression)FormulaParser.parseValue(str3);
 		
 		Expression[] expArray1d = {new Constant(1), new Constant(10), new Constant(100), 
@@ -345,7 +345,7 @@ public class LutMatrixTest
 	@Test
 	public void testLut2d()
 	{
-		String lutStr = "lut([a, b], [1 2 4 ; 2 3 5 ; 3 5 10], [0, 1, 3], [0, 10, 30])";
+		String lutStr = "lut([a, b], [1, 2, 4 ; 2, 3, 5 ; 3, 5, 10], [0, 1, 3], [0, 10, 30])";
 		String[][] dynamics = {{"a", "1", "0"}, {"b", "1", "0"}, {"y", lutStr, "15"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;
@@ -408,7 +408,7 @@ public class LutMatrixTest
 	@Test
 	public void testLinearInterpolation2d()
 	{
-		String lutStr = "lut([a, b], [1 2 4 ; 2 3 5 ; 3 5 10], [0, 1, 3], [0, 10, 30])";
+		String lutStr = "lut([a, b], [1, 2, 4 ; 2, 3, 5 ; 3, 5, 10], [0, 1, 3], [0, 10, 30])";
 		LutExpression lut = (LutExpression)FormulaParser.parseValue(lutStr);
 		int[] indexList = new int[]{1,1};
 		Interval[] rangeList = new Interval[]{new Interval(1,3), new Interval(10, 30)};
@@ -422,6 +422,17 @@ public class LutMatrixTest
 			Assert.fail("2-d lut interpolation was wrong: " + msg);
 	}
 	
-	// TODO: maybe add one more test, maybe with a 3-d lookup table, which tests specific points using the matlab
-	// script provided by Matt
+	@Test
+	public void testClassifyLut()
+	{
+		String val = "lut([(input - x) * 5, input - x - v], " + 
+				"[-2, -1.5, -1, -0.5, 0 ; -1.5, -1, -0.5, 0, 0.5 ; -1, -0.5, 0, 0.5, 1 " +
+				"; -0.5, 0, 0.5, 1, 1.5 ; 0, 0.5, 1, 1.5, 2], [-1.0, -0.5, 0.0, 0.5, 1.0], " +
+				"[-1.0, -0.5, 0.0, 0.5, 1.0])";
+		Expression e = FormulaParser.parseValue(val);
+		
+		byte b = AutomatonUtil.classifyExpressionOps(e);
+		
+		Assert.assertNotEquals("Classification of lut expression should be nonzero", 0, b);
+	}
 }

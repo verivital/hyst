@@ -779,10 +779,13 @@ public abstract class AutomatonUtil
 		final Collection <Operator> NONLINEAR_OPS = Arrays.asList(new Operator[]{Operator.POW, Operator.DIVIDE, 
 				Operator.COS, Operator.SIN, Operator.SQRT, Operator.TAN, Operator.EXP, Operator.LN});
 		
+		System.out.println(". e is " + e.getClass());
+		
 		Operation o = e.asOperation();
 		
 		if (o != null)
 		{
+			System.out.println(". op is " + o.op);
 			if (LINEAR_OPS.contains(o.op))
 				rv |= OPS_LINEAR;
 			else if (NONLINEAR_OPS.contains(o.op))
