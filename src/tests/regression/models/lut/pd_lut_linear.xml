@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="input" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="loc1" x="112.0" y="209.5" width="185.0" height="122.0">
+      <note>reshape([-2, -1.5, -1, -0.5, 0, -1.5, -1, -0.5, 0, 0.5, -1, -0.5, 0, 0.5, 1, -0.5, 0, 0.5, 1, 1.5, 0, 0.5, 1.0, 1.5, 2],5,5)</note>
+      <invariant>t &lt;= 5</invariant>
+      <flow>t' == 1 &amp;&amp;
+x' == v &amp;&amp;
+v' == lut([(input-x)*5,(input-x-v)], 
+reshape([-2, -1.5, -1, -0.5, 0, -1.5, -1, -0.5, 0, 0.5, -1, -0.5, 0, 0.5, 1, -0.5, 0, 0.5, 1, 1.5, 0, 0.5, 1.0, 1.5, 2],5,5)
+, [-1, -0.5, 0, 0.5, 1], [-1, -0.5, 0, 0.5, 1])</flow>
+    </location>
+  </component>
+</sspaceex>
+
