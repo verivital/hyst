@@ -33,7 +33,6 @@ import com.verivital.hyst.util.AutomatonUtil;
  */
 public class BaseComponent extends Component
 {	
-	public ArrayList <String> initialModes = new ArrayList <String>(); 
 	public LinkedHashMap <String, AutomatonMode> modes = new LinkedHashMap <String, AutomatonMode>();
 	public ArrayList <AutomatonTransition> transitions = new ArrayList<AutomatonTransition>(); 
 	
