@@ -42,6 +42,7 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 public class FlowPrinter extends ToolPrinter
 {
 	private BaseComponent ha;
+	private int DEFAULT_MAX_JUMPS = 999999999;
 	
 	public FlowPrinter()
 	{
@@ -170,7 +171,13 @@ public class FlowPrinter extends ToolPrinter
 		printLine("cutoff " + toolParams.get("cutoff"));
 		printLine("precision " + toolParams.get("precision"));
 		printLine("output out");
-		printLine("max jumps " + toolParams.get("jumps"));
+		
+		int jumps = Integer.parseInt(toolParams.get("jumps"));
+		
+		if (jumps == DEFAULT_MAX_JUMPS)
+			jumps = config.settings.spaceExConfig.maxIterations;
+				
+		printLine("max jumps " + jumps);
 		printLine("print on");
 		printLine("}");
 	}
@@ -769,7 +776,7 @@ public class FlowPrinter extends ToolPrinter
 		toolParams.put("orders", "3-8");
 		toolParams.put("cutoff", "1e-15");
 		toolParams.put("precision", "53");
-		toolParams.put("jumps", "99999999");
+		toolParams.put("jumps", "" + DEFAULT_MAX_JUMPS);
 		toolParams.put("print", "on");
 		toolParams.put("aggregation", "parallelotope");
 

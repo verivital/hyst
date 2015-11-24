@@ -148,6 +148,9 @@ class SpaceExTool(HybridTool):
     def load_args(self, args):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
         HybridTool.load_args(self, args)
+        
+        if not self.original_model_path.endswith(".xml"):
+            raise RuntimeError("Model path must end with .xml: " + str(self.original_model_path))
 
         # also setup the extra cfg path
         cfg_path = args.cfg
@@ -158,7 +161,7 @@ class SpaceExTool(HybridTool):
         cfg_path = os.path.realpath(cfg_path)
 
         if not os.path.exists(cfg_path):
-            raise RuntimeError('cfg file not found at path: ' + self.original_cfg_path)
+            raise RuntimeError('cfg file not found at path: ' + str(cfg_path))
 
         self.original_cfg_path = cfg_path
 

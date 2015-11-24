@@ -242,7 +242,7 @@ public class LutMatrixTest
 	public void testLut1dExpressionInput()
 	{
 		String lutStr = "lut([t + 1], [1, 2, 1, 2], [0, 10, 30, 40])";
-		String[][] dynamics = {{"t", "1", "0"}, {"y", lutStr, "15"}};
+		String[][] dynamics = {{"t", "t", "0"}, {"y", lutStr, "15"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;
 		
@@ -276,11 +276,11 @@ public class LutMatrixTest
 		// test the guard from mode 0 to mode 1 (should be t >= 10)
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
 		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
-		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t + 1 >= 10", at.guard.toDefaultString());
+		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t + 1 >= 10 & t >= 0", at.guard.toDefaultString());
 		
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
 		at = ha.findTransition(names[2], names[1]);
-		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect", "t + 1 <= 30", at.guard.toDefaultString());
+		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect", "t + 1 <= 30 & t <= 0", at.guard.toDefaultString());
 	}
 	
 	/**
@@ -332,11 +332,11 @@ public class LutMatrixTest
 		// test the guard from mode 0 to mode 1 (should be t >= 10)
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
 		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
-		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t >= 10", at.guard.toDefaultString());
+		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect", "t >= 10 & 1 >= 0", at.guard.toDefaultString());
 		
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
 		at = ha.findTransition(names[2], names[1]);
-		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect", "t <= 30", at.guard.toDefaultString());
+		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect", "t <= 30 & 1 <= 0", at.guard.toDefaultString());
 	}
 	
 	/**

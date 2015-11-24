@@ -20,6 +20,8 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.LutExpression;
+import com.verivital.hyst.grammar.formula.MatrixExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -779,13 +781,10 @@ public abstract class AutomatonUtil
 		final Collection <Operator> NONLINEAR_OPS = Arrays.asList(new Operator[]{Operator.POW, Operator.DIVIDE, 
 				Operator.COS, Operator.SIN, Operator.SQRT, Operator.TAN, Operator.EXP, Operator.LN});
 		
-		System.out.println(". e is " + e.getClass());
-		
 		Operation o = e.asOperation();
 		
 		if (o != null)
 		{
-			System.out.println(". op is " + o.op);
 			if (LINEAR_OPS.contains(o.op))
 				rv |= OPS_LINEAR;
 			else if (NONLINEAR_OPS.contains(o.op))
@@ -794,16 +793,16 @@ public abstract class AutomatonUtil
 				rv |= OPS_BOOLEAN;
 			else if (o.op == Operator.LOC)
 				rv |= OPS_LOC;
-			else if (o.op == Operator.LUT)
-				rv |= OPS_LUT;
-			else if (o.op == Operator.MATRIX)
-				rv |= OPS_MATRIX;
 			
 			for (Expression child : o.children)
 				rv |= classifyExpressionOps(child);
 		}
 		else if (e == Constant.TRUE || e == Constant.FALSE)
 			rv |= OPS_BOOLEAN;
+		else if (e instanceof MatrixExpression)
+			rv |= OPS_MATRIX;
+		else if (e instanceof LutExpression)
+			rv |= OPS_LUT;
 		
 		return rv;
 	}
@@ -948,6 +947,85 @@ public abstract class AutomatonUtil
 			}
 		}
 			
+		return rv;
+	}
+	
+	/**
+	 * Return an expression taking the time derivative of the given expression. This consists of substituting the
+	 * symbolic derivative for each variable
+	 * @param e the expression where to do the substitution
+	 * @param timeDerivatives a map of variable->time derivative for each variable. All other Variable expressions will
+	 *                        be assumed to be constants
+	 * @return the derivative of e
+	 */
+	public static Expression derivativeOf(Expression e, Map <String, Expression> timeDerivatives)
+	{
+		Expression rv = null;
+		
+		if (e instanceof Variable)
+		{
+			String v = ((Variable)e).name;
+			
+			if (timeDerivatives.keySet().contains(v))
+				rv = timeDerivatives.get(v).copy();
+			else
+				rv = new Constant(0); // derivative of a constant is zero
+		}
+		else if (e instanceof Constant)
+			rv = new Constant(0);
+		else if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+			
+			if (o.op == Operator.SUBTRACT)
+				o = new Operation(Operator.ADD, o.getLeft(), new Operation(Operator.NEGATIVE, o.getRight()));
+			
+			if (o.op == Operator.NEGATIVE)
+				o = new Operation(Operator.MULTIPLY, new Constant(-1), o.children.get(0));
+			
+			if (o.op == Operator.ADD)
+			{
+				ArrayList <Expression> childDers = new ArrayList <Expression>();
+				
+				for (Expression child : o.children)
+				{
+					Expression childDer = derivativeOf(child, timeDerivatives);
+					
+					if (!(childDer instanceof Constant) || ((Constant)childDer).getVal() != 0)
+						childDers.add(childDer);
+				}
+				
+				if (childDers.size() == 0)
+					rv = new Constant(0);
+				else if (childDers.size() == 1)
+					rv = childDers.get(0);
+				else
+					rv = new Operation(Operator.ADD, childDers);
+			}
+			else if (o.op == Operator.MULTIPLY)
+			{
+				Expression leftDer = derivativeOf(o.getLeft(), timeDerivatives);
+				Expression rightDer = derivativeOf(o.getRight(), timeDerivatives);
+				
+				// chain rule: (xy)' = x'y + xy'
+				
+				Operation leftSide = new Operation(Operator.MULTIPLY, leftDer, o.getRight());
+				Operation rightSide = new Operation(Operator.MULTIPLY, o.getLeft(), rightDer);
+				
+				if (leftDer instanceof Constant && ((Constant)leftDer).getVal() == 0)
+					rv = rightSide;
+				else if (rightDer instanceof Constant && ((Constant)rightDer).getVal() == 0)
+					rv = leftSide;
+				else
+					rv = new Operation(Operator.ADD, leftSide, rightSide);
+			}
+			else
+				throw new AutomatonExportException("Unsupported Operation in derivativeOf '" 
+						+ o.op.toDefaultString() + "': " + e.toDefaultString());
+		}
+		else
+			throw new AutomatonExportException("Unsupported Expression type in derivativeOf: " + e.toDefaultString());
+		
 		return rv;
 	}
 }

@@ -404,9 +404,6 @@ public class Preconditions
 						
 						byte cl = AutomatonUtil.classifyExpressionOps(e);
 						
-						System.out.println(".Preconditions classify " + e.toDefaultString() + 
-								" returned " + cl);
-						
 						cl &= ~BASIC; // turn off BASIC bits in the mask
 						
 						if (cl == AutomatonUtil.OPS_LUT)
@@ -448,8 +445,6 @@ public class Preconditions
 			for (ComponentInstance ci : nc.children.values())
 				rv = checkBasicOperatorsInComponents(ci.child);
 		}
-		
-		System.out.println(".Preconditions checkBasicOperatorsInComponents returning " + rv);
 		
 		return rv;
 	}

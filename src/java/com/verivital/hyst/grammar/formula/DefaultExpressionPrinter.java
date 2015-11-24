@@ -95,12 +95,6 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 				case LOGICAL_NOT:
 					opNames.put(Operator.LOGICAL_NOT, "!");
 					break;
-				case LUT:
-					opNames.put(Operator.LUT, "lut");
-					break;
-				case MATRIX:
-					opNames.put(Operator.MATRIX, "matrix");
-					break;
 				default:
 					throw new RuntimeException("unsupported case: " + o.name());
 			}

@@ -293,7 +293,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		}
 		
 		// negative constants
-		if (rv.asOperation() != null & rv.asOperation().children.size() == 1 && rv.asOperation().op == Operator.NEGATIVE)
+		if (rv.asOperation() != null && rv.asOperation().children.size() == 1 && rv.asOperation().op == Operator.NEGATIVE)
 		{
 			if (rv.asOperation().children.get(0) instanceof Constant)
 			{

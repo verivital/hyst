@@ -79,35 +79,35 @@ public class Hyst
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
-			{
-					new FlowPrinter(),
-					new DReachPrinter(),
-					new HyCreate2Printer(),
-					new HyCompPrinter(),
-					new PythonQBMCPrinter(),
-					new SpaceExPrinter(),
-					new SMTPrinter(),
-					new StateflowSpPrinter(),
-			};
+	{
+			new FlowPrinter(),
+			new DReachPrinter(),
+			new HyCreate2Printer(),
+			new HyCompPrinter(),
+			new PythonQBMCPrinter(),
+			new SpaceExPrinter(),
+			new SMTPrinter(),
+			new StateflowSpPrinter(),
+	};
 
 	// passes that are run only if the user selects them
 	private static final TransformationPass[] availablePasses =
-			{
-					new AddIdentityResetPass(),
-					new PseudoInvariantPass(),
-					new PseudoInvariantSimulatePass(),
-					new TimeScalePass(),
-					new SubstituteConstantsPass(),
-					new SimplifyExpressionsPass(),
-					new SplitDisjunctionGuardsPass(),
-					new RemoveSimpleUnsatInvariantsPass(),
-					new ShortenModeNamesPass(),
-					new RegularizePass(),
-					new ContinuizationPass(),
-					new HybridizeGridPass(),
-					new HybridizeMixedTriggeredPass(),
-					new FlattenAutomatonPass(),
-			};
+	{
+			new AddIdentityResetPass(),
+			new PseudoInvariantPass(),
+			new PseudoInvariantSimulatePass(),
+			new TimeScalePass(),
+			new SubstituteConstantsPass(),
+			new SimplifyExpressionsPass(),
+			new SplitDisjunctionGuardsPass(),
+			new RemoveSimpleUnsatInvariantsPass(),
+			new ShortenModeNamesPass(),
+			new RegularizePass(),
+			new ContinuizationPass(),
+			new HybridizeGridPass(),
+			new HybridizeMixedTriggeredPass(),
+			new FlattenAutomatonPass(),
+	};
 
 	// passes that the user has selected
 	private static ArrayList <RequestedTransformationPass> requestedPasses =

@@ -4,6 +4,7 @@ package com.verivital.hyst.junit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import org.junit.Assert;
@@ -854,5 +855,47 @@ public class SmallTest
 					+ " has no classification.", AutomatonUtil.classifyExpressionOps(op) != 0);
 		}
 	}
+	
+	@Test
+	public void testDerivative()
+	{
+		Map <String, Expression> ders = new HashMap<String, Expression>();
+		ders.put("x", FormulaParser.parseValue("x + y"));
+		ders.put("y", FormulaParser.parseValue("1"));
+		
+		String[][] tests = 
+		{
+			{"x", "x + y"},
+			{"y", "1"},
+			{"-y", "-1"},
+			{"- (-x)", "x + y"},
+			{"2 * x", "2 * (x + y)"},
+			{"x + 3 + y", "x + y + 1"},
+			{"1 - x", "-(x + y)"},
+			{"3 * x * y + const", "3 * (x + y) * y + 3 * x * 1"},
+		};
+		
+		for (String[] test : tests)
+		{
+			Expression original = FormulaParser.parseValue(test[0]);
+			Expression result = AutomatonUtil.derivativeOf(original , ders);
+			Expression expected = FormulaParser.parseValue(test[1]);
+			
+			String res = AutomatonUtil.areExpressionsEqual(expected, result);
+			
+			if (res != null)
+				Assert.fail("Derivative of " + test[0] + " was wrong: " + res);
+		}
+	}
+	
+	@Test
+    public void testParseDoubleNegative()
+	{
+		String t = "- (-x)";
+		
+		Expression e = FormulaParser.parseValue(t);
+
+		Assert.assertNotEquals(e, null);
+    }
 }
 

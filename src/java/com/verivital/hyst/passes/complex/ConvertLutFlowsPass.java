@@ -4,6 +4,8 @@ package com.verivital.hyst.passes.complex;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.geometry.HyperPoint;
@@ -27,6 +29,7 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 
 
@@ -310,6 +313,18 @@ public class ConvertLutFlowsPass extends TransformationPass
 			
 			Interval[] rangeList = new Interval[tableDims];
 			
+			// create dynamics for all other variables
+			for (String var : ha.variables)
+			{
+				if (!var.equals(variableWithLut))
+				{
+					// copy dynamics
+					am.flowDynamics.put(var, original.flowDynamics.get(var).copy());
+				}
+				else
+					am.flowDynamics.put(var, new ExpressionInterval(0)); // temp, will be replaced later
+			}
+			
 			// this loop populates range list, accumulates the invariant, and creates neighbor transitions
 			for (int varIndex = 0; varIndex < tableDims; ++varIndex)
 			{
@@ -339,7 +354,10 @@ public class ConvertLutFlowsPass extends TransformationPass
 					if (leftMode == null)
 						throw new AutomatonExportException("Left mode named '" + leftName + "' not found in automaton");
 					
-					ha.createTransition(am, leftMode).guard = guard;
+					Expression goingLeft = new Operation(Operator.LESSEQUAL,
+							AutomatonUtil.derivativeOf(inputExpr, asExpressionMap(am)), new Constant(0));
+					
+					ha.createTransition(am, leftMode).guard = Expression.and(guard, goingLeft);
 				}
 				
 				// if there's a right neighbor (3 breakpoints = 2 modes which means only index 0 has a right neighbor)
@@ -362,18 +380,10 @@ public class ConvertLutFlowsPass extends TransformationPass
 					if (rightMode == null)
 						throw new AutomatonExportException("Right mode named '" + rightName + "' not found in automaton");
 					
-					ha.createTransition(am, rightMode).guard = guard;
-				}
-			}
-			
-			// create dynamics for all other variables
-			for (String var : ha.variables)
-			{
-				if (!var.equals(variableWithLut))
-				{
-					// copy dynamics
-					am.flowDynamics.put(var, original.flowDynamics.get(var).copy());
-					continue;
+					Expression goingRight = new Operation(Operator.GREATEREQUAL,
+							AutomatonUtil.derivativeOf(inputExpr, asExpressionMap(am)), new Constant(0));
+					
+					ha.createTransition(am, rightMode).guard = Expression.and(guard, goingRight);
 				}
 			}
 			
@@ -384,6 +394,21 @@ public class ConvertLutFlowsPass extends TransformationPass
 			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
 			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
 		}
+	}
+	
+	/**
+	 * Return a mode's expression map from the dynamics
+	 * @param mode the mode
+	 * @return a map of variable names -> expressions
+	 */
+	public Map <String, Expression> asExpressionMap(AutomatonMode mode)
+	{
+		Map <String, Expression> rv = new HashMap <String, Expression>(mode.flowDynamics.size());
+		
+		for (Entry<String, ExpressionInterval> e : mode.flowDynamics.entrySet())
+			rv.put(e.getKey(), e.getValue().asExpression());
+		
+		return rv;
 	}
 
 	/**
