@@ -174,7 +174,7 @@ public class FlowPrinter extends ToolPrinter
 		
 		int jumps = Integer.parseInt(toolParams.get("jumps"));
 		
-		if (jumps == DEFAULT_MAX_JUMPS)
+		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
 			jumps = config.settings.spaceExConfig.maxIterations;
 				
 		printLine("max jumps " + jumps);
