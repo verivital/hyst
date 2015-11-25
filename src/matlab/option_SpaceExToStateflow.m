@@ -5,31 +5,45 @@ function [options, path_name, xml_name, cfg_name] = option_SpaceExToStateflow(ar
 % ------------------------------------------------------------------------------
 
    %add xml, cfg option flag
-    opt_xml = 0;
-    opt_cfg = 0;
     %add debugging option flag
     opt_flow = 0;
     opt_invariant = 0;
     opt_guard = 0;
     opt_semantics = 0;
     opt_eager_violation = 0;
-    path_name = ['..', filesep,'..', filesep, 'examples', filesep];
+    %path_name = ['..', filesep,'..', filesep, 'examples', filesep];
     xml_name = '';
     cfg_name = '';
-    for i_opt= 1: length(argument)
-        if strfind(argument{i_opt},'.xml') 
-            opt_xml = 1;   %
-            xml_name = argument{i_opt};
-            %xml_filepath = ['..', filesep, 'examples', filesep, xml_filename];
-        elseif strfind(argument{i_opt},'.cfg') 
-            opt_cfg = 1;   %
-            cfg_name = argument{i_opt}; 
-            %cfg_filepath =  ['..', filesep, 'examples', filesep, cfg_filename];
-        elseif strfind(argument{i_opt}, '--folder')
-            assert(i_opt < length(argument), 'There must be a folder name following the option.');
-            path_name = [path_name, argument{i_opt + 1}, filesep];
+    path_name='';
+    try
+        xml_path_name = argument{1};
+        if strfind(xml_path_name,'.xml')
+            k = strfind(xml_path_name, '\');
+            index = k(length(k));
+            path_name = xml_path_name(1:index-1);
+            xml_name = xml_path_name(index + 1: end);
         end
-    end    
+        length(argument)
+        if length(argument) > 1 && ~isempty(strfind(argument{2},'.cfg'))
+            cfg_path_name = argument{2};
+            cfg_name = cfg_path_name(index + 1: end);
+        else
+            cfg_name = strrep(xml_name,'.xml','.cfg');
+        end
+    catch
+         throw(MException('File path is not found'));
+    end
+%     for i_opt= 2: length(argument)
+%         if strfind(argument{i_opt},'.xml') 
+%             opt_xml = 1;   %
+%             xml_name = argument{i_opt};
+%             %xml_filepath = ['..', filesep, 'examples', filesep, xml_filename];
+%         elseif strfind(argument{i_opt},'.cfg') 
+%             opt_cfg = 1;   %
+%             cfg_name = argument{i_opt}; 
+%             %cfg_filepath =  ['..', filesep, 'examples', filesep, cfg_filename];
+%         end
+%     end    
     
     if  find(cellfun(@(s)strcmp(s,'-s'),argument))
         opt_semantics = 1;   % call SpaceExToStateflow('-s') to run with semantics analysis
@@ -58,8 +72,6 @@ function [options, path_name, xml_name, cfg_name] = option_SpaceExToStateflow(ar
     end
     
     options = struct(...
-        'xml', opt_xml, ...
-        'cfg', opt_cfg, ...
         'semantics', opt_semantics, ...
         'flow', opt_flow, ...
         'guard', opt_guard, ...

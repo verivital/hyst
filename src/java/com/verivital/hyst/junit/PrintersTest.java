@@ -345,4 +345,12 @@ public class PrintersTest
             StateflowSpPrinter sp = new StateflowSpPrinter();
             sp.printProcedure(example_name,true);
     }
+    @Test
+    public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
+    {
+            String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
+            StateflowSpPrinter sp = new StateflowSpPrinter();
+            sp.printProcedure(example_name,false);
+    }
+    
 }

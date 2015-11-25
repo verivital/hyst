@@ -1,4 +1,4 @@
-function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,model,chart,name,ha,config,opt_cfg_reader, componentIdx, isAddSignals, inputVars, outputVars)
+function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,model,chart,name,ha,config, componentIdx, isAddSignals, inputVars, outputVars)
     % ------------------------------------------------------------------------------
     % author: Luan Viet Nguyen
     % ------------------------------------------------------------------------------
@@ -150,19 +150,17 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
         sF(i_mode).LabelString = char(ModeDescription);
 
         % create a default transition
-        % set defaut transtion acquired from configuration field 
-        if opt_cfg_reader 
-            if (ha.modes.size() >= 1) 
-                if strfind(initLoc, modeNames(i_mode))
-                   xsource = sF(i_mode).Position(1)+sF(i_mode).Position(3)/2;
-                   ysource = sF(i_mode).Position(2)-30;
-                   [defaultTransistion] = addInittransistion(chart,sF(i_mode),xsource,ysource);
-                   % TODO(X) Instead of 'initLoc' one should pass the current
-                   % mode name, but HyST does not know it in the network setting.
-                   defaultTransistion.LabelString = filterInitialCondition(...
-                      char(printer.getTransitionInit2inLabel(initLoc,1,constIncludingGlobals)), ...
-                      inputVars, var, componentIdx);
-                end
+        % set defaut transtion acquired from configuration field
+        if (ha.modes.size() >= 1) 
+            if strfind(initLoc, modeNames(i_mode))
+               xsource = sF(i_mode).Position(1)+sF(i_mode).Position(3)/2;
+               ysource = sF(i_mode).Position(2)-30;
+               [defaultTransistion] = addInittransistion(chart,sF(i_mode),xsource,ysource);
+               % TODO(X) Instead of 'initLoc' one should pass the current
+               % mode name, but HyST does not know it in the network setting.
+               defaultTransistion.LabelString = filterInitialCondition(...
+                  char(printer.getTransitionInit2inLabel(initLoc,1,constIncludingGlobals)), ...
+                  inputVars, var, componentIdx);
             end
         end
     end

@@ -216,23 +216,22 @@ public class StateflowSpPrinter extends ToolPrinter {
         //proxy.eval("disp('" + originalFilename + "'); disp('test123'); clock");
 
         File f = new File(originalFilename);
-
+        
         // TODO: get rid of having to change paths, this is nasty
         proxy.eval("[path_parent,path_current] = fileparts(pwd)");
         proxy.eval("if strcmp(path_current, 'pass_order_reduction') cd ../../; end");
         proxy.eval("[path_parent,path_current] = fileparts(pwd)");
         proxy.eval("if ~strcmp(path_current, 'matlab') cd ./matlab; end");
-        // TODO: fix paths in stateflow converter, just let them take an arbitrary relative path as input
-        // instead of this folder garbage, and this will then be consistent with the rest of the Hyst paths
         // TODO: pull in actual example name from filename string
         String example_name = f.getName().substring(0, f.getName().lastIndexOf('.')); // strip extension
-        String cmd_string = "SpaceExToStateflow('" + example_name + ".xml', '" + example_name + ".cfg', '--folder', '" + f.getParentFile().getName() + "'";  // TODO: once removing the examples crap from the stateflow converter, use just f.getParent()
+        String cmd_string = "SpaceExToStateflow('..\\" +f.getParent() + "\\"+ example_name + ".xml'";  
         if (opt_semantics_preserving) {
             cmd_string += ", '-s')";
         }
         else {
             cmd_string += ")";
         }
+        System.out.println(cmd_string);
         proxy.eval(cmd_string); 
 
 
