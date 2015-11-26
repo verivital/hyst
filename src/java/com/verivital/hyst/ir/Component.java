@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.verivital.hyst.geometry.Interval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
@@ -22,7 +22,7 @@ import com.verivital.hyst.ir.network.NetworkComponent;
  * the variableNames, constants, and labels, are only those visible at this level (not locals of subcomponents)
  * 
  * Validation guarantees:
- * variablesNames, and labels are not null and unique, and are valid C variable names
+ * variablesNames, and labels are not null, and are valid C variable names
  * constants are valid c variable names, may be null (if inferred from parent, but must be definable)
  *    for most printers, constants will map to single values, and you can use Interval.asConstant() to get the value
  * instance name should only be null for root (if parent == null) and, if valid, is a valid C variable name

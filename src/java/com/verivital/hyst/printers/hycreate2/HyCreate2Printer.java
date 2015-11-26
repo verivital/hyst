@@ -21,7 +21,6 @@ import com.stanleybak.hycreate.containers.ModelSimulationOptions;
 import com.stanleybak.hycreate.containers.ModelSimulationOptions.SimulationType;
 import com.stanleybak.hycreate.containers.ModelSimulationOptions.StartingPositionsType;
 import com.stanleybak.hycreate.containers.TransitionData;
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -33,6 +32,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
@@ -679,7 +679,6 @@ public class HyCreate2Printer extends ToolPrinter
 			opNames.put(Operator.SIN, "Math.sin");
 			opNames.put(Operator.TAN, "Math.tan");
 			opNames.put(Operator.LN, "Math.ln");
-			opNames.put(Operator.SQRT, "Math.sqrt");
 			
 			opNames.put(Operator.AND, "&&");
 			opNames.put(Operator.OR, "||");

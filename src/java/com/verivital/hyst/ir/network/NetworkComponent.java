@@ -6,11 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.Interval;
 
 /**
  * A network component as part of a hybrid automaton. This can compose one or more subcomponents, as well as
@@ -25,9 +25,6 @@ import com.verivital.hyst.ir.Configuration;
  */
 public class NetworkComponent extends Component
 {
-	// should printing using toString() be recursive?
-	public static boolean PRINT_RECURSIVE = true; 
-	
 	// map instance name -> sub-component
 	public LinkedHashMap <String, ComponentInstance> children = new LinkedHashMap <String, ComponentInstance>();
 	

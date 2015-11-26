@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.verivital.hyst.geometry.HyperPoint;
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 
 /**
@@ -23,10 +22,13 @@ import com.verivital.hyst.simulation.RungeKutta.StepListener;
  */
 public class Simulator
 {
-	public static double[] simulateFor(double time, HyperPoint init, int numSteps, 
+	public static double[] simulateFor(double time, double[] init, int numSteps, 
 			Map <String, ExpressionInterval> dynamics, List <String> variableNames, StepListener sl)
 	{
-		HyperPoint hp = new HyperPoint(init);
+		HyperPoint hp = new HyperPoint(init.length);
+		
+		for (int i = 0; i < hp.dims.length; ++i)
+			hp.dims[i] = init[i];
 		
 		double stepTime = time / numSteps;
 		RungeKutta.stepsRk(centerDynamics(dynamics), variableNames, hp, stepTime, numSteps, sl);
@@ -61,10 +63,10 @@ public class Simulator
 	 * @param reset the reset map
 	 * @return the outgoing point
 	 */
-	public static HyperPoint processReset(HyperPoint pt, ArrayList <String> variableNames, 
+	public static double[] processReset(double[] p, ArrayList <String> variableNames, 
 			LinkedHashMap<String, ExpressionInterval> reset)
 	{
-		HyperPoint rv = new HyperPoint(pt);
+		double[] rv = new double[p.length];
 		
 		for (int i = 0; i < variableNames.size(); ++i)
 		{
@@ -72,15 +74,15 @@ public class Simulator
 			ExpressionInterval resetAssignment = reset.get(v);
 			
 			if (resetAssignment == null)
-				rv.dims[i] = pt.dims[i];
+				rv[i] = p[i];
 			else
-				rv.dims[i] = assignFromExpression(v, pt, variableNames, resetAssignment);
+				rv[i] = assignFromExpression(v, p, variableNames, resetAssignment);
 		}
 		
 		return rv;
 	}
 
-	private static double assignFromExpression(String v, HyperPoint p, ArrayList<String> variableNames, 
+	private static double assignFromExpression(String v, double[] p, ArrayList<String> variableNames, 
 			ExpressionInterval resetAssignment)
 	{
 		HyperPoint hp = new HyperPoint(p);

@@ -60,19 +60,19 @@ public class Configuration
 		
 		// validate the children
 		if (settings == null)
-			throw new AutomatonValidationException("settings cannot be null");
+			throw new AutomatonValidationException("settings was null");
 		
 		settings.validate();
 		
 		if (root == null)
-			throw new AutomatonValidationException("root component cannot be null");
+			throw new AutomatonValidationException("root component was null");
 		
 		// only root has a null parent and no instance name
 		if (root.instanceName != null)
-			throw new AutomatonValidationException("root component cannot have a defined instance name");
+			throw new AutomatonValidationException("root component had a defined instance name");
 		
 		if (root.parent != null)
-			throw new AutomatonValidationException("root component vannot have a defined parent");
+			throw new AutomatonValidationException("root component had a defined parent");
 		
 		for (Expression e : init.values())
 		{
@@ -121,6 +121,7 @@ public class Configuration
 			
 			if (!AutomatonUtil.modeExistsInComponent(modeName, root))
 			{
+				System.out.println("config = " + this);
 				throw new AutomatonValidationException(name + " contains mode " + modeName + ", which is not in the automaton");
 			}
 		}

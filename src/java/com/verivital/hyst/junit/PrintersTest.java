@@ -6,7 +6,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
@@ -16,6 +15,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
@@ -41,6 +41,7 @@ public class PrintersTest
 	}
 	
 	private String UNIT_BASEDIR = "tests/unit/models/";
+	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	
 	// tools to test here. Each test will run all of these
 	private static final ArrayList <ToolPrinter> printers; 

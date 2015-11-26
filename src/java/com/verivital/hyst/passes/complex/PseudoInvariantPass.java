@@ -14,6 +14,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 
@@ -29,14 +30,14 @@ import com.verivital.hyst.passes.TransformationPass;
  */
 public class PseudoInvariantPass extends TransformationPass
 {
-	private int UNIQUE_ID = 0;
+	private static int UNIQUE_ID = 0;
 	BaseComponent ha;
 	public List <String> vars;
 	
 	AutomatonMode applyMode;
 	String applyModeName;
 	LinkedList <PseudoInvariantParams> params = new LinkedList <PseudoInvariantParams>();
-	String initModeName;
+	String incomingModeName;
 	
 	int numVars;
 	
@@ -67,7 +68,7 @@ public class PseudoInvariantPass extends TransformationPass
 		// first make an incoming mode for incoming transitions
 		// This mode has zero dynamics (x'=0) and outgoing guards based on the current state
 		
-		AutomatonMode initMode = makeInitMode();
+		AutomatonMode incomingMode = makeIncomingMode(incomingModeName);
 		AutomatonMode modeToSplit = applyMode;
 		
 		// make modes for each step in the automaton
@@ -95,7 +96,7 @@ public class PseudoInvariantPass extends TransformationPass
 			secondMode.invariant = pip.inv;
 			
 			// create the transition from the incoming mode
-			AutomatonTransition atFromIncoming = ha.createTransition(initMode, secondMode);
+			AutomatonTransition atFromIncoming = ha.createTransition(incomingMode, secondMode);
 			atFromIncoming.guard = createPiGuard(pip.inv, i);
 			
 			// create the transition to the next pseudo-invariant modes
@@ -132,17 +133,12 @@ public class PseudoInvariantPass extends TransformationPass
 				atToNext.guard = new Operation(Operator.AND, atToNext.guard, negateEqualCondition(otherModePip.inv));
 			}
 			
-			Hyst.log("Created pi mode #" + i + " with invariant: " + pip.inv.toDefaultString());
+			Hyst.log("Created pi mode #" + i + " with invariant: " + pip.inv);
 		}
 		
-		// add the transition from initial mode to applyMode
-		AutomatonTransition atFromIncoming = ha.createTransition(initMode, applyMode);
+		// finally, add the transition from initial mode to applyMode
+		AutomatonTransition atFromIncoming = ha.createTransition(incomingMode, applyMode);
 		atFromIncoming.guard = createPiGuard(null, params.size());
-		
-		// rename applyMode to applyMode_final
-		ha.modes.remove(applyModeName);
-		applyMode.name = checkNewModeName(applyMode.name + "_final");
-		ha.modes.put(applyMode.name, applyMode);
 	}
 
 	/**
@@ -223,22 +219,22 @@ public class PseudoInvariantPass extends TransformationPass
 		return name;
 	}
 
-	private AutomatonMode makeInitMode()
+	private AutomatonMode makeIncomingMode(String incomingModeName)
 	{
-		AutomatonMode rv = ha.createMode(initModeName);
+		AutomatonMode rv = ha.createMode(incomingModeName);
 		
 		// invariant
 		rv.invariant = Constant.TRUE;
 		
-		// flow dynamics (urgent)
-		rv.flowDynamics = null;
-		rv.urgent = true;
+		// flow dynamics
+		for (String var : ha.variables)
+			rv.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
 		
 		// redirect initial states to this mode
 		if (config.init.containsKey(applyModeName))
 		{
 			Expression e = config.init.remove(applyModeName);
-			config.init.put(initModeName, e);
+			config.init.put(incomingModeName, e);
 		}
 		
 		// redirect incoming transitions to this mode
@@ -251,37 +247,17 @@ public class PseudoInvariantPass extends TransformationPass
 		return rv;
 	}
 
-	/**
-	 * Make an expression from a linear inequality (dot product of vars and coeffs) <= right-hand-side value
-	 * @param vars the list of variables
-	 * @param coeff the list of coefficients
-	 * @param op the operator
-	 * @param rhs the right hand side
-	 * @return the Expression for the desired linear inequality
-	 */
-	public static Expression makeExpressionFromLinearInequality(List <String> vars, double[] coeff, Operator op, double rhs)
+	private Expression makeExpressionFromLinearInequality(double[] coeff,
+			double rhs, Operator op)
 	{
-		Operation sum = null;
+		Operation sum = new Operation(new Constant(coeff[0]), Operator.MULTIPLY, new Variable(vars.get(0)));
 		
-		new Operation(new Constant(coeff[0]), Operator.MULTIPLY, new Variable(vars.get(0)));
-		
-		for (int d = 0; d < coeff.length; ++d)
+		for (int d = 1; d < coeff.length; ++d)
 		{
-			double c = coeff[d];
+			Operation term = new Operation(new Constant(coeff[d]), Operator.MULTIPLY, new Variable(vars.get(d)));
 			
-			if (c == 0)
-				continue;
-			
-			Operation term = new Operation(c, Operator.MULTIPLY, vars.get(d));
-			
-			if (sum == null)
-				sum = term;
-			else
-				sum = new Operation(sum, Operator.ADD, term);
+			sum = new Operation(sum, Operator.ADD, term);
 		}
-		
-		if (sum == null)
-			throw new AutomatonExportException("all coefficients were zero when constructing linear inequality");
 		
 		return new Operation(sum, op, new Constant(rhs));
 	}
@@ -320,7 +296,7 @@ public class PseudoInvariantPass extends TransformationPass
 		}
 			
 		applyMode = ha.modes.get(applyModeName);
-		initModeName = checkNewModeName(applyModeName + "_init");
+		incomingModeName = checkNewModeName(applyModeName + "_Pi_" + (++UNIQUE_ID) + "_Incoming");
 		
 		for (int i = firstIndex; i < splitParams.length; ++i)
 		{
@@ -369,7 +345,7 @@ public class PseudoInvariantPass extends TransformationPass
 		{
 			double rhs = dot(pt, dir);
 			
-			inv = makeExpressionFromLinearInequality(vars, dir, Operator.GREATEREQUAL, rhs);
+			inv = makeExpressionFromLinearInequality(dir, rhs, Operator.GREATEREQUAL);
 			
 			Hyst.log("Making invariant from point " + arrayString(pt) + " and dir " + arrayString(dir) + ": " + 
 					DefaultExpressionPrinter.instance.print(inv));
@@ -377,7 +353,7 @@ public class PseudoInvariantPass extends TransformationPass
 			if (inv == null)
 				throw new AutomatonExportException("Invariant was null from dir: " + arrayString(dir));
 			
-			modeName = checkNewModeName(applyModeName + "_pi_" + (UNIQUE_ID++));
+			modeName = checkNewModeName(applyModeName + "_Pi_" + (++UNIQUE_ID));
 		}
 	}
 	

@@ -5,14 +5,12 @@ package com.verivital.hyst.printers;
 
 
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -25,6 +23,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -193,15 +192,13 @@ public class FlowPrinter extends ToolPrinter
 	
 	private String getPlotParam()
 	{
-		String auto = "gnuplot octagon";
+		String auto = "gnuplot octagon " + config.settings.plotVariableNames[0] + "," 
+				+ config.settings.plotVariableNames[1];
+		
 		String value = toolParams.get("plot");
 		
 		if (value.equals("auto"))
 			value = auto;
-		
-		if (value.equals("gnuplot octagon") || value.equals("gnuplot interval") 
-				|| value.equals("matlab interval") || value.equals("matlab octagon"))
-			value = value + " " + config.settings.plotVariableNames[0] + "," + config.settings.plotVariableNames[1];
 		
 		return value;
 	}
@@ -375,7 +372,10 @@ public class FlowPrinter extends ToolPrinter
 		
 		for (ExpressionInterval e : flowDynamics.values())
 		{
-			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.EXP))
+			if (expressionContainsOp(e.getExpression(), Operator.DIVIDE) || 
+				expressionContainsOp(e.getExpression(), Operator.COS) || 
+				expressionContainsOp(e.getExpression(), Operator.SIN) || 
+				expressionContainsOp(e.getExpression(), Operator.EXP))
 			{
 				rv = true;
 				break;
@@ -385,20 +385,20 @@ public class FlowPrinter extends ToolPrinter
 		return rv;
 	}
 
-	private boolean expressionContainsOperator(Expression e, Operator ... operators)
+	private boolean expressionContainsOp(Expression e, Operator testOp)
 	{
 		boolean rv = false;
 		Operation o = e.asOperation();
 		
 		if (o != null)
 		{
-			if (Arrays.asList(operators).contains(o.op))
+			if (o.op.equals(testOp))
 				rv = true;
 			else
 			{
 				for (Expression child : o.children)
 				{
-					rv = expressionContainsOperator(child, operators);
+					rv = expressionContainsOp(child, testOp);
 					
 					if (rv)
 						break;
@@ -688,9 +688,6 @@ public class FlowPrinter extends ToolPrinter
 
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");
-		
-		if (ha.modes.containsKey("start"))
-			throw new AutomatonExportException("mode named 'start' is not allowed in Flow* printer");
 		
 		if (config.init.size() > 1)
 		{

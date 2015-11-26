@@ -180,8 +180,8 @@ public class TemplateImporter
 		Param p = c.getParam(paramName);
 		
 		if (p == null)
-			throw new AutomatonExportException("Bind in SX file with param that doesn't exist in component. Param: " 
-					+ paramName + "; Component: " + componentName);
+			throw new AutomatonExportException("Bind in SX file with param that doesn't exist in component: param " 
+					+ paramName + " in component " + componentName);
 		
 		return p;
 	}
