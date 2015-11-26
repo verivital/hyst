@@ -59,10 +59,6 @@ public class SpaceExDocument {
 	public void setMaxIterations(int maxIterations) {
 		mConfig.maxIterations = maxIterations;
 	}
-	
-	public void setTimeTriggered(boolean tt) {
-		mConfig.timeTriggered = tt;
-	}
 
 	public void setSystemID(String systemID) {
 		mConfig.systemID = systemID;
@@ -129,11 +125,6 @@ public class SpaceExDocument {
 
 	public void setOutputFormat(String outputFormat) {
 		mConfig.outputFormat = outputFormat;
-	}
-	
-	public void setDirections(String dirs)
-	{
-		mConfig.directions = dirs;
 	}
 
 	public String toString()

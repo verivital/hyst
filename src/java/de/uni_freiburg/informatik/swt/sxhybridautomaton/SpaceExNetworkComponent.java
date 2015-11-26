@@ -61,15 +61,13 @@ public class SpaceExNetworkComponent extends SpaceExComponent {
 	
 	public String toString()
 	{
-		StringBuilder rv = new StringBuilder("[Network Component with " + mBinds.size() + " binds:\n");
+		String rv = "[Network Component with " + mBinds.size() + " binds:\n";
 		
 		int index = 0;
 		
 		for (Bind b : mBinds)
-			rv.append(index + ": " + b + "\n");
+			rv += index + ": " + b.getComponent() + " named " + b.getAs() + "\n";
 		
-		rv.append("\n");
-		
-		return rv.toString();
+		return rv;
 	}
 }
