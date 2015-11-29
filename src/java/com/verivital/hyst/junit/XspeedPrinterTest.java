@@ -13,6 +13,21 @@ import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
+package com.verivital.hyst.junit;
+
+import java.util.ArrayList;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.importer.SpaceExImporter;
+import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.Interval;
@@ -156,60 +171,7 @@ public class XspeedPrinterTest
 		runAllPrintersOnModel(UNIT_BASEDIR + "no_vars_check/", "has_vars.xml", "has_vars.cfg");
 	}
 	
-	/**
-	 * Printers should be able to print a slightly more complex model
-	 */
-	@Test
-	public void testPrintMoreComplexModel()
-	{
-		runAllPrintersOnModel("controller_heater");
-	}
 	
-	/**
-	 * Printers should be able to print a model with havoc flows in the init state
-	 */
-	@Test
-	public void testPrintHavocInitFlows()
-	{
-		runAllPrintersOnModel("havoc_flow");
-	}
-	
-	@Test
-    public void testPrintUrgentSimple() 
-	{
-		runAllPrintersOnModel("urgent_simple");
-    }
-	
-	@Test
-    public void testPrintUrgent() 
-	{
-		runAllPrintersOnModel("urgent_composition");
-    }
-	
-	/**
-	 * Printers should be able to print a model with havoc flows in a state that
-	 * occurs after a transition
-	 */
-	@Test
-	public void testPrintHavocTransitionFlows()
-	{
-		runAllPrintersOnModel("havoc_flow_transition");
-	}
-	
-	/**
-	 * Printers should be able to print a model with nondeterministic assignments and
-	 * deterministic flows
-	 */
-	@Test
-	public void testPrintNondeterministicAssignments()
-	{
-		runAllPrintersOnModel("nondeterm_reset");
-	}
-	
-	/**
-	 * make a sample configuration, which is used in multiple tests
-	 * @return the constructed Configuration
-	 */
 	private static Configuration makeSampleConfiguration()
 	{
 		BaseComponent ha = new BaseComponent();
@@ -239,46 +201,7 @@ public class XspeedPrinterTest
 		return c;
 	}
 	
-	/**
-	 * Test the conversion of multiple initial modes for use in the Flow* printer
-	 */
-	@Test
-	public void testFlowConvertMultipleInitialModes()
-	{
-		Configuration c = makeSampleConfiguration();
-		
-		// add a second initial mode
-		c.init.put("stopped", FormulaParser.parseLoc("x = 5 & t = 6"));
-		
-		FlowPrinter.convertInitialModes(c);
-		
-		BaseComponent ha = (BaseComponent)c.root;
-		AutomatonMode init = ha.modes.get("_init");
-		boolean found = false;
-		
-		for (AutomatonTransition at : ha.transitions)
-		{
-			if (at.from == init && at.to.name.equals("stopped"))
-			{
-				found = true;
-				
-				ExpressionInterval eiX = at.reset.get("x");
-				ExpressionInterval eiT = at.reset.get("t");
-				
-				Assert.assertTrue("reset sets x to 5", eiX.getInterval().isPoint() && eiX.getInterval().min == 5);
-				Assert.assertTrue("reset sets t to 6", eiT.getInterval().isPoint() && eiT.getInterval().min == 6);
-			}
-		}
-		
-		if (!found)
-			Assert.fail("Transition from init to stopped not found");
-	}
 	
-	/**
-	 * The printers should be able to print a hybrid automaton which has interval expressions in the
-	 * flow dynamics
-	 */
-	@Test
 	public void testPrintIntervalExpression()
 	{
 		Configuration c = makeSampleConfiguration();
@@ -305,22 +228,5 @@ public class XspeedPrinterTest
 		runAllPrintersOnConfiguration(c);
 	}
 	
-	@Test
-    public void testSpaceExHybrizized() 
-	{
-		ToolPrinter tp = new SpaceExPrinter();
-		
-		String path = UNIT_BASEDIR + "hybridized/hybridized.";
-		
-		SpaceExDocument sd = SpaceExImporter.importModels(path + "cfg", path + "xml");
-		Configuration c = ModelParserTest.flatten(sd);
-
-		for (String scenario : new String[]{"supp", "stc", "phaver"})
-		{
-			String loadedFilename = "hybridized.xml";
-		
-			tp.setOutputNone();
-			tp.print(c, "scenario=" + scenario, loadedFilename);
-		}
-    }
+    
 }
