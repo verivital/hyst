@@ -6,6 +6,7 @@ package com.verivital.hyst.printers;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -85,6 +86,7 @@ public class XspeedPrinter extends ToolPrinter {
 		org = new String(originalFilename);
 		org = org.substring(org.lastIndexOf("/")+1);
 		// begin printing the actual program
+		
 		printNewline();
 		printProcedure();
 	}
@@ -115,9 +117,10 @@ public class XspeedPrinter extends ToolPrinter {
 		//constraintVmatrixXspeed();
 		printModes();
 		printInitialStatesExspeed();
+		System.out.println("End init of printing");
 		printJumpsXspeed();
 		
-		
+		System.out.println("End of printing");
 		//printLine("}");
 
 		
@@ -125,11 +128,21 @@ public class XspeedPrinter extends ToolPrinter {
 		 //printForbidden();
 	}
 	private void printInitial()
-	{	printLine("#include \""+org.substring(0,org.lastIndexOf(".xml"))+".h\"");
-		printLine("void "+org.substring(0,org.lastIndexOf(".xml"))+"(hybrid_automata& Hybrid_Automata, symbolic_states& initial_symbolic_state, ReachabilityParameters& reach_parameters) {");
+	{	printLine("#include \"user_model.h\"");
+		printLine("void user_model(hybrid_automata& Hybrid_Automata, symbolic_states& initial_symbolic_state, ReachabilityParameters& reach_parameters, int& transition_iterations) {");
 		printNewline();
 		printNewline();
 		printLine("typedef typename boost::numeric::ublas::matrix<double>::size_type size_type;");
+		printNewline();
+		printNewline();
+		printLine("unsigned int Directions_Type = 1;");
+		printLine("unsigned int iter_max = "+config.settings.spaceExConfig.maxIterations+";");
+		printLine("double time_horizon = "+config.settings.spaceExConfig.timeHorizon+"; ");
+		printLine("double sampling_time = "+config.settings.spaceExConfig.samplingTime+";");
+		printLine("unsigned int dim;");
+		printLine("size_type row, col;");
+		printNewline();
+		printNewline();
 		printNewline();
 		printNewline();
 		printLine("polytope::ptr initial_polytope_I;");
@@ -191,7 +204,6 @@ public class XspeedPrinter extends ToolPrinter {
 		printLine("int boundSignI, invariantBoundSign, gaurdBoundSign, boundSignV;");
 		printNewline();
 		printNewline();
-		printLine("size_type row, col;");
 	}
 	private void printForbidden() {
 		if (config.forbidden.size() > 0) {
@@ -433,7 +445,13 @@ public class XspeedPrinter extends ToolPrinter {
 			id=0;
 		}
 		
-		//System.out.println("modes size :  "+ ha.modes.size());
+		
+		
+		//printLine("Max iterations are"+config.settings.spaceExConfig.maxIterations);
+		//printLine("dir are "+ config.settings.spaceExConfig.timeHorizon);
+		
+		
+		//System.out.printn("modes size :  "+ ha.es.size());
 		for (Entry<String, AutomatonMode> e : ha.modes.entrySet()) {
 			ControlVar.clear();/////////////clear Control and uncontrol matrix for next location
 			UncontrolVar.clear();
@@ -478,7 +496,7 @@ public class XspeedPrinter extends ToolPrinter {
 		
 			
 			
-			DefaultExpressionPrinter dep = new DefaultExpressionPrinter(str, str1, ControlVar.size(), UncontrolVar.size());
+			XspeedExpressionPrinter dep = new XspeedExpressionPrinter(str, str1, ControlVar.size(), UncontrolVar.size());
 			if (first)
 				first = false;
 			else
@@ -568,7 +586,6 @@ public class XspeedPrinter extends ToolPrinter {
 				
 				// edited
 				ei.setExpression(simplifyExpression(ei.getExpression()));
-
 				// be explicit (even though x' == 0 is implied by Flow*)
 			//	printLine(entry.getKey() + "' = " + ei);
 						}
@@ -592,7 +609,7 @@ public class XspeedPrinter extends ToolPrinter {
 			{
 				printLine("system_dynamics"+inc+".isEmptyMatrixA = true;");
 			}
-			
+
 ///////////////////////////////A matrix print complete////////////////////////////////////////
 			printNewline();
 			
@@ -640,6 +657,10 @@ public class XspeedPrinter extends ToolPrinter {
 			printNewline();
 ///////////////////////////////////C vector print complete//////////////////////////////////////////			
 			// invariant
+			invSize = 0;
+			Uinvsize =0;
+			invindex =0;
+			Uinvindex=0;
 			Expression inv = simplifyExpression(mode.invariant);
 			//printLine("   "+ inv.toString());
 			if (!inv.equals(Constant.TRUE)) {
@@ -649,6 +670,7 @@ public class XspeedPrinter extends ToolPrinter {
 				invY = new double[xl-Uinvsize][ControlVar.size()];
 				ConUX = new double[Uinvsize];
 				ConUY = new double[Uinvsize][UncontrolVar.size()];
+				
 				for (j = 0; j < xl-Uinvsize; j++) {
 					for (k = 0; k < ControlVar.size(); k++) 
 						invY[j][k] = 0;
@@ -659,9 +681,9 @@ public class XspeedPrinter extends ToolPrinter {
 						ConUY[j][k] = 0;
 					ConUX[j]=0;
 				}
-				printNewline();
-				printNewline();
 				
+				printNewline();
+				printNewline();
 				/////////making of invaiant and constraint U polytope/////////////////////////
 				getFlowConditionExpressionXspeed(inv);
 				//System.out.println("hello");
@@ -675,8 +697,6 @@ public class XspeedPrinter extends ToolPrinter {
 					for (k = 0; k < ControlVar.size(); k++) 
 						printLine("invariantConstraintsMatrix"+inc+"("+j+","+k+")= "+invY[j][k]+";");
 				}
-				
-				
 				printNewline();
 				printNewline();
 				printLine("invariantBoundValue"+inc+".resize(row);");
@@ -750,7 +770,6 @@ public class XspeedPrinter extends ToolPrinter {
 
 			//printLine("}"); // end individual mode
 		}
-		
 		
 
 	//	printLine("}"); // end all modes
@@ -1807,7 +1826,7 @@ public class XspeedPrinter extends ToolPrinter {
 			printNewline();
 			printNewline();
 			
-			printLine("int dim = initial_polytope_I->getSystemDimension();");
+			printLine("dim = initial_polytope_I->getSystemDimension();");
 			printLine("Hybrid_Automata.addInitial_Location(l1);");
 			for(Entry<String,AutomatonMode>m: ha.modes.entrySet())
 			{
@@ -1823,11 +1842,641 @@ public class XspeedPrinter extends ToolPrinter {
 			printLine("d_set.insert_element("+Inid+");");
 			printLine("initial_symbolic_state.setDiscreteSet(d_set);");
 			printLine("initial_symbolic_state.setContinuousSet(initial_polytope_I);");
+			printNewline();
+			printNewline();
+			
+			printLine("dim = initial_symbolic_state.getContinuousSet()->getSystemDimension();");
+				printLine("std::vector<std::vector<double> > newDirections;");
+				printLine("math::matrix<double> Real_Directions;");
+				printLine("unsigned int dir_nums;");
+				printLine("if (Directions_Type == BOX) {");
+				printLine("dir_nums = 2 * dim;");
+				printLine("newDirections = generate_axis_directions(dim);");
+				printLine("}");
+				printLine("if (Directions_Type == OCT) {");
+				printLine("dir_nums = 2 * dim * dim;");
+				printLine("newDirections = get_octagonal_directions(dim);");
+				printLine("}");
+				printLine("if (Directions_Type > 2) {");
+				printLine("dir_nums = Directions_Type;");
+				printLine("newDirections = math::uni_sphere(dir_nums, dim, 100, 0.0005);");
+				printLine("}");
+				
+				printLine("get_ublas_matrix(newDirections, Real_Directions); ");
+				printLine("row = dir_nums;");
+				printLine("col = dim;");
+				printLine("reach_parameters.Directions.resize(row, col);");
+				printLine("reach_parameters.Directions = Real_Directions;");
+				printLine("transition_iterations = iter_max;");
+				printLine("reach_parameters.Iterations =  time_horizon / sampling_time; ");
+				printLine("reach_parameters.TimeBound = time_horizon; ");
+				printLine("reach_parameters.time_step = reach_parameters.TimeBound / reach_parameters.Iterations;");
+			
+			
+			
+			
+			
 			printLine("}");
 			
 	}
 	
 	
+	
+	///////**************************************************************
+	
+	public static class XspeedExpressionPrinter extends DefaultExpressionPrinter
+	{
+		
+		public ArrayList <String> ControlVar = new ArrayList <String>();
+		public ArrayList <String> UncontrolVar = new ArrayList <String>();
+		int index,i,index0,indexU, indexU0;
+		String [] st;
+		String [] st1;
+		double[][] cons ;
+		double[][] Bmatrix;
+		double [] constraint;
+		public XspeedExpressionPrinter(String [] vars, String [] cos, int con, int uncon)
+		{
+			super();
+			cons = new double[con][con];
+			Bmatrix = new double [con][uncon];
+			for(int k=0; k<con;k++)
+				for(int j=0;j<con;j++)
+					cons[k][j]=0;
+			for(int k=0; k<con;k++)
+				for(int j=0;j<uncon;j++)
+					Bmatrix[k][j]=0;
+			
+			st = new String[vars.length];
+			st = vars;
+			st1 = new String[cos.length];
+			st1 = cos;
+			constraint = new double[con];
+			for(int k=0; k<con;k++)
+					constraint[k]=0;
+		}
+		
+		public String printOperationExspeed(Operation o, int j)
+		{
+			
+			String rv;
+			List <Expression> children = o.children;
+			Operator op = o.op;
+			
+			if(op.equals(Operator.EQUAL))
+			{
+				if(children.get(1) instanceof Constant)
+				{
+					constraint[j] = Double.parseDouble(children.get(1).toString());
+				}
+			}
+			
+			if (children.size() == 0)
+				{
+				rv = printOperator(o.op);
+				}
+			else if (children.size() == 1)
+			{
+				
+				//System.out.println("I'm in 1 child block");
+				
+				Expression child = children.get(0);
+			    
+				
+				if (op.equals(Operator.NEGATIVE) || op.equals(Operator.LOGICAL_NOT))
+				{
+					if (child instanceof Operation && child.asOperation().children.size() > 1)
+						rv = opNames.get(o.op) + "(" + printExspeed(child,j) + ")";
+					else
+						rv = opNames.get(o.op) + "" + printExspeed(child,j);
+				//	System.out.println("negative : "+rv);
+					
+				}
+				else
+					{
+					
+					rv = opNames.get(o.op) + "(" + printExspeed(child,j) + ")";
+				    }
+				for(int l =0 ;l<st1.length;l++)
+				{
+					if(child.toString().equals(st1[l]))
+					{
+						//System.out.println(j+" () "+l+"  "+st1[l]);
+						constraint[j] = Double.parseDouble(rv);
+						break;
+					}
+				}
+				
+			}
+			else if (children.size() == 2)
+			{
+				//System.out.println(children.toString());
+				
+				//System.out.println("vvvv"+children.toString());
+				
+				Expression leftExp = children.get(0);
+				Operation left = leftExp.asOperation();
+				
+				Expression rightExp = children.get(1);
+				Operation right = rightExp.asOperation();
+				
+			
+				boolean needParenLeft = false;
+				boolean needParenRight = false;
+				
+				rv = "";
+				// use parentheses if they are needed
+				
+				if(children.get(1) instanceof Variable && children.get(0) instanceof Constant && o.op.equals(Operator.MULTIPLY))
+				{				
+					for (int k = 0; k < ControlVar.size(); k++)
+					{
+						if(ControlVar.get(k).equals((children.get(1).toString())))
+							{
+							//System.out.println("hiii");
+							cons[j][k] =Double.parseDouble(children.get(0).toString());
+							//System.out.println("hiii    cons["+j+"]["+k+"]"+cons[j][k]);
+							   break;
+							}
+					}
+					for (int k = 0; k < UncontrolVar.size(); k++)
+					{
+					if(UncontrolVar.get(k).equals((children.get(1).toString())))
+						{
+						//System.out.println("hiii");
+							Bmatrix[j][k] =Double.parseDouble(children.get(0).toString());
+							//System.out.println("hiii"+Bmatrix[j][k]);
+							break;
+						}
+					}
+				}
+				
+				else if(( rightExp instanceof Constant) && (opNames.get(o.op)=="+" || opNames.get(o.op)=="-"))
+				{
+					//System.out.println("hiii");
+					if(opNames.get(o.op)=="-")
+					{
+					constraint[j] = -Double.parseDouble(rightExp.toString());
+					}
+					else
+					{
+					constraint[j] = Double.parseDouble(rightExp.toString());
+					}
+					
+					rv += printExspeed(leftExp,j);
+				}
+				/*
+				if(leftExp instanceof Variable && rightExp instanceof Variable && opNames.get(o.op)=="+")
+				{
+					
+					for (int k = 0; k < ControlVar.size(); k++)
+					{
+						if(ControlVar.contains((children.get(0).toString())))
+							{
+							   index0 = k;
+							   break;
+							}
+					}
+					
+					for (int k = 0; k < ControlVar.size(); k++)
+					{
+						if(ControlVar.contains((children.get(1).toString())))
+							{
+							   index = k;
+							   break;
+							}
+					}
+					
+					
+					for (int k = 0; k < UncontrolVar.size(); k++)
+					{
+						if(UncontrolVar.contains((children.get(0).toString())))
+							{
+							   indexU0 = k;
+							   break;
+							}
+					}
+					
+					for (int k = 0; k < UncontrolVar.size(); k++)
+					{
+						if(UncontrolVar.contains((children.get(1).toString())))
+							{
+							   indexU = k;
+							   break;
+							}
+					}
+					
+					
+					
+					
+				   cons[j][index]= 1;
+				   cons[j][index0]= 1;
+				//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+				}
+				
+				if(leftExp instanceof Variable && rightExp instanceof Variable && opNames.get(o.op)=="-")
+				{
+					
+					for (int k = 0; k < ControlVar.size(); k++)
+					{
+						if(ControlVar.contains((children.get(0).toString())))
+							{
+							   index0 = k;
+							   break;
+							}
+					}
+					
+					for (int k = 0; k < ControlVar.size(); k++)
+					{
+						if(ControlVar.contains((children.get(1).toString())))
+							{
+							   index = k;
+							   break;
+							}
+					}
+					
+					
+					for (int k = 0; k < UncontrolVar.size(); k++)
+					{
+						if(UncontrolVar.contains((children.get(0).toString())))
+							{
+							   index0 = k;
+							   break;
+							}
+					}
+					
+					for (int k = 0; k < UncontrolVar.size(); k++)
+					{
+						if(UncontrolVar.contains((children.get(1).toString())))
+							{
+							   index = k;
+							   break;
+							}
+					}
+					cons[j][index]= 1;
+					cons[j][index]= -1;
+				//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+				}
+				*/
+				else if(left instanceof Operation && rightExp instanceof Variable && opNames.get(o.op)=="-")
+					{
+						for (int k = 0; k < ControlVar.size(); k++)
+						{
+							if(ControlVar.get(k).equals(rightExp))
+								{
+								//System.out.println("hiii");
+									cons[j][k]= -1;
+									break;
+								}
+						
+						}
+					
+						for (int k = 0; k < UncontrolVar.size(); k++)
+						{
+							if(UncontrolVar.get(k).equals(rightExp))
+							{
+								//System.out.println("hiii");
+								cons[j][k]= -1;
+								break;
+							}
+						}
+						
+						rv += printExspeed(leftExp,j);
+					//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+					}
+				
+				
+				else
+					if(left instanceof Operation && rightExp instanceof Variable && opNames.get(o.op)=="+")
+				{
+						for (int k = 0; k < ControlVar.size(); k++)
+						{
+							if(ControlVar.get(k).equals(rightExp))
+								{
+									//System.out.println("hiii");
+									cons[j][k]= 1;
+									break;
+								}
+						
+						}
+					
+						for (int k = 0; k < UncontrolVar.size(); k++)
+						{
+							if(UncontrolVar.get(k).equals(rightExp))
+							{
+								//System.out.println("hiii");
+								cons[j][k]= 1;
+								break;
+							}
+						}
+						
+						
+						rv += printExspeed(leftExp,j);
+				//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+				}
+					
+					else
+					{
+						
+						int myP = Operator.getPriority(op);
+						if (left != null && left.children.size() > 1)
+						{
+							int leftP = Operator.getPriority(left.op);
+							
+							if (leftP < myP)
+								needParenLeft = true;
+						//	System.out.println(needParenLeft);
+						}
+						
+						if (right != null && right.children.size() > 1)
+						{
+							int rightP = Operator.getPriority(right.op);
+							
+							if (myP > rightP || (myP == rightP && !Operator.isCommutative(op))) // commutative
+								needParenRight = true;
+							//System.out.println(needParenRight);
+						}
+						
+						
+						if (needParenLeft)
+						{
+							//System.out.println("Unexpected");
+						   rv += "(" + printExspeed(leftExp,j) + ")"; 
+						// maybe not strictly necessary as the expression.toString is overriden to call this print, but was having problems with this
+						}
+						else
+							{
+							rv += printExspeed(leftExp,j);
+							//System.out.println("the left expression is:"+ print(leftExp));
+							}
+						
+						rv += " " + opNames.get(o.op) + " ";
+					//	System.out.println(opNames.get(o.op));
+						if (needParenRight)
+						{
+							//System.out.println("Unexpected");
+							rv += "(" + printExspeed(rightExp,j) + ")";
+						}
+						else
+						{
+							rv += printExspeed(rightExp,j);
+							//System.out.println("the right expression is:"+ print(rightExp));
+						}
+						
+					}
+				
+			}
+			else
+			{
+				throw new AutomatonExportException("No default way to in-line print expression with " + children.size() 
+						+ " children (" + opNames.get(o.op) + ".");
+			}
+			
+			
+			//System.out.println("The result is :"+ rv);
+			return rv;
+			
+		}
+		
+		public double cons(int cons1, int cons2)
+		{
+			return cons[cons1][cons2];
+				
+		}
+		
+		public double Bmatrix(int cons1, int cons2)
+		{
+			return Bmatrix[cons1][cons2];
+				
+		}
+		
+		
+		public double Cmatrix(int cons1)
+		{
+			return constraint[cons1];
+				
+		}
+		
+		
+		
+		
+		
+		
+		public String printExspeedFirst(Expression e, int j, ArrayList<String>Control, ArrayList<String>Uncontrol)
+		{
+			String rv = null;
+			ControlVar = Control;
+			UncontrolVar = Uncontrol;
+			//System.out.println("Inside "+j);
+				if (e == null)
+					rv = "null";
+				else if (e instanceof Constant && Integer.parseInt(e.toString())!=0)
+				{
+				rv = e.toString();
+				//System.out.println("constant :"+rv);
+				saveCmatrix(rv,j);
+				}
+				else if (e instanceof Operation)
+				{
+			 	rv = printOperationExspeed((Operation) e,j);
+				//System.out.println("operation "+rv);
+				}
+				else if (e instanceof Variable)
+				{
+					if(ControlVar.contains(e.toString()))
+					{
+					rv = printVariable((Variable) e);
+					//System.out.println("variable "+rv);
+					saveAmatrix(rv,j);
+					}
+					if(UncontrolVar.contains(e.toString()))
+					{
+						rv = printVariable((Variable) e);
+						//System.out.println("unvariable "+rv);
+						saveBmatrix(rv,j);
+					}
+				}
+				else
+				{
+					rv = printOther(e);
+					//System.out.println("other"+rv);
+				}
+			return rv;
+			
+				
+		}
+		
+		
+		
+		
+		public String printExspeed(Expression e, int j)
+		{
+
+				String rv = null;
+				if (e == null)
+					rv = "null";
+				else if (e instanceof Constant)
+				{
+				rv = printConstant((Constant) e);
+				//System.out.println("constant :"+rv);
+				}
+				else if (e instanceof Operation)
+				{
+			 	rv = printOperationExspeed((Operation) e,j);
+				//System.out.println("operation "+rv);
+				}
+				else if (e instanceof Variable)
+				{
+					rv = printVariable((Variable) e);
+				//	System.out.println("variable "+rv);
+				}
+				else
+				{
+					rv = printOther(e);
+				//	System.out.println("other"+rv);
+				}
+			return rv;
+				
+		}
+		public String printOther(Expression e)
+		{
+			return e.toString();
+		}
+		
+		public String printVariable(Variable v)
+		{
+			return v.name;
+		}
+		
+		public String printConstant(Constant c)
+		{
+			String rv = null;
+			
+			if (c == Constant.TRUE)
+				rv = printTrue();
+			else if (c == Constant.FALSE)
+				rv = printFalse();
+			else
+				rv = printConstantValue(c.getVal());
+
+			return rv;
+		}
+		
+		public String printConstantValue(double d)
+		{
+			return "" + d;
+		}
+		
+		public String printTrue()
+		{
+			return "true";
+		}
+		
+		public String printFalse()
+		{
+			return "false";
+		}
+		
+		// although Operators are technically not expressions, it's better to define this here to keep the printing all in once place
+
+		
+		/**
+		 * Prefix printing for everything
+		 * @param o
+		 * @return
+		 */
+		public String printOperation(Operation o)
+		{
+			String childrenStr = "";
+			
+			for (Expression e : o.children)
+			{
+				//System.out.println("");
+				//System.out.println("");
+				childrenStr += " " + print(e);
+			}
+			return "(" + printOperator(o.op) + childrenStr + ")";
+		}
+		
+		public void saveAmatrix(String stx,int j)
+		{
+			
+			for (int k = 0; k < ControlVar.size(); k++)
+			{
+				if(ControlVar.get(k).equals(stx.toString()))
+					{
+					   index = k;
+					   cons[j][index]= 1;
+					   //System.out.println("cons["+j+"]["+index+"]"+cons[j][index]);
+					   break;
+					}
+			}
+			
+			  // System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+			
+		}
+		
+		public void saveCmatrix(String stl,int j)
+		{
+			
+					   constraint[j]= Integer.parseInt(stl);
+			
+			
+			  // System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+			
+		}
+		
+		public void saveBmatrix(String stl,int j)
+		{
+			for (int k = 0; k < UncontrolVar.size(); k++)
+			{
+				if(UncontrolVar.get(k).equals(stl.toString()))
+					{
+					   index = k;
+					   Bmatrix[j][index]= 1;
+					   break;
+					}
+			}
+			
+					   Bmatrix[j][index]= Integer.parseInt(stl);
+			
+			
+			  // System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
+			
+		}
+		
+		
+	
+		
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+//////////////////////////***********************************************	
 
 	@Override
 	protected void printAutomaton() {
