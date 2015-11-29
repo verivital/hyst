@@ -91,7 +91,7 @@ public abstract class ToolPrinter
 	{
 		this.toolParamsString = toolParamsString;
 		this.originalFilename = originalFilename;
-		System.out.println("vfsvssv"+originalFilename);
+
 		boolean shouldCloseStream = false;
 		
 		if (toolParamsString == null) 
@@ -110,12 +110,11 @@ public abstract class ToolPrinter
 			{
 				shouldCloseStream = true;
 				outputStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFilename)));
-					}
+			}
+			
 			this.config = c;
-			//System.out.println("Helllo......");
 			checkPreconditions(c);
 			printAutomaton();
-			//System.out.println("Helllo......");
 		}
 		catch (FileNotFoundException e)
 		{
@@ -129,7 +128,7 @@ public abstract class ToolPrinter
 		{
 			if (shouldCloseStream && outputStream != null)
 				outputStream.close();
-						}
+		}
 	}
 
 	private void setBaseName(String originalFilename)

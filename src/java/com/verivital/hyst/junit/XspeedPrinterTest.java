@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
@@ -15,22 +16,13 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.printers.XspeedPrinter;
-import com.verivital.hyst.printers.FlowPrinter;
-import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
-/**
- * A unit test suite for testing various types of printers. While ModelParserTest focuses on validating that
- * the models are input correctly, this suite instead focuses on exporting models.
- * 
- * @author Stanley Bak
- *
- */
+
 public class XspeedPrinterTest
 {
 	@Before 
@@ -40,7 +32,6 @@ public class XspeedPrinterTest
 	}
 	
 	private String UNIT_BASEDIR = "tests/unit/XspeedModel/";
-	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	
 	// tools to test here. Each test will run all of these
 	private static final ArrayList <ToolPrinter> printers; 
@@ -63,6 +54,15 @@ public class XspeedPrinterTest
 	 * tests/unit/models/ directory
 	 * @param baseName the name used to construct the directory, and names of the .xml and .cfg files
 	 */
+	private void runAllPrintersOnModel(String baseName)
+	{
+		String path = UNIT_BASEDIR + baseName + "/";
+		String xml = baseName + ".xml";
+		String cfg = baseName + ".cfg";
+		
+		runAllPrintersOnModel(path, xml, cfg);
+	}
+
 	/**
 	 * Test all the printers defined in the printers array on the passed-in model
 	 * @param path the directory path, ends in '/'
@@ -138,15 +138,35 @@ public class XspeedPrinterTest
 		}
 	}
 	
-	/**
-	 * Printers should be able to print a simple model with no errors.
-	 */
 	@Test
-	public void testPrintSimpleModel()
+	public void testPrintbball()
 	{
-		runAllPrintersOnModel(UNIT_BASEDIR + "helicopter/", "helicopter.xml", "helicopter.cfg");
+		runAllPrintersOnModel("bball");
 	}
 	
+	@Test
+    public void testPrintTimedbball() 
+	{
+		runAllPrintersOnModel("bball_timed");
+    }
+	
+	@Test
+    public void testPrintHelicopter() 
+	{
+		runAllPrintersOnModel("helicopter");
+    }
+	
+	@Test
+	public void testPrintNavigation4X4()
+	{
+		runAllPrintersOnModel("nav04");
+	}
+	
+	@Test
+	public void testPrintNavigation5X5()
+	{
+		runAllPrintersOnModel("nav5X5");
+	}
 	
 	private static Configuration makeSampleConfiguration()
 	{
@@ -176,34 +196,4 @@ public class XspeedPrinterTest
 		
 		return c;
 	}
-	
-	
-	public void testPrintIntervalExpression()
-	{
-		Configuration c = makeSampleConfiguration();
-		
-		BaseComponent ha = (BaseComponent)c.root;
-		AutomatonMode am = ha.modes.get("running");
-		ExpressionInterval ei = new ExpressionInterval(new Constant(0), new Interval(-1, 1));
-		am.flowDynamics.put("x", ei);
-		
-		runAllPrintersOnConfiguration(c);
-	}
-
-	/**
-	 * The preconditions should split a disjunctive condition directly
-	 */
-	@Test
-	public void testDisjunctiveGuard()
-	{
-		Configuration c = makeSampleConfiguration();
-		
-		BaseComponent ha = (BaseComponent)c.root;
-		ha.transitions.get(0).guard = FormulaParser.parseGuard("t >= 5 | x >= 7");
-		
-		runAllPrintersOnConfiguration(c);
-	}
-	
-    
 }
-

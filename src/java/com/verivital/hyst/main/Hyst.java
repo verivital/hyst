@@ -26,22 +26,21 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
-import com.verivital.hyst.passes.complex.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.RegularizePass;
-import com.verivital.hyst.passes.flat.SimulatorPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
-import com.verivital.hyst.printers.LayoutPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SMTPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
-import com.verivital.hyst.printers.XspeedPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -89,8 +88,6 @@ public class Hyst
 					new SpaceExPrinter(),
 					new SMTPrinter(),
 					new StateflowSpPrinter(),
-					new LayoutPrinter(),
-					new XspeedPrinter(),
 			};
 
 	// passes that are run only if the user selects them
@@ -106,9 +103,9 @@ public class Hyst
 					new RemoveSimpleUnsatInvariantsPass(),
 					new ShortenModeNamesPass(),
 					new RegularizePass(),
-					//new ContinuizationPass(), // TODO: add back, but the commons-cli stuff is breaking the stateflow converter
+					new ContinuizationPass(),
 					new HybridizeGridPass(),
-					new SimulatorPass(),
+					new HybridizeMixedTriggeredPass(),
 					new FlattenAutomatonPass(),
 			};
 
@@ -243,7 +240,8 @@ public class Hyst
 		}
 		catch (Exception ex)
 		{
-			logError("Exception while exporting: " + ex.getLocalizedMessage());
+			String message = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : ex.toString();
+			logError("Exception in Hyst while exporting: " + message);
 
 			if (verboseMode)
 			{
@@ -254,6 +252,8 @@ public class Hyst
 				ex.printStackTrace(pw);
 				log(sw.toString());
 			}
+			else
+				logError("For more information about the error, use the -verbose or -debug flag.");
 
 			return ExitCode.EXPORT_EXCEPTION.ordinal();
 		}
@@ -274,7 +274,7 @@ public class Hyst
 			printer.setOutputFile(outputFilename);
 		else if (guiFrame != null)
 			printer.setOutputGui(guiFrame);
-		
+
 		printer.print(config, toolParamsString, originalFilename);
 	}
 

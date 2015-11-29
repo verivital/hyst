@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -49,13 +50,23 @@ public class RungeKutta
 		for (int s = 0; s < numSteps; ++s)
 		{
 			if (sl != null)
-				sl.step(s, hp);
+				sl.step(s, new HyperPoint(hp));
 				
 			stepRK(hp, h);
 		}
 		
 		if (sl != null)
-			sl.step(numSteps, hp);
+			sl.step(numSteps, new HyperPoint(hp));
+	}
+	
+	/**
+	 * a public version of a single-step function
+	 */
+	public static void singleStepRk(Map <String, Expression> flowDynamics, List <String> varNames, HyperPoint hp, double h)
+	{
+		assignDynamics(flowDynamics, varNames);
+		
+		stepRK(hp, h);
 	}
 	
 	/**
