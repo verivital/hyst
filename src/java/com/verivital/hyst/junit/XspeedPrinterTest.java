@@ -39,7 +39,7 @@ public class XspeedPrinterTest
 	    Expression.expressionPrinter = null;
 	}
 	
-	private String UNIT_BASEDIR = "tests/unit/models/XspeedModel";
+	private String UNIT_BASEDIR = "tests/unit/models/XspeedModel/";
 	private String REGRESSION_BASEDIR = "tests/regression/models/";
 	
 	// tools to test here. Each test will run all of these
