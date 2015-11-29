@@ -63,15 +63,6 @@ public class XspeedPrinterTest
 	 * tests/unit/models/ directory
 	 * @param baseName the name used to construct the directory, and names of the .xml and .cfg files
 	 */
-	private void runAllPrintersOnModel(String baseName)
-	{
-		String path = UNIT_BASEDIR + baseName + "/";
-		String xml = baseName + ".xml";
-		String cfg = baseName + ".cfg";
-		
-		runAllPrintersOnModel(path, xml, cfg);
-	}
-
 	/**
 	 * Test all the printers defined in the printers array on the passed-in model
 	 * @param path the directory path, ends in '/'
@@ -153,7 +144,7 @@ public class XspeedPrinterTest
 	@Test
 	public void testPrintSimpleModel()
 	{
-		runAllPrintersOnModel(UNIT_BASEDIR + "no_vars_check/", "has_vars.xml", "has_vars.cfg");
+		runAllPrintersOnModel(UNIT_BASEDIR + "helicopter/", "helicopter.xml", "helicopter.cfg");
 	}
 	
 	
