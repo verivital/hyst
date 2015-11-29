@@ -13,21 +13,6 @@ import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
-package com.verivital.hyst.junit;
-
-import java.util.ArrayList;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.importer.SpaceExImporter;
-import com.verivital.hyst.ir.Configuration;
-import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.Interval;
@@ -230,3 +215,4 @@ public class XspeedPrinterTest
 	
     
 }
+
