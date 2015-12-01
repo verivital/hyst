@@ -101,7 +101,7 @@ public class XspeedPrinterTest
 		}
 		
 		if (!printedOk)
-			throw new RuntimeException("No printer successfully printed the model (all precondition checks rejected it): " + xmlName);
+			throw new RuntimeException("XSpeed printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
 	}
 	
 	/**
