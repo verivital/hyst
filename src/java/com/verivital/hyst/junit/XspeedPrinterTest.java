@@ -34,20 +34,8 @@ public class XspeedPrinterTest
 	private String UNIT_BASEDIR = "tests/unit/models/";
 	
 	// tools to test here. Each test will run all of these
-	private static final ArrayList <ToolPrinter> printers; 
+	ToolPrinter tp= new XspeedPrinter();
 	
-	static 	
-	{
-		printers = new ArrayList <ToolPrinter>();
-		
-		//System.out.println(". PrintersTest.java todo: uncomment all printers");
-		addPrinter(new XspeedPrinter());
-	};
-	
-	private static void addPrinter(ToolPrinter p)
-	{			
-		printers.add(p);
-	}
 
 	/**
 	 * Test all the printers defined in the printers array on the passed-in model within the
@@ -73,9 +61,7 @@ public class XspeedPrinterTest
 	{
 		boolean printedOk = false;
 		
-		for (ToolPrinter tp : printers)
-		{
-			// clear expression printer since no assumptions can be made about it. If null pointer exceptinons are thrown, this means
+		// clear expression printer since no assumptions can be made about it. If null pointer exceptinons are thrown, this means
 			// it should have been assigned on printAutomaton()
 			Expression.expressionPrinter = null;
 			
@@ -100,7 +86,6 @@ public class XspeedPrinterTest
 				throw new RuntimeException("XSpeed printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
 				// preconditions error, ignore this model for this printer
 			}
-		}
 		
 		if (!printedOk)
 		{
@@ -118,8 +103,7 @@ public class XspeedPrinterTest
 		config.validate();
 		boolean printedOk = false;
 		
-		for (ToolPrinter tp : printers)
-		{
+		
 			Configuration c = config.copy();
 			
 			try
@@ -135,7 +119,6 @@ public class XspeedPrinterTest
 				System.out.println("Rejected model:\n" + config);
 				// preconditions error, ignore this model for this printer
 			}
-		}
 		
 		if (!printedOk)
 		{

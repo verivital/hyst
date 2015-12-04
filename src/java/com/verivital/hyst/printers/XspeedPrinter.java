@@ -1249,7 +1249,6 @@ public class XspeedPrinter extends ToolPrinter {
 					int re = CVarcontainX(key);
 				    Expression eee = t1.reset.get(key).getExpression();
 				 
-				    System.out.println("hhdhd"+ha.variables);
 				    for(int i=0;i<ControlVarI.size();i++)
 						Wmatrix[i] = 0;
 				
