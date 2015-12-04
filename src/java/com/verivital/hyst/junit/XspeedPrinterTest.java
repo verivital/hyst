@@ -1,8 +1,5 @@
 package com.verivital.hyst.junit;
 
-import java.util.ArrayList;
-
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +30,7 @@ public class XspeedPrinterTest
 	
 	private String UNIT_BASEDIR = "tests/unit/models/";
 	
-	// tools to test here. Each test will run all of these
+	//  XSPeed printer too will be tested here.
 	ToolPrinter tp= new XspeedPrinter();
 	
 
