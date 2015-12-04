@@ -31,15 +31,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
-import java.util.*;
 
-import org.antlr.v4.parse.ANTLRParser.option_return;
-/**
- * Printer for Flow* models. Based on Chris' Boogie printer.
- * 
- * @author Stanley Bak (8-2014)
- * 
- */
 public class XspeedPrinter extends ToolPrinter {
 	private BaseComponent ha;
 	double [] invX ;
@@ -111,21 +103,11 @@ public class XspeedPrinter extends ToolPrinter {
 	 */
 	private void printProcedure() {
 		printInitial();
-		//printVars();
-		
-		// printSettings();
-		//constraintVmatrixXspeed();
 		printModes();
 		printInitialStatesExspeed();
-		System.out.println("End init of printing");
+		//System.out.println("End init of printing");
 		printJumpsXspeed();
-		
-		System.out.println("End of printing");
-		//printLine("}");
-
-		
-
-		 //printForbidden();
+		//System.out.println("End of printing");
 	}
 	private void printInitial()
 	{	printLine("#include \"user_model.h\"");
@@ -205,163 +187,9 @@ public class XspeedPrinter extends ToolPrinter {
 		printNewline();
 		printNewline();
 	}
-	private void printForbidden() {
-		if (config.forbidden.size() > 0) {
-			printLine("");
-			printLine("unsafe set");
-			printLine("{");
-
-			for (Entry<String, Expression> e : config.forbidden.entrySet()) {
-				String expString = "";
-				Expression exp = e.getValue();
-
-				if (exp != null)
-					expString = getFlowConditionExpression(exp);
-
-				printLine(e.getKey() + " {" + expString + "}");
-			}
-
-			printLine("}");
-		}
-	}
-
-	private void printSettings() {
-		printNewline();
-		printLine("setting");
-		printLine("{");
-
-		String[] step = getStepParam();
-
-		if (step.length == 1 || step.length == 2 && step[0].equals(step[1]))
-			printLine("fixed steps " + step[0]);
-		else if (step.length == 2)
-			printLine("adaptive steps { min " + step[0] + ", max " + step[1]
-					+ " }");
-		else
-			throw new AutomatonExportException(
-					"Param 'step' should have one or two entries: "
-							+ toolParams.get("step"));
-
-		printLine("time " + getTimeParam());
-
-		printLine("remainder estimation " + toolParams.get("remainder"));
-
-		if (toolParams.get("precondition").equals("auto")) {
-			// follow recommendation in 1.2 manual
-			if (ha.variables.size() > 3)
-				printLine("identity precondition");
-			else
-				printLine("QR precondition");
-		} else
-			printLine(toolParams.get("precondition") + " precondition");
-
-		printLine(getPlotParam());
-
-		String[] order = getOrderParam();
-
-		if (order.length == 1 || order.length == 2 && order[0].equals(order[1]))
-			printLine("fixed orders " + order[0]);
-		else if (order.length == 2)
-			printLine("adaptive orders { min " + order[0] + ", max " + order[1]
-					+ " } ");
-		else
-			throw new AutomatonExportException(
-					"Param 'orders' should have one or two entries: "
-							+ toolParams.get("orders"));
-
-		printLine("cutoff " + toolParams.get("cutoff"));
-		printLine("precision " + toolParams.get("precision"));
-		printLine("output out");
-		printLine("max jumps " + toolParams.get("jumps"));
-		printLine("print on");
-		printLine("}");
-	}
-
-	private String[] getOrderParam() {
-		return toolParams.get("orders").split("-");
-	}
-
-	private String getTimeParam() {
-		String value = toolParams.get("time");
-
-		if (value.equals("auto"))
-			value = doubleToString(config.settings.spaceExConfig.timeHorizon);
-
-		return value;
-	}
-
-	private String getPlotParam() {
-		String auto = "gnuplot octagon " + config.settings.plotVariableNames[0]
-				+ "," + config.settings.plotVariableNames[1];
-
-		String value = toolParams.get("plot");
-
-		if (value.equals("auto"))
-			value = auto;
-
-		return value;
-	}
-
-	private String[] getStepParam() {
-		String value = toolParams.get("step");
-
-		if (value.contains("auto")) {
-			String autoVal = doubleToString(config.settings.spaceExConfig.samplingTime);
-			value = value.replace("auto", autoVal);
-		}
-
-		return value.split("-");
-	}
-
-	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
-	 */
-	private void printVars() {
-		printLine("# Vars");
-
-		String varLine = "state var ";
-
-		boolean first = true;
-		for (int k = 0; k <= ha.constants.size(); k++) {
-			varLine += ", ";
-
-			varLine += ha.constants.get(k);
-		}
-
-		printLine(varLine);
-		for (String v : ha.variables) {
-			if (first)
-				first = false;
-			else
-				varLine += ", ";
-
-			varLine += v;
-		}
-
-		printLine(varLine);
-	}
-
-	/**
-	 * Print initial states
-	 */
-	private void printInitialStates() {
-		printNewline();
-		printLine("init");
-		printLine("{");
-
-		for (Entry<String, Expression> e : config.init.entrySet()) {
-			printLine(e.getKey());
-			printLine(removeConstants(e.getValue(), ha.constants.keySet()).toString());
-			printLine("{");
-			printFlowRangeConditions(
-					removeConstants(e.getValue(), ha.constants.keySet()), true);
-			printLine("}"); // end mode
-		}
-
-		printLine("}"); // end all initial modes
-	}
 	
+	
+
 	private void printInitialStatesExspeed() {
 		printNewline();
 		//int init =1;
@@ -502,7 +330,6 @@ public class XspeedPrinter extends ToolPrinter {
 			else
 				printNewline();
 
-			String locName = e.getKey();
 			
 			
 			
@@ -511,42 +338,6 @@ public class XspeedPrinter extends ToolPrinter {
 				ControlVarI = ControlVar;
 				UncontrolVarI = UncontrolVar;
 			}
-			
-			//printLine(locName);
-		//	printLine("{");
-
-			// From Xin Chen e-mail:
-			// linear ode - linear time-invariant, can also have uncertain input
-			// "poly ode 1" works more efficient than the others on low degree
-			// and low dimension (<=3) ODEs.
-			// "poly ode 2" works more efficient than the others on low degree
-			// and medium dimension (4~6) ODEs.
-			// "poly ode 3" works more efficient than the others on medium or
-			// high degree and high dimension ODEs.
-			// "nonpoly ode" works with nonlinear terms
-
-			/*if (isNonLinearDynamics(mode.flowDynamics))
-				printLine("nonpoly ode");
-			else if (isLinearDynamics(mode.flowDynamics))
-				printLine("linear ode");
-			else if (ha.variables.size() <= 3)
-				printLine("poly ode 1");
-			else if (ha.variables.size() <= 6)
-				printLine("poly ode 2");
-			else
-				printLine("poly ode 3");*/
-			//mode.flowDynamics
-			/*for (Entry<String, Expression> ee : mode.flowDynamics.)
-			{
-				
-			}*/
-			
-		//	System.out.println("The flows are "+mode.flowDynamics.toString());
-			//System.out.println("The variables are "+ha.variables.toString());
-			//printLine("{");
-			
-
-			
 			
 			
 			
@@ -775,57 +566,7 @@ public class XspeedPrinter extends ToolPrinter {
 	//	printLine("}"); // end all modes
 	}
 ///////////////////////////////////////////Locations work completed ///////////////////////////////////
-	private boolean isNonLinearDynamics(
-			LinkedHashMap<String, ExpressionInterval> flowDynamics) {
-		boolean rv = false;
-
-		for (ExpressionInterval e : flowDynamics.values()) {
-			if (expressionContainsOp(e.getExpression(), Operator.DIVIDE)
-					|| expressionContainsOp(e.getExpression(), Operator.COS)
-					|| expressionContainsOp(e.getExpression(), Operator.SIN)
-					|| expressionContainsOp(e.getExpression(), Operator.EXP)) {
-				rv = true;
-				break;
-			}
-		}
-
-		return rv;
-	}
-
-	private boolean expressionContainsOp(Expression e, Operator testOp) {
-		boolean rv = false;
-		Operation o = e.asOperation();
-
-		if (o != null) {
-			if (o.op.equals(testOp))
-				rv = true;
-			else {
-				for (Expression child : o.children) {
-					rv = expressionContainsOp(child, testOp);
-
-					if (rv)
-						break;
-				}
-			}
-		}
-
-		return rv;
-	}
-
-	private boolean isLinearDynamics(
-			LinkedHashMap<String, ExpressionInterval> flowDynamics) {
-		boolean rv = true;
-
-		for (ExpressionInterval e : flowDynamics.values()) {
-			if (!isLinearExpression(e.getExpression())) {
-				rv = false;
-				break;
-			}
-		}
-
-		return rv;
-	}
-
+	
 	public static boolean isLinearExpression(Expression e) {
 		boolean rv = true;
 
@@ -901,6 +642,7 @@ public class XspeedPrinter extends ToolPrinter {
 			rv = getFlowConditionExpressionRec(e);
 			//System.out.println(rv);
 		} catch (AutomatonExportException ex) {
+			
 			throw new AutomatonExportException("Error with expression:" + e, ex);
 		}
 
@@ -924,7 +666,7 @@ public class XspeedPrinter extends ToolPrinter {
 				rv += getFlowConditionExpressionRec(o.getRight());
 			} else if (o.op == Operator.OR) {
 				throw new AutomatonExportException(
-						"Flow* printer doesn't support OR operator. "
+						"XSpeed printer doesn't support OR operator. "
 								+ "Consider using a Hyst pass to eliminate disjunctions)");
 			} else if (Operator.isComparison(o.op)) {
 				Operator op = o.op;
@@ -933,7 +675,7 @@ public class XspeedPrinter extends ToolPrinter {
 				if (op.equals(Operator.GREATER) || op.equals(Operator.LESS)
 						|| op.equals(Operator.NOTEQUAL))
 					throw new AutomatonExportException(
-							"Flow* printer doesn't support operator " + op);
+							"XSpeed printer doesn't support operator " + op);
 
 				// make sure it's of the form p ~ c
 				if (o.children.size() == 2 && o.getRight() instanceof Constant)
@@ -969,6 +711,7 @@ public class XspeedPrinter extends ToolPrinter {
 			rv = getFlowConditionExpressionRecXspeed(e);
 			//System.out.println(rv);
 		} catch (AutomatonExportException ex) {
+			System.out.println("XSpeed Can not able to handle those models");
 			throw new AutomatonExportException("Error with expression:" + e, ex);
 		}
 			return rv;
@@ -1135,13 +878,15 @@ public class XspeedPrinter extends ToolPrinter {
 			invindex =0;
 			rv = getguardConditionExpressionRecXspeed(e);
 		} catch (AutomatonExportException ex) {
-			throw new AutomatonExportException("Error with expression:" + e, ex);
+			throw new RuntimeException("XSpeed does not work on these models\n");
 		}
 			return rv;
 	}
 
 	private  String getguardConditionExpressionRecXspeed(Expression e) {
 		String rv = "";
+		try
+		{
 		// replace && with ' ' and then print as normal
 		if (e instanceof Operation) {
 			Operation o = (Operation) e;
@@ -1173,8 +918,8 @@ public class XspeedPrinter extends ToolPrinter {
 						"Xspeed printer doesn't support OR operator. "
 								+ "Consider using a Hyst pass to eliminate disjunctions)");
 			} else if (Operator.isComparison(o.op)) {
+				
 				Operator op = o.op;
-
 				// Flow doesn't like < or >... needs <= or >=
 				if (op.equals(Operator.NOTEQUAL))
 					
@@ -1276,6 +1021,12 @@ public class XspeedPrinter extends ToolPrinter {
 				rv = e.toString();
 		} else
 			rv = e.toString();
+		}
+		catch(Exception ex)
+		{
+			throw new RuntimeException("XSpeed does not work on Disjunctiveguard models\n");
+			
+		}
 
 		return rv;
 	}
@@ -1287,134 +1038,10 @@ public class XspeedPrinter extends ToolPrinter {
 	
 	
 	
-	private void printFlowRangeConditions(Expression ex, boolean isAssignment) {
-		TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
-
-		try {
-			RangeExtractor.getVariableRanges(ex, ranges);
-		} catch (EmptyRangeException e) {
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} catch (ConstantMismatchException e) {
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-
-		for (Entry<String, Interval> e : ranges.entrySet()) {
-			String varName = e.getKey();
-			Interval inter = e.getValue();
-
-			if (isAssignment)
-				printLine(varName + " in [" + doubleToString(inter.min) + ", "
-						+ doubleToString(inter.max) + "]");
-			else {
-				// it's a comparison
-
-				if (inter.min == inter.max)
-					printLine(varName + " = " + doubleToString(inter.min));
-				else {
-					if (inter.min != -Double.MAX_VALUE)
-						printLine(varName + " >= " + doubleToString(inter.min));
-
-					if (inter.max != Double.MAX_VALUE)
-						printLine(varName + " <= " + doubleToString(inter.max));
-				}
-			}
-		}
-	}
-
-
-	/*
-	private void constraintVmatrixXspeed()
-	{
-			printLine("boundSignI = 1;");
-			printNewline();
-		   int l = ha.constants.size();
-			printLine("row = "+(l*2)+";");
-			printLine("col = "+l+";");
-			printLine("ConstraintsMatrixV.resize(row, col);");
-			
-		   
-		   for (int i=0; i<(l*2); i++)
-		   {
-			   for (int j=0; j<l; j++)
-			   {
-				   if(i% 2==0 && j==i/2)
-				   {
-					   printLine("ConstraintMatrixV("+i+", "+j+") = 1;");
-				   }
-				   
-				   else
-				   {
-					   if(i% 2==1 && j==i/2)
-					   {
-					   printLine("ConstraintMatrixV("+i+", "+j+") = -1;");
-					   }
-				   
-					   else
-					   printLine("ConstraintMatrixV("+i+", "+j+") = 0;");
-				   }
-			   }
-			    printNewline();
-			    printNewline();
-		   }
-		printLine("boundSignV = 1;");
-		printNewline();
-		printLine("boundValueV.resize(row);");
-		
-		
-		
-		//for(AutomatonMode )
-		
-		
-		for (Entry<String, Expression> e : config.init.entrySet()) {
-			
-			printFlowRangeConditionsMatrixV(
-					removeConstants(e.getValue(), ha.constants.keySet()), true);
-			}
-		
-		
-		
-		
-		
-		
-		
-		
-	}
 	
-	private void printFlowRangeConditionsMatrixV(Expression ex, boolean isAssignment) {
-		TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
 
-		try {
-			RangeExtractor.getVariableRanges(ex, ranges);
-		} catch (EmptyRangeException e) {
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} catch (ConstantMismatchException e) {
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		
 
-		for (Entry<String, Interval> e : ranges.entrySet()) {
-			String varName = e.getKey();
-			Interval inter = e.getValue();
-
-			if (isAssignment)
-				printLine(varName + " in [" + doubleToString(inter.min) + ", "
-						+ doubleToString(inter.max) + "]");
-			else {
-				// it's a comparison
-
-				if (inter.min == inter.max)
-					printLine(varName + " = " + doubleToString(inter.min));
-				else {
-					if (inter.min != -Double.MAX_VALUE)
-						printLine(varName + " >= " + doubleToString(inter.min));
-
-					if (inter.max != Double.MAX_VALUE)
-						printLine(varName + " <= " + doubleToString(inter.max));
-				}
-			}
-		}
-	}
-*/
+	
 /*****************************************	
 	printFlowRangeConditionsExspeed(,...........) function used for making Initial polytope I from the initial input.
 	
@@ -1427,8 +1054,10 @@ public class XspeedPrinter extends ToolPrinter {
 		try {
 			RangeExtractor.getVariableRanges(ex, ranges);
 		} catch (EmptyRangeException e) {
+			System.out.println("XSpeed Can not able to handle those models");
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		} catch (ConstantMismatchException e) {
+			
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		}
 		int init = ControlVarI.size();
@@ -1439,7 +1068,7 @@ public class XspeedPrinter extends ToolPrinter {
 		
 		for (Entry<String, Interval> e : ranges.entrySet()) {
 			String varName = e.getKey();
-			Interval inter = e.getValue();
+			//Interval inter = e.getValue();
 
 			if (isAssignment && ControlVarI.contains(varName))
 			{
@@ -1474,7 +1103,7 @@ public class XspeedPrinter extends ToolPrinter {
 				}*/
 			}
 		}
-		int vari = 0;
+		//int vari = 0;
 		
 		
 		printLine("boundValueI.resize(row );");
@@ -1514,61 +1143,6 @@ public class XspeedPrinter extends ToolPrinter {
 		
 	}
 
-	private void printJumps() {
-		printNewline();
-		printLine("jumps");
-		printLine("{");
-
-		boolean first = true;
-
-		for (AutomatonTransition t : ha.transitions) {
-			Expression guard = simplifyExpression(t.guard);
-
-			if (guard == Constant.FALSE)
-				continue;
-
-			if (first)
-				first = false;
-			else
-				printNewline();
-
-			String fromName = t.from.name;
-			String toName = t.to.name;
-
-			printLine(fromName + " -> " + toName);
-			printLine("guard");
-			printLine("{");
-
-			if (!guard.equals(Constant.TRUE)) {
-				printCommentblock("Original guard: " + t.guard);
-				printLine(getFlowConditionExpression(guard));
-			}
-
-			printLine("}");
-
-			printLine("reset");
-			printLine("{");
-
-			for (Entry<String, ExpressionInterval> e : t.reset.entrySet()) {
-				ExpressionInterval ei = e.getValue();
-				ei.setExpression(simplifyExpression(ei.getExpression()));
-				printLine(e.getKey() + "' := " + ei);
-			}
-
-			printLine("}");
-
-			if (toolParams.get("aggregation").equals("parallelotope"))
-				printLine("parallelotope aggregation {}");
-			else if (toolParams.get("aggregation").equals("interval"))
-				printLine("interval aggregation");
-			else
-				throw new AutomatonExportException(
-						"Unknown aggregation method: "
-								+ toolParams.get("aggregation"));
-		}
-
-		printLine("}");
-	}
 	
 	/**************************************
 	printJumpsXspeed() function is used for making guard matrix and assignment matrix W[] and R matrix of transition .
@@ -1582,7 +1156,7 @@ public class XspeedPrinter extends ToolPrinter {
 		for (AutomatonTransition t : ha.transitions) {
 			printCommentblock("The transition label is"+t.label);
 			
-			String stw[] = new String[t.reset.size()];
+			//String stw[] = new String[t.reset.size()];
 			Rmatrix = new double[ControlVarI.size()][ControlVarI.size()];
 			Wmatrix = new double[ControlVarI.size()];
 			//Expression ee  = t.reset.keySet();
@@ -1602,7 +1176,6 @@ public class XspeedPrinter extends ToolPrinter {
 			else
 				printNewline();
 			
-
 			for(int i=0;i<xl;i++)
 			for(int k=0;k<ControlVarI.size();k++)
 			 guardY[i][k] = 0;	
@@ -1672,12 +1245,12 @@ public class XspeedPrinter extends ToolPrinter {
 					}
 				
 				for (String key : t1.reset.keySet()) {
-					String rv = "";
+					//String rv = "";
 					int re = CVarcontainX(key);
 				    Expression eee = t1.reset.get(key).getExpression();
 				 
-				    
-				    for(int i=0;i<ha.variables.size();i++)
+				    System.out.println("hhdhd"+ha.variables);
+				    for(int i=0;i<ControlVarI.size();i++)
 						Wmatrix[i] = 0;
 				
 				    
@@ -1986,6 +1559,14 @@ public class XspeedPrinter extends ToolPrinter {
 				
 				rv = "";
 				// use parentheses if they are needed
+	
+				if(children.get(1) instanceof Variable && children.get(0) instanceof Variable && o.op.equals(Operator.MULTIPLY))
+				{
+					throw new RuntimeException("XSpeed does not work on non-linear models\n");
+					
+				}
+				
+				
 				
 				if(children.get(1) instanceof Variable && children.get(0) instanceof Constant && o.op.equals(Operator.MULTIPLY))
 				{				
@@ -2025,99 +1606,7 @@ public class XspeedPrinter extends ToolPrinter {
 					
 					rv += printExspeed(leftExp,j);
 				}
-				/*
-				if(leftExp instanceof Variable && rightExp instanceof Variable && opNames.get(o.op)=="+")
-				{
-					
-					for (int k = 0; k < ControlVar.size(); k++)
-					{
-						if(ControlVar.contains((children.get(0).toString())))
-							{
-							   index0 = k;
-							   break;
-							}
-					}
-					
-					for (int k = 0; k < ControlVar.size(); k++)
-					{
-						if(ControlVar.contains((children.get(1).toString())))
-							{
-							   index = k;
-							   break;
-							}
-					}
-					
-					
-					for (int k = 0; k < UncontrolVar.size(); k++)
-					{
-						if(UncontrolVar.contains((children.get(0).toString())))
-							{
-							   indexU0 = k;
-							   break;
-							}
-					}
-					
-					for (int k = 0; k < UncontrolVar.size(); k++)
-					{
-						if(UncontrolVar.contains((children.get(1).toString())))
-							{
-							   indexU = k;
-							   break;
-							}
-					}
-					
-					
-					
-					
-				   cons[j][index]= 1;
-				   cons[j][index0]= 1;
-				//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
-				}
-				
-				if(leftExp instanceof Variable && rightExp instanceof Variable && opNames.get(o.op)=="-")
-				{
-					
-					for (int k = 0; k < ControlVar.size(); k++)
-					{
-						if(ControlVar.contains((children.get(0).toString())))
-							{
-							   index0 = k;
-							   break;
-							}
-					}
-					
-					for (int k = 0; k < ControlVar.size(); k++)
-					{
-						if(ControlVar.contains((children.get(1).toString())))
-							{
-							   index = k;
-							   break;
-							}
-					}
-					
-					
-					for (int k = 0; k < UncontrolVar.size(); k++)
-					{
-						if(UncontrolVar.contains((children.get(0).toString())))
-							{
-							   index0 = k;
-							   break;
-							}
-					}
-					
-					for (int k = 0; k < UncontrolVar.size(); k++)
-					{
-						if(UncontrolVar.contains((children.get(1).toString())))
-							{
-							   index = k;
-							   break;
-							}
-					}
-					cons[j][index]= 1;
-					cons[j][index]= -1;
-				//   System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
-				}
-				*/
+			
 				else if(left instanceof Operation && rightExp instanceof Variable && opNames.get(o.op)=="-")
 					{
 						for (int k = 0; k < ControlVar.size(); k++)
@@ -2428,6 +1917,7 @@ public class XspeedPrinter extends ToolPrinter {
 		
 		public void saveBmatrix(String stl,int j)
 		{
+			
 			for (int k = 0; k < UncontrolVar.size(); k++)
 			{
 				if(UncontrolVar.get(k).equals(stl.toString()))
@@ -2437,8 +1927,6 @@ public class XspeedPrinter extends ToolPrinter {
 					   break;
 					}
 			}
-			
-					   Bmatrix[j][index]= Integer.parseInt(stl);
 			
 			
 			  // System.out.println("The constant in  cons["+j+"]["+index+"] is: "+ cons[j][index]);
@@ -2456,25 +1944,7 @@ public class XspeedPrinter extends ToolPrinter {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 //////////////////////////***********************************************	
 
@@ -2528,9 +1998,11 @@ public class XspeedPrinter extends ToolPrinter {
 			try {
 				RangeExtractor.getVariableRanges(e.getValue(), ranges);
 			} catch (EmptyRangeException e1) {
+				System.out.println("XSpeed Can not able to handle those models");
 				throw new AutomatonExportException(
 						"Empty range in initial mode: " + modeName, e1);
 			} catch (ConstantMismatchException e2) {
+				System.out.println("XSpeed Can not able to handle those models");
 				throw new AutomatonExportException(
 						"Constant mismatch in initial mode: " + modeName, e2);
 			}
@@ -2599,7 +2071,7 @@ public class XspeedPrinter extends ToolPrinter {
 	//getsizeofInvX(Expression e) return the size of the invariant expression with number of variables available
 	public int getsizeofInvX(Expression e)
 	{
-		int p;	
+		//int p;	
 		if (e instanceof Operation)
 		{
 			Operation o = (Operation) e;
@@ -2673,6 +2145,8 @@ public class XspeedPrinter extends ToolPrinter {
 		int i;
 		String[] st = new String[ControlVarI.size()];
 		st= ControlVarI.toArray(st);
+		if(ControlVarI.size()==0)
+			return -1;
 		for(i=0; i<ControlVarI.size(); i++)
 		{
 			if(st[i].equals(e))
@@ -2730,6 +2204,10 @@ public class XspeedPrinter extends ToolPrinter {
 		int i=1;
 		for(AutomatonTransition t: ha.transitions)
 		{
+			if(t.label == null)
+			{
+				throw new RuntimeException("XSpeed does not work on non-deterministic models\n");
+			}
 			String l = t.label;
 			if(l.equals(m))
 				{

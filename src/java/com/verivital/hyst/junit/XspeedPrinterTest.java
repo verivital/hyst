@@ -31,7 +31,7 @@ public class XspeedPrinterTest
 	    Expression.expressionPrinter = null;
 	}
 	
-	private String UNIT_BASEDIR = "tests/unit/XspeedModel/";
+	private String UNIT_BASEDIR = "tests/unit/models/";
 	
 	// tools to test here. Each test will run all of these
 	private static final ArrayList <ToolPrinter> printers; 
@@ -96,12 +96,17 @@ public class XspeedPrinterTest
 			}
 			catch (PreconditionsFailedException e)
 			{
+				System.out.println("The x-speed printer can not able to handle those example");
+				throw new RuntimeException("XSpeed printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
 				// preconditions error, ignore this model for this printer
 			}
 		}
 		
 		if (!printedOk)
+		{
+			System.out.println("Rejected model:\n" );
 			throw new RuntimeException("XSpeed printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
+		}
 	}
 	
 	/**
@@ -127,6 +132,7 @@ public class XspeedPrinterTest
 			}
 			catch (PreconditionsFailedException e)
 			{
+				System.out.println("Rejected model:\n" + config);
 				// preconditions error, ignore this model for this printer
 			}
 		}
@@ -166,6 +172,22 @@ public class XspeedPrinterTest
 	public void testPrintNavigation5X5()
 	{
 		runAllPrintersOnModel("nav5X5");
+	}
+	@Test
+	public void testDisjunctiveGuard()
+	{
+		Configuration c = makeSampleConfiguration();
+		
+		BaseComponent ha = (BaseComponent)c.root;
+		ha.transitions.get(0).guard = FormulaParser.parseGuard("t >= 5 | x >= 7");
+		
+		runAllPrintersOnConfiguration(c);
+	}
+	
+	@Test
+	public void testPrintNondeterministicAssignments()
+	{
+		runAllPrintersOnModel("nondeterm_reset");
 	}
 	
 	private static Configuration makeSampleConfiguration()

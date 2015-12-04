@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
+import com.verivital.hyst.printers.XspeedPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -54,6 +55,7 @@ public class PrintersTest
 		addPrinter(new HyCreate2Printer());
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
+		addPrinter(new XspeedPrinter());
 	};
 	
 	private static void addPrinter(ToolPrinter p)
@@ -108,6 +110,8 @@ public class PrintersTest
 			}
 			catch (PreconditionsFailedException e)
 			{
+				
+				throw new RuntimeException("printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
 				// preconditions error, ignore this model for this printer
 			}
 		}
@@ -145,7 +149,6 @@ public class PrintersTest
 		
 		if (!printedOk)
 		{
-			System.out.println("Rejected model:\n" + config);
 			throw new RuntimeException("No printer successfully printed the model (all precondition checks rejected it)");
 		}
 	}
