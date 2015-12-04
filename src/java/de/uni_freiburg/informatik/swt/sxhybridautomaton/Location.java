@@ -3,7 +3,10 @@
  */
 package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 
+import java.util.Map;
+
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.ir.base.Interval;
 
 /**
  * A Location in an automaton Component. It is identified by a unique

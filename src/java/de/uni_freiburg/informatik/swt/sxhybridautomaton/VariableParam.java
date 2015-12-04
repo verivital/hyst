@@ -23,7 +23,7 @@ public class VariableParam extends Param {
 		
 		setType(ParamType.REAL);
 		setDynamics(ParamDynamics.ANY);
-		setControlled(true);
+		setControlled(false);
 		setDimensionSize(1, 1);
 		setDimensionSize(2, 1);
 	}
@@ -34,7 +34,7 @@ public class VariableParam extends Param {
 		setName(Name);
 		setType(type);
 		setDynamics(dynamics);
-		setControlled(true);
+		setControlled(false);
 		setDimensionSize(1, 1);
 		setDimensionSize(2, 1);
 	}
@@ -76,7 +76,7 @@ public class VariableParam extends Param {
 		return mControlled;
 	}
 	
-	public void setControlled(boolean controlled) {
+	public void setControlled(Boolean controlled) {
 		mControlled = controlled;
 	}
 

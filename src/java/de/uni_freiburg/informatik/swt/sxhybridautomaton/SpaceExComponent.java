@@ -22,9 +22,9 @@ public abstract class SpaceExComponent {
 	@Override
 	public String toString()
 	{
-		StringBuilder rv = new StringBuilder("[Component id=" + mID + "\n"); 
+		String rv = "[Component id=" + mID + "\n"; 
 
-		rv.append(" Params:\n");
+		rv += " Params:\n";
 		for (Param p : mParams)
 		{
 			String suffix = "";
@@ -33,15 +33,13 @@ public abstract class SpaceExComponent {
 			{
 				VariableParam vp = (VariableParam)p;
 				
-				suffix = "(" + vp.getDynamics().name() + ", " + (vp.getControlled() ? "CONTROLLED" : "UNCONTROLLED") + ")";
+				suffix = "(" + vp.getDynamics().name() + ")";
 			}
 			
-			rv.append(" " + p.getName() + " (type=" + p.getType().name() + ") " + suffix + "\n");
+			rv += " " + p.getName() + " (type=" + p.getType().name() + ") " + suffix + "\n";
 		}
-		
-		rv.append("]");
-		
-		return rv.toString();
+				
+		return rv + "]";
 	}
 
 	/**

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="navigation_template">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="v2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t1" type="label" local="false" />
+    <param name="t2" type="label" local="false" />
+    <param name="t3" type="label" local="false" />
+    <param name="t4" type="label" local="false" />
+    <param name="t5" type="label" local="false" />
+    <param name="t6" type="label" local="false" />
+    <param name="t7" type="label" local="false" />
+    <param name="t8" type="label" local="false" />
+    <param name="t9" type="label" local="false" />
+    <param name="t10" type="label" local="false" />
+    <param name="t11" type="label" local="false" />
+    <param name="t12" type="label" local="false" />
+    <param name="t13" type="label" local="false" />
+    <param name="t14" type="label" local="false" />
+    <param name="t15" type="label" local="false" />
+    <param name="t16" type="label" local="false" />
+    <param name="t17" type="label" local="false" />
+    <param name="t18" type="label" local="false" />
+    <param name="t19" type="label" local="false" />
+    <param name="t20" type="label" local="false" />
+    <location id="1" name="loc9" x="304.0" y="99.0">
+      <invariant>0&lt;=x1&lt;=1 &amp; 2&lt;=x2&lt;=3</invariant>
+	<flow>x1'==(0) *x1 &amp; x2'==(0) *x2  &amp; v1'==(0) *v1 &amp; v2'== (0) *v2 </flow>
+    </location>
+    <location id="2" name="loc5" x="560.0" y="106.0">
+      <invariant>1&lt;=x1&lt;=2 &amp; 2&lt;=x2&lt;=3</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2 &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  +1.2 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2 -0.1</flow>
+    </location>
+    <location id="3" name="loc7" x="840.0" y="103.0">
+      <invariant>2&lt;=x1&lt;=3 &amp; 2&lt;=x2&lt;=3</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2 &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  +0.1 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2  - 1.2</flow>
+    </location>
+    <location id="4" name="loc1" x="305.0" y="245.0">
+      <invariant>0&lt;=x1&lt;=1 &amp; 1&lt;=x2&lt;=2</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2 &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  + 1.2 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2  - 0.1</flow>
+    </location>
+    <location id="5" name="loc4" x="565.0" y="250.0">
+      <invariant>1&lt;=x1&lt;=2 &amp; 1&lt;=x2&lt;=2</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2 &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  + 1.2 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2  - 0.1</flow>
+    </location>
+    <location id="6" name="loc6" x="839.0" y="244.0">
+      <invariant>2&lt;=x1&lt;=3 &amp; 1&lt;=x2&lt;=2</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2 &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  +0.1 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2  - 1.2</flow>
+    </location>
+    <location id="7" name="loc3" x="567.0" y="435.0">
+      <invariant>1&lt;=x1&lt;=2 &amp; 0&lt;=x2&lt;=1</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2  &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  + 0.777821 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2 + 0.777821</flow>
+    </location>
+    <location id="8" name="loc8" x="843.0" y="421.0">
+      <invariant>2&lt;=x1&lt;=3 &amp; 0&lt;=x2&lt;=1</invariant>
+	<flow>x1'==(0) *x1 &amp; x2'==(0) *x2  &amp; v1'==(0) *v1 &amp; v2'== (0) *v2 </flow>
+    </location>
+    <location id="9" name="loc2" x="299.0" y="429.0">
+      <invariant>0&lt;=x1&lt;=1 &amp; 0&lt;=x2&lt;=1</invariant>
+      <flow>x1'==(0) *x1 + (0) *x2 + (1) *v1 + (0) *v2 &amp; x2'==(0) *x1 + (0) *x2 + (0) *v1 + (1) *v2  &amp; v1'==(0) *x1 + (0) *x2 + (-1.2) *v1 + (0.1) *v2  + 0.777821 &amp; v2'==(0) *x1 + (0) *x2 + (0.1) *v1 + (-1.2) *v2 + 0.777821</flow>
+    </location>
+    <transition source="4" target="1">
+      <note>From Loc1 to Bad</note>
+      <label>t1</label>
+      <guard>0&lt;=x1&lt;=1 &amp; x2==2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-157.0" y="-25.0" width="146.0" height="52.0" />
+    </transition>
+    <transition source="4" target="5">
+      <label>t2</label>
+      <guard>x1==1 &amp; 1&lt;=x2&lt;=2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-70.0" y="-13.0" />
+      <middlepoint x="462.0" y="309.5" />
+    </transition>
+    <transition source="4" target="9">
+      <label>t3</label>
+      <guard>0&lt;=x1&lt;=1 &amp; x2==1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="17.0" y="-11.0" />
+    </transition>
+    <transition source="9" target="7">
+      <label>t5</label>
+      <guard>x1==1 &amp; 0&lt;=x2&lt;=1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-17.0" y="14.0" />
+      <middlepoint x="404.5" y="455.0" />
+    </transition>
+    <transition source="9" target="4">
+      <label>t4</label>
+      <guard>0&lt;=x1&lt;=1 &amp; x2==1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-58.0" y="-22.0" />
+      <middlepoint x="249.5" y="343.0" />
+    </transition>
+    <transition source="7" target="5">
+      <label>t6</label>
+      <guard>1&lt;=x1&lt;=2 &amp; x2==1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-50.0" y="-9.0" />
+      <middlepoint x="537.0" y="346.5" />
+    </transition>
+    <transition source="7" target="9">
+      <label>t7</label>
+      <guard>x1==1 &amp; 0&lt;=x2&lt;=1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-17.0" y="11.0" />
+      <middlepoint x="402.5" y="383.0" />
+    </transition>
+    <transition source="7" target="8">
+      <label>t8</label>
+      <guard>x1==2 &amp; 0&lt;=x2&lt;=1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-46.0" y="8.0" />
+      <middlepoint x="733.0" y="442.5" />
+    </transition>
+    <transition source="5" target="4">
+      <label>t9</label>
+      <guard>x1==1 &amp; 1&lt;=x2&lt;=2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-59.0" y="-44.0" />
+      <middlepoint x="469.0" y="219.5" />
+    </transition>
+    <transition source="5" target="2">
+      <label>t10</label>
+      <guard>1&lt;=x1&lt;=2 &amp; x2==2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-54.0" y="-31.0" />
+      <middlepoint x="540.5" y="191.5" />
+    </transition>
+    <transition source="5" target="6">
+      <label>t11</label>
+      <guard>x1==2 &amp; 1&lt;=x2&lt;=2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-42.0" y="-1.0" />
+      <middlepoint x="732.0" y="307.0" />
+    </transition>
+    <transition source="5" target="7">
+      <label>t12</label>
+      <guard>1&lt;=x1&lt;=2 &amp; x2==1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="11.0" y="-22.0" />
+      <middlepoint x="594.0" y="349.5" />
+    </transition>
+    <transition source="2" target="5">
+      <label>t13</label>
+      <guard>1&lt;=x1&lt;=2 &amp; x2==2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="6.0" y="-32.0" />
+      <middlepoint x="591.5" y="187.5" />
+    </transition>
+    <transition source="2" target="3">
+      <label>t14</label>
+      <guard>x1==2 &amp; 2&lt;=x2&lt;=3 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-22.0" y="-59.0" />
+      <middlepoint x="716.0" y="75.5" />
+    </transition>
+    <transition source="2" target="1">
+      <label>t15</label>
+      <guard>x1==1 &amp; 2&lt;=x2&lt;=3 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="1.0" y="-53.0" />
+      <middlepoint x="400.0" y="58.5" />
+    </transition>
+    <transition source="6" target="3">
+      <label>t16</label>
+      <guard>2&lt;=x1&lt;=3 &amp; x2==2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="12.0" y="-37.0" />
+      <middlepoint x="879.5" y="185.0" />
+    </transition>
+    <transition source="6" target="5">
+      <label>t17</label>
+      <guard>x1==2 &amp; 1&lt;=x2&lt;=2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-37.0" y="7.0" />
+      <middlepoint x="735.0" y="228.0" />
+    </transition>
+    <transition source="6" target="8">
+      <label>t18</label>
+      <guard>2&lt;=x1&lt;=3 &amp; x2==1 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="13.0" y="-33.0" />
+      <middlepoint x="858.0" y="337.0" />
+    </transition>
+    <transition source="3" target="6">
+      <label>t19</label>
+      <guard>2&lt;=x1&lt;=3 &amp; x2==2 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="16.0" y="-32.0" />
+      <middlepoint x="799.5" y="185.0" />
+    </transition>
+    <transition source="3" target="2">
+      <label>t20</label>
+      <guard>x1==2 &amp; 2&lt;=x2&lt;=3 &amp; -1000&lt;=v1&lt;=1000 &amp; -1000&lt;=v2&lt;=1000</guard>
+      <assignment>x1'==(1) *x1  &amp; x2'== (1) *x2  &amp; v1'==(1) *v1 &amp; v2'==(1) *v2</assignment>
+      <labelposition x="-40.0" y="-61.0" />
+      <middlepoint x="729.0" y="165.5" />
+    </transition>
+  </component>
+  <component id="system">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t1" type="label" local="false" />
+    <param name="t2" type="label" local="false" />
+    <param name="t3" type="label" local="false" />
+    <param name="t4" type="label" local="false" />
+    <param name="t5" type="label" local="false" />
+    <param name="t6" type="label" local="false" />
+    <param name="t7" type="label" local="false" />
+    <param name="t8" type="label" local="false" />
+    <param name="t9" type="label" local="false" />
+    <param name="t10" type="label" local="false" />
+    <param name="t11" type="label" local="false" />
+    <param name="t12" type="label" local="false" />
+    <param name="t13" type="label" local="false" />
+    <param name="t14" type="label" local="false" />
+    <param name="t15" type="label" local="false" />
+    <param name="t16" type="label" local="false" />
+    <param name="t17" type="label" local="false" />
+    <param name="t18" type="label" local="false" />
+    <param name="t19" type="label" local="false" />
+    <param name="t20" type="label" local="false" />
+    <bind component="navigation_template" as="navigation_template_1" x="483.0" y="20.0">
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+      <map key="v1">v1</map>
+      <map key="v2">v2</map>
+      <map key="t1">t1</map>
+      <map key="t2">t2</map>
+      <map key="t3">t3</map>
+      <map key="t4">t4</map>
+      <map key="t5">t5</map>
+      <map key="t6">t6</map>
+      <map key="t7">t7</map>
+      <map key="t8">t8</map>
+      <map key="t9">t9</map>
+      <map key="t10">t10</map>
+      <map key="t11">t11</map>
+      <map key="t12">t12</map>
+      <map key="t13">t13</map>
+      <map key="t14">t14</map>
+      <map key="t15">t15</map>
+      <map key="t16">t16</map>
+      <map key="t17">t17</map>
+      <map key="t18">t18</map>
+      <map key="t19">t19</map>
+      <map key="t20">t20</map>
+    </bind>
+  </component>
+</sspaceex>
+

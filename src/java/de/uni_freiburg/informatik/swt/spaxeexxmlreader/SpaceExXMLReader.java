@@ -746,9 +746,6 @@ public class SpaceExXMLReader {
 							
 							mTarget.setMaxIterations(im);
 						}
-						else if (property.equals("map-zero-duration-jump-sets")) {
-							mTarget.setTimeTriggered(value.equals("true"));
-						}
 						else if (property.equals("initially")) {
 							Expression initialStates = FormulaParser.parseLoc(value);
 									
@@ -770,9 +767,6 @@ public class SpaceExXMLReader {
 						}
 						else if (property.equals("scenario")) {
 							mTarget.setScenario(value);
-						}
-						else if (property.equals("directions")) {
-							mTarget.setDirections(value);
 						}
 					}
 				}

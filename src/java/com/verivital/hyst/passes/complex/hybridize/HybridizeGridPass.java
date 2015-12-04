@@ -118,6 +118,9 @@ public class HybridizeGridPass extends TransformationPass
 		
 		if (c.init.size() != 1)
 			throw new PreconditionsFailedException("Expected a single initial mode.");
+		
+		if (!PythonBridge.hasPython())
+			throw new PreconditionsFailedException("Python (and required libraries) needed to run Hybridize Grid pass.");
 	}
 
 	@Override
@@ -237,14 +240,12 @@ public class HybridizeGridPass extends TransformationPass
 			params.add(op);
 		}
 		
-		PythonBridge pb = new PythonBridge();
-		pb.open();
+		PythonBridge pb = PythonBridge.getInstance();
 		long start = System.currentTimeMillis();
 
 		AffineOptimize.createAffineDynamics(pb, params);
 		
 		long dif = System.currentTimeMillis() - start;
-		pb.close();
 		
 		// store result
 		for (int i = 0; i < modeIndexLists.size(); ++i)
@@ -260,13 +261,11 @@ public class HybridizeGridPass extends TransformationPass
 				(1000.0 * numOpt / dif) + " per second");
 	}
 
-	private void linearOptimize(){
-		final int TIMEOUT_MS = 5000;
-		PythonBridge pb = new PythonBridge(TIMEOUT_MS);
+	private void linearOptimize()
+	{
+		PythonBridge pb = PythonBridge.getInstance();
 
-		pb.open();
 		linearOptimizeScipy(pb);
-		pb.close();
 	}
 
 	private void linearOptimizeScipy(PythonBridge pb)

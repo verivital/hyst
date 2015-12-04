@@ -1,7 +1,5 @@
 package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 
-import com.verivital.hyst.ir.AutomatonExportException;
-
 /**
  * Params are like variables of automatons which are connected to values by
  * Binds of a Component.
@@ -22,13 +20,23 @@ public abstract class Param {
 		mParent = parent;
 		setLocal(false);
 		
+		// check that no param already added has the same name
+		// TODO: there are reasons we might want to disable this effectively static analysis check, e.g., for testing how
+		// tools handle these slightly ill-formatted examples
+		
+		boolean duplicate = false;
+		
 		for (Param v : parent.getParams()) {
 			if (v.mName == this.mName) {
-				throw new AutomatonExportException("ERROR: tried to add duplicate parameter to automaton (parameter with same name already exists).");
+				// TODO: throw appropriate error here if this is attempted instead of just printing
+				System.err.println("ERROR: tried to add duplicate parameter to automaton (parameter with same name already exists). Ignoring this addition for now (throw error eventually).");
+				duplicate = true;
 			}
 		}
 		
-		parent.addParam(this);
+		if (!duplicate) {
+			parent.addParam(this);
+		}
 	}
 
 	public String getName() {
