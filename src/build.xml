@@ -196,7 +196,7 @@
 		
 		<copy file="${readme_user.path}" tofile="${release.path}/README.txt"/>
 		
-		<!-- only try to run if not on windows -->
+		<!-- only try to run tools if not on windows -->
 		<!-- based on: http://stackoverflow.com/questions/4520572/different-targets-on-different-os-with-ant -->
 		<exec dir="${batch_run.path}" executable="python" failonerror="true" os="linux">
 		    <arg line="run_examples.py" />
@@ -253,9 +253,9 @@
 		</copy>
 		
 		<!-- Copy slsf matlab codes over -->
-		<mkdir dir="${release_slsf.path}/spaceex2stateflow"/>
+		<mkdir dir="${release_slsf.path}/matlab"/>
 		
-		<copy todir="${release_slsf.path}/spaceex2stateflow">
+		<copy todir="${release_slsf.path}/matlab">
 			<fileset dir="${slsf_dir.path}" 
 				includes="output_slsf_models/**,functions/**,checkLocations.m, Initial_SpaceExToStateflow.m, Location_SpaceExToStateflow.m, option_SpaceExToStateflow.m, plotExecution.m, plotSimulationLoop.m, resultsToMatrix.m, semanticTranslation.m, simulation_config.m, simulationLoop.m, SpaceExToStateflow.m, Transition_SpaceExToStateflow.m, ha2slsf_rtss15_all_benchmarks.m "/>
 
