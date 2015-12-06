@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="toy">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="loc1" x="422.0" y="191.0" width="330.0" height="164.0">
+      <flow>x1' == -x1 + 2*x2  + 0.5* u1  &amp;&amp;
+x2' == x1 - x2 - 0.5 * u2</flow>
+    </location>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="2" name="ticking" x="250.0" y="153.0" width="124.0" height="104.0">
+      <invariant>t &lt;= tmax</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="controller">
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="T" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="2" name="off" x="668.0" y="124.0">
+      <flow>u1' == 0 &amp;&amp;
+u2' == 0</flow>
+    </location>
+    <location id="3" name="impulse" x="216.0" y="126.0" width="134.0" height="104.0">
+      <invariant>t &lt;= T</invariant>
+      <flow>u1' == 0 &amp;&amp;
+u2' == 0</flow>
+    </location>
+    <transition source="3" target="2">
+      <guard>t &gt;= T</guard>
+      <assignment>u1 := 0 &amp;&amp; u2 := 0</assignment>
+      <labelposition x="-81.0" y="16.0" width="150.0" height="76.0" />
+    </transition>
+  </component>
+  <component id="network">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="T" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="toy" as="toy_1" x="388.0" y="118.0">
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+      <map key="u1">u1</map>
+      <map key="u2">u2</map>
+    </bind>
+    <bind component="timer" as="timer_1" x="395.0" y="247.0">
+      <map key="t">t</map>
+      <map key="tmax">tmax</map>
+    </bind>
+    <bind component="controller" as="controller_1" x="395.0" y="373.0">
+      <map key="u1">u1</map>
+      <map key="u2">u2</map>
+      <map key="t">t</map>
+      <map key="T">T</map>
+    </bind>
+  </component>
+</sspaceex>
+

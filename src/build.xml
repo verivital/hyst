@@ -147,7 +147,7 @@
 	</target>
 	
 	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath" description="Make the .class files">
-    	<echo>Classpath: ${ant.refid:build.classpath}</echo>
+    	<!-- <echo>Classpath: ${ant.refid:build.classpath}</echo> -->
 
 		<mkdir dir="${bin.path}"/>
 		<javac includeantruntime="false" destdir="${bin.path}" failonerror="true" target="1.7" source="1.7">

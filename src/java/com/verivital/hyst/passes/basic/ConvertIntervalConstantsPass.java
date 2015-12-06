@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 
-import com.verivital.hyst.ir.base.Interval;
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.util.Preconditions;
 

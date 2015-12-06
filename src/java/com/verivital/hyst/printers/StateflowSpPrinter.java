@@ -1,5 +1,6 @@
 package com.verivital.hyst.printers;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +23,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.util.RangeExtractor;
 import java.io.File;

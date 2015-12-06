@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -19,7 +20,6 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
@@ -34,6 +34,11 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.ParamMap;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 /**
  * Small tests dealing with the expression parser or range extractor. Things that don't require
@@ -605,7 +610,7 @@ public class SmallTest
 		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
 		double[] point = {1.5, 1.5};
 		double[] dir = {1.0, 0};
-		String expectedResult = "1 * x + 0 * y >= 1.5";
+		String expectedResult = "1 * x >= 1.5";
 		
 		PseudoInvariantPass pi = new PseudoInvariantPass();
 		pi.vars = new ArrayList<String>(2);
@@ -623,7 +628,7 @@ public class SmallTest
 		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
 		double[] point = {0, 0};
 		double[] dir = {0, 1};
-		String expectedResult = "0 * x + 1 * y >= 0";
+		String expectedResult = "1 * y >= 0";
 		
 		PseudoInvariantPass pi = new PseudoInvariantPass();
 		pi.vars = new ArrayList<String>(2);
@@ -778,6 +783,31 @@ public class SmallTest
 			System.out.println();
 		}*/
 	}
+	
+	@Test
+	/**
+	 * Ensure a bind cannot have multiple parameters added with the same names 
+	 * (SpaceEx will not accept these if done and had an error where a model was created with multiple binds)
+	 */
+    public void testSpaceExNetworkComponentDuplicateBind() 
+	{
+        // Network component
+        SpaceExDocument sed = new SpaceExDocument();
+        SpaceExNetworkComponent net = new SpaceExNetworkComponent(sed);
+        Bind bind = new Bind(net);
+        
+        new ParamMap(bind, "key", "reference");
+        
+        try
+        {
+        	new ParamMap(bind, "key", "reference");
+        	Assert.fail("inserting duplicate bind did not raise exception");
+        }
+        catch (AutomatonExportException e)
+        {
+        	// expected
+        }
+    }
 	
 	/**
 	 * Test using LUT in flow

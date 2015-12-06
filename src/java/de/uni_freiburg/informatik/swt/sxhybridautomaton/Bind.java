@@ -5,6 +5,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 
 import java.util.ArrayList;
 
+import com.verivital.hyst.ir.AutomatonExportException;
+
 /**
  * A Bind instantiates a subordinated automaton and binds its Params to values
  * or Params of the Component the Bind belongs to.
@@ -18,6 +20,11 @@ public class Bind {
 	private ArrayList<BindMap> mMaps = new ArrayList<BindMap>();
 	private UIPosition mPosition;
 	private UIDimensions mDimensions;
+	
+	public String toString()
+	{
+		return "[Bind component(type): " + mComponent + ", instanceName(as): " + mAs + "]";
+	}
 	
 	/**
 	 * Creates a new Bind and adds it to the parent Component
@@ -98,6 +105,14 @@ public class Bind {
 	 */
 	public void addMap(BindMap map) {
 		map.setParent(this);
+		
+		for (BindMap bm : mMaps)
+		{
+			if (bm.getKey().equals(map.getKey()))
+				throw new AutomatonExportException("Key was mapped to multiple values: '" + bm.getKey() 
+						+ "' in instance " + getAs());
+		}
+		
 		mMaps.add(map);
 	}
 

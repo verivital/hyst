@@ -6,6 +6,8 @@ import subprocess
 import threading
 import os
 import shutil
+import re
+import collections
 
 from hybrid_tool import HybridTool
 from hybrid_tool import RunCode
@@ -94,14 +96,14 @@ class SpaceExTool(HybridTool):
 
             proc.wait()
 
-            print "Return code was " + str(proc.returncode)
+            print "SpaceEx return code was " + str(proc.returncode)
 
             if rv == RunCode.SUCCESS: # exit code wasn't set during output
                 if proc.returncode != 0:
                     print "Unknown return code"
                     rv = RunCode.ERROR
                 else:
-                    print "Successfully completed."
+                    print "SpaceEx successfully completed."
 
         except OSError as e:
             print "OSError while trying to run " + str(params) + "\nError: " + str(e)
@@ -113,7 +115,14 @@ class SpaceExTool(HybridTool):
         rv = True
 
         # graph -T "ps" -BC -q 0.5 plots/$MODELNAME-plot.txt > plots/$MODELNAME-plot.ps
-        params = ["graph", "-T", "png", "-BC", "-q", "0.25", "plotdata.txt"]
+        # -T png = image type png
+        # -B = turn of varying linemode feature (all ploted datasets will use the same style)
+        # -C = color
+        # -q 0.25 = fill polygons with color intensity 0.25
+        # -w, -h, -r, -u = width and height ratios of plot area, and right and uo offset ratios
+        # bitmap-size = size of output file
+        params = ["graph", "-T", "png", "-BC", "-q", "0.25", \
+                  "-h", "0.9", "-w", "0.8", "-r", ".1", "-u", ".07", "--bitmap-size", "1000x1000", "plotdata.txt"]
 
         print "Plotting with command 'graph' (plotutils), params: %s"%str(params)
 
@@ -162,9 +171,109 @@ class SpaceExTool(HybridTool):
 
         shutil.copyfile(self.original_cfg_path, self.cfg_path)
 
+    def create_output(self, directory):
+        '''Assigns to the output object (self.output_obj)
+        For SpaceEx, this expects output-format=INTV
+
+        The result object is an ordered dictionary, with
+        'lines' -> [(line1, timestamp1), ...]                    <-- stdout lines (automatically created)
+        'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
+        'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
+        'fixpoint' -> True/False   <-- True if 'Found fixpoint after' found on stdout
+                                       False if 'without finding fixpoint' found on stdout
+                                       unassigned if neither
+        '''
+
+        ### create 'fixpoint' from stdout
+        for (line, _) in reversed(self.output_obj['lines']):
+            if 'Found fixpoint after' in line:
+                self.output_obj['fixpoint'] = True
+                break
+            elif 'without finding fixpoint' in line:
+                self.output_obj['fixpoint'] = False
+                break
+        
+        ### create 'variables' and 'locations' from plotdata.txt
+        filename = directory + '/plotdata.txt'
+        var = collections.OrderedDict() # map from var_name -> (min, max)
+        loc = collections.OrderedDict() # map from loc_name->{map from var_name -> (min,max)}
+
+        # state machine when reading file
+        state_init = 0
+        state_vars = 1
+        state_locs = 2
+        state = state_init
+
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.strip() # remove trailing newline
+                
+                if len(line) == 0: # skip blank lines
+                    continue
+
+                if state == state_init:
+                    if line.startswith('Bounds on the variables over the entire set'):
+                        state = state_vars
+                    elif line.startswith('empty set'):
+                        state = state_locs # prevents error that file format was wrong
+                        break
+                elif state == state_vars:
+                    if line.startswith('Location-wise bounds on the variables'):
+                        state = state_locs
+                    else:
+                        self._read_var_line(line, var)
+                elif state == state_locs:
+                    self._read_loc_line(line, loc)
+
+        if state == state_init:
+            raise RuntimeError('Format of plotdata.txt was wrong. Did you use output-format=INTV?')
+
+        # assign to output object (don't overwrite object)
+        self.output_obj['locations'] = loc
+        self.output_obj['variables'] = var
+
+    # line = 'Location: loc(Heater)==heater_on & loc(Controller)==controller_on'
+    loc_re = re.compile(r'loc\([^)]*\)==([^ ]+)') # use with findall
+    loc_obj = None
+        
+    def _read_loc_line(self, line, result):
+        '''read a line in the result file in the location section. Parse it and store in result.'''
+
+        if line.startswith("Location:"):
+            parts = self.loc_re.findall(line)
+
+            if len(parts) == 0:
+                raise RuntimeError("Error parsing location name in result line: " + line)
+
+            loc_name = ".".join(parts)
+            self.loc_obj = collections.OrderedDict()
+            result[loc_name] = self.loc_obj
+        else:
+            self._read_var_line(line, self.loc_obj)
+        
+    # sys1.t: [3.89966e-15,50.0001]
+    var_re = re.compile(r'([^.]+)\.([^:]+)\: \[([^,]+),([^\]]+)\]')
+        
+    def _read_var_line(self, line, result):
+        '''read a line in the result file in the variables section. Parse it and store in result.'''        
+
+        if line.startswith("SPACETIME_TIME"):
+            pass
+        else:
+            m = self.var_re.match(line)
+
+            if m is None or len(m.groups()) != 4:
+                raise RuntimeError("Variable regular expression result didn't match line: " + line)
+
+            var = m.group(2)
+            imin = float(m.group(3))
+            imax = float(m.group(4))
+
+            result[var] = (imin, imax)
+
 def _main():
     '''main func for running SpaceEx'''
-
+    
     extra_args = [('-cfg', 'cfg file')]
     tool_main(SpaceExTool(), extra_args)
 

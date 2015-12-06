@@ -3,11 +3,11 @@ package com.verivital.hyst.ir.network;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.importer.TemplateImporter;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
-import com.verivital.hyst.ir.base.Interval;
 
 /**
  * A component instance is part of a network component. It consists of a component, as well as a mapping of the
@@ -127,7 +127,7 @@ public class ComponentInstance
 		
 		if (child.template == child)
 			str.append("Child is a template automaton.");
-		else
+		else if (NetworkComponent.PRINT_RECURSIVE)
 			str.append(child);
 		
 		str.append("]");
