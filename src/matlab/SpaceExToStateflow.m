@@ -2,11 +2,11 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 %SPACEEXTOSTATEFLOW SpaceEx to Stateflow conversion
 %
 % example call without semantics preservation:
-% SpaceExToStateflow('mymodel.xml', 'myconfig.cfg', '--folder', 'myfolder')
-% This uses SpaceEx model ..\examples\myfolder\mymodel.xml with myconfig.cfg.
+% SpaceExToStateflow('..\..\examples\myfolder\mymodel.xml')
+% This uses SpaceEx model ..\..\examples\myfolder\mymodel.xml with myconfig.cfg.
 %
 % example call with semantics preservation: add '-s' like in the following:
-% SpaceExToStateflow('mymodel.xml', 'myconfig.cfg', '--folder', 'myfolder', '-s')
+% SpaceExToStateflow('..\..\examples\myfolder', 'mymodel.xml', 'myconfig.cfg', '-s')
 %
 % Actual calls on example systems:
 %
@@ -16,11 +16,11 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 % converter will work, but it will generate ONE of the infinitely many
 % executions (all modulo numeric accuracy of course).
 %
-% SpaceExToStateflow('heaterLygeros.xml', 'heaterLygeros.cfg', '--folder', 'heaterLygeros') 
+% SpaceExToStateflow('..\..\examples\heaterLygeros\heaterLygeros.xml')
 % 
 % 2) Van Der Pol Oscillator (nonlinear example)
 %
-% SpaceExToStateflow('vanderpol.xml', 'vanderpol.cfg', '--folder', 'vanderpol')
+% SpaceExToStateflow('..\..\examples\vanderpol\vanderpol.xml')
 %
 % You can manually add an X-Y graph scope/plot and see that its phase
 % portrait looks correct.
@@ -84,66 +84,46 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     % Specify options from the input argument
     [options, path_name, xml_filename, cfg_filename] = ...
         option_SpaceExToStateflow(varargin);
-    xml_filepath = [path_name, xml_filename];
-    cfg_filepath = [path_name, cfg_filename];
+    xml_filepath = [path_name, '\', xml_filename];
+    cfg_filepath = [path_name, '\',cfg_filename];
     % add option for using model without .cfg file
-    if options.xml == 1
-        try
-        % read spaceex XML model file
-            xml = xmlread(xml_filepath);
-            [pathstr,name,ext] = fileparts(xml_filepath);
-            
-            % matlab functions cannot start with numbers, although some
-            % model files may, so replace all these possibilities
-            %
-            % TODO: put this as a pass / general fix in Hyst in case other tools don't
-            % support arbitrary names (I thought we've run into this
-            % before...)
-            expression = '(^|\.)\d*';
-            replace = '${digitToWord($0)}';
+    try
+    % read spaceex XML model file
+        xml = xmlread(xml_filepath);
+        [pathstr,name,ext] = fileparts(xml_filepath);
 
-            name = regexprep(name,expression,replace);
-            
-        catch exception
-            %if ~exist('..\examples\xml_filename', 'file')
-                disp('The xml file does not exist');
-                throw(exception)
-            %end 
-        end
-        if options.cfg == 1 
-            try
-                cfg_reader = java.io.FileReader(cfg_filepath);
-                % create SpaceexDocuments
-                % read both spaceex XML model and configuration files
-                xml_cfg = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml, cfg_reader);
-                doc = xml_cfg.read();
-                componentTemplates = com.verivital.hyst.importer.TemplateImporter.createComponentTemplates(doc);
-		
-                config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-                
-                %if opt_debug
-                %components = config.root.template.children
+        % matlab functions cannot start with numbers, although some
+        % model files may, so replace all these possibilities
+        %
+        % TODO: put this as a pass / general fix in Hyst in case other tools don't
+        % support arbitrary names (I thought we've run into this
+        % before...)
+        expression = '(^|\.)\d*';
+        replace = '${digitToWord($0)}';
 
-                %end
-                
-            catch exception
-               %if ~exist('..\examples\cfg_filename', 'file')
-                    disp('The configuration file does not exist');
-                    throw(exception);
-               %end
-            end
-        else
-            try
-                xml_reader = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml);
-                %create SpaceexDocuments
-                doc = xml_reader.read();
-            catch exception
-               throw(exception);
-            end
-        end  
-    % create an error message if no xml file found
-    else
-        throw(MException('ResultChk:BadInput','Argument does not contain xml file, please input the xml file name'));
+        name = regexprep(name,expression,replace);
+
+    catch exception
+        %if ~exist('..\examples\xml_filename', 'file')
+            disp('The xml file does not exist');
+            throw(exception)
+        %end 
+    end
+    try
+        cfg_reader = java.io.FileReader(cfg_filepath);
+        % create SpaceexDocuments
+        % read both spaceex XML model and configuration files
+        xml_cfg = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml, cfg_reader);
+        doc = xml_cfg.read();
+        componentTemplates = com.verivital.hyst.importer.TemplateImporter.createComponentTemplates(doc);
+
+        config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
+    catch exception
+       %if ~exist('..\examples\cfg_filename', 'file')
+            disp('The configuration file does not exist');
+            throw(exception);
+       %end
     end
     
     output_path = ['.', filesep, 'output_slsf_models', filesep];

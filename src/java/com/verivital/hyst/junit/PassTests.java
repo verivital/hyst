@@ -757,7 +757,6 @@ public class PassTests
 		}
 		
 	}
-        
         @Test
 	public void testOrderReductionpass()
 	{
@@ -786,4 +785,27 @@ public class PassTests
                     Assert.assertEquals(invariant, e.getValue().invariant.toString());
                 }
 	}
+        @Test
+	public void testLargeModelOrderReductionpass()
+	{
+		String path = UNIT_BASEDIR + "order_reduction/";
+		System.out.println(path);
+		SpaceExDocument doc = SpaceExImporter.importModels(
+				path + "iss_full_model.cfg",
+				path + "iss_full_model.xml");
+                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		
+		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+                String OrderReductionPassParam = "10";
+		try{
+                    new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
+                }
+                catch (RuntimeException e){
+                    System.out.println("The order reduction pass is failed" );
+                    throw e;
+                }       
+                        
+	}
+       		
+		
 }
