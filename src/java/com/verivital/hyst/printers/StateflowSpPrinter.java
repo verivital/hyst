@@ -8,13 +8,11 @@ import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
-import static com.verivital.hyst.util.AutomatonUtil.simplifyExpression;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
 import java.io.File;
@@ -32,7 +30,6 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
-//import org.antlr.v4.runtime.misc.Nullable;
 
 /**
  * Printer for Simulink/Stateflow models with non-semantics preservation and semantics preservation
@@ -127,30 +124,18 @@ public class StateflowSpPrinter extends ToolPrinter {
     // --- strings which are only non-null with certain constructor ---
     
     // common label part for entry states
-    //@Nullable
     private final String STATE_IN_PART;
-    //@Nullable
     private final String TRANS_CHOOSEJ2DWELL_STRING;
     // constant strings
-    //@Nullable
     private final String STATE_CHOOSE_STRING;
-    //@Nullable
     private final String STATE_DWELL_STRING;
-    //@Nullable
     private final String TRANS_DWELL2LEAVE_STRING;
-    //@Nullable
     private final String TRANS_LEAVE2DWELL_STRING;
-    //@Nullable
     private final String TRANS_CHOOSES2DWELL_STRING;
-    //@Nullable
     private final String TRANS_CHOOSEJ2CHOOSES_STRING;
-    //@Nullable
     private final String TRANS_CHOOSES2CHOOSEJ_STRING;
-    //@Nullable
     private final String TRANS_IN2DWELL_STRING;
-    //@Nullable
     private final String TRANS_BACKTRACK2DWELL_STRING;
-    //@Nullable
     private final String TRANS_LEAVE2TRANS_STRING;
     
     // ------------- normal static fields -------------
@@ -200,10 +185,6 @@ public class StateflowSpPrinter extends ToolPrinter {
     public void printProcedure(String originalFilename, boolean opt_semantics_preserving ) throws MatlabConnectionException, MatlabInvocationException
     {
 
-        //Create a proxy, which we will use to control MATLAB
-        //MatlabProxyFactory factory = new MatlabProxyFactory();
-        //MatlabProxy proxy = factory.getProxy();
-
         // this will try to reconnect to existing session if possible
         MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
 
@@ -211,13 +192,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 
         MatlabProxy proxy = factory.getProxy();
 
-        //Display 'hello world' just like when using the demo
-        //proxy.eval("disp('hello world'); disp('test123'); clock");
-        //proxy.eval("disp('" + originalFilename + "'); disp('test123'); clock");
-
         File f = new File(originalFilename);
         
-        // TODO: get rid of having to change paths, this is nasty
         proxy.eval("[path_parent,path_current] = fileparts(pwd)");
         proxy.eval("if strcmp(path_current, 'pass_order_reduction') cd ../../; end");
         proxy.eval("[path_parent,path_current] = fileparts(pwd)");
@@ -239,8 +215,6 @@ public class StateflowSpPrinter extends ToolPrinter {
 
         //Disconnect the proxy from MATLAB
         proxy.disconnect();
-
-        //proxy = factory.getProxy();
     }    
     /**
     * return the size of A matrix depending on a set of variable X 
@@ -325,8 +299,6 @@ public class StateflowSpPrinter extends ToolPrinter {
                     // outputs (y = Cx) are those with non defined (havoc) dynamics
 
                     if (!(m.flowDynamics.containsKey(v))|| m.flowDynamics.get(v).asExpression().equals(new Constant(0))) {
-                            //Expression e = m.flowDynamics.get(v).asExpression();
-                            //if (e.equals(new Constant(0))) { // note: this is coming in as e = 0, although if it's defined this way in spaceex it's actually a havoc...
 
                                     Expression subEquality = getSubEquality(v, eInv, null); // todo: did not test much, probably pretty buggy
                                     for (String s : ha.variables){
@@ -546,7 +518,6 @@ public class StateflowSpPrinter extends ToolPrinter {
         // name
         public final String name;
         // properties
-        //@Nullable
         public Collection<VariableProperty> props;
         
         private static final String SCOPE = "Scope";
@@ -667,9 +638,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 	 */
 	private class IntervalBound extends VariableBound {
     	// bounds
-    	//@Nullable
     	private Expression lower;
-		//@Nullable
 		private Expression upper;
     	
     	/**
@@ -678,9 +647,7 @@ public class StateflowSpPrinter extends ToolPrinter {
     	 * @param upper lower bound expression
     	 */
 		public IntervalBound(final String var,
-				//@Nullable 
                         final Expression lower,
-				//@Nullable 
                         final Expression upper) {
 			super(var, false);
 			this.lower = lower;
@@ -712,7 +679,6 @@ public class StateflowSpPrinter extends ToolPrinter {
 	 */
 	private class EqualityBound extends VariableBound {
 		// equality expression (including the variable and equality)
-		//@Nullable
 		private Expression expr;
 		
 		/**

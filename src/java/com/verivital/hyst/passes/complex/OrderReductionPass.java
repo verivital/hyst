@@ -53,11 +53,6 @@ public class OrderReductionPass extends TransformationPass
 		BaseComponent ha = (BaseComponent)config.root;
 		
 		processParams(ha, params);
-		
-		
-		//Create a proxy, which we will use to control MATLAB
-        //MatlabProxyFactory factory = new MatlabProxyFactory();
-        //MatlabProxy proxy = factory.getProxy();
 
         // this will try to reconnect to existing session if possible
         MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder().setUsePreviouslyControlledSession(true).build();
@@ -75,7 +70,6 @@ public class OrderReductionPass extends TransformationPass
 		try {
 			proxy = factory.getProxy();
 			
-	        proxy.eval("disp('hello world'); disp('test123'); clock");
                 proxy.eval("[path_parent,path_current] = fileparts(pwd)");
                 proxy.eval("if strcmp(path_current, 'matlab') cd ../; end");
                 proxy.eval("[path_parent,path_current] = fileparts(pwd)");
