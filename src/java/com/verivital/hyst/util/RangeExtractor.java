@@ -40,7 +40,7 @@ public class RangeExtractor
 		catch (AutomatonExportException e)
 		{
 			throw new AutomatonExportException("Error while parsing expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
+					expression.toDefaultString(), e);
 		}
 	}
 	
@@ -302,7 +302,7 @@ public class RangeExtractor
 				else
 				{
 					throw new AutomatonExportException("Unsupported condition (one side should be variable," +
-								" the other side a constant): " + expression);
+								" the other side a constant): " + expression.toDefaultString());
 				}
 				
 				if (!shouldSkip)
@@ -342,7 +342,8 @@ public class RangeExtractor
 						i.max = val;
 					}
 					else 
-						throw new AutomatonExportException("Unsupported expression in condition: " + expression);
+						throw new AutomatonExportException("Unsupported expression in condition: " 
+									+ expression.toDefaultString());
 					
 					if (i.max < i.min)
 						throw new EmptyRangeException("range for " + varName + " is unsatisfiable");
@@ -362,12 +363,13 @@ public class RangeExtractor
 				throw new EmptyRangeException("expression contains false");
 			}
 			else
-				throw new AutomatonExportException("Unsupported expression type (variable as condition?): " + expression);
+				throw new AutomatonExportException("Unsupported expression type (variable as condition?): " 
+						+ expression.toDefaultString());
 		}
 		else if (expression == Constant.FALSE) // if any variable is false, the range for all is empty
 			throw new EmptyRangeException("expression contains FALSE");
 		else if (expression != Constant.TRUE && expressionContainsVariables(expression, vars))
-			throw new AutomatonExportException("Unsupported expression: " + expression);
+			throw new AutomatonExportException("Unsupported expression: " + expression.toDefaultString());
 		
 	}
 	
