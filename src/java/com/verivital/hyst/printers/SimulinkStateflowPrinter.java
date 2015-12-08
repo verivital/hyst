@@ -33,11 +33,17 @@ import matlabcontrol.MatlabProxyFactoryOptions;
 
 /**
  * Printer for Simulink/Stateflow models with non-semantics preservation and
- * semantics preservation
+ * semantics preservation modes
+ * 
+ * Semantics preservation uses randomness to approximate nondeterministic behavior allowed in hybrid automata
+ * 
+ * Non-semantics preserving is a basic translation, and in practice, often does preserve semantics (so the name is poor), 
+ * under the assumption that the original automata
+ * is deterministic, non-Zeno, and some other assumptions that need to be clarified by Luan/Christian.
  * 
  * @author Christian Schilling, Luan Nguyen
  */
-public class StateflowSpPrinter extends ToolPrinter {
+public class SimulinkStateflowPrinter extends ToolPrinter {
 
 	/**
 	 * TODO: update, this is just copied
@@ -45,6 +51,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 	public Map<String, String> getDefaultParams() {
 		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
 
+		// TODO: this needs to be pulled in in part from the Configuration object, as some of these may already be specified there
+		// although of course doing some transformation between configurations of simulators vs. reachability tools is perhaps a bit unrealistic at this stage
 		params.put("time", "auto");
 		params.put("step", "auto-auto");
 		params.put("remainder", "1e-4");
@@ -69,7 +77,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 	public boolean isSP = true;
 
 	// expression printer
-	private final StateflowSpExpressionPrinter m_printer;
+	private final SimulinkStateflowExpressionPrinter m_printer;
 
 	// global option
 	private final boolean IS_ADD_EPS;
@@ -165,7 +173,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 				Hyst.TOOL_NAME + "\n" + "Hybrid Automaton in " + Hyst.TOOL_NAME + "\n" + "Converted from file: "
 						+ originalFilename + "\n" + "Command Line arguments: " + Hyst.programArguments);
 
-		Expression.expressionPrinter = new StateflowSpPrinter.StateflowSpExpressionPrinter(0); // TODO:
+		Expression.expressionPrinter = new SimulinkStateflowPrinter.SimulinkStateflowExpressionPrinter(0); // TODO:
 																								// move
 																								// to
 																								// constructor?
@@ -724,7 +732,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 	/**
 	 * Printer for Stateflow expressions.
 	 */
-	public class StateflowSpExpressionPrinter extends DefaultExpressionPrinter {
+	public class SimulinkStateflowExpressionPrinter extends DefaultExpressionPrinter {
 		// translate equalities to small intervals?
 		private boolean m_isIntervalEquality;
 		// add variable prefix?
@@ -739,7 +747,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 		 */
 		private final int m_prettyPrintThreshold;
 
-		public StateflowSpExpressionPrinter(final int prettyPrintThreshold) {
+		public SimulinkStateflowExpressionPrinter(final int prettyPrintThreshold) {
 			super();
 			opNames.put(Operator.AND, "&&");
 			opNames.put(Operator.OR, "||");
@@ -893,8 +901,8 @@ public class StateflowSpPrinter extends ToolPrinter {
 	/**
 	 * Standard constructor (does not support every feature).
 	 */
-	public StateflowSpPrinter() {
-		this.m_printer = new StateflowSpExpressionPrinter(0);
+	public SimulinkStateflowPrinter() {
+		this.m_printer = new SimulinkStateflowExpressionPrinter(0);
 		this.m_randoms = 0;
 		Expression.expressionPrinter = m_printer;
 		this.IS_ADD_EPS = false;
@@ -922,9 +930,9 @@ public class StateflowSpPrinter extends ToolPrinter {
 	 * @param prettyPrintThreshold
 	 *            threshold for breaking long expressions
 	 */
-	public StateflowSpPrinter(final Iterable<String> variableNames, final boolean isAddEpsilon,
+	public SimulinkStateflowPrinter(final Iterable<String> variableNames, final boolean isAddEpsilon,
 			final int prettyPrintThreshold) {
-		this.m_printer = new StateflowSpExpressionPrinter(prettyPrintThreshold);
+		this.m_printer = new SimulinkStateflowExpressionPrinter(prettyPrintThreshold);
 		this.m_randoms = 0;
 		Expression.expressionPrinter = m_printer;
 		this.IS_ADD_EPS = isAddEpsilon;
@@ -1104,7 +1112,7 @@ public class StateflowSpPrinter extends ToolPrinter {
 	@Override
 	protected void printAutomaton() {
 		this.ha = (BaseComponent) config.root;
-		Expression.expressionPrinter = new StateflowSpExpressionPrinter(0);
+		Expression.expressionPrinter = new SimulinkStateflowExpressionPrinter(0);
 
 		// remove this after proper support for multiple initial modes is added
 		// if (ha.init.size() != 1)
