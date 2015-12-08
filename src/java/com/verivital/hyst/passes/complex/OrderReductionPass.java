@@ -8,7 +8,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
-import com.verivital.hyst.printers.StateflowSpPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.util.Classification;
 import java.util.Map.Entry;
 import matlabcontrol.MatlabConnectionException;
@@ -62,7 +62,7 @@ public class OrderReductionPass extends TransformationPass
         Classification cf = new Classification();
         cf.ha = ha;
         cf.setVarID(ha); 
-        StateflowSpPrinter sp = new StateflowSpPrinter();
+        SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
         sp.ha = ha;
         sp.setConfig(config);
         //sp.setVarID(ha); 

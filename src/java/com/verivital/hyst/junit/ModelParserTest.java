@@ -30,8 +30,8 @@ import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.passes.flatten.FlattenRenameUtils;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
-import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
@@ -1010,7 +1010,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
@@ -1035,7 +1035,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
@@ -1061,7 +1061,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
@@ -1086,7 +1086,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
@@ -1110,7 +1110,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
@@ -1146,7 +1146,7 @@ public class ModelParserTest
 		Classification cls = new Classification();
                 cls.ha = ha;
                 cls.setVarID(ha); 
-                StateflowSpPrinter sp = new StateflowSpPrinter();
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");

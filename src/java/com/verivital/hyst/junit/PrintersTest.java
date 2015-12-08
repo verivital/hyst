@@ -12,8 +12,8 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
-import com.verivital.hyst.printers.StateflowSpPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -335,21 +335,21 @@ public class PrintersTest
     public void testNonSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
             String example_name = "../examples/vanderpol/vanderpol.xml";
-            StateflowSpPrinter sp = new StateflowSpPrinter();
+            SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
             sp.printProcedure(example_name,false);
     }
     @Test
     public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
             String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
-            StateflowSpPrinter sp = new StateflowSpPrinter();
+            SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
             sp.printProcedure(example_name,true);
     }
     @Test
     public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
             String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
-            StateflowSpPrinter sp = new StateflowSpPrinter();
+            SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
             sp.printProcedure(example_name,false);
     }
     

@@ -20,7 +20,7 @@ import com.verivital.hyst.passes.complex.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantPass.PseudoInvariantParams;
 import com.verivital.hyst.printers.DReachPrinter.DReachExpressionPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
-import com.verivital.hyst.printers.StateflowSpPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
@@ -661,8 +661,8 @@ public class SmallTest
 	
 	@Test
 	public void testStateflowExpressionPrinterOne() {
-		StateflowSpPrinter spprinter = new StateflowSpPrinter();
-		StateflowSpPrinter.StateflowSpExpressionPrinter exp_printer = spprinter.new StateflowSpExpressionPrinter(0);
+		SimulinkStateflowPrinter spprinter = new SimulinkStateflowPrinter();
+		SimulinkStateflowPrinter.SimulinkStateflowExpressionPrinter exp_printer = spprinter.new SimulinkStateflowExpressionPrinter(0);
 		String sampleGuard = "-5 <= x <= 5";
 		FormulaParser.parseGuard(sampleGuard);
 
