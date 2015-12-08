@@ -35,6 +35,7 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.ParamMap;
@@ -186,24 +187,13 @@ public class SmallTest
     }
 	
 	@Test
-	public void testLocExtract()
+	public void testLocExtract() throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		String t = "x = boy & boy <= 5 & boy >= cat & cat = 5";
 		
 		Expression e = FormulaParser.parseInitialForbidden(t);
 		
-		try
-		{
-			RangeExtractor.getVariableRange(e, "x");
-		} 
-		catch (EmptyRangeException ex)
-		{
-			throw new RuntimeException(ex);
-		}
-		catch (ConstantMismatchException ex)
-		{
-			throw new RuntimeException(ex);
-		}
+		RangeExtractor.getVariableRange(e, "x");
 	}
 	
 	@Test
@@ -334,6 +324,10 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -359,6 +353,10 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -382,6 +380,10 @@ public class SmallTest
 		{
 			Assert.fail("should be empty range");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -403,6 +405,10 @@ public class SmallTest
 		catch (ConstantMismatchException e1) 
 		{
 			Assert.fail("should be empty range");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
 		}
 	}
 	
@@ -428,6 +434,10 @@ public class SmallTest
 		{
 			// expected
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	@Test
@@ -451,20 +461,37 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
     }
 	
 	@Test
-    public void testExtractVarConstRangeAlias() 
+    public void testExtractVarConstRangeAlias() throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		String sampleInv = "xmin == -5 & xmin <= x_alias <= xmax & xmax == 6 & x == x_alias";
 		
 		Expression e = FormulaParser.parseInvariant(sampleInv);
+	
+		Interval range = RangeExtractor.getVariableRange(e, "x");
+		
+		if (range == null || !range.equals(new Interval(-5, 6)))
+				Assert.fail("wrong range extracted: " + range);
+
+    }
+	
+	@Test
+    public void testExtractRangeUnsupported() 
+	{
+		String sampleInv = "x >= 0 && x <= 2 * 3.14";
+		
+		Expression e = FormulaParser.parseInvariant(sampleInv);
 		try
 		{
-			Interval range = RangeExtractor.getVariableRange(e, "x");
+			RangeExtractor.getVariableRange(e, "x");
 			
-			if (range == null || !range.equals(new Interval(-5, 6)))
-					Assert.fail("wrong range extracted: " + range);
+			Assert.fail("didn't raise unsupported exception");
 		} 
 		catch (EmptyRangeException ex)
 		{
@@ -473,6 +500,36 @@ public class SmallTest
 		catch (ConstantMismatchException e1)
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			// expected
+		}
+    }
+	
+	@Test
+    public void testExtractRangeUnsupported2() 
+	{
+		String sampleInv = "x >= 0 && x <= 1 && x <= y";
+		
+		Expression e = FormulaParser.parseInvariant(sampleInv);
+		try
+		{
+			System.out.println(RangeExtractor.getVariableRange(e, "x"));
+			
+			Assert.fail("didn't raise unsupported exception");
+		} 
+		catch (EmptyRangeException ex)
+		{
+			throw new RuntimeException("empty range found", ex);
+		}
+		catch (ConstantMismatchException e1)
+		{
+			Assert.fail("range extractor raised constant mismatch exception.");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			// expected
 		}
     }
 	

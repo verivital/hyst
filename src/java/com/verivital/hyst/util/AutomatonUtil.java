@@ -39,6 +39,7 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
  * Generic importer functions
@@ -227,6 +228,10 @@ public abstract class AutomatonUtil
 						catch (ConstantMismatchException e)
 						{
 							throw new AutomatonExportException("Reset contains constant mismatch", e);
+						}
+						catch (UnsupportedConditionException e)
+						{
+							throw new AutomatonExportException("Reset contains noninterval assignment", e);
 						}
 					}
 				}
@@ -468,6 +473,10 @@ public abstract class AutomatonUtil
 		catch (ConstantMismatchException e)
 		{
 			throw new AutomatonExportException("Constant mismatch in initial values.", e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException("Initial states contain noninterval assignment", e);
 		}
 		
 		int numVars = ha.variables.size();

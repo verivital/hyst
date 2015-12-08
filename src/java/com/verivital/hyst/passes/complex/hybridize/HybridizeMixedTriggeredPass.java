@@ -36,6 +36,7 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 public class HybridizeMixedTriggeredPass extends TransformationPass 
 {
@@ -239,6 +240,10 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		catch (ConstantMismatchException e)
 		{
 			throw new AutomatonExportException("Constant mismatch in initial values.", e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException("Initial values were not a box", e);
 		}
 		
 		int numVars = ha.variables.size();

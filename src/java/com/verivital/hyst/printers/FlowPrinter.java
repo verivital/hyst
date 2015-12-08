@@ -31,6 +31,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 
 /**
@@ -580,6 +581,10 @@ public class FlowPrinter extends ToolPrinter
 		{
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
 		
 		for (Entry<String, Interval> e : ranges.entrySet())
 		{
@@ -725,6 +730,10 @@ public class FlowPrinter extends ToolPrinter
 			{
 				throw new AutomatonExportException("Constant mismatch in initial mode: " + modeName, e2);
 			}
+			catch (UnsupportedConditionException e2)
+			{
+				throw new AutomatonExportException("Non-box initial mode: " + modeName, e2);
+			} 
 			
 			Collection <String> vars = AutomatonUtil.getVariablesInExpression(resetExp);
 			
