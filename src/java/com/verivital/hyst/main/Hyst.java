@@ -160,7 +160,6 @@ public class Hyst
 		}
 	}
 
-
 	/**
 	 * Main conversion thread
 	 * @param args

@@ -542,7 +542,7 @@ public class FlowPrinter extends ToolPrinter
 				
 				// Flow doesn't like < or >... needs <= or >=
 				if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || op.equals(Operator.NOTEQUAL))
-					throw new AutomatonExportException("Flow* printer doesn't support operator " + op);
+					throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
 
 				// make sure it's of the form p ~ c
 				if (o.children.size() == 2 && o.getRight() instanceof Constant)
