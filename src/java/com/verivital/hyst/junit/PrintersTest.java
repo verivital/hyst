@@ -336,21 +336,25 @@ public class PrintersTest
     {
             String example_name = "../examples/vanderpol/vanderpol.xml";
             SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-            sp.printProcedure(example_name,false);
+            sp.setToolParamsString("semantics=0");
+            sp.printProcedure(example_name);
+            // TODO: it would be ideal to call via the standard printer, e.g., sp.print(c, toolParamsString, originalFilename);
     }
     @Test
     public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
             String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
             SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-            sp.printProcedure(example_name,true);
+            sp.setToolParamsString("semantics=1");
+            sp.printProcedure(example_name);
     }
     @Test
     public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException 
     {
             String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
             SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-            sp.printProcedure(example_name,false);
+            sp.setToolParamsString("semantics=0");
+            sp.printProcedure(example_name);
     }
     
 }

@@ -53,7 +53,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 
 		// TODO: this needs to be pulled in in part from the Configuration object, as some of these may already be specified there
 		// although of course doing some transformation between configurations of simulators vs. reachability tools is perhaps a bit unrealistic at this stage
-		params.put("time", "auto");
+		/*params.put("time", "auto");
 		params.put("step", "auto-auto");
 		params.put("remainder", "1e-4");
 		params.put("precondition", "auto");
@@ -63,7 +63,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 		params.put("precision", "53");
 		params.put("jumps", "99999999");
 		params.put("print", "on");
-		params.put("aggregation", "parallelotope");
+		params.put("aggregation", "parallelotope");*/
+		params.put("semantics", "0"); // 0 = no transformation, 1 = add epsilons
 
 		return params;
 	}
@@ -181,7 +182,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 		// begin printing the actual program
 		// printNewline();
 		try {
-			printProcedure(originalFilename, false);
+			printProcedure(originalFilename); // semantics decision is made via toolparams
 		} catch (Exception ex) {
 
 		}
@@ -190,7 +191,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 	/**
 	 * Calling Matlab from java to
 	 */
-	public void printProcedure(String originalFilename, boolean opt_semantics_preserving) {
+	public void printProcedure(String originalFilename) {
 
 		// this will try to reconnect to existing session if possible
 		MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
@@ -202,9 +203,11 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 		
 		String example_name = f.getName().substring(0, f.getName().lastIndexOf('.')); // strip extension
 		String cmd_string = "SpaceExToStateflow('..\\" + f.getParent() + "\\" + example_name + ".xml'";
-		if (opt_semantics_preserving) {
+		if (this.toolParams.get("semantics").equals("1")) {
+			System.out.println("Translating with semantics preserving mode with randomness," + this.toolParams.get("semantics"));
 			cmd_string += ", '-s')";
 		} else {
+			System.out.println("Translating with best gusses via non-semantics preserving mode, " + this.toolParams.get("semantics"));
 			cmd_string += ")";
 		}
 		System.out.println(cmd_string);
