@@ -50,7 +50,7 @@ function [inputVars, outputVars, sF] = nonsemanticTranslation (isContinuous,mode
     position_y = 0;
     y_count = 0;
     % Stateflow printer
-    printer = com.verivital.hyst.printers.StateflowSpPrinter;
+    printer = com.verivital.hyst.printers.SimulinkStateflowPrinter;
     printer.setConfig(config);
     printer.ha = ha;
     printer.isSP = false;

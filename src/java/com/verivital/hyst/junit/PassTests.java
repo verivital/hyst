@@ -20,6 +20,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
@@ -814,6 +815,9 @@ public class PassTests {
 
 	@Test
 	public void testOrderReductionpass() {
+		if (!MatlabBridge.hasMatlab())
+			return;
+		
 		String path = UNIT_BASEDIR + "order_reduction/";
 		System.out.println(path);
 		SpaceExDocument doc = SpaceExImporter.importModels(path + "building_full_order.cfg",

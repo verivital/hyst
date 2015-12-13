@@ -13,6 +13,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
 import java.io.File;
@@ -25,11 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxyFactory;
-import matlabcontrol.MatlabProxyFactoryOptions;
 
 /**
  * Printer for Simulink/Stateflow models with non-semantics preservation and
@@ -192,13 +192,6 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 	 * Calling Matlab from java to
 	 */
 	public void printProcedure(String originalFilename) {
-
-		// this will try to reconnect to existing session if possible
-		MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
-				.setUsePreviouslyControlledSession(true).build();
-
-		MatlabProxyFactory factory = new MatlabProxyFactory(options);
-		
 		File f = new File(originalFilename);
 		
 		String example_name = f.getName().substring(0, f.getName().lastIndexOf('.')); // strip extension
@@ -214,7 +207,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 		
 		MatlabProxy proxy = null;
 		try {
-			proxy = factory.getProxy();
+			proxy = MatlabBridge.getInstance().getProxy();
 		
 			proxy.eval("[path_parent,path_current] = fileparts(pwd)");
 			
@@ -228,21 +221,18 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 	
 			// TODO: figure out how to get the .mdl file contents as a string so we
 			// can pipe its output to stdout
-	
-			// Disconnect the proxy from MATLAB
+			
 			proxy.disconnect();
-		}
-		catch (MatlabConnectionException e) {
-			System.err.println(e);
 		}
 		catch (MatlabInvocationException e) {
 			System.err.println(e);
+		} catch (MatlabConnectionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		finally {
 			// What is the right pattern to handle this cleanup?
-			if (proxy != null) {
-				proxy.disconnect();
-			}
+			proxy.disconnect();
 		}
 	}
 
