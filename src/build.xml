@@ -35,7 +35,7 @@
 		<property name="lib.path" value="../lib" />
 	
 		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
-		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar commons-cli*.jar" />
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar args4j-*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
 		<property name="regression.path" value="tests/regression" />
@@ -107,8 +107,8 @@
         	<arg value="com.verivital.hyst.grammar.antlr"/>
         	<!-- Stan: commented this out because it would generate the files in a subdirectory of the grammar file,
         	although it did compile it correctly somehow.-->
-        	<!--<arg value="-o"/>
-			<arg value="java/com/verivital/hyst/grammar/antlr"/>-->
+        	<arg value="-o"/>
+			<arg value="java/com/verivital/hyst/grammar/antlr"/>
         	<!-- Taylor: the previous are necessary for me...? -->
             <classpath refid="build.classpath"/>
         	
@@ -166,11 +166,13 @@
 	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
 		<mkdir dir="${reports.path}"/>
 		
-		<junit printsummary="yes" haltonfailure="yes" fork = "true" dir=""> <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
+		<junit showoutput="true" printsummary="yes" enabletestlistenerevents="true" haltonfailure="yes" fork = "true" dir="" > <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
+			<!-- timeout="30000" -->
 		 	<classpath refid="junit.classpath"/>
 			
 			<formatter type="plain" usefile="false"/>
 			
+			<!-- TODO: it would be good to be able to set timeouts for tests, e.g., use a default of timeout="30000", but let this be overriden by some tests -->
 		 	<batchtest fork="yes" todir="${reports.path}">
 	 	        <fileset dir="${src.path}">
 	 	          <include name="**/*Test*.java"/>

@@ -6,7 +6,6 @@ src/bin/*
 .project
 .settings*
 .*.xml
-
 *.bbl
 *.aux
 *.blg
@@ -17,5 +16,4 @@ main.pdf
 *auto*/
 
 *.flow
-
 /bin/
