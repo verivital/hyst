@@ -146,8 +146,11 @@ public class SpaceExBaseComponent extends SpaceExComponent
 		{
 			Location loc = getLocation(i);
 			
+			String flow = loc.getFlow() == null ? "<null>" : loc.getFlow().toDefaultString();
+			String inv = loc.getInvariant() == null ? "<null>" : loc.getInvariant().toDefaultString(); 
+			
 			rv.append("Location index=" + i + ", name='" + loc.getName() + "', id=" + loc.getId()
-					+ ", flow=" + loc.getFlow() + ", invariant=" + loc.getInvariant() + "\n");
+					+ ", flow=" + flow + ", invariant=" + inv + "\n");
 		}
 		
 		for (int i = 0; i < getTransitionCount(); ++i)
@@ -157,8 +160,11 @@ public class SpaceExBaseComponent extends SpaceExComponent
 			String from = getLocationByID((t.getSource())).getName();
 			String to = getLocationByID((t.getTarget())).getName();
 			
+			String guard = t.getGuard() == null ? "<null>" : t.getGuard().toDefaultString();
+			String reset = t.getAssignment() == null ? "<null>" : t.getAssignment().toDefaultString();
+			
 			rv.append("Transition index=" + i + ", " + from + " -> " + to + ", LABEL: " + t.getLabel() + 
-					", GUARD=" + t.getGuard() + ", RESET=" + t.getAssignment() + "\n");
+					", GUARD=" + guard + ", RESET=" + reset + "\n");
 		}
 		
 		return rv.toString();

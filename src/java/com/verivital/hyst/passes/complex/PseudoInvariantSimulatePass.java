@@ -3,12 +3,12 @@ package com.verivital.hyst.passes.complex;
 import java.util.Map;
 import java.util.TreeSet;
 
+import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.TransformationPass;
-import com.verivital.hyst.simulation.HyperPoint;
 import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -32,7 +32,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 	BaseComponent ha;
 	TreeSet <Double> simTimes;
 	AutomatonMode mode;
-	double[] initPt;
+	HyperPoint initPt;
 	int numVars;
 	
 	@Override
@@ -79,9 +79,6 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			
 			piParams += commaSeparated(pt) + ";" + commaSeparated(invariantDir);
 		}
-		
-		//System.out.println("params = " + piParams);
-		//System.exit(1);
 		
 		// run the traditional pseudo-invariants pass
 		new PseudoInvariantPass().runTransformationPass(config, piParams);

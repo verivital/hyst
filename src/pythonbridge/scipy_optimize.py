@@ -1,20 +1,29 @@
 ''' optimization module using scipy.basinhopping'''
 
 from scipy import optimize
+from multiprocessing import Pool
 import time
 
-def opt_multi(func, bounds_list, niter=50):
-    '''optimize a function with several bounds'''
-    rv = []
+def opt_multi(func_bounds_list):
+    '''optimize a function with several functions and bounds
+    func_bounds list is a list of tuples, each tuple is (func, bounds)
+    '''
 
-    for bounds in bounds_list:
-        result = opt(func, bounds, niter)
-        rv.append(result)
+    p = Pool()
+    result = p.map(opt_star, func_bounds_list)
+    p.close()
 
-    return rv
+    return result
 
+def opt_star(params):
+    '''call opt, but untuple the parameters
+    '''
+    func = params[0]
+    bound = params[1]
 
-def opt(func, bound, niter=50):
+    return opt(func, bound)
+
+def opt(func, bound, niter=30):
     ''' optimize a function in a given bounds limit, returns [min, max]'''
 
     stepsize = None
@@ -37,24 +46,44 @@ def opt(func, bound, niter=50):
 
     return [minimum, maximum]
 
-def __test():
-    ''' test the optimization'''
-    lim1 = [(0.9, 1.1), (-0.51, -0.49)]
-    lim2 = [(0.8, 1.1), (-0.81, -0.69)]
+def __func((x, y)):
+    '''test dynamics'''
+    return (1 - x * x) * y - x
 
-    print opt_multi(lambda (x, y): ((1 - x * x) * y - x), [lim1, lim2])
+def __test_par(count):
+    '''parallel execution test'''
+    start = time.time()
+    func_lim = []
 
-	# time measurement (~1 second)
-    start = time.clock()
+    for i in xrange(count):
+        lim = [(0, i), (-0.2, -0.1)]
+        func_lim.append((__func, lim))
 
-    for i in xrange(60):
-        lim = [(0, 1), (-0.2, -0.1)]
-        fun = lambda (x, y): ((1 - x * x) * y - x)
+    opt_multi(func_lim)
+
+    dif = time.time() - start
+    print count, "parallel optimizations, seconds elapsed:", dif
+
+def __test_seq(count):
+    '''sequential execution test'''
+    start = time.time()
+
+    for i in xrange(count):
+        lim = [(0, i), (-0.2, -0.1)]
+        fun = __func # lambda (x, y): ((1 - x * x) * y - x)
 
         opt(fun, lim)
 
-    dif = time.clock() - start
-    print "seconds elapsed:", dif
+    dif = time.time() - start
+    print count, "single optimizations, seconds elapsed:", dif
+
+def __test():
+    '''test the optimization'''
+    count = 170
+
+    # we get about a 4:1 ratio which makes sense since it's a four-core machine
+    __test_seq(count)
+    __test_par(count)
 
 #__test()
 

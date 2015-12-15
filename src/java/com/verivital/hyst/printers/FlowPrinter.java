@@ -5,12 +5,7 @@ package com.verivital.hyst.printers;
 
 
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -23,14 +18,21 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.base.Interval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
+import static com.verivital.hyst.printers.ToolPrinter.doubleToString;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 
 /**
@@ -192,13 +194,15 @@ public class FlowPrinter extends ToolPrinter
 	
 	private String getPlotParam()
 	{
-		String auto = "gnuplot octagon " + config.settings.plotVariableNames[0] + "," 
-				+ config.settings.plotVariableNames[1];
-		
+		String auto = "gnuplot octagon";
 		String value = toolParams.get("plot");
 		
 		if (value.equals("auto"))
 			value = auto;
+		
+		if (value.equals("gnuplot octagon") || value.equals("gnuplot interval") 
+				|| value.equals("matlab interval") || value.equals("matlab octagon"))
+			value = value + " " + config.settings.plotVariableNames[0] + "," + config.settings.plotVariableNames[1];
 		
 		return value;
 	}
@@ -325,7 +329,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (isNonLinearDynamics(mode.flowDynamics))
 				printLine("nonpoly ode");
-			else if (isLinearDynamics(mode.flowDynamics))
+			else if (Classification.isLinearDynamics(mode.flowDynamics))
 				printLine("linear ode");
 			else if (ha.variables.size() <= 3)
 				printLine("poly ode 1");
@@ -372,10 +376,7 @@ public class FlowPrinter extends ToolPrinter
 		
 		for (ExpressionInterval e : flowDynamics.values())
 		{
-			if (expressionContainsOp(e.getExpression(), Operator.DIVIDE) || 
-				expressionContainsOp(e.getExpression(), Operator.COS) || 
-				expressionContainsOp(e.getExpression(), Operator.SIN) || 
-				expressionContainsOp(e.getExpression(), Operator.EXP))
+			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.EXP))
 			{
 				rv = true;
 				break;
@@ -385,20 +386,20 @@ public class FlowPrinter extends ToolPrinter
 		return rv;
 	}
 
-	private boolean expressionContainsOp(Expression e, Operator testOp)
+	private boolean expressionContainsOperator(Expression e, Operator ... operators)
 	{
 		boolean rv = false;
 		Operation o = e.asOperation();
 		
 		if (o != null)
 		{
-			if (o.op.equals(testOp))
+			if (Arrays.asList(operators).contains(o.op))
 				rv = true;
 			else
 			{
 				for (Expression child : o.children)
 				{
-					rv = expressionContainsOp(child, testOp);
+					rv = expressionContainsOperator(child, operators);
 					
 					if (rv)
 						break;
@@ -409,103 +410,7 @@ public class FlowPrinter extends ToolPrinter
 		return rv;
 	}
 
-	private boolean isLinearDynamics(LinkedHashMap<String, ExpressionInterval> flowDynamics)
-	{
-		boolean rv = true;
-		
-		for (ExpressionInterval e : flowDynamics.values())
-		{
-			if (!isLinearExpression(e.getExpression()))
-			{
-				rv = false;
-				break;
-			}
-		}
-		
-		return rv;
-	}
 
-	public static boolean isLinearExpression(Expression e)
-	{
-		boolean rv = true;
-		
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (o.op == Operator.MULTIPLY)
-			{
-				int numVars = 0;
-				
-				for (Expression c : o.children)
-				{
-					int count = countVariablesMultNeg(c); 
-					
-					if (count != Integer.MAX_VALUE)
-						numVars += count;
-					else
-					{
-						rv = false;
-						break;
-					}
-				}
-				
-				if (numVars > 1)
-					rv = false;
-			}
-			else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT)
-			{
-				for (Expression c : o.children)
-				{
-					if (!isLinearExpression(c))
-					{
-						rv = false;
-						break;
-					}
-				}
-			}
-			else if (o.op == Operator.NEGATIVE)
-				rv = isLinearExpression(o.children.get(0));
-			else
-				rv = false;
-		}
-		
-		return rv;
-	}
-
-	/**
-	 * Recursively count the number of variables. only recurse if we have
-	 * multiplication, or negation, otherwise return Integer.MAX_VALUE
-	 * @param e the expression
-	 * @return the number of variables
-	 */
-	private static int countVariablesMultNeg(Expression e)
-	{
-		int rv = 0;
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (o.op == Operator.MULTIPLY || o.op == Operator.NEGATIVE)
-			{
-				for (Expression c : o.children)
-				{
-					int count = countVariablesMultNeg(c);
-					
-					if (count == Integer.MAX_VALUE)
-						rv = Integer.MAX_VALUE;
-					else
-						rv += count;
-				}
-			}
-			else
-				rv = Integer.MAX_VALUE;
-		}
-		else if (e instanceof Variable)
-			rv = 1;
-		
-		return rv;
-	}
 
 	public static String getFlowConditionExpression(Expression e)
 	{
@@ -688,6 +593,9 @@ public class FlowPrinter extends ToolPrinter
 
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");
+		
+		if (ha.modes.containsKey("start"))
+			throw new AutomatonExportException("mode named 'start' is not allowed in Flow* printer");
 		
 		if (config.init.size() > 1)
 		{

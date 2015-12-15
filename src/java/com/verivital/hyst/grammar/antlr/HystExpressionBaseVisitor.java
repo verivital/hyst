@@ -1,6 +1,5 @@
-// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5
+// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5.1
 package com.verivital.hyst.grammar.antlr;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
 
 /**

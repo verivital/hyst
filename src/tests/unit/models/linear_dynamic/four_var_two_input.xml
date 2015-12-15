@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="main">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="z" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="k" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="running" x="465.0" y="273.0" width="326.0" height="192.0">
+      <invariant>z == x+ 2*y  &amp; k == y</invariant>
+      <flow>x' == x + 0.5*y + 0.5*u1 -0.2*u2&amp;
+y' == 4*x - 3*y - 2*u1 + 3*u2</flow>
+    </location>
+  </component>
+  <component id="sys">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="z" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="k" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="main" as="main_1" x="304.0" y="202.0">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="u1">u1</map>
+      <map key="u2">u2</map>
+      <map key="z">z</map>
+      <map key="k">k</map>
+    </bind>
+  </component>
+</sspaceex>
+

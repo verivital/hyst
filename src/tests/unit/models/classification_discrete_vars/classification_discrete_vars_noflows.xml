@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="classification_discrete_vars">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="loc1" x="241.0" y="106.0" />
+    <location id="2" name="loc2" x="509.0" y="119.0" />
+    <location id="3" name="loc3" x="230.0" y="374.0" />
+    <location id="4" name="loc4" x="470.0" y="351.0" />
+    <transition source="1" target="2">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="2" target="4">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="4" target="3">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="3" target="1">
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+  </component>
+  <component id="system">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="classification_discrete_vars" as="classification_discrete_vars_1" x="477.0" y="59.0">
+      <map key="x1">x1</map>
+    </bind>
+  </component>
+</sspaceex>
+
