@@ -110,8 +110,6 @@ public class PrintersTest
 			}
 			catch (PreconditionsFailedException e)
 			{
-				
-				throw new RuntimeException("printer did not print successfully the model (all precondition checks rejected it): " + xmlName);
 				// preconditions error, ignore this model for this printer
 			}
 		}

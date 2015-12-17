@@ -56,11 +56,7 @@ public class XspeedPrinter extends ToolPrinter {
 	String initname;//name of initial location
 	
 	public XspeedPrinter() {
-		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
-		preconditions.skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS
-				.ordinal()] = true;
-		preconditions.skip[PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS
-				.ordinal()] = true;
+		
 	}
 	String org;
 	@Override
@@ -1024,7 +1020,7 @@ public class XspeedPrinter extends ToolPrinter {
 		}
 		catch(Exception ex)
 		{
-			throw new RuntimeException("XSpeed does not work on Disjunctiveguard models\n");
+			throw new RuntimeException("XSpeed does not work on Disjunctiveguard models\n", ex);
 			
 		}
 
