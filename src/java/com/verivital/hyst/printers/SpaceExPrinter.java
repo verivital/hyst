@@ -77,6 +77,14 @@ public class SpaceExPrinter extends ToolPrinter
 		baseName = name;
 	}
         
+        /**
+	 * set basecomponent
+	 */
+	public void setBaseComponent(BaseComponent component)
+	{
+		ha = component;
+	}
+        
 	/**
 	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */

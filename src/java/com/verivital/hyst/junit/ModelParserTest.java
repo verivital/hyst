@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
@@ -29,9 +30,11 @@ import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.passes.flatten.FlattenRenameUtils;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -362,6 +365,7 @@ public class ModelParserTest
 	@Test
     public void testImportSpaceEx()
 	{
+            
 		String path = UNIT_BASEDIR + "loc_init/";
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(
 				path + "one_init.cfg",
@@ -992,6 +996,191 @@ public class ModelParserTest
 		}
     }
 	
+        
+        @Test
+	public void testConvertLinearDynamicTwoVars()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "two_var.cfg",
+				path + "two_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
+		String result = "[2.0 4.0 ;0.0 -3.0 ;]";
+		Assert.assertEquals(s, result);    	
+	}
+        
+        @Test
+	public void testConvertLinearDynamicThreeVars()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "three_var.cfg",
+				path + "three_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
+		String result = "[-1.0 4.0 2.0 ;2.0 -3.0 3.0 ;0.0 2.0 4.0 ;]";
+		Assert.assertEquals(s, result);
+	}
+        
+         
+        @Test
+	public void testConvertLinearDynamicOneVar()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "one_var.cfg",
+				path + "one_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
+                String result = "[1.0 ;]";
+                Assert.assertEquals(s, result);        	
+	}
+         
+        @Test
+	public void testConvertLinearDynamicTimeHAOneVar()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "time_flow_one_var.cfg",
+				path + "time_flow_one_var.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+		String s = sp.convertFlowToAMatrix(mode);
+		String result = "[0.0 ;]";
+		Assert.assertEquals(s, result);     	
+	}
+         @Test
+	public void testConvertLinearDynamicTwoVarsOneInput()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "two_var_one_input.cfg",
+				path + "two_var_one_input.xml");
+		
+		Configuration c = flatten(test1);
+		BaseComponent ha = (BaseComponent)c.root;
+
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+                
+        System.out.println("mode = " + mode);
+                
+		String A = sp.convertFlowToAMatrix(mode);
+		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
+                Assert.assertEquals(resultA, A);
+                String B = sp.convertInputToBMatrix(mode);
+		String resultB = "[-0.2 2.0 ;]";
+		Assert.assertEquals(resultB, B);		    	
+	}
+         
+    @Test
+    public void testClassifySubtract()
+    {
+    	String[][]dy = {{"x","-1 * x - 2 * y - 0.2 * u"}, {"y", "4 * x - 3 * y + 2 * u"}, {"u", "1"}};
+    			
+    	Configuration c = AutomatonUtil.makeDebugConfiguration(dy);
+    	BaseComponent ha = ((BaseComponent)c.root);
+    	AutomatonMode mode = ha.modes.values().iterator().next();
+    	
+    	Classification cls = new Classification();
+    	cls.ha = ha;
+        cls.setVarID(ha); 
+    	cls.setLinearMatrix(mode);
+        
+    	double TOL = 1e-9;
+        Assert.assertEquals(-1, Classification.linearMatrix[0][0], TOL);
+    }
+        
+	@Test
+	public void testConvertLinearDynamicTwoVarTwoHavocTwoInput()
+	{
+		String path = UNIT_BASEDIR + "linear_dynamic/";
+		SpaceExDocument test1 = SpaceExImporter.importModels(
+				path + "four_var_two_input.cfg",
+				path + "four_var_two_input.xml");
+                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(test1);
+		
+		Configuration c = ConfigurationMaker.fromSpaceEx(test1, componentTemplates);
+
+                new FlattenAutomatonPass().runVanillaPass(c, null);
+		BaseComponent ha = (BaseComponent)c.root;
+            
+                //Configuration c = flatten(test1);
+                
+		//BaseComponent ha = (BaseComponent)c.root;
+                
+		Classification cls = new Classification();
+                cls.ha = ha;
+                cls.setVarID(ha); 
+                SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+                sp.ha = ha;
+                //sp.setVarID(ha);
+		AutomatonMode mode = ha.modes.get("running");
+                cls.setLinearMatrix(mode);
+                // test A matrix
+		String A = sp.convertFlowToAMatrix(mode);
+		String resultA = "[1.0 4.0 ;0.5 -3.0 ;]";
+		Assert.assertEquals(A, resultA);  
+                // test B matrix
+		String B = sp.convertInputToBMatrix(mode);
+		String resultB = "[0.5 -2.0 ;-0.2 3.0 ;]";
+		Assert.assertEquals(B, resultB);
+                // test A matrix
+		String C = sp.convertInvToMatrix(mode);
+		String resultC = "[1 2.0 ;0 1 ;]";
+		Assert.assertEquals(C, resultC);
+			
+	}
 	/*@Test
     public void testVariableRenaming() 
 	{

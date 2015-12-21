@@ -2,11 +2,11 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 %SPACEEXTOSTATEFLOW SpaceEx to Stateflow conversion
 %
 % example call without semantics preservation:
-% SpaceExToStateflow('mymodel.xml', 'myconfig.cfg', '--folder', 'myfolder')
-% This uses SpaceEx model ..\examples\myfolder\mymodel.xml with myconfig.cfg.
+% SpaceExToStateflow('..\..\examples\myfolder\mymodel.xml')
+% This uses SpaceEx model ..\..\examples\myfolder\mymodel.xml with myconfig.cfg.
 %
 % example call with semantics preservation: add '-s' like in the following:
-% SpaceExToStateflow('mymodel.xml', 'myconfig.cfg', '--folder', 'myfolder', '-s')
+% SpaceExToStateflow('..\..\examples\myfolder', 'mymodel.xml', 'myconfig.cfg', '-s')
 %
 % Actual calls on example systems:
 %
@@ -16,11 +16,11 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
 % converter will work, but it will generate ONE of the infinitely many
 % executions (all modulo numeric accuracy of course).
 %
-% SpaceExToStateflow('heaterLygeros.xml', 'heaterLygeros.cfg', '--folder', 'heaterLygeros') 
+% SpaceExToStateflow('..\..\examples\heaterLygeros\heaterLygeros.xml')
 % 
 % 2) Van Der Pol Oscillator (nonlinear example)
 %
-% SpaceExToStateflow('vanderpol.xml', 'vanderpol.cfg', '--folder', 'vanderpol')
+% SpaceExToStateflow('..\..\examples\vanderpol\vanderpol.xml')
 %
 % You can manually add an X-Y graph scope/plot and see that its phase
 % portrait looks correct.
@@ -73,18 +73,7 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     import com.verivital.hyst.python.*;
     import com.verivital.hyst.simulation.*;
     import com.verivital.hyst.util.*;
-    
-%     % DO NOT IMPORT THESE
-%     import org.apache.commons.cli.*;
-% %     import org.apache.commons.cli.CommandLine;
-% %     import org.apache.commons.cli.CommandLineParser;
-% %     import org.apache.commons.cli.DefaultParser;
-% %     import org.apache.commons.cli.HelpFormatter;
-% %     import org.apache.commons.cli.Option;
-% %     import org.apache.commons.cli.Options;
-% %     import org.apache.commons.cli.ParseException;
-    
-    
+   
     import de.uni_freiburg.informatik.swt.spaceexxmlprinter.*;
     import de.uni_freiburg.informatik.swt.spaxeexxmlreader.*;
     import de.uni_freiburg.informatik.swt.sxhybridautomaton.*;
@@ -93,76 +82,55 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     % add classes and functions subfolders to path
     addpath(genpath('functions'));
     % Specify options from the input argument
-    [opt_xml_reader, opt_cfg_reader, opt_semantics, opt_display_flow, ...
-        opt_display_guard, opt_display_invariant, opt_eager_violation, ...
-        path_name, xml_filename, cfg_filename] = option_SpaceExToStateflow(varargin);
-    xml_filepath = [path_name, xml_filename];
-    cfg_filepath = [path_name, cfg_filename];
+    [options, path_name, xml_filename, cfg_filename] = ...
+        option_SpaceExToStateflow(varargin);
+    xml_filepath = [path_name, '\', xml_filename];
+    cfg_filepath = [path_name, '\',cfg_filename];
     % add option for using model without .cfg file
-    if opt_xml_reader == 1
-        try
-        % read spaceex XML model file
-            xml = xmlread(xml_filepath);  
-            [pathstr,name,ext] = fileparts(xml_filepath); 
-            
-            % matlab functions cannot start with numbers, although some
-            % model files may, so replace all these possibilities
-            %
-            % TODO: put this as a pass / general fix in Hyst in case other tools don't
-            % support arbitrary names (I thought we've run into this
-            % before...)
-            expression = '(^|\.)\d*';
-            replace = '${digitToWord($0)}';
+    try
+    % read spaceex XML model file
+        xml = xmlread(xml_filepath);
+        [pathstr,name,ext] = fileparts(xml_filepath);
 
-            name = regexprep(name,expression,replace);
-            
-        catch exception
-            %if ~exist('..\examples\xml_filename', 'file')
-                disp('The xml file does not exist');
-                throw(exception)
-            %end 
-        end
-        if opt_cfg_reader == 1 
-            try
-                cfg_reader = java.io.FileReader(cfg_filepath);
-                % create SpaceexDocuments
-                % read both spaceex XML model and configuration files
-                xml_cfg = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml, cfg_reader);
-                doc = xml_cfg.read();
-                componentTemplates = com.verivital.hyst.importer.TemplateImporter.createComponentTemplates(doc);
-		
-                config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-                
-                %if opt_debug
-                %components = config.root.template.children
+        % matlab functions cannot start with numbers, although some
+        % model files may, so replace all these possibilities
+        %
+        % TODO: put this as a pass / general fix in Hyst in case other tools don't
+        % support arbitrary names (I thought we've run into this
+        % before...)
+        expression = '(^|\.)\d*';
+        replace = '${digitToWord($0)}';
 
-                %end
-                
-            catch exception
-               %if ~exist('..\examples\cfg_filename', 'file')
-                    disp('The configuration file does not exist');
-                    throw(exception);
-               %end
-            end
-        else
-            try
-                xml_reader = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml);
-                %create SpaceexDocuments
-                doc = xml_reader.read();
-            catch exception
-               throw(exception);
-            end
-        end  
-    % create an error message if no xml file found
-    else
-        throw(MException('ResultChk:BadInput','Argument does not contain xml file, please input the xml file name'));
+        name = regexprep(name,expression,replace);
+
+    catch exception
+        %if ~exist('..\examples\xml_filename', 'file')
+            disp('The xml file does not exist');
+            throw(exception)
+        %end 
+    end
+    try
+        cfg_reader = java.io.FileReader(cfg_filepath);
+        % create SpaceexDocuments
+        % read both spaceex XML model and configuration files
+        xml_cfg = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml, cfg_reader);
+        doc = xml_cfg.read();
+        componentTemplates = com.verivital.hyst.importer.TemplateImporter.createComponentTemplates(doc);
+
+        config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
+    catch exception
+       %if ~exist('..\examples\cfg_filename', 'file')
+            disp('The configuration file does not exist');
+            throw(exception);
+       %end
     end
     
-    if isequal(exist(['.', filesep, 'output_slsf_models', filesep], 'dir'),7) == 0
-        % if the output directory does not exist, generate it;
-        mkdir(['.', filesep, 'output_slsf_models', filesep]);       
-    end
     output_path = ['.', filesep, 'output_slsf_models', filesep];
+    if isequal(exist(output_path, 'dir'),7) == 0
+        % if the output directory does not exist, generate it
+        mkdir(output_path);       
+    end
  
     % Import hybidautomaton into SLSF
 %     try
@@ -187,44 +155,26 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     %config;
     
     bdclose(name); % close model (uncoditionally, careful in case this is called and open diagrams are not saved!)
-    %
-    isNetwork = false;
+    
     % Reference: http://blogs.mathworks.com/seth/2010/01/21/building-models-with-matlab-code/
     % Reference: http://www.mathworks.com/help/stateflow/api/quick-start-for-the-stateflow-api.html
     rt = sfroot;
-    m = rt.find('-isa','Simulink.BlockDiagram');
     % chart_ref = m.find('-isa','Stateflow.Chart');
     prev_models = rt.find('-isa','Simulink.BlockDiagram');
-    % create new model, and get current models
-    sfnew;
+    % create new model with Matlab action language
+    sfnew('-MATLAB');
+    % get current models
     curr_models = rt.find('-isa','Simulink.BlockDiagram');
     % new model is current models - previous models
     m = setdiff(curr_models, prev_models);
     % save model file
-    %
     slsf_model_path = [output_path, name, '.mdl'];
     sfsave(m.Name, slsf_model_path);
-    %
     
-    % Get chart in new model
-    ch = m.find('-isa', 'Stateflow.Chart');
-    ch.Name = strcat('SF_',name);  
-    % Update chart method type to be continuous
-    ch.ChartUpdate='CONTINUOUS';
-    % LUAN TODO next: refactor and merge these, all of this should be the same
-    % for the semantics vs. non-semantics preserving converters
-    %basecomponent
-    if (opt_semantics)
-        com.verivital.hyst.passes.flatten.FlattenAutomatonPass.flattenAndOptimize(config);
-        %ha = ... flatten here
-        ha = config.root;
-        semanticTranslation(ch, config, ha, name, opt_eager_violation);
-    else     
-        [sF] = nonsemanticTranslation(isNetwork,m,ch,config,opt_cfg_reader);
-    end
+    % translates the automaton to Stateflow
+    translateAutomaton(m, config, options);
     
     % Save model file
-    %
     sfsave(m.Name, slsf_model_path);
     % output
     out_slsf_model_path = slsf_model_path;

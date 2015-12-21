@@ -35,7 +35,7 @@
 		<property name="lib.path" value="../lib" />
 	
 		<!-- These are the runtime classpath jars, packaged in with the .jar, in the lib folder -->
-		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol-*.jar args4j-*.jar" />
+		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar args4j-*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
 		<property name="regression.path" value="tests/regression" />
@@ -107,8 +107,8 @@
         	<arg value="com.verivital.hyst.grammar.antlr"/>
         	<!-- Stan: commented this out because it would generate the files in a subdirectory of the grammar file,
         	although it did compile it correctly somehow.-->
-        	<!--<arg value="-o"/>
-			<arg value="java/com/verivital/hyst/grammar/antlr"/>-->
+        	<arg value="-o"/>
+			<arg value="java/com/verivital/hyst/grammar/antlr"/>
         	<!-- Taylor: the previous are necessary for me...? -->
             <classpath refid="build.classpath"/>
         	
@@ -172,11 +172,13 @@
 	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
 		<mkdir dir="${reports.path}"/>
 		
-		<junit printsummary="yes" haltonfailure="yes" fork = "true" dir=""> <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
+		<junit showoutput="true" printsummary="yes" enabletestlistenerevents="true" haltonfailure="yes" fork = "true" dir="" > <!-- NOTE: with repos move, I had to add this dir="" part to get the unit tests to pass, otherwise the relative directory was messed up for me at least -->
+			<!-- timeout="30000" -->
 		 	<classpath refid="junit.classpath"/>
 			
 			<formatter type="plain" usefile="false"/>
 			
+			<!-- TODO: it would be good to be able to set timeouts for tests, e.g., use a default of timeout="30000", but let this be overriden by some tests -->
 		 	<batchtest fork="yes" todir="${reports.path}">
 	 	        <fileset dir="${src.path}">
 	 	          <include name="**/*Test*.java"/>
@@ -202,7 +204,7 @@
 		
 		<copy file="${readme_user.path}" tofile="${release.path}/README.txt"/>
 		
-		<!-- only try to run if not on windows -->
+		<!-- only try to run tools if not on windows -->
 		<!-- based on: http://stackoverflow.com/questions/4520572/different-targets-on-different-os-with-ant -->
 		<exec dir="${batch_run.path}" executable="python" failonerror="true" os="linux">
 		    <arg line="run_examples.py" />
@@ -259,9 +261,9 @@
 		</copy>
 		
 		<!-- Copy slsf matlab codes over -->
-		<mkdir dir="${release_slsf.path}/spaceex2stateflow"/>
+		<mkdir dir="${release_slsf.path}/matlab"/>
 		
-		<copy todir="${release_slsf.path}/spaceex2stateflow">
+		<copy todir="${release_slsf.path}/matlab">
 			<fileset dir="${slsf_dir.path}" 
 				includes="output_slsf_models/**,functions/**,checkLocations.m, Initial_SpaceExToStateflow.m, Location_SpaceExToStateflow.m, option_SpaceExToStateflow.m, plotExecution.m, plotSimulationLoop.m, resultsToMatrix.m, semanticTranslation.m, simulation_config.m, simulationLoop.m, SpaceExToStateflow.m, Transition_SpaceExToStateflow.m, ha2slsf_rtss15_all_benchmarks.m "/>
 

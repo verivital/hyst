@@ -109,7 +109,7 @@ op
 	;
 
 compare
-    : addSub op addSub (op addSub)*	# BoolOp
+    : addSub (op addSub)+	# BoolOp
     | TRUE   	      		    	# ConstTrue
     | FALSE			    			# ConstFalse
     ;
