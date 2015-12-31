@@ -57,8 +57,8 @@ public abstract class ToolPrinter
 	}
 	
 	protected OutputType outputType = OutputType.STDOUT;
-	private PrintStream outputStream; // used if printType = STDOUT or FILE
-	private HystFrame outputFrame; // used if printType = GUI
+	protected PrintStream outputStream; // used if printType = STDOUT or FILE
+	protected HystFrame outputFrame; // used if printType = GUI
 	
 	
 	// static 
