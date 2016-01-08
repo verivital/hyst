@@ -16,17 +16,20 @@ function [options, path_name, xml_name, cfg_name] = option_SpaceExToStateflow(ar
     cfg_name = '';
     path_name='';
     try
-        argument
         xml_path_name = argument{1};
+        xml_path_name = strrep(xml_path_name, '/', filesep);
+        xml_path_name = strrep(xml_path_name, '\', filesep);
         if strfind(xml_path_name,'.xml')
-            k = strfind(xml_path_name, '\');
+            k = strfind(xml_path_name, filesep);
             index = k(length(k));
             path_name = xml_path_name(1:index-1);
             xml_name = xml_path_name(index + 1: end);
         end
-        length(argument)
+        
         if length(argument) > 1 && ~isempty(strfind(argument{2},'.cfg'))
             cfg_path_name = argument{2};
+            cfg_path_name = strrep(cfg_path_name, '/', filesep);
+            cfg_path_name = strrep(cfg_path_name, '\', filesep);
             cfg_name = cfg_path_name(index + 1: end);
         else
             cfg_name = strrep(xml_name,'.xml','.cfg');
