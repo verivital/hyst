@@ -1,6 +1,16 @@
 package com.verivital.hyst.junit;
 
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -27,17 +37,12 @@ import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
+
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.ParamMap;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.TreeMap;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Small tests dealing with the expression parser or range extractor. Things that don't require
@@ -166,7 +171,7 @@ public class SmallTest
 		Assert.assertEquals("x = 10 ^ -1", DefaultExpressionPrinter.instance.print(e));
 		
 		sampleExpression = "A == 7.89*10^-10.1"; // from E5/E5.xml example from ODE/DAE test set
-		e = FormulaParser.parseLoc(sampleExpression);
+		e = FormulaParser.parseInitialForbidden(sampleExpression);
 		Assert.assertEquals("A = 7.89 * 10 ^ -10.1", DefaultExpressionPrinter.instance.print(e));
     }
 	
@@ -182,11 +187,11 @@ public class SmallTest
 	}
 
 	@Test
-    public void testLocSingle() 
+    public void testLocSingle()
 	{
 		String t = "loc(x) = y & x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -196,30 +201,19 @@ public class SmallTest
 	{
 		String t = "x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
 	
 	@Test
-	public void testLocExtract()
+	public void testLocExtract() throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		String t = "x = boy & boy <= 5 & boy >= cat & cat = 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 		
-		try
-		{
-			RangeExtractor.getVariableRange(e, "x");
-		} 
-		catch (EmptyRangeException ex)
-		{
-			throw new RuntimeException(ex);
-		}
-		catch (ConstantMismatchException ex)
-		{
-			throw new RuntimeException(ex);
-		}
+		RangeExtractor.getVariableRange(e, "x");
 	}
 	
 	@Test
@@ -227,7 +221,7 @@ public class SmallTest
 	{
 		String t = "loc(automaton.x) = y & x > 5";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -237,7 +231,7 @@ public class SmallTest
 	{
 		String t = "loc(automaton.x) = y & x > 5 & loc(automatonTwo.z) = jump";
 		
-		Expression e = FormulaParser.parseLoc(t);
+		Expression e = FormulaParser.parseInitialForbidden(t);
 
 		Assert.assertNotEquals(e, null);
     }
@@ -249,7 +243,7 @@ public class SmallTest
 		
 		try
 		{
-			FormulaParser.parseLoc(t);
+			FormulaParser.parseInitialForbidden(t);
 			
 			Assert.fail("ors are not allowed in loc statements");
 		}
@@ -261,7 +255,7 @@ public class SmallTest
 	{
 		String t = "x==0 & y==0 & loc()==one";
 		
-		FormulaParser.parseLoc(t);
+		FormulaParser.parseInitialForbidden(t);
     }
 	
 	@Test
@@ -350,6 +344,10 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -375,6 +373,10 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -398,6 +400,10 @@ public class SmallTest
 		{
 			Assert.fail("should be empty range");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	/**
@@ -419,6 +425,10 @@ public class SmallTest
 		catch (ConstantMismatchException e1) 
 		{
 			Assert.fail("should be empty range");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
 		}
 	}
 	
@@ -444,6 +454,10 @@ public class SmallTest
 		{
 			// expected
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
 	}
 	
 	@Test
@@ -467,20 +481,37 @@ public class SmallTest
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
 		}
+		catch (UnsupportedConditionException condExp)
+		{
+			Assert.fail("range extractor raised unsupported condition exception.");
+		}
     }
 	
 	@Test
-    public void testExtractVarConstRangeAlias() 
+    public void testExtractVarConstRangeAlias() throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		String sampleInv = "xmin == -5 & xmin <= x_alias <= xmax & xmax == 6 & x == x_alias";
 		
 		Expression e = FormulaParser.parseInvariant(sampleInv);
+	
+		Interval range = RangeExtractor.getVariableRange(e, "x");
+		
+		if (range == null || !range.equals(new Interval(-5, 6)))
+				Assert.fail("wrong range extracted: " + range);
+
+    }
+	
+	@Test
+    public void testExtractRangeUnsupported() 
+	{
+		String sampleInv = "x >= 0 && x <= 2 * 3.14";
+		
+		Expression e = FormulaParser.parseInvariant(sampleInv);
 		try
 		{
-			Interval range = RangeExtractor.getVariableRange(e, "x");
+			RangeExtractor.getVariableRange(e, "x");
 			
-			if (range == null || !range.equals(new Interval(-5, 6)))
-					Assert.fail("wrong range extracted: " + range);
+			Assert.fail("didn't raise unsupported exception");
 		} 
 		catch (EmptyRangeException ex)
 		{
@@ -489,6 +520,36 @@ public class SmallTest
 		catch (ConstantMismatchException e1)
 		{
 			Assert.fail("range extractor raised constant mismatch exception.");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			// expected
+		}
+    }
+	
+	@Test
+    public void testExtractRangeUnsupported2() 
+	{
+		String sampleInv = "x >= 0 && x <= 1 && x <= y";
+		
+		Expression e = FormulaParser.parseInvariant(sampleInv);
+		try
+		{
+			System.out.println(RangeExtractor.getVariableRange(e, "x"));
+			
+			Assert.fail("didn't raise unsupported exception");
+		} 
+		catch (EmptyRangeException ex)
+		{
+			throw new RuntimeException("empty range found", ex);
+		}
+		catch (ConstantMismatchException e1)
+		{
+			Assert.fail("range extractor raised constant mismatch exception.");
+		}
+		catch (UnsupportedConditionException condExp)
+		{
+			// expected
 		}
     }
 	
@@ -531,7 +592,7 @@ public class SmallTest
 	@Test
 	public void testNumber()
 	{
-		Expression e = FormulaParser.parseNumber("3.0");
+		Expression e = FormulaParser.parseValue("3.0");
 		
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 		
@@ -545,7 +606,7 @@ public class SmallTest
 	@Test
 	public void testSimplifyPow()
 	{
-		Expression e = FormulaParser.parseNumber("3 * 10^7");
+		Expression e = FormulaParser.parseValue("3 * 10^7");
 		
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 		
@@ -705,14 +766,14 @@ public class SmallTest
 	public void testLinearDetection() {
 		String exp1 = "(1.0 - x * x) * y - x";
 
-		Expression e1 = FormulaParser.parseNumber(exp1);
+		Expression e1 = FormulaParser.parseValue(exp1);
 
 		if (Classification.isLinearExpression(e1))
 			Assert.fail("expression was detected as linear: " + exp1);
 
 		String exp2 = "1.0 - x * 2 + 3 * y - z";
 
-		Expression e2 = FormulaParser.parseNumber(exp2);
+		Expression e2 = FormulaParser.parseValue(exp2);
 
 		if (!(Classification.isLinearExpression(e2)))
 			Assert.fail("expression was not detected as linear: " + exp2);
@@ -724,7 +785,7 @@ public class SmallTest
 	{
 		String exp = "(1.0 - x * x) * y - x";
 		
-		Expression e = FormulaParser.parseNumber(exp);
+		Expression e = FormulaParser.parseValue(exp);
 		
 		if (FlowPrinter.isLinearExpression(e))
 			Assert.fail("expression was detected as linear: " + exp);
@@ -745,7 +806,7 @@ public class SmallTest
 	@Test
 	public void testSubstituteExpression()
 	{
-		Expression e = FormulaParser.parseNumber("5 * c + 2");
+		Expression e = FormulaParser.parseValue("5 * c + 2");
 		Expression sub = new Operation(Operator.ADD, new Variable("c"), new IntervalTerm(new Interval(0, 1)));
 		Expression result = AutomatonUtil.substituteVariable(e, "c", sub);
 		
@@ -763,7 +824,7 @@ public class SmallTest
 	@Test
 	public void testHarderExpression()
 	{
-		Expression e = FormulaParser.parseNumber("-10 * v - 3 * a");
+		Expression e = FormulaParser.parseValue("-10 * v - 3 * a");
 		Expression sub = new Operation(Operator.ADD, new Variable("a"), new IntervalTerm(new Interval(-1, 2)));
 		Expression result = AutomatonUtil.substituteVariable(e, "a", sub);
 		
@@ -776,8 +837,11 @@ public class SmallTest
 		
 		Assert.assertTrue("simplification resulted in correct interval", new Interval(-6, 3).equals(ei.getInterval()));
 		
-		Assert.assertTrue("simplification resulted in correct expression", 
-				DefaultExpressionPrinter.instance.print(ei.getExpression()).equals("-10 * v - 3 * a"));
+		Expression expected = FormulaParser.parseValue("-10 * v - 3 * a");
+		String errorMsg = AutomatonUtil.areExpressionsEqual(expected, ei.getExpression());
+
+		if (errorMsg != null)
+			Assert.fail(errorMsg);
 	}
 	
 	@Test
@@ -801,7 +865,7 @@ public class SmallTest
 	@Test
 	public void testSimplifyCos()
 	{
-		Expression e = FormulaParser.parseNumber("cos(t)");
+		Expression e = FormulaParser.parseValue("cos(t)");
 		
 		ExpressionInterval ei = ContinuizationPass.simplifyExpressionWithIntervalsRec(e);
 		
@@ -816,8 +880,8 @@ public class SmallTest
 	{
 		
 		LinkedHashMap<String, ExpressionInterval> dy = new LinkedHashMap<String, ExpressionInterval>();
-		dy.put("x", new ExpressionInterval(FormulaParser.parseNumber("2 * x + y")));
-		dy.put("y", new ExpressionInterval(FormulaParser.parseNumber("3 * y * x + y")));
+		dy.put("x", new ExpressionInterval(FormulaParser.parseValue("2 * x + y")));
+		dy.put("y", new ExpressionInterval(FormulaParser.parseValue("3 * y * x + y")));
 		
 		HashMap<String, Interval> bounds = new 	HashMap<String, Interval>();
 		bounds.put("x", new Interval(1, 2));
@@ -830,21 +894,10 @@ public class SmallTest
 		// 7.5 5.5
 		
 		double TOL = 1e-6;
-		Assert.assertTrue("Entry 0, 0 is correct", Math.abs(rv[0][0] - 2.0) < TOL);
-		Assert.assertTrue("Entry 0, 1 is correct", Math.abs(rv[0][1] - 1.0) < TOL);
-		Assert.assertTrue("Entry 1, 0 is correct", Math.abs(rv[1][0] - 7.5) < TOL);
-		Assert.assertTrue("Entry 1, 1 is correct", Math.abs(rv[1][1] - 5.5) < TOL);
-		
-		/*System.out.println("Estimated Jacobian:");
-		for (int y = 0; y < rv.length; ++y)
-		{
-			for (int x = 0; x < rv[0].length; ++x)
-			{
-				System.out.print(rv[y][x] + " ");
-			}
-			
-			System.out.println();
-		}*/
+		Assert.assertEquals("Entry 0, 0 is correct", 2.0, rv[0][0], TOL);
+		Assert.assertEquals("Entry 0, 1 is correct", 1.0, rv[0][1], TOL);
+		Assert.assertEquals("Entry 1, 0 is correct", 7.5, rv[1][0], TOL);
+		Assert.assertEquals("Entry 1, 1 is correct", 5.5, rv[1][1], TOL);
 	}
 	
 	@Test
@@ -872,19 +925,100 @@ public class SmallTest
         }
     }
 	
-	/**
-	 * Test using LUT in flow
-	 */
-	/*@Test
-	public void testLut()
+	private class ExpressionClassification
 	{
-		Expression e = FormulaParser.parseFlow("y' = lut([t], [0,0,1,1,0], [1,2,3,4,8])");
+		public String exp;
+		public byte[] classes;
 		
-		if (!e.asOperation().getRight().getClass().equals(Lut.class))
+		public ExpressionClassification(String exp, byte ... classification)
 		{
-			System.out.println("LUT flow not parsed correctly: " + e);
-			Assert.fail("LUT flow not parsed correctly");
+			this.exp = exp;
+			this.classes = classification;
 		}
-	}*/
+	}
+	
+	/**
+	 * Test that functions get classified as expected
+	 */
+	@Test
+	public void testClassifyOperators()
+	{
+		final ExpressionClassification[] tests = 
+		{
+			new ExpressionClassification("x", (byte)0),
+			new ExpressionClassification("x + 1", AutomatonUtil.OPS_LINEAR),
+			new ExpressionClassification("x^2", AutomatonUtil.OPS_NONLINEAR),
+			new ExpressionClassification("sin(x)^2.5", AutomatonUtil.OPS_NONLINEAR),
+			new ExpressionClassification("ln(x + 1)", AutomatonUtil.OPS_NONLINEAR, AutomatonUtil.OPS_LINEAR),
+			new ExpressionClassification("lut([t], [0,0,1,1,0], [1,2,3,4,8])", 
+					AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX),
+		};
+		
+		for (ExpressionClassification test : tests)
+		{
+			String expStr = test.exp;
+			Expression e = FormulaParser.parseValue(expStr);
+			
+			boolean result = AutomatonUtil.expressionContainsOnlyAllowedOps(e, test.classes);
+			Assert.assertTrue("Misclassified expression: '" + expStr + "'", result); 
+		}
+	}
+	
+	/**
+	 * Test that every operator in Hyst gets classified somewhere
+	 */
+	@Test
+	public void testAllOperatorsHaveSomeClassification()
+	{
+		for (Operator o : Operator.values())
+		{
+			Operation op = new Operation(o);
+			
+			Assert.assertTrue("Operator " + DefaultExpressionPrinter.instance.printOperator(o) 
+					+ " has no classification.", AutomatonUtil.classifyExpressionOps(op) != 0);
+		}
+	}
+	
+	@Test
+	public void testDerivative()
+	{
+		Map <String, Expression> ders = new HashMap<String, Expression>();
+		ders.put("x", FormulaParser.parseValue("x + y"));
+		ders.put("y", FormulaParser.parseValue("1"));
+		
+		String[][] tests = 
+		{
+			{"x", "x + y"},
+			{"y", "1"},
+			{"-y", "-1"},
+			{"- (-x)", "x + y"},
+			{"2 * x", "2 * (x + y)"},
+			{"x + 3 + y", "x + y + 1"},
+			{"1 - x", "-(x + y)"},
+			{"3 * x * y + const", "3 * (x + y) * y + 3 * x * 1"},
+		};
+		
+		for (String[] test : tests)
+		{
+			Expression original = FormulaParser.parseValue(test[0]);
+			Expression result = AutomatonUtil.derivativeOf(original , ders);
+			Expression expected = FormulaParser.parseValue(test[1]);
+			
+			String res = AutomatonUtil.areExpressionsEqual(expected, result);
+			
+			if (res != null)
+				Assert.fail("Derivative of " + test[0] + " was wrong: " + res);
+		}
+	}
+	
+	@Test
+    public void testParseDoubleNegative()
+	{
+		String t = "- (-x)";
+		
+		Expression e = FormulaParser.parseValue(t);
+
+		Assert.assertNotEquals(e, null);
+    }
 }
 

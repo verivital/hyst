@@ -23,6 +23,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
  * This pass converts interval havoc flows (variables with no differential equation defined, only invariants), into ones where
@@ -80,13 +81,17 @@ public class ConvertHavocFlowsPass extends TransformationPass
 						modesToRemove.add(am);
 						break;
 					}
+					catch (UnsupportedConditionException e)
+					{
+						throw new AutomatonExportException("Havoc dynamics in Hyst can currently only have interval nondeterminism", e);
+					}
 					
 					if (range == null || range.isOpenInterval())
 					{
 						// this is only allowed if the havoc variable is not used in this location
 						if (variableIsUsedInFlow(am, name))	
 							throw new AutomatonExportException("Havoc flow variable " + name + 
-								" must have closed range defined by invariant. range = " + range);
+								" must have closed interval range defined by invariant. range = " + range);
 						else
 							continue; // havoc variable is not referenced anyway
 					}

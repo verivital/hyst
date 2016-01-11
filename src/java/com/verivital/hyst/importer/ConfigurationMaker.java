@@ -25,6 +25,7 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -188,12 +189,17 @@ public class ConfigurationMaker
 				catch (EmptyRangeException e)
 				{
 					throw new AutomatonExportException("Error getting initial value of constant " + var + 
-							" in init expression " + init, e);
+							" in init expression (empty range)" + init, e);
 				}
 				catch (ConstantMismatchException e)
 				{
 					throw new AutomatonExportException("Error getting initial value of constant " + var + 
-							" in init expression " + init, e); 
+							" in init expression (contradicting constants)" + init, e); 
+				}
+				catch (UnsupportedConditionException e)
+				{
+					throw new AutomatonExportException("Initial value of constant " + var + 
+							" in init expression is NOT an interval" + init, e);
 				}
 				
 				if (value == null)

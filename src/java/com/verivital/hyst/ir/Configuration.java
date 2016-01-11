@@ -3,11 +3,8 @@ package com.verivital.hyst.ir;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.Operation;
-import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
@@ -74,37 +71,35 @@ public class Configuration
 		if (root.parent != null)
 			throw new AutomatonValidationException("root component vannot have a defined parent");
 		
+		// if root is a network component, initial and forbidden states MUST contain underscores
+		if (root instanceof NetworkComponent && ((NetworkComponent)root).children.size() > 1)
+		{
+			for (String mode : init.keySet())
+			{
+				if (!mode.contains("."))
+					throw new AutomatonValidationException("Initial mode in network component must contain '.': " + mode);
+			}
+			
+			for (String mode : forbidden.keySet())
+			{
+				if (!mode.contains("."))
+					throw new AutomatonValidationException("Forbidden mode in network component must contain '.': " + mode);
+			}
+		}
+		
 		for (Expression e : init.values())
 		{
-			if (e != null)
-				validateExpression(e, "initial states: " + DefaultExpressionPrinter.instance.print(e));
+			if (e == null)
+				throw new AutomatonValidationException("Initial states contain null expression");
 		}
 		
 		for (Expression e : forbidden.values())
 		{
-			if (e != null)
-				validateExpression(e, "forbidden states: " + DefaultExpressionPrinter.instance.print(e));
+			if (e == null)
+				throw new AutomatonValidationException("Forbidden states contain null expression");
 		}
 		
 		root.validate();
-	}
-	
-	/**
-	 * Validate an expression. This makes sure the only Expression types are Constant, Variable, and Operation
-	 * @param e the expression to validate
-	 */
-	public static void validateExpression(Expression e, String desc)
-	{
-		if (e == null)
-			throw new AutomatonValidationException("null expression not allowed in " + desc);
-		else if (e instanceof Operation)
-		{
-			for (Expression c : ((Operation) e).children)
-				validateExpression(c, desc);
-		}
-		else if (!(e instanceof Variable || e instanceof Constant))
-			throw new AutomatonValidationException("Unsupported Expression type: " + e.getClass().getName() + 
-					"(" + e + ") in " + desc);
 	}
 
 	private void validateMap(LinkedHashMap<String, Expression> map, String name, boolean allowEmpty)

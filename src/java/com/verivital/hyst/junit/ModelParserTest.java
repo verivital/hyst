@@ -689,9 +689,11 @@ public class ModelParserTest
 	{
 		String path = UNIT_BASEDIR + "urgent_simple/";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
+		SpaceExDocument doc = SpaceExImporter.importModels(
 				path + "urgent_simple.cfg",
-				path + "urgent_simple.xml"));
+				path + "urgent_simple.xml");
+		
+		Configuration c = flatten(doc);
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		if (!AutomatonUtil.hasUrgentMode(ha))
@@ -1133,14 +1135,34 @@ public class ModelParserTest
                 //sp.setVarID(ha);
 		AutomatonMode mode = ha.modes.get("running");
                 cls.setLinearMatrix(mode);
+                
+        System.out.println("mode = " + mode);
+                
 		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
-                Assert.assertEquals(A, resultA);
+                Assert.assertEquals(resultA, A);
                 String B = sp.convertInputToBMatrix(mode);
 		String resultB = "[-0.2 2.0 ;]";
-		Assert.assertEquals(B, resultB);
-		    	
+		Assert.assertEquals(resultB, B);		    	
 	}
+         
+    @Test
+    public void testClassifySubtract()
+    {
+    	String[][]dy = {{"x","-1 * x - 2 * y - 0.2 * u"}, {"y", "4 * x - 3 * y + 2 * u"}, {"u", "1"}};
+    			
+    	Configuration c = AutomatonUtil.makeDebugConfiguration(dy);
+    	BaseComponent ha = ((BaseComponent)c.root);
+    	AutomatonMode mode = ha.modes.values().iterator().next();
+    	
+    	Classification cls = new Classification();
+    	cls.ha = ha;
+        cls.setVarID(ha); 
+    	cls.setLinearMatrix(mode);
+        
+    	double TOL = 1e-9;
+        Assert.assertEquals(-1, Classification.linearMatrix[0][0], TOL);
+    }
         
 	@Test
 	public void testConvertLinearDynamicTwoVarTwoHavocTwoInput()

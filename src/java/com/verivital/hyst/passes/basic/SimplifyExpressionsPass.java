@@ -10,7 +10,11 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.python.PythonUtil;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions;
 
 
@@ -55,12 +59,27 @@ public class SimplifyExpressionsPass extends TransformationPass
 				runRec(ci.child);
 		}
 	}
-
+	
 	/**
 	 * Simplify a single expression and return it
 	 * Boolean expressions are simplified to Constant.FALSE or Constant.TRUE
 	 */
 	public static Expression simplifyExpression(Expression e)
+	{
+		Expression rv = simplifyExpressionRec(e);
+		
+		// possibly use python to simplify the system
+		if (PythonBridge.hasPython() && AutomatonUtil.expressionContainsOnlyAllowedOps(e, 
+				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
+		{
+			rv = PythonUtil.pythonSimplifyExpression(rv);
+			Hyst.logDebug("Symplified expression using python to: " + rv.toDefaultString());
+		}
+		
+		return rv;
+	}
+	
+	private static Expression simplifyExpressionRec(Expression e)
 	{
 		Expression rv = e;
 		
@@ -73,7 +92,7 @@ public class SimplifyExpressionsPass extends TransformationPass
 			{
 				Expression child = o.children.get(i);
 				
-				o.children.set(i, simplifyExpression(child));
+				o.children.set(i, simplifyExpressionRec(child));
 			}
 
 			if (op == Operator.AND && o.getLeft() instanceof Constant)

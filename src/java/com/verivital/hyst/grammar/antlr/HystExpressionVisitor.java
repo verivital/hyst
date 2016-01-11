@@ -1,5 +1,6 @@
-// Generated from java/com/verivital/hyst/grammar/antlr/HystExpression.g4 by ANTLR 4.5.1
+// Generated from HystExpression.g4 by ANTLR 4.5
 package com.verivital.hyst.grammar.antlr;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 
 /**
@@ -11,19 +12,12 @@ import org.antlr.v4.runtime.tree.ParseTreeVisitor;
  */
 public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	/**
-	 * Visit a parse tree produced by the {@code VarList}
-	 * labeled alternative in {@link HystExpressionParser#varListExpression}.
+	 * Visit a parse tree produced by the {@code MatrixRowExp}
+	 * labeled alternative in {@link HystExpressionParser#matrixRow}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVarList(HystExpressionParser.VarListContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code MatrixRow}
-	 * labeled alternative in {@link HystExpressionParser#matrixRowExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitMatrixRow(HystExpressionParser.MatrixRowContext ctx);
+	T visitMatrixRowExp(HystExpressionParser.MatrixRowExpContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Matrix}
 	 * labeled alternative in {@link HystExpressionParser#matrixExpression}.
@@ -32,12 +26,12 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMatrix(HystExpressionParser.MatrixContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code Lut}
-	 * labeled alternative in {@link HystExpressionParser#lutExpression}.
+	 * Visit a parse tree produced by the {@code Function}
+	 * labeled alternative in {@link HystExpressionParser#functionExpression}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitLut(HystExpressionParser.LutContext ctx);
+	T visitFunction(HystExpressionParser.FunctionContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code ResetSubEq}
 	 * labeled alternative in {@link HystExpressionParser#resetSubExpression}.
@@ -122,27 +116,6 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitDotVar(HystExpressionParser.DotVarContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocSubExp}
-	 * labeled alternative in {@link HystExpressionParser#locSubExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocSubExp(HystExpressionParser.LocSubExpContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocSubBlankExp}
-	 * labeled alternative in {@link HystExpressionParser#locSubExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocSubBlankExp(HystExpressionParser.LocSubBlankExpContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LocAndExp}
-	 * labeled alternative in {@link HystExpressionParser#locSubExpression}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLocAndExp(HystExpressionParser.LocAndExpContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code LocExp}
 	 * labeled alternative in {@link HystExpressionParser#locExpression}.
@@ -340,54 +313,19 @@ public interface HystExpressionVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitToUnary(HystExpressionParser.ToUnaryContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code LutFunc}
+	 * Visit a parse tree produced by the {@code MatrixExp}
 	 * labeled alternative in {@link HystExpressionParser#unary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitLutFunc(HystExpressionParser.LutFuncContext ctx);
+	T visitMatrixExp(HystExpressionParser.MatrixExpContext ctx);
 	/**
-	 * Visit a parse tree produced by the {@code TanFunc}
+	 * Visit a parse tree produced by the {@code FuncExp}
 	 * labeled alternative in {@link HystExpressionParser#unary}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitTanFunc(HystExpressionParser.TanFuncContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SqrtFunc}
-	 * labeled alternative in {@link HystExpressionParser#unary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSqrtFunc(HystExpressionParser.SqrtFuncContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code SinFunc}
-	 * labeled alternative in {@link HystExpressionParser#unary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitSinFunc(HystExpressionParser.SinFuncContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code CosFunc}
-	 * labeled alternative in {@link HystExpressionParser#unary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitCosFunc(HystExpressionParser.CosFuncContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code ExpFunc}
-	 * labeled alternative in {@link HystExpressionParser#unary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitExpFunc(HystExpressionParser.ExpFuncContext ctx);
-	/**
-	 * Visit a parse tree produced by the {@code LnFunc}
-	 * labeled alternative in {@link HystExpressionParser#unary}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitLnFunc(HystExpressionParser.LnFuncContext ctx);
+	T visitFuncExp(HystExpressionParser.FuncExpContext ctx);
 	/**
 	 * Visit a parse tree produced by the {@code Number}
 	 * labeled alternative in {@link HystExpressionParser#unary}.

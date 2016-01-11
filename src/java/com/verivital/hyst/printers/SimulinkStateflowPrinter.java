@@ -16,6 +16,8 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -501,10 +503,12 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 		TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
 
 		try {
-			RangeExtractor.getVariableRanges(ex, ranges);
+				RangeExtractor.getVariableRanges(ex, ranges);
 		} catch (RangeExtractor.EmptyRangeException e) {
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		} catch (RangeExtractor.ConstantMismatchException e) {
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} catch (UnsupportedConditionException e) {
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		}
 

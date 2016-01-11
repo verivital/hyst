@@ -218,9 +218,9 @@ public class PrintersTest {
 		ha.variables.add("x");
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
-		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & t = 0"));
-
+		c.settings.plotVariableNames[1] = "x"; 
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t = 0"));
+		
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
 		am1.flowDynamics.put("t", new ExpressionInterval(new Constant(1)));
@@ -248,8 +248,8 @@ public class PrintersTest {
 		Configuration c = makeSampleConfiguration();
 
 		// add a second initial mode
-		c.init.put("stopped", FormulaParser.parseLoc("x = 5 & t = 6"));
-
+		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
+		
 		FlowPrinter.convertInitialModes(c);
 
 		BaseComponent ha = (BaseComponent) c.root;

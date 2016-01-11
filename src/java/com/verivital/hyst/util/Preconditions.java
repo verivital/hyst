@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
+import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 
@@ -69,6 +70,9 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
 			Preconditions.convertDisjunctiveGuards(c);
 		
+		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
+			Preconditions.convertBasicOperators(c);
+		
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
 			Preconditions.convertToFlat(c);
@@ -78,6 +82,7 @@ public class Preconditions
 		}
 		
 		// conversions should be done before checks
+		
 		
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
@@ -105,7 +110,7 @@ public class Preconditions
 	 * Checks if all flows are assigned in the flat automaton. If not runs the havoc transformation pass to ensure this.
 	 * @param c
 	 */
-	public static void convertAllFlowAssigned(Configuration c)
+	private static void convertAllFlowAssigned(Configuration c)
 	{
 		boolean convert = false;
 		BaseComponent bc = (BaseComponent)c.root;
@@ -142,7 +147,7 @@ public class Preconditions
 	 * two, each with one of the conditions
 	 * @param c the configuration to check and modify
 	 */
-	public static void convertDisjunctiveGuards(Configuration c)
+	private static void convertDisjunctiveGuards(Configuration c)
 	{
 		new SplitDisjunctionGuardsPass().runVanillaPass(c, SplitDisjunctionGuardsPass.PRINT_PARAM);
 	}
@@ -151,7 +156,7 @@ public class Preconditions
 	 * Checks if the model has at least one variable. Raises PrinterPreconditionException if not.
 	 * @param c the configuration to check
 	 */
-	public static void hasAtLeastOneVariable(Configuration c)
+	private static void hasAtLeastOneVariable(Configuration c)
 	{
 		if (c.root.getAllVariables().size() == 0)
 			throw new PreconditionsFailedException("Printer requires at least one continuous variable in the model.");
@@ -161,7 +166,7 @@ public class Preconditions
 	 * Checks if the model is flat. If not, prints a log message and runs the flattening pass to conver it
 	 * @param c the configuration to check
 	 */
-	public static void convertToFlat(Configuration c)
+	private static void convertToFlat(Configuration c)
 	{
 		if (!(c.root instanceof BaseComponent))
 		{
@@ -176,7 +181,7 @@ public class Preconditions
 	 * constants to variables
 	 * @param c the configuration to check
 	 */
-	public static void convertIntervalConstants(Configuration c)
+	private static void convertIntervalConstants(Configuration c)
 	{
 		if (containsIntervalConstants(c.root))
 		{
@@ -192,7 +197,7 @@ public class Preconditions
 	 * @param c the component to check 
 	 * @return true iff c or any of its children contains interval-valued constants
 	 */
-	public static boolean containsIntervalConstants(Component c)
+	private static boolean containsIntervalConstants(Component c)
 	{
 		boolean rv = false;
 		
@@ -275,7 +280,7 @@ public class Preconditions
 	 * Check if there are non-deterministic dynamics (interval-expressions with nonnull intervals) in the model
 	 * @param c the component to check
 	 */
-	public static void noNondeterministicDynamics(Component c)
+	private static void noNondeterministicDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -311,7 +316,7 @@ public class Preconditions
 	 * Check that there are no urgent dynamics (instant mode changes)
 	 * @param c
 	 */
-	public static void noUrgentDynamics(Component c)
+	private static void noUrgentDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -333,6 +338,127 @@ public class Preconditions
 			for (ComponentInstance ci : nc.children.values())
 				noUrgentDynamics(ci.child);
 		}
+	}
+	
+	
+	/**
+	 * Check that there are no non-basic operators in the given component's expressions.
+	 * This will try to convert, if such a conversion is supported.
+	 * 
+	 * basic operators are things like +, *, ^, sine, ln
+	 * non-basic are things like matrices, lookup-tables
+	 * @param c the configuration to check
+	 */
+	private static void convertBasicOperators(Configuration config)
+	{
+		final byte SUPPORTED = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR | AutomatonUtil.OPS_BOOLEAN;
+		
+		for (Entry<String, Expression> entry : config.init.entrySet())
+		{
+			String mode = entry.getKey();
+			Expression e = entry.getValue();
+			
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, SUPPORTED))
+				throw new PreconditionsFailedException("Initial states for mode " + mode + " contains unsupported " +
+						"expression operation: " + e.toDefaultString());
+		}
+		
+		for (Entry<String, Expression> entry : config.forbidden.entrySet())
+		{
+			String mode = entry.getKey();
+			Expression e = entry.getValue();
+			
+			if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, SUPPORTED))
+				throw new PreconditionsFailedException("Forbidden states for mode " + mode + " contains unsupported " +
+						"expression operation: " + e.toDefaultString());
+		}
+		
+		if (checkBasicOperatorsInComponents(config.root))
+		{
+			Hyst.log("Preconditions check detected look-up-tables in dynamics. ");
+			Hyst.log("Running conversion pass to split them, as required by the preconditions.");
+		
+			new ConvertLutFlowsPass().runTransformationPass(config, null);
+		}
+	}
+	
+	/**
+	 * Recursive part of convertBasicOperators(config). This returns true if there are look-up-table dynamics that
+	 * should be attempted to be converted. It may also raise a PreconditionsFailedException if, for example, there
+	 * are look-up-table dynamics in other parts of the automaton.
+	 * 
+	 * @param comp the component to check for basic operation (linear and simple nonlinear)
+	 * @return false if no conversion is needed, true if we should try to convert
+	 */
+	private static boolean checkBasicOperatorsInComponents(Component c)
+	{
+		final byte BASIC = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR;
+		boolean rv = false;
+		
+		if (c instanceof BaseComponent)
+		{
+			// base case
+			BaseComponent ha = (BaseComponent)c;
+			
+			for (AutomatonMode am : ha.modes.values())
+			{
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(am.invariant, BASIC, AutomatonUtil.OPS_BOOLEAN))
+					throw new PreconditionsFailedException("Invariant in mode " + am.name + " of automaton " + 
+							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
+							am.invariant.toDefaultString());
+				
+				if (am.flowDynamics != null)
+				{
+					for (Entry<String, ExpressionInterval> entry : am.flowDynamics.entrySet())
+					{
+						String var = entry.getKey();
+						Expression e = entry.getValue().getExpression();
+						
+						byte cl = AutomatonUtil.classifyExpressionOps(e);
+						
+						cl &= ~BASIC; // turn off BASIC bits in the mask
+						
+						if (cl == AutomatonUtil.OPS_LUT)
+							rv = true; // should attempt to convert this
+						else if (cl != 0) // unsupported
+						{
+							throw new PreconditionsFailedException("Flow for variable " + var + " in mode " + am.name + 
+									" of automaton " + ha.getPrintableInstanceName() + 
+									" contains unsupported expression operation: " + e.toDefaultString());
+						}
+					}
+				}
+			}
+			
+			for (AutomatonTransition at : ha.transitions)
+			{
+				if (!AutomatonUtil.expressionContainsOnlyAllowedOps(at.guard, BASIC, AutomatonUtil.OPS_BOOLEAN))
+					throw new PreconditionsFailedException("Guard in transition " + at.from + "->" + at.to + " of automaton " + 
+							ha.getPrintableInstanceName() + " contains unsupported expression operation: " + 
+							at.guard.toDefaultString());
+				
+				for (Entry<String, ExpressionInterval> entry : at.reset.entrySet())
+				{
+					String var = entry.getKey();
+					Expression e = entry.getValue().getExpression();
+					
+					if (!AutomatonUtil.expressionContainsOnlyAllowedOps(e, BASIC))
+						throw new PreconditionsFailedException("Reset in transition " + at.from + "->" + at.to +
+							"for variable " + var + " in automaton " + ha.getPrintableInstanceName() 
+							+ " contains unsupported expression operation: " + at.guard.toDefaultString());
+				}
+			}
+		}
+		else
+		{
+			// recursive case
+			NetworkComponent nc = (NetworkComponent)c;
+			
+			for (ComponentInstance ci : nc.children.values())
+				rv = checkBasicOperatorsInComponents(ci.child);
+		}
+		
+		return rv;
 	}
 	
 	@SuppressWarnings("serial")

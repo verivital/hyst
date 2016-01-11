@@ -7,8 +7,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.verivital.hyst.ir.AutomatonExportException;
-
 public class DefaultExpressionPrinter extends ExpressionPrinter
 {
 	public static DefaultExpressionPrinter instance = new DefaultExpressionPrinter(); 
@@ -98,13 +96,13 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 					opNames.put(Operator.LOGICAL_NOT, "!");
 					break;
 				default:
-					throw new RuntimeException("unsupported case: " + o);
+					throw new RuntimeException("unsupported case: " + o.name());
 			}
 		}
 	}
 	
 	@Override
-	public String printConstantValue(double d)
+	protected String printConstantValue(double d)
 	{
 		return constFormatter.format(d);
 	}
@@ -116,10 +114,10 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 	}
 	
 	/**
-	 * Inline printing unless unary function
+	 * Usually inline printing
 	 */
 	@Override
-	public String printOperation(Operation o)
+	protected String printOperation(Operation o)
 	{
 		String rv;
 		List <Expression> children = o.children;
@@ -187,8 +185,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 		}
 		else
 		{
-			throw new AutomatonExportException("No default way to in-line print expression with " + children.size() 
-					+ " children (" + opNames.get(o.op) + ".");
+			rv = super.printOperation(o);
 		}
 		
 		return rv;

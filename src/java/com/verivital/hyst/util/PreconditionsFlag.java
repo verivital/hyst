@@ -19,5 +19,9 @@ public enum PreconditionsFlag
 	CONVERT_INTERVAL_CONSTANTS,
 	CONVERT_TO_FLAT_AUTOMATON,
 	CONVERT_DISJUNCTIVE_GUARDS,
-	CONVERT_ALL_FLOWS_ASSIGNED, // only run if CONVERT_TO_FLAT_AUTOMATON is not skipped 
+	CONVERT_ALL_FLOWS_ASSIGNED, // only run if CONVERT_TO_FLAT_AUTOMATON is not skipped
+	
+	// only linear/basic nonlinear (sine, ^, ect.) operators allowed in init, flows, resets, guards...
+	// this one can fail, if the conversion is not supported
+	CONVERT_BASIC_OPERATORS, 
 }

@@ -11,6 +11,8 @@ import java.util.Set;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -24,7 +26,8 @@ import com.verivital.hyst.util.AutomatonUtil;
  */
 public class PythonUtil
 {
-	public static PythonExpressionPrinter pyPrinter = new PythonExpressionPrinter();
+	public static PythonEvaluatePrinter pyEvaluatePrinter = new PythonEvaluatePrinter();
+	public static PythonSympyPrinter pySympyPrinter = new PythonSympyPrinter();
 
 	/**
 	 * Optimize a function in a hyper-rectangle using interval arithmetic.
@@ -33,20 +36,20 @@ public class PythonUtil
 	 *  I measured 20 calls a second. In native python this is about 100 times a second. If more performance is needed, and
 	 *  you're evaluating the same equations with many different bounds, use the intervalOptimizeMulti function instead.
 	 *
-	 * @param pb the PythonBridge interface to use
 	 * @param exp the expression to minimize and maximize
 	 * @param bounds the interval bounds for each variable used in the expression
 	 * @return an interval bounds on exp
 	 */
-	public static Interval intervalOptimize(PythonBridge pb, Expression exp, Map<String, Interval> bounds)
+	public static Interval intervalOptimize(Expression exp, Map<String, Interval> bounds)
 	{
+		PythonBridge pb = PythonBridge.getInstance();
 		pb.send("import math");
 		
 		StringBuilder s = new StringBuilder();
 		s.append(makeExpressionVariableSymbols(exp));
 		
 		s.append("print eval_eq(");
-		s.append(pyPrinter.print(exp));
+		s.append(pyEvaluatePrinter.print(exp));
 		s.append(",");
 		s.append(toPythonIntervalMap(bounds));
 		s.append(")");
@@ -64,12 +67,11 @@ public class PythonUtil
 	 *  I measured 55 calls a second. In native python this is also about 55 times a second, so I didn't write a multi version
 	 *  of this function.
 	 *
-	 * @param pb the PythonBridge interface to use
 	 * @param exp the expression to minimize and maximize
 	 * @param bounds the interval bounds for each variable used in the expression
 	 * @return an interval bounds on exp (the result)
 	 */
-	public static Interval scipyOptimize(PythonBridge pb, Expression exp, HashMap<String, Interval> bounds)
+	public static Interval scipyOptimize(Expression exp, HashMap<String, Interval> bounds)
 	{
 		ArrayList <Expression> exps = new ArrayList <Expression>(1);
 		ArrayList <HashMap<String, Interval>> b = new ArrayList <HashMap<String, Interval>>(1);
@@ -77,7 +79,7 @@ public class PythonUtil
 		exps.add(exp);
 		b.add(bounds);
 		
-		return scipyOptimize(pb, exps, b).get(0);
+		return scipyOptimize(exps, b).get(0);
 	}
 	
 	/**
@@ -85,14 +87,14 @@ public class PythonUtil
 	 *
 	 * This is a a parallel version the call above. It will use the number of cores available in the system.
 	 *
-	 * @param pb the PythonBridge interface to use
 	 * @param exp_list a list of expression to minimize and maximize
 	 * @param bounds_list a list of interval bounds for each variable used in the expression
 	 * @return an list of interval bounds on exp (the results)
 	 */
-	public static List<Interval> scipyOptimize(PythonBridge pb, List<Expression> expList, 
+	public static List<Interval> scipyOptimize(List<Expression> expList, 
 			List<HashMap<String, Interval>> boundsList)
 	{
+		PythonBridge pb = PythonBridge.getInstance();
 		int size = expList.size();
 		
 		if (size != boundsList.size())
@@ -113,7 +115,7 @@ public class PythonUtil
 			
 			StringBuilder s = new StringBuilder();
 			s.append("def " + FUNC_PREFIX + i + " ((" + varList + ")):\n");
-			s.append("    return " + pyPrinter.print(e) + "\n");
+			s.append("    return " + pyEvaluatePrinter.print(e) + "\n");
 			
 			String res = pb.sendWithTrailingNewline(s.toString());
 			
@@ -177,25 +179,33 @@ public class PythonUtil
 		return rv.toString();
 	}
 
+	/**
+	 * Return an expression which declares sympy variables for each symbol in a Hyst Expression
+	 * @param exp the input expression
+	 * @return the output expression, like "x,y,z=sympy.symbols('x y z ')"
+	 */
 	private static String makeExpressionVariableSymbols(Expression exp)
 	{
 		StringBuilder s = new StringBuilder();
 		Collection <String> variables = AutomatonUtil.getVariablesInExpression(exp);
-
-		String prefix = "";
-		for (String var : variables){
-			s.append(prefix);
-			prefix = ",";
-			s.append(var);
+		
+		if (variables.size() > 0)
+		{
+			String prefix = "";
+			for (String var : variables)
+			{
+				s.append(prefix);
+				prefix = ",";
+				s.append(var);
+			}
+	
+			s.append("=sympy.symbols('");
+	
+			for (String var : variables)
+				s.append(var + " ");
+	
+			s.append("');");
 		}
-
-
-		s.append("=symbols('");
-
-		for (String var : variables)
-			s.append(var + " ");
-
-		s.append("');");
 
 		return s.toString();
 	}
@@ -330,9 +340,10 @@ public class PythonUtil
 	 * @param boundsList a list of interval bounds for each variable used in the expression
 	 * @return a list of resultant interval bounds
 	 */
-	public static List<Interval> intervalOptimizeMulti(PythonBridge pb, Expression exp,
+	public static List<Interval> intervalOptimizeMulti(Expression exp,
 			List<Map<String, Interval>> boundsList)
 	{
+		PythonBridge pb = PythonBridge.getInstance();
 		pb.send("import math");
 		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
@@ -341,7 +352,7 @@ public class PythonUtil
 		s.append(makeExpressionVariableSymbols(exp));
 
 		s.append("[str(v) for v in eval_eq_multi(");
-		s.append(pyPrinter.print(exp));
+		s.append(pyEvaluatePrinter.print(exp));
 		s.append(",[");
 
 		for (Map<String, Interval> bounds : boundsList)
@@ -379,6 +390,40 @@ public class PythonUtil
 
 		return rv;
 	}
+	
+	/**
+	 * Use python-sympy to simplify an expression
+	 * @param e the input expression
+	 * @return the output expression
+	 */
+	public static Expression pythonSimplifyExpression(Expression e)
+	{
+		Expression rv = e;
+		
+		// optimization: only simplify if it's an operation
+		if (e instanceof Operation)
+		{
+			PythonBridge pb = PythonBridge.getInstance();
+			StringBuilder s = new StringBuilder();
+			
+			String symbols = makeExpressionVariableSymbols(e);
+			
+			if (symbols.length() > 0)
+				s.append(symbols);
+			
+			s.append("sympy.simplify(");
+			s.append(pySympyPrinter.print(e));
+			s.append(")");
+			
+			String result = pb.send(s.toString());
+			
+			// substitute back
+			result = result.replace("**", "^");
+			rv = FormulaParser.parseValue(result);
+		}
+		
+		return rv;
+	}
 
 	/**
 	 * Optimize a function in a hyper-rectangle using interval arithmetic over multiple domains. This
@@ -390,9 +435,10 @@ public class PythonUtil
 	 * @param maxSize the maximum width of a domain, in any dimension
 	 * @return a list of resultant interval bounds
 	 */
-	public static List<Interval> intervalOptimizeMulti_bb(PythonBridge pb, Expression exp,
+	public static List<Interval> intervalOptimizeMulti_bb(Expression exp,
 			List<Map<String, Interval>> boundsList, double maxSize)
 	{
+		PythonBridge pb = PythonBridge.getInstance();
 		pb.send("import math");
 		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
@@ -401,7 +447,7 @@ public class PythonUtil
 		s.append(makeExpressionVariableSymbols(exp));
 
 		s.append("[str(v) for v in eval_eq_multi_branch_bound(");
-		s.append(pyPrinter.print(exp));
+		s.append(pyEvaluatePrinter.print(exp));
 		s.append(",[");
 
 		for (Map<String, Interval> bounds : boundsList)
@@ -440,9 +486,14 @@ public class PythonUtil
 		return rv;
 	}
 
-	private static class PythonExpressionPrinter extends DefaultExpressionPrinter
+	/**
+	 * Used for printing expressions that can be evaluated in Python (like math.sin(10))
+	 * @author Stanley Bak
+	 *
+	 */
+	private static class PythonEvaluatePrinter extends DefaultExpressionPrinter
 	{
-		PythonExpressionPrinter()
+		PythonEvaluatePrinter()
 		{
 			super();
 			opNames.put(Operator.POW, "**");
@@ -452,6 +503,26 @@ public class PythonUtil
 			opNames.put(Operator.EXP, "math.exp");
 			opNames.put(Operator.LN, "math.log");
 			opNames.put(Operator.TAN, "math.tan");
+		}
+	}
+	
+	/**
+	 * Used for printing sympy expressions in python
+	 * @author Stanley Bak
+	 *
+	 */
+	private static class PythonSympyPrinter extends DefaultExpressionPrinter
+	{
+		PythonSympyPrinter()
+		{
+			super();
+			opNames.put(Operator.POW, "**");
+			opNames.put(Operator.SQRT, "sympy.sqrt");
+			opNames.put(Operator.SIN, "sympy.sin");
+			opNames.put(Operator.COS, "sympy.cos");
+			opNames.put(Operator.EXP, "sympy.exp");
+			opNames.put(Operator.LN, "sympy.log");
+			opNames.put(Operator.TAN, "sympy.tan");
 		}
 	}
 }

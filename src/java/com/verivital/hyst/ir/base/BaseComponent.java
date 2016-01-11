@@ -38,7 +38,8 @@ public class BaseComponent extends Component
 	
 	/**
 	 * Create a new mode in this hybrid automaton. By default the invariant
-	 * is null (must be manually set) and the flows are x'=null for all x (these must be assigned) 
+	 * is null (must be manually set) and the flows are x'=null for all x (these must be assigned), 
+	 * or flows can be set to null and the mode's urgent flag enabled
 	 * @param name a name for the mode (must be unique)
 	 * @return the created AutomatonMode object
 	 */
@@ -98,7 +99,8 @@ public class BaseComponent extends Component
 	}
 	
 	/**
-	 * Create a new transition in this hybrid automaton
+	 * Create a new transition in this hybrid automaton. 
+	 * Guard is initially null; be sure to assign it or validation will fail.
 	 * @param from the source
 	 * @param to the destination
 	 * @return the created AutomatonTransition object
@@ -289,6 +291,28 @@ public class BaseComponent extends Component
 		rv.addAll(constants.keySet());
 		rv.addAll(labels);
 	
+		return rv;
+	}
+
+	/**
+	 * Find a transition in the automaton
+	 * @param from the mode from
+	 * @param to the mode to
+	 * @return the first transition between modes named 'from' and 'to', or null if not found 
+	 */
+	public AutomatonTransition findTransition(String from, String to)
+	{
+		AutomatonTransition rv = null; 
+		
+		for (AutomatonTransition at : transitions)
+		{
+			if (at.from.name.equals(from) && at.to.name.equals(to))
+			{
+				rv = at;
+				break;
+			}
+		}
+		
 		return rv;
 	}
 }

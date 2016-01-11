@@ -80,36 +80,36 @@ public class Hyst
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
-			{
-					new FlowPrinter(),
-					new DReachPrinter(),
-					new HyCreate2Printer(),
-					new HyCompPrinter(),
-					new PythonQBMCPrinter(),
-					new SpaceExPrinter(),
-					new SMTPrinter(),
-					new SimulinkStateflowPrinter(),
-			};
+	{
+			new FlowPrinter(),
+			new DReachPrinter(),
+			new HyCreate2Printer(),
+			new HyCompPrinter(),
+			new PythonQBMCPrinter(),
+			new SpaceExPrinter(),
+			new SMTPrinter(),
+			new SimulinkStateflowPrinter(),
+	};
 
 	// passes that are run only if the user selects them
 	private static final TransformationPass[] availablePasses =
-			{
-					new AddIdentityResetPass(),
-					new PseudoInvariantPass(),
-					new PseudoInvariantSimulatePass(),
-					new TimeScalePass(),
-					new SubstituteConstantsPass(),
-					new SimplifyExpressionsPass(),
-					new SplitDisjunctionGuardsPass(),
-					new RemoveSimpleUnsatInvariantsPass(),
-					new ShortenModeNamesPass(),
-					new RegularizePass(),
-					new ContinuizationPass(),
-					new HybridizeGridPass(),
-					new HybridizeMixedTriggeredPass(),
-					new FlattenAutomatonPass(),
-					new OrderReductionPass(),
-			};
+	{
+			new AddIdentityResetPass(),
+			new PseudoInvariantPass(),
+			new PseudoInvariantSimulatePass(),
+			new TimeScalePass(),
+			new SubstituteConstantsPass(),
+			new SimplifyExpressionsPass(),
+			new SplitDisjunctionGuardsPass(),
+			new RemoveSimpleUnsatInvariantsPass(),
+			new ShortenModeNamesPass(),
+			new RegularizePass(),
+			new ContinuizationPass(),
+			new HybridizeGridPass(),
+			new HybridizeMixedTriggeredPass(),
+			new FlattenAutomatonPass(),
+			new OrderReductionPass(),
+	};
 
 	// passes that the user has selected
 	private static ArrayList <RequestedTransformationPass> requestedPasses =
@@ -123,7 +123,7 @@ public class Hyst
 		ARG_PARSE_ERROR,
 		INTERNAL_ERROR,
 		GUI_QUIT,
-		EXPORT_AUTOMATON_EXCEPTION,
+		EXPORT_AUTOMATON_EXCEPTION
 	};
 
 	public static void main(String[] args)
@@ -142,7 +142,7 @@ public class Hyst
 			final String loadFilename = (args.length >= 2) ? args[1] : null;
 
 			// use gui
-			System.out.println("Started in GUI mode. For command-line help use the -help flag.");
+			System.out.println("Started in GUI mode. For command-line help use the " + FLAG_HELP + " flag.");
 
 			fixLookAndFeel();
 
@@ -161,7 +161,6 @@ public class Hyst
 			});
 		}
 	}
-
 
 	/**
 	 * Main conversion thread
@@ -358,6 +357,7 @@ public class Hyst
 	private static boolean parseArgs(String[] args)
 	{
 		boolean rv = true;
+		boolean quitAfterUsage = false;
 
 		for (int i = 0; i < args.length; i++)
 		{
@@ -413,7 +413,7 @@ public class Hyst
 				continue;
 
 			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || arg.endsWith(FLAG_GUI))
-				; // ignore
+				quitAfterUsage = true; // ignore
 			else if (arg.equals(FLAG_VERBOSE) || arg.equals(FLAG_VERBOSE_SHORT))
 				verboseMode = true;
 			else if (arg.equals(FLAG_DEBUG) || arg.equals(FLAG_DEBUG_SHORT))
@@ -543,6 +543,9 @@ public class Hyst
 					+ "be derived from the XML filename if not explicitly stated (*.cfg)");
 			rv = false;
 		}
+		
+		if (quitAfterUsage) // if -help was used
+			System.exit(ExitCode.SUCCESS.ordinal());
 
 		return rv;
 	}

@@ -750,13 +750,13 @@ public class SpaceExXMLReader {
 							mTarget.setTimeTriggered(value.equals("true"));
 						}
 						else if (property.equals("initially")) {
-							Expression initialStates = FormulaParser.parseLoc(value);
+							Expression initialStates = FormulaParser.parseInitialForbidden(value);
 									
 							mTarget.setInitialStateConditions(initialStates);
 						}
 						else if (property.equals("forbidden") && value.trim().length() > 0) 
 						{
-							Expression forbiddenStates = FormulaParser.parseLoc(value);
+							Expression forbiddenStates = FormulaParser.parseInitialForbidden(value);
 							
 							mTarget.setForbiddenStateConditions(forbiddenStates);
 						}

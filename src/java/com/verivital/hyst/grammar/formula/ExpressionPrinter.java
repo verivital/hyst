@@ -1,5 +1,7 @@
 package com.verivital.hyst.grammar.formula;
 
+import com.verivital.hyst.ir.AutomatonExportException;
+
 
 
 public abstract class ExpressionPrinter
@@ -16,23 +18,41 @@ public abstract class ExpressionPrinter
 			rv = printOperation((Operation) e);
 		else if (e instanceof Variable)
 			rv = printVariable((Variable) e);
+		else if (e instanceof MatrixExpression)
+			rv = printMatrix((MatrixExpression) e);
+		else if (e instanceof LutExpression)
+			rv = printLut((LutExpression) e);
 		else
-			rv = printOther(e);
+		{
+			try
+			{
+				rv = e.toString();
+			}
+			catch (AutomatonExportException ex)
+			{
+				throw new RuntimeException("No print method defined in ExpressionPrinter for type " + e.getClass().getName());
+			}
+		}
 		
 		return rv;
 	}
 	
-	public String printOther(Expression e)
+	protected String printLut(LutExpression l)
 	{
-		return e.toString();
+		return l.toString(this);
+	}
+
+	protected String printMatrix(MatrixExpression m)
+	{
+		return m.toString(this);
 	}
 	
-	public String printVariable(Variable v)
+	protected String printVariable(Variable v)
 	{
 		return v.name;
 	}
 	
-	public String printConstant(Constant c)
+	protected String printConstant(Constant c)
 	{
 		String rv = null;
 		
@@ -46,17 +66,17 @@ public abstract class ExpressionPrinter
 		return rv;
 	}
 	
-	public String printConstantValue(double d)
+	protected String printConstantValue(double d)
 	{
 		return "" + d;
 	}
 	
-	public String printTrue()
+	protected String printTrue()
 	{
 		return "true";
 	}
 	
-	public String printFalse()
+	protected String printFalse()
 	{
 		return "false";
 	}
@@ -69,13 +89,17 @@ public abstract class ExpressionPrinter
 	 * @param o
 	 * @return
 	 */
-	public String printOperation(Operation o)
+	protected String printOperation(Operation o)
 	{
-		String childrenStr = "";
+		StringBuilder sb = new StringBuilder();
+		sb.append(printOperator(o.op));
 		
 		for (Expression e : o.children)
-			childrenStr += " " + print(e);
+		{
+			sb.append(" ");
+			sb.append(print(e));
+		}
 		
-		return "(" + printOperator(o.op) + childrenStr + ")";
+		return "(" + sb.toString() + ")";
 	}
 }

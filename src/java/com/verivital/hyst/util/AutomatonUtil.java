@@ -1,12 +1,14 @@
 package com.verivital.hyst.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -17,6 +19,9 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.LutExpression;
+import com.verivital.hyst.grammar.formula.MatrixExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -34,6 +39,7 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
  * Generic importer functions
@@ -222,6 +228,10 @@ public abstract class AutomatonUtil
 						catch (ConstantMismatchException e)
 						{
 							throw new AutomatonExportException("Reset contains constant mismatch", e);
+						}
+						catch (UnsupportedConditionException e)
+						{
+							throw new AutomatonExportException("Reset contains noninterval assignment", e);
 						}
 					}
 				}
@@ -463,6 +473,10 @@ public abstract class AutomatonUtil
 		catch (ConstantMismatchException e)
 		{
 			throw new AutomatonExportException("Constant mismatch in initial values.", e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException("Initial states contain noninterval assignment", e);
 		}
 		
 		int numVars = ha.variables.size();
@@ -737,6 +751,289 @@ public abstract class AutomatonUtil
 				}
 			}
 		}
+		
+		return rv;
+	}
+	
+	// these are the flags for the bitmask returned by classifyExpression
+	public static final byte OPS_LINEAR = 1 << 0; // operators like add, subtract, multiply, negative
+	public static final byte OPS_NONLINEAR = 1 << 1; // division, exponentiation, or sine, sqrt, ln, ...
+	public static final byte OPS_BOOLEAN = 1 << 2; // boolean expression operators (==, >=, &&, !)
+	public static final byte OPS_LOC = 1 << 3; // loc() functions
+	public static final byte OPS_LUT = 1 << 4; // look up table subexpressions
+	public static final byte OPS_MATRIX = 1 << 5; // matrix subexpressions
+	
+	/**
+	 * Classify an Expression's operators. This returns a bitmask, which you can use to check for various parts 
+	 * of the expression. For example, val = classifyExpression(e);   if (val | NONLINEAR) {expression has nonlinear operators}.
+	 * 
+	 * Each category is classified separately, for example classifying 'x^2' will set HAS_NONLINEAR, but 
+	 * not HAS_LINEAR, since there are no linear operations in the expression.
+	 * 
+	 * Notice that the operator classification is NOT the same as the expression classification, 
+	 * for example "x*y" is a nonlinear expression, but only uses linear operators (multiplication)
+	 * 
+	 * @param e the expression to check
+	 * @return a bitmask composed of OPS_* values binary or'd ('|') together like (OPS_LINEAR | OPS_NONLINEAR)
+	 */
+	public static byte classifyExpressionOps(Expression e)
+	{
+		byte rv = 0;
+		
+		final Collection <Operator> LINEAR_OPS = Arrays.asList(new Operator[]{Operator.ADD, Operator.SUBTRACT, 
+				Operator.MULTIPLY, Operator.NEGATIVE});
+		
+		final Collection <Operator> BOOLEAN_OPS = Arrays.asList(new Operator[]{Operator.AND, Operator.OR, 
+				Operator.EQUAL, Operator.LESS, Operator.GREATER, Operator.LESSEQUAL, Operator.GREATEREQUAL, 
+				Operator.NOTEQUAL, Operator.LOGICAL_NOT});
+		
+		final Collection <Operator> NONLINEAR_OPS = Arrays.asList(new Operator[]{Operator.POW, Operator.DIVIDE, 
+				Operator.COS, Operator.SIN, Operator.SQRT, Operator.TAN, Operator.EXP, Operator.LN});
+		
+		Operation o = e.asOperation();
+		
+		if (o != null)
+		{
+			if (LINEAR_OPS.contains(o.op))
+				rv |= OPS_LINEAR;
+			else if (NONLINEAR_OPS.contains(o.op))
+				rv |= OPS_NONLINEAR;
+			else if (BOOLEAN_OPS.contains(o.op))
+				rv |= OPS_BOOLEAN;
+			else if (o.op == Operator.LOC)
+				rv |= OPS_LOC;
+			
+			for (Expression child : o.children)
+				rv |= classifyExpressionOps(child);
+		}
+		else if (e == Constant.TRUE || e == Constant.FALSE)
+			rv |= OPS_BOOLEAN;
+		else if (e instanceof MatrixExpression)
+			rv |= OPS_MATRIX;
+		else if (e instanceof LutExpression)
+			rv |= OPS_LUT;
+		
+		return rv;
+	}
+	
+	/**
+	 * Check if an Expression contains only operations from a set of allowed classes (linear, nonlinear, ect.)
+	 * @param e the expression
+	 * @param allowedClasses a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR, HAS_NONLINEAR
+	 * @return
+	 */
+	public static boolean expressionContainsOnlyAllowedOps(Expression e, byte ... allowedClasses)
+	{
+		byte val = classifyExpressionOps(e);
+		
+		for (byte b : allowedClasses)
+			val &= ~b; // turns off bits in b if they were on
+		
+		return val == 0;
+	}
+	
+	/**
+	 * Create a single-mode configuration with a mode named "on", for unit testing
+	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
+	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 * @return the constructed configuration
+	 */
+	public static Configuration makeDebugConfiguration(String[][] dynamics) 
+	{
+		final int VAR_INDEX = 0;
+		final int FLOW_INDEX = 1;
+		final int INIT_INDEX = 2;
+		BaseComponent ha = new BaseComponent();
+		AutomatonMode am = ha.createMode("on");
+		StringBuilder initStringBuilder = new StringBuilder();
+		
+		for (int i = 0; i < dynamics.length; ++i)
+		{
+			if (dynamics[i].length < 2 || dynamics[i].length > 3)
+				throw new AutomatonExportException("expected 2 or 3 values in passed-in array (varname, flow, init)");
+			
+			String var = dynamics[i][VAR_INDEX];
+			String flow = var + "' == " + dynamics[i][FLOW_INDEX];
+			
+			ha.variables.add(var);
+			
+			String initVal = dynamics[i].length == 3 ? dynamics[i][INIT_INDEX] : "0";
+			String initStr = var + " == " + initVal;
+					
+			if (initStringBuilder.length() > 0)
+				initStringBuilder.append(" & " + initStr);
+			else
+				initStringBuilder.append(initStr);
+			
+			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			am.flowDynamics.put(var, new ExpressionInterval(flowExp));
+		}
+		
+		Configuration c = new Configuration(ha);
+
+		am.invariant = Constant.TRUE;
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
+		c.init.put("on", FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
+			
+		c.validate();
+		return c;
+	}
+	
+	/**
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
+	 * a counter-example description string if they are not.
+	 * @param expected the expected expression
+	 * @param actual the actual expression
+	 */
+	public static String areExpressionsEqual(Expression expected, Expression actual)
+	{
+		String rv = null;
+	
+		Set <String> varSet = AutomatonUtil.getVariablesInExpression(expected);
+		varSet.addAll(AutomatonUtil.getVariablesInExpression(actual));
+		
+		ArrayList <String> varList = new ArrayList <String>();
+		varList.addAll(varSet);
+		int numVars = varList.size();
+		
+		ArrayList <HyperPoint> samples = new ArrayList <HyperPoint>(); 
+		samples.add(new HyperPoint(numVars)); // add 0
+		
+		// add 1 for each dimension
+		for (int d = 0; d < numVars; ++d)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			hp.dims[d] = 1;
+			samples.add(hp);
+		}
+		
+		// add -1 for each dimension
+		for (int d = 0; d < numVars; ++d)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			hp.dims[d] = -1;
+			samples.add(hp);
+		}
+		
+		// add 1 for every dimension
+		HyperPoint one = new HyperPoint(numVars);
+		
+		for (int d = 0; d < numVars; ++d)
+			one.dims[d] = 1;
+
+		samples.add(one);
+			
+		// add a few deterministic random points
+		int NUM_RANDOM_SAMPLES = 5;
+		int seed = varList.hashCode();
+		Random r = new Random(seed);
+		
+		for (int n = 0; n < NUM_RANDOM_SAMPLES; ++n)
+		{
+			HyperPoint hp = new HyperPoint(numVars);
+			
+			for (int d = 0; d < numVars; ++d)
+				hp.dims[d] = r.nextDouble() * 20 - 10;
+			
+			samples.add(hp);
+		}
+		
+		// compare a and b at the constructed sample points
+		double TOL = 1e-9;
+		
+		for (HyperPoint hp : samples)
+		{
+			double expectedVal = RungeKutta.evaluateExpression(expected, hp, varList);
+			double actualVal = RungeKutta.evaluateExpression(actual, hp, varList);
+			
+			if (Math.abs(expectedVal - actualVal) > TOL)
+			{
+				rv = "Expressions expected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
+						"' differ at point" + varList + " = " + Arrays.toString(hp.dims) + 
+						".\nexpected evalues to " + expectedVal + "; actual evalutes to " + actualVal;
+				break;
+			}
+		}
+			
+		return rv;
+	}
+	
+	/**
+	 * Return an expression taking the time derivative of the given expression. This consists of substituting the
+	 * symbolic derivative for each variable
+	 * @param e the expression where to do the substitution
+	 * @param timeDerivatives a map of variable->time derivative for each variable. All other Variable expressions will
+	 *                        be assumed to be constants
+	 * @return the derivative of e
+	 */
+	public static Expression derivativeOf(Expression e, Map <String, Expression> timeDerivatives)
+	{
+		Expression rv = null;
+		
+		if (e instanceof Variable)
+		{
+			String v = ((Variable)e).name;
+			
+			if (timeDerivatives.keySet().contains(v))
+				rv = timeDerivatives.get(v).copy();
+			else
+				rv = new Constant(0); // derivative of a constant is zero
+		}
+		else if (e instanceof Constant)
+			rv = new Constant(0);
+		else if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+			
+			if (o.op == Operator.SUBTRACT)
+				o = new Operation(Operator.ADD, o.getLeft(), new Operation(Operator.NEGATIVE, o.getRight()));
+			
+			if (o.op == Operator.NEGATIVE)
+				o = new Operation(Operator.MULTIPLY, new Constant(-1), o.children.get(0));
+			
+			if (o.op == Operator.ADD)
+			{
+				ArrayList <Expression> childDers = new ArrayList <Expression>();
+				
+				for (Expression child : o.children)
+				{
+					Expression childDer = derivativeOf(child, timeDerivatives);
+					
+					if (!(childDer instanceof Constant) || ((Constant)childDer).getVal() != 0)
+						childDers.add(childDer);
+				}
+				
+				if (childDers.size() == 0)
+					rv = new Constant(0);
+				else if (childDers.size() == 1)
+					rv = childDers.get(0);
+				else
+					rv = new Operation(Operator.ADD, childDers);
+			}
+			else if (o.op == Operator.MULTIPLY)
+			{
+				Expression leftDer = derivativeOf(o.getLeft(), timeDerivatives);
+				Expression rightDer = derivativeOf(o.getRight(), timeDerivatives);
+				
+				// chain rule: (xy)' = x'y + xy'
+				
+				Operation leftSide = new Operation(Operator.MULTIPLY, leftDer, o.getRight());
+				Operation rightSide = new Operation(Operator.MULTIPLY, o.getLeft(), rightDer);
+				
+				if (leftDer instanceof Constant && ((Constant)leftDer).getVal() == 0)
+					rv = rightSide;
+				else if (rightDer instanceof Constant && ((Constant)rightDer).getVal() == 0)
+					rv = leftSide;
+				else
+					rv = new Operation(Operator.ADD, leftSide, rightSide);
+			}
+			else
+				throw new AutomatonExportException("Unsupported Operation in derivativeOf '" 
+						+ o.op.toDefaultString() + "': " + e.toDefaultString());
+		}
+		else
+			throw new AutomatonExportException("Unsupported Expression type in derivativeOf: " + e.toDefaultString());
 		
 		return rv;
 	}
