@@ -56,7 +56,15 @@ def simulate(ha, init_state, init_mode, time, num_steps=500):
             t = active_transitions[0]
             events.append((str(t), state))
             mode = t.to_mode
-            state = t.reset(state)
+            post_state = t.reset(state)
+
+            # resets to None are identity resets
+            for dim in xrange(len(state)):
+                if post_state[dim] == None:
+                    post_state[dim] = state[dim]
+
+            state = post_state
+
             continue
 
         # check continuous post
@@ -96,10 +104,13 @@ def plot_sim_result(result, filename, dim_x, dim_y, draw_events=True, axis_range
 
     if len(traces) == 0:
         raise RuntimeError('Result.traces contains no points')
-    elif dim_x < 0 or dim_x >= len(traces[0]):
-        raise RuntimeError('X dimension out of bounds: ' + str(dim_x))
-    elif dim_y < 0 or dim_y >= len(traces[0]):
-        raise RuntimeError('Y dimension out of bounds: ' + str(dim_x))
+
+    num_dims = len(traces[0][0])
+
+    if dim_x < 0 or dim_x >= num_dims:
+        raise RuntimeError('X dimension out of bounds: ' + str(dim_x) + ', should be [0, ' + num_dims + ")")
+    elif dim_y < 0 or dim_y >= num_dims:
+        raise RuntimeError('Y dimension out of bounds: ' + str(dim_y) + ', shold be [0, ' + num_dims + ")")
 
     for mode_sim in traces:
         x = [val[dim_x] for val in mode_sim]
@@ -108,7 +119,14 @@ def plot_sim_result(result, filename, dim_x, dim_y, draw_events=True, axis_range
         plt.plot(x, y)
 
     if draw_events:
-        above = True
+        # possible label locations
+        locs = [(15, 20, 'left', 'bottom', 'angle3,angleA=180,angleB=-90'), 
+                (0, 25, 'center', 'bottom', 'angle3,angleA=-90,angleB=-89'), 
+                (-15, 20, 'right', 'bottom', 'angle3,angleA=0,angleB=-90'), 
+                (15, -20, 'left', 'top', 'angle3,angleA=180,angleB=90'), 
+                (0, -25, 'center', 'top', 'angle3,angleA=90,angleB=89'), 
+                (-15, -20, 'right', 'top', 'angle3,angleA=0,angleB=90'),]
+        loc_index = 0
 
         for event in events:
             msg = event[0]
@@ -116,21 +134,33 @@ def plot_sim_result(result, filename, dim_x, dim_y, draw_events=True, axis_range
             x = state[dim_x]
             y = state[dim_y]
 
-            # alternate labels between above and below
-            y_offset = 20
-            above = not above
+            location = locs[loc_index]
+            loc_x = location[0]
+            loc_y = location[1]
+            loc_ax = location[2]
+            loc_ay = location[3]
+            con = location[4]
 
-            if above:
-                y_offset = -20
+            # cycle through different label locations
+            loc_index += 1
 
-            plt.annotate(msg, xy=(x, y), xytext=(20, y_offset), \
-                         textcoords='offset points', horizontalalignment='left', \
-                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.6"))
+            if loc_index >= len(locs):
+                loc_index = 0
+
+            #plt.plot([x], [y], 'o')
+            plt.annotate(msg, xy=(x, y), xytext=(loc_x, loc_y), \
+                         textcoords='offset points', horizontalalignment=loc_ax, verticalalignment=loc_ay, \
+                        arrowprops=dict(arrowstyle="->", connectionstyle=con))
         
     if draw_func is not None:
         draw_func()
 
-    plt.savefig(filename)
+    plt.savefig(filename, dpi=300)
+
+
+
+
+
 
 
 

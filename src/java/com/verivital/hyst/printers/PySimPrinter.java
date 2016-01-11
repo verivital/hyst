@@ -13,7 +13,6 @@ import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -22,6 +21,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.PreconditionsFlag;
 
 
 /**
@@ -36,7 +36,7 @@ public class PySimPrinter extends ToolPrinter
 	
 	public PySimPrinter()
 	{
-		
+		preconditions.skip(PreconditionsFlag.NO_URGENT); // skip the 'no urgent modes' check
 	}
 	
 	@Override
@@ -84,8 +84,10 @@ public class PySimPrinter extends ToolPrinter
 			*/
 			
 			printLine(am.name + " = ha.new_mode('" + am.name + "')");
-			printLine(am.name + ".der = lambda state, _: " + getMapString(am.flowDynamics));
 			printLine(am.name + ".inv = lambda state: " + am.invariant);
+
+			if (!am.urgent)
+				printLine(am.name + ".der = lambda state, _: " + getMapString(am.flowDynamics));
 		}
 	}
 	
@@ -97,7 +99,6 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	private String getMapString(Map <String, ExpressionInterval> map)
 	{
-		
 		StringBuffer rv = new StringBuffer();
 		rv.append("[");
 		
@@ -109,7 +110,7 @@ public class PySimPrinter extends ToolPrinter
 			ExpressionInterval ei = map.get(var);
 			
 			if (ei == null)
-				rv.append(Expression.expressionPrinter.print(new Variable(var)));
+				rv.append("None");
 			else
 				rv.append(ei.getExpression());
 		}
