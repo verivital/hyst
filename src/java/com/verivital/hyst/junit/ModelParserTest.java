@@ -104,24 +104,18 @@ public class ModelParserTest
 	{
 		String path = UNIT_BASEDIR + "const_model/";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
-			path + "const_model.cfg",
-			path + "const_model.xml"));
-		
-		// const x should be converted to a variable
-		BaseComponent bc = (BaseComponent)c.root;
-		
-		Assert.assertTrue("x is initially a constant", bc.constants.get("a00o") != null);
-		Assert.assertTrue("x is initially an interval", bc.constants.get("a00o").isConstant() == false);
-		
-		// run conversion pass of interval constants -> variables
-		new ConvertIntervalConstantsPass().runTransformationPass(c, null);
-		
-		Assert.assertTrue("x is no longer a constant", !bc.constants.containsKey("a00o"));
-		Assert.assertTrue("x was converted to a variable", bc.variables.contains("a00o"));
-		Assert.assertTrue("x is no longer a constant in the model", !bc.constants.containsKey("a00o"));
-		Assert.assertTrue("x has dynamics a00o' == 0", 
-				bc.modes.values().iterator().next().flowDynamics.get("a00o").equalsInterval(new Interval(0)));
+		try
+		{
+			Configuration c = flatten(SpaceExImporter.importModels(
+				path + "const_model.cfg",
+				path + "const_model.xml"));
+			
+			Assert.fail("Exception expected due to undefined constant param in network component");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
     }
 	
 	@Test
