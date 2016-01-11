@@ -277,6 +277,7 @@ public class Classification
                     linearMatrix = new double[ha.variables.size()][size];
                     for (ExpressionInterval ei : m.flowDynamics.values()){
                             Expression e = simplifyExpression(ei.getExpression());
+                            
                             findCoefficient(i,e);
                             i++;
                     }
@@ -289,7 +290,7 @@ public class Classification
     private void findCoefficient(int i, Expression e) {
    
             if (e instanceof Variable) {
-                    linearMatrix[i][varID.get(e.toString())] = 1;
+                    linearMatrix[i][varID.get(e.toDefaultString())] = 1;
             } else if (e instanceof Operation) {
 
                     Operation o = (Operation) e;
@@ -297,23 +298,23 @@ public class Classification
                             Expression l = o.getLeft();
                             Expression r = o.getRight();                             
                             if (r instanceof Variable && l instanceof Constant) {
-                                    linearMatrix[i][varID.get(r.toString())] = ((Constant) l).getVal();
+                                    linearMatrix[i][varID.get(r.toDefaultString())] = ((Constant) l).getVal();
                                     if (o.getParent() != null) {
                                             if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
-                                                    linearMatrix[i][varID.get(r.toString())] = -linearMatrix[i][varID.get(r.toString())];
+                                                    linearMatrix[i][varID.get(r.toDefaultString())] = -linearMatrix[i][varID.get(r.toDefaultString())];
                                     }
                             } else if (l instanceof Variable && r instanceof Constant) {
-                                    linearMatrix[i][varID.get(l.toString())] = ((Constant) r).getVal();
+                                    linearMatrix[i][varID.get(l.toDefaultString())] = ((Constant) r).getVal();
                                     if (o.getParent() != null) {
                                             if (o.getParent().op == Operator.SUBTRACT && o.getParent().getRight().equals(o))
-                                                    linearMatrix[i][varID.get(l.toString())] = -linearMatrix[i][varID.get(l.toString())];
+                                                    linearMatrix[i][varID.get(l.toDefaultString())] = -linearMatrix[i][varID.get(l.toDefaultString())];
                                     }
                             }
                     } else if (o.op == Operator.ADD || o.op == Operator.SUBTRACT) {
                             if (o.getRight() instanceof Variable)
-                                    linearMatrix[i][varID.get(o.getRight().toString())] = 1;
+                                    linearMatrix[i][varID.get(o.getRight().toDefaultString())] = 1;
                             if (o.getLeft() instanceof Variable)
-                                    linearMatrix[i][varID.get(o.getLeft().toString())] = 1;
+                                    linearMatrix[i][varID.get(o.getLeft().toDefaultString())] = 1;
                             if (o.getRight() instanceof Operation || o.getLeft() instanceof Operation) {
                                     findCoefficient(i, o.getRight());
                                     findCoefficient(i, o.getLeft());
