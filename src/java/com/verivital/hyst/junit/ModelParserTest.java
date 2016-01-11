@@ -2,12 +2,17 @@ package com.verivital.hyst.junit;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -43,8 +48,20 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 
 // Tests dealing with aspects of the modelimporter
+@RunWith(Parameterized.class)
 public class ModelParserTest
 {
+	@Parameters
+    public static Collection<Object[]> data() 
+    {
+    	return Arrays.asList(new Object[][]{{false}, {true}});
+    }
+	
+    public ModelParserTest(boolean block) 
+	{
+    	PythonBridge.setBlockPython(block);
+    }
+    
 	@Before 
 	public void setUpClass() 
 	{      
