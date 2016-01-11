@@ -25,7 +25,6 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
@@ -34,6 +33,7 @@ import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -106,7 +106,7 @@ public class ModelParserTest
 		
 		try
 		{
-			Configuration c = flatten(SpaceExImporter.importModels(
+			flatten(SpaceExImporter.importModels(
 				path + "const_model.cfg",
 				path + "const_model.xml"));
 			
@@ -1136,7 +1136,7 @@ public class ModelParserTest
 		AutomatonMode mode = ha.modes.get("running");
                 cls.setLinearMatrix(mode);
                 
-        System.out.println("mode = " + mode);
+        //System.out.println("mode = " + mode);
                 
 		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
@@ -1149,14 +1149,18 @@ public class ModelParserTest
     @Test
     public void testClassifySubtract()
     {
-    	String[][]dy = {{"x","-1 * x - 2 * y - 0.2 * u"}, {"y", "4 * x - 3 * y + 2 * u"}, {"u", "1"}};
-    			
+    	String[][]dy = {{"x","-x - 2 * y -0.2 * u"}, {"y", "4 * x - 3 * y + 2 * u"}, {"u", "1"}};
+    	// Automaton with three variables ['x', 'y', 'u'] and flows: 
+    	// x' == -x - 2 * y -0.2 * u
+    	// y' == 4 * x - 3 * y + 2 * u
+    	// u' == 1
+    	
     	Configuration c = AutomatonUtil.makeDebugConfiguration(dy);
     	BaseComponent ha = ((BaseComponent)c.root);
     	AutomatonMode mode = ha.modes.values().iterator().next();
     	
     	Classification cls = new Classification();
-    	cls.ha = ha;
+    	Classification.ha = ha;
         cls.setVarID(ha); 
     	cls.setLinearMatrix(mode);
         
