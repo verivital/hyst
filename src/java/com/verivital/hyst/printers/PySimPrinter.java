@@ -279,7 +279,7 @@ public class PySimPrinter extends ToolPrinter
 	@Override
 	public boolean isInRelease()
 	{
-		return false;
+		return true;
 	}
 	
 	public Map <String, String> getDefaultParams()

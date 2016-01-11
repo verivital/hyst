@@ -37,6 +37,7 @@ import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
+import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SMTPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -89,6 +90,7 @@ public class Hyst
 			new SpaceExPrinter(),
 			new SMTPrinter(),
 			new SimulinkStateflowPrinter(),
+			new PySimPrinter(),
 	};
 
 	// passes that are run only if the user selects them
