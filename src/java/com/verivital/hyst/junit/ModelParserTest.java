@@ -25,6 +25,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
@@ -103,24 +104,18 @@ public class ModelParserTest
 	{
 		String path = UNIT_BASEDIR + "const_model/";
 		
-		Configuration c = flatten(SpaceExImporter.importModels(
-			path + "const_model.cfg",
-			path + "const_model.xml"));
-		
-		// const x should be converted to a variable
-		BaseComponent bc = (BaseComponent)c.root;
-		
-		Assert.assertTrue("x is initially a constant", bc.constants.get("a00o") != null);
-		Assert.assertTrue("x is initially an interval", bc.constants.get("a00o").isConstant() == false);
-		
-		// run conversion pass of interval constants -> variables
-		new ConvertIntervalConstantsPass().runTransformationPass(c, null);
-		
-		Assert.assertTrue("x is no longer a constant", !bc.constants.containsKey("a00o"));
-		Assert.assertTrue("x was converted to a variable", bc.variables.contains("a00o"));
-		Assert.assertTrue("x is no longer a constant in the model", !bc.constants.containsKey("a00o"));
-		Assert.assertTrue("x has dynamics a00o' == 0", 
-				bc.modes.values().iterator().next().flowDynamics.get("a00o").equalsInterval(new Interval(0)));
+		try
+		{
+			Configuration c = flatten(SpaceExImporter.importModels(
+				path + "const_model.cfg",
+				path + "const_model.xml"));
+			
+			Assert.fail("Exception expected due to undefined constant param in network component");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
     }
 	
 	@Test
@@ -1027,7 +1022,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicTwoVars()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "two_var.cfg",
 				path + "two_var.xml");
@@ -1036,7 +1030,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1052,7 +1046,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicThreeVars()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "three_var.cfg",
 				path + "three_var.xml");
@@ -1061,7 +1054,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1078,7 +1071,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicOneVar()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "one_var.cfg",
 				path + "one_var.xml");
@@ -1087,7 +1079,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1103,7 +1095,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicTimeHAOneVar()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "time_flow_one_var.cfg",
 				path + "time_flow_one_var.xml");
@@ -1112,7 +1103,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1127,7 +1118,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicTwoVarsOneInput()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "two_var_one_input.cfg",
 				path + "two_var_one_input.xml");
@@ -1136,7 +1126,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1156,7 +1146,6 @@ public class ModelParserTest
 	public void testConvertLinearDynamicTwoVarTwoHavocTwoInput()
 	{
 		String path = UNIT_BASEDIR + "linear_dynamic/";
-		System.out.println(path);
 		SpaceExDocument test1 = SpaceExImporter.importModels(
 				path + "four_var_two_input.cfg",
 				path + "four_var_two_input.xml");
@@ -1172,7 +1161,7 @@ public class ModelParserTest
 		//BaseComponent ha = (BaseComponent)c.root;
                 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;

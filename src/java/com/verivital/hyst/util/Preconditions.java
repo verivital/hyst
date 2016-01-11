@@ -87,6 +87,18 @@ public class Preconditions
 		
 		if (!skip[PreconditionsFlag.NO_URGENT.ordinal()])
 			Preconditions.noUrgentDynamics(c.root);
+		
+		if (!skip[PreconditionsFlag.ALL_CONSTANTS_DEFINED.ordinal()]) 
+			Preconditions.allConstantsDefined(c.root);
+	}
+
+	private static void allConstantsDefined(Component root)
+	{
+		for (Entry<String, Interval> e : root.getAllConstants().entrySet())
+		{
+			if (e.getValue() == null)
+				throw new PreconditionsFailedException("Constant '" + e.getKey() + "' was not defined");
+		}
 	}
 
 	/**
