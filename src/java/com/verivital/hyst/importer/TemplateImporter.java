@@ -16,6 +16,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.util.AutomatonUtil;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
@@ -88,6 +89,8 @@ public class TemplateImporter
 			
 			templates.put(name, rv);
 		}
+		
+		Hyst.logDebug("Instantiated template '" + name + "' as:\n" + rv);
 		
 		return rv;
 	}

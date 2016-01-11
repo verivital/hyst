@@ -11,15 +11,24 @@ function translateAutomaton( model, config, options )
     outputVars = java.util.HashMap();
     
     % translate each component normally
-    componentsMap = config.root.template.children;
-    componentsIt = componentsMap.entrySet().iterator();
-    idx = 1;
-    while (componentsIt.hasNext())
-        component = componentsIt.next();
-        [charts(idx), inputVars, outputVars] = ...
-            addNetworkComponent(model, component, options, config, idx, ...
-                isAddSignals, inputVars, outputVars);
-        idx = idx + 1;
+    if isa(config.root.template, 'com.verivital.hyst.ir.network.NetworkComponent')
+        componentsMap = config.root.template.children;
+        componentsIt = componentsMap.entrySet().iterator();
+        idx = 1;
+        while (componentsIt.hasNext())
+            component = componentsIt.next();
+            [charts(idx), inputVars, outputVars] = ...
+                addNetworkComponent(model, component, options, config, idx, ...
+                    isAddSignals, inputVars, outputVars);
+            idx = idx + 1;
+        end
+    elseif isa(config.root.template, 'com.verivital.hyst.ir.base.BaseComponent')
+        % TODO: need to fix models with only base components (e.g., cruise
+        % control), as the changes to support networks has broken this.
+        %
+        %[charts(1), inputVars, outputVars] = ...
+        %    addNetworkComponent(model, config.root, options, config, 1, ...
+        %        isAddSignals, inputVars, outputVars);
     end
     
     % post-processing: add a scope block and signals if activated
@@ -90,7 +99,7 @@ function [ chart, inputVars, outputVars ] = addNetworkComponent( model, componen
         chart.ChartUpdate = 'CONTINUOUS';
     else
         chart.ChartUpdate = 'DISCRETE';
-        chart.SampleTime ='1/50000';
+        chart.SampleTime ='1/50000'; % TODO: why is this being set to a magic number?
     end
     % LUAN TODO next: refactor and merge these, all of this should be the same
     % for the semantics vs. non-semantics preserving converters

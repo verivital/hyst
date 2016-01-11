@@ -25,6 +25,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
 import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
@@ -93,6 +94,28 @@ public class ModelParserTest
 		Assert.assertTrue("x is no longer a constant in the model", !bc.constants.containsKey("x"));
 		Assert.assertTrue("x has dynamics x' == 0", 
 				bc.modes.values().iterator().next().flowDynamics.get("x").equalsInterval(new Interval(0)));
+    }
+	
+	/**
+	 * Model has a 'const' value which is defined in the model and not in the initial conditions
+	 */
+	@Test
+    public void testParseModelConstants() 
+	{
+		String path = UNIT_BASEDIR + "const_model/";
+		
+		try
+		{
+			Configuration c = flatten(SpaceExImporter.importModels(
+				path + "const_model.cfg",
+				path + "const_model.xml"));
+			
+			Assert.fail("Exception expected due to undefined constant param in network component");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
     }
 	
 	@Test
@@ -1009,7 +1032,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1033,7 +1056,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1058,7 +1081,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1082,7 +1105,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1105,7 +1128,7 @@ public class ModelParserTest
 		BaseComponent ha = (BaseComponent)c.root;
 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;
@@ -1160,7 +1183,7 @@ public class ModelParserTest
 		//BaseComponent ha = (BaseComponent)c.root;
                 
 		Classification cls = new Classification();
-                cls.ha = ha;
+		Classification.ha = ha;
                 cls.setVarID(ha); 
                 SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
                 sp.ha = ha;

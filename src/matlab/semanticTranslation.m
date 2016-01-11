@@ -38,7 +38,7 @@ function semanticTranslation( chart, config, ha, modelName, optEagerViolation )
     CONSTS = ha.constants;
     
     % Java printer
-    printer = com.verivital.hyst.printers.StateflowSpPrinter(...
+    printer = com.verivital.hyst.printers.SimulinkStateflowPrinter(...
         VARS, IS_ADD_EPS, prettyPrintThreshold);
     
     printer.setConfig(config);
