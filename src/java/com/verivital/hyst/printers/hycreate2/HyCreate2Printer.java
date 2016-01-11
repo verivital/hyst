@@ -647,7 +647,7 @@ public class HyCreate2Printer extends ToolPrinter
 	}
 
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "//";
 	}

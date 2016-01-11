@@ -555,7 +555,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		// config file comments are // and /* */, while xml comments are <!-- -->
 		return getCommentCharacterStart() + getCommentCharacterEnd();

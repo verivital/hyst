@@ -37,7 +37,7 @@ public abstract class ToolPrinter
 	// don't need to be modified
 	protected String indentation = "";
 	protected String indentationAmount = "  ";
-	protected String commentChar = getCommentCharacter();
+	protected String commentChar = getCommentPrefix();
 	protected String decreaseIndentationString = "}";
 	
 	// checks to do before printing (assign to the preconditions.skip in your ToolPrinter constructor to omit checks)
@@ -159,7 +159,7 @@ public abstract class ToolPrinter
 		if (outputType == OutputType.STDOUT || outputType == OutputType.FILE)
 			outputStream.println();
 		else if (outputType == OutputType.GUI)
-			outputFrame.addOutput("\n");
+			outputFrame.addOutput("");
 	}
 
 	/**
@@ -276,7 +276,7 @@ public abstract class ToolPrinter
 	 * Get a single-line comment character for the tool's output format
 	 * @return
 	 */
-	protected abstract String getCommentCharacter();
+	protected abstract String getCommentPrefix();
 
 	/**
 	 * Should this tool be considered release-quality, which will make it show up in the GUI

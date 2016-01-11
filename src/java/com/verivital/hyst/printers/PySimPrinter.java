@@ -13,6 +13,8 @@ import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.ExpressionPrinter;
+import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -31,7 +33,6 @@ import com.verivital.hyst.util.AutomatonUtil;
 public class PySimPrinter extends ToolPrinter
 {
 	private BaseComponent ha;
-	private int DEFAULT_MAX_JUMPS = 999999999;
 	
 	public PySimPrinter()
 	{
@@ -39,9 +40,9 @@ public class PySimPrinter extends ToolPrinter
 	}
 	
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
-		return "#";
+		return "# ";
 	}
 	
 	/**
@@ -88,12 +89,14 @@ public class PySimPrinter extends ToolPrinter
 		}
 	}
 	
-
+	/**
+	 * Gets a map string. Null values get mapped to the variable name
+	 * if x' == x+1 and y' == y-x, this would give: '[x + 1,  y - x]'
+	 * @param map
+	 * @return the mapped string
+	 */
 	private String getMapString(Map <String, ExpressionInterval> map)
 	{
-		// if x' == x+1 and y' == y-x, this would give:
-		// [x + 1,  y - x]
-		
 		
 		StringBuffer rv = new StringBuffer();
 		rv.append("[");
@@ -103,7 +106,12 @@ public class PySimPrinter extends ToolPrinter
 			if (rv.length() > 1)
 				rv.append(", ");
 			
-			rv.append(map.get(var));
+			ExpressionInterval ei = map.get(var);
+			
+			if (ei == null)
+				rv.append(Expression.expressionPrinter.print(new Variable(var)));
+			else
+				rv.append(ei.getExpression());
 		}
 		
 		rv.append("]");
@@ -137,12 +145,14 @@ public class PySimPrinter extends ToolPrinter
 	private void printProcedure() 
 	{
 		printLine("import matplotlib.pyplot as plt");
-		printLine("from hybrid_automaton import HybridAutomaton");
+		printLine("from pysim.hybrid_automaton import HybridAutomaton");
+		printLine("from pysim.hybrid_automaton_sim import simulate, plot_sim_result");
 		printNewline();
 		
 		printLine("def main():");
 		increaseIndentation();
-		printLine("'''main entry point'''");
+		printLine("'''simulate the model'''");
+		printComment("Variable ordering: " + ha.variables);
 
 		printLine("ha = HybridAutomaton()");
 		
@@ -157,6 +167,7 @@ public class PySimPrinter extends ToolPrinter
 		decreaseIndentation();
 		
 		// check if main module
+		printNewline();
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
 		printLine("main()");
@@ -174,10 +185,11 @@ public class PySimPrinter extends ToolPrinter
 		
 		printNewline();
 		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
-		printLine("init = [" + join(",", initPt.dims) + "]");
-		printLine("init_mode = " + config.init.keySet().iterator().next());
+		printLine("init = [" + join(", ", initPt.dims) + "]");
+		printLine("init_mode = '" + config.init.keySet().iterator().next() + "'");
 		printLine("max_time = " + getTimeParam());
-		printLine("result = ha.simulate(init, init_mode, max_time)");
+		printLine("result = simulate(ha, init, init_mode, max_time)");
+		printNewline();
 	}
 	
 	private String join(String sep, double[] vals)
@@ -238,6 +250,24 @@ public class PySimPrinter extends ToolPrinter
 		ArrayList <String> vars = ha.variables;
 		Map<String, Interval> constants = ha.constants;
 		String BASE = "state";
+		
+		public PySimExpressionPrinter()
+		{
+			this.opNames.put(Operator.AND, "and");
+			this.opNames.put(Operator.OR, "or");
+		}
+		
+		@Override
+		protected String printTrue()
+		{
+			return "True";
+		}
+		
+		@Override
+		protected String printFalse()
+		{
+			return "False";
+		}
 		
 		@Override
 		protected String printVariable(Variable v)

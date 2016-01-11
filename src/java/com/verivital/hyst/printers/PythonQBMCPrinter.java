@@ -787,7 +787,7 @@ public class PythonQBMCPrinter  extends ToolPrinter
 	}
 
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "#";
 	}
