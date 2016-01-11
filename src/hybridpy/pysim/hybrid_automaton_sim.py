@@ -29,7 +29,7 @@ def simulate(ha, init_state, init_mode, time, num_steps=500):
     if mode == None:
         raise RuntimeError("Initial mode named '" + str(init_mode) + "' not found in automaton.")
 
-    events.append(('init', state))
+    events.append(('Init', state))
 
     while steps_left > 0:
         steps_left -= 1
@@ -48,6 +48,7 @@ def simulate(ha, init_state, init_mode, time, num_steps=500):
 
                 print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
                 ' at state ' + str(state) + ': ' + transition_names
+                events.append(("Multiple Transitions", state))
 
             traces.append(mode_sim)
             mode_sim = []
@@ -60,6 +61,7 @@ def simulate(ha, init_state, init_mode, time, num_steps=500):
 
         # check continuous post
         if mode.inv(state) == False:
+            events.append(("False Invariant", state))
             print 'Warning: Invariant became false in mode ' + str(mode.name) + ' at state ' + str(state)
             break
 
@@ -69,6 +71,9 @@ def simulate(ha, init_state, init_mode, time, num_steps=500):
 
     if len(mode_sim) > 0:
         traces.append(mode_sim)
+
+        last_state = mode_sim[len(mode_sim) - 1]
+        events.append(("End", last_state))
 
     return {'traces':traces, 'events':events}
 
@@ -103,14 +108,24 @@ def plot_sim_result(result, filename, dim_x, dim_y, draw_events=True, axis_range
         plt.plot(x, y)
 
     if draw_events:
+        above = True
+
         for event in events:
             msg = event[0]
             state = event[1]
             x = state[dim_x]
             y = state[dim_y]
 
-            plt.annotate(msg, xy=(x, y), xytext=(20, 20), textcoords='offset points', horizontalalignment='left', \
-                    arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.6"))
+            # alternate labels between above and below
+            y_offset = 20
+            above = not above
+
+            if above:
+                y_offset = -20
+
+            plt.annotate(msg, xy=(x, y), xytext=(20, y_offset), \
+                         textcoords='offset points', horizontalalignment='left', \
+                        arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=.6"))
         
     if draw_func is not None:
         draw_func()
