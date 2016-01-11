@@ -44,6 +44,7 @@ import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -64,7 +65,7 @@ public class Hyst
 	public static boolean debugMode = false; // flag used to toggle debug printing with Main.logDebug()
 	private static String toolParamsString = null; // tool parameter string set using -toolparams or -tp
 
-	public static boolean silentUsage = false; // should usage printing be omitted (for unit testing)
+	public static boolean IS_UNIT_TEST = false; // should usage printing be omitted (for unit testing)
 	private static HystFrame guiFrame = null; // set if gui mode is being used
 
 	public final static String FLAG_HELP = "-help";
@@ -78,6 +79,7 @@ public class Hyst
 	public final static String FLAG_DEBUG_SHORT = "-d";
 	public final static String FLAG_NOVALIDATE = "-novalidate";
 	public final static String FLAG_OUTPUT = "-o";
+	public final static String FLAG_TESTPYTHON = "-testpython";
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
@@ -358,6 +360,7 @@ public class Hyst
 	 */
 	private static boolean parseArgs(String[] args)
 	{
+		boolean testPython = false;
 		boolean rv = true;
 		boolean quitAfterUsage = false;
 
@@ -414,10 +417,13 @@ public class Hyst
 			if (processedArg)
 				continue;
 
-			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || arg.endsWith(FLAG_GUI))
+			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || 
+					arg.equals(FLAG_GUI))
 				quitAfterUsage = true; // ignore
 			else if (arg.equals(FLAG_VERBOSE) || arg.equals(FLAG_VERBOSE_SHORT))
 				verboseMode = true;
+			else if (arg.equals(FLAG_TESTPYTHON))
+				testPython = true;
 			else if (arg.equals(FLAG_DEBUG) || arg.equals(FLAG_DEBUG_SHORT))
 			{
 				verboseMode = true;
@@ -475,10 +481,23 @@ public class Hyst
 				rv = false;
 			}
 		}
+		
+		if (testPython)
+		{
+			if (PythonBridge.hasPython())
+				System.out.println("Python and required packages sucessfully detected.");
+			else
+			{
+				System.out.println("Python and required packages NOT detected."); 
+				System.out.println("Use -debug to examine error information.");
+			}
+			
+			System.exit(ExitCode.SUCCESS.ordinal());
+		}
 
 		if (!rv || xmlFilenames.size() == 0 || cfgFilename == null || printerIndex < 0 || printerIndex >= printers.length)
 		{
-			if (silentUsage)
+			if (IS_UNIT_TEST)
 				return false;
 
 			// show usage
