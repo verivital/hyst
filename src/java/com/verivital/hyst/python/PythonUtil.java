@@ -411,9 +411,10 @@ public class PythonUtil
 			if (symbols.length() > 0)
 				s.append(symbols);
 			
-			s.append("sympy.simplify(");
+			s.append("from sympy import S;");
+			s.append("sympy.simplify(sympy.factor(");
 			s.append(pySympyPrinter.print(e));
-			s.append(")");
+			s.append("))");
 			
 			String result = pb.send(s.toString());
 			
@@ -523,6 +524,12 @@ public class PythonUtil
 			opNames.put(Operator.EXP, "sympy.exp");
 			opNames.put(Operator.LN, "sympy.log");
 			opNames.put(Operator.TAN, "sympy.tan");
+		}
+		
+		@Override
+		protected String printConstantValue(double d)
+		{
+			return "S(" + constFormatter.format(d) + ")";
 		}
 	}
 }

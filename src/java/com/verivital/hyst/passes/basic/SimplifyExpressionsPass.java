@@ -66,15 +66,17 @@ public class SimplifyExpressionsPass extends TransformationPass
 	 */
 	public static Expression simplifyExpression(Expression e)
 	{
-		Expression rv = simplifyExpressionRec(e);
+		Expression rv = null;
 		
 		// possibly use python to simplify the system
 		if (PythonBridge.hasPython() && AutomatonUtil.expressionContainsOnlyAllowedOps(e, 
 				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
 		{
-			rv = PythonUtil.pythonSimplifyExpression(rv);
+			rv = PythonUtil.pythonSimplifyExpression(e);
 			Hyst.logDebug("Symplified expression using python to: " + rv.toDefaultString());
 		}
+		else
+			rv = simplifyExpressionRec(e);
 		
 		return rv;
 	}
