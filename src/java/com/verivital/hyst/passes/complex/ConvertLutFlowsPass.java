@@ -44,13 +44,13 @@ public class ConvertLutFlowsPass extends TransformationPass
 	public ConvertLutFlowsPass()
 	{
 		// this pass is doing the conversion, if we don't skip we'd have an infinite loop
-		preconditions.skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()] = true;
+		preconditions.skip(PreconditionsFlag.CONVERT_BASIC_OPERATORS);
 		
 		// network automata are supported
-		preconditions.skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()] = true;
+		preconditions.skip(PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON);
 		
 		// urgent modes are supported
-		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
+		preconditions.skip(PreconditionsFlag.NO_URGENT);
 	}
 
 	@Override
@@ -321,11 +321,28 @@ public class ConvertLutFlowsPass extends TransformationPass
 					// copy dynamics
 					am.flowDynamics.put(var, original.flowDynamics.get(var).copy());
 				}
-				else
-					am.flowDynamics.put(var, new ExpressionInterval(0)); // temp, will be replaced later
 			}
 			
-			// this loop populates range list, accumulates the invariant, and creates neighbor transitions
+			// this loop populates range list, which is used to create the dynamics
+			for (int varIndex = 0; varIndex < tableDims; ++varIndex)
+			{
+				int indexInTable = indexList[varIndex];
+				double[] breakpoints = lut.breakpoints[varIndex];
+				Constant leftBreakpoint = new Constant(breakpoints[indexInTable]);
+				Constant rightBreakpoint = new Constant(breakpoints[indexInTable + 1]); // in bounds because shouldSkip was false 
+				
+				rangeList[varIndex] = new Interval(leftBreakpoint.getVal(), rightBreakpoint.getVal());
+			}
+			
+			// create dynamics for variableWithLut 
+			// must be done before creating transitions, since inputs may use variableWithLut
+			Expression replaceLutExpression = nLinearInterpolation(lut, indexList, rangeList);
+			ExpressionInterval originalExpInt = original.flowDynamics.get(variableWithLut);
+			Expression newFlow = replaceLutSubexpression(originalExpInt.getExpression(), lut, replaceLutExpression);
+			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
+			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
+			
+			// this loop accumulates the invariant, and creates neighbor transitions
 			for (int varIndex = 0; varIndex < tableDims; ++varIndex)
 			{
 				Expression inputExpr = lut.inputs[varIndex];
@@ -333,8 +350,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 				double[] breakpoints = lut.breakpoints[varIndex];
 				Constant leftBreakpoint = new Constant(breakpoints[indexInTable]);
 				Constant rightBreakpoint = new Constant(breakpoints[indexInTable + 1]); // in bounds because shouldSkip was false 
-				
-				rangeList[varIndex] = new Interval(leftBreakpoint.getVal(), rightBreakpoint.getVal());
 				
 				// if there's a left neighbor
 				if (indexInTable > 0)
@@ -386,13 +401,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 					ha.createTransition(am, rightMode).guard = Expression.and(guard, goingRight);
 				}
 			}
-			
-			// create dynamics for variableWithLut
-			Expression replaceLutExpression = nLinearInterpolation(lut, indexList, rangeList);
-			ExpressionInterval originalExpInt = original.flowDynamics.get(variableWithLut);
-			Expression newFlow = replaceLutSubexpression(originalExpInt.getExpression(), lut, replaceLutExpression);
-			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
-			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
 		}
 	}
 	
