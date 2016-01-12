@@ -163,7 +163,7 @@ Please create unit tests and possibly regression tests for any changes submitted
 
 #### Code Quality:
 
-If you plan to do Hyst development that will works its way back into the main branch, please make an effort to produce high quality code. In addition to general practices of organizing your code flow in a logical manner, breaking up code into classes and methods which make sense for whatever logic being implemented, please pay attention to the following guidelines:
+If you plan to do Hyst development that will work its way back into the main branch, please make an effort to produce high quality code. In addition to general practices of organizing your code flow in a logical manner, breaking up code into classes and methods which make sense for whatever logic being implemented, please pay attention to the following guidelines:
 
 * Add tests. You should at least have one or two tests showing that your printer or transformation pass works as expected. Add individual tests for complicated subcomponents or key methods.
 * Avoid duplicate code. If the same functionailty is implemented twice, generalize it and make a method called in both instances.
@@ -174,6 +174,7 @@ If you plan to do Hyst development that will works its way back into the main br
 * Use meaningful variable and method names.
 * Use Java naming conventions for class and method names. Class names should be CapitalizedCamelCase, and methods should be lowercaseFirstCamelCase.
 * Use consistent a per-file code format. We have different conventions between different files, which isn't ideal, but each file should be consistent. In Eclipse you can right click within a file and do Source -> Format and it will reformat it for you.
+* Please try to keep lines less than 120 characters. If your lines are too long, consider breaking them up into multiple shorter lines that are easier to read.
 * If you copy a printer as a template, for example the Flow* printer, your final printer shouldn't make references to Flow* or its parameters. Read through your code before submitting.
 
 #### BUILDING HYST: 
