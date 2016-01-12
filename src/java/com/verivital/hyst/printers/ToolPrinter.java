@@ -36,7 +36,7 @@ public abstract class ToolPrinter
 
 	// don't need to be modified
 	protected String indentation = "";
-	protected String indentationAmount = "  ";
+	protected String indentationAmount = "    ";
 	protected String commentChar = getCommentPrefix();
 	protected String decreaseIndentationString = "}";
 	

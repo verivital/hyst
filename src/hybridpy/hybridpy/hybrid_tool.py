@@ -171,8 +171,10 @@ def get_env_var_path(basename, default_path):
         # not found at environment variable, try hardcoded path
         rv = default_path
 
-    if not os.path.exists(rv):
-        print basename + ' not found at path: ' + rv + '.',
+    if rv is None or not os.path.exists(rv):
+
+        if rv is not None:
+            print basename + ' not found at path: ' + rv + '.',
 
         if os.environ.get(var) is None:
             print 'Environment variable ' + var + ' was NOT set.',

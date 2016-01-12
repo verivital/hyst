@@ -145,33 +145,32 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	private void printProcedure() 
 	{
-		printLine("import matplotlib.pyplot as plt");
-		printLine("from pysim.hybrid_automaton import HybridAutomaton");
-		printLine("from pysim.hybrid_automaton_sim import simulate, plot_sim_result");
+		printLine("import hybridpy.pysim.simulate as pysim");
+		printLine("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
 		printNewline();
 		
-		printLine("def main():");
+		printLine("def simulate():");
 		increaseIndentation();
-		printLine("'''simulate the model'''");
+		printLine("'''make the hybrid automaton, simulate it, and return the result'''");
 		printComment("Variable ordering: " + ha.variables);
-
 		printLine("ha = HybridAutomaton()");
-		
 		printModes();
-		
 		printJumps();
-		
 		printSimulate();
-		
-		printPlot();
-		
+		printLine("return result");
 		decreaseIndentation();
+		printNewline();
+		
+		printLine("def plot(result, filename='plot.png'):");
+		increaseIndentation();
+		printPlot();
+		decreaseIndentation();
+		printNewline();
 		
 		// check if main module
-		printNewline();
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("main()");
+		printLine("plot(simulate())");
 		decreaseIndentation();
 	}
 	
@@ -189,7 +188,7 @@ public class PySimPrinter extends ToolPrinter
 		printLine("init = [" + join(", ", initPt.dims) + "]");
 		printLine("init_mode = '" + config.init.keySet().iterator().next() + "'");
 		printLine("max_time = " + getTimeParam());
-		printLine("result = simulate(ha, init, init_mode, max_time)");
+		printLine("result = pysim.simulate(ha, init, init_mode, max_time)");
 		printNewline();
 	}
 	
@@ -220,11 +219,10 @@ public class PySimPrinter extends ToolPrinter
 		
 		int xIndex = ha.variables.indexOf(config.settings.plotVariableNames[0]);
 		int yIndex = ha.variables.indexOf(config.settings.plotVariableNames[1]);
-		String FILENAME = "plot.png";
 		
 		printLine("dim_x = " + xIndex);
 		printLine("dim_y = " + yIndex);
-		printLine("plot_sim_result(result, '" + FILENAME + "', dim_x, dim_y)");
+		printLine("pysim.plot_sim_result(result, filename, dim_x, dim_y)");
 	}
 
 	private String getTimeParam()

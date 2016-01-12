@@ -9,21 +9,18 @@ import random
 import argparse
 import shutil
 
-import hybrid_tool
-from hybrid_tool import get_script_path
-from hybrid_tool import get_env_var_path
+import hybridpy.hybrid_tool as hybrid_tool
+from hybridpy.hybrid_tool import get_env_var_path
 
-from tool_flowstar import FlowstarTool
-from tool_dreach import DReachTool
-from tool_spaceex import SpaceExTool
-from tool_hycreate import HyCreateTool
-
-# path the the Hyst jar file
-DEFAULT_HYST_PATH = get_script_path() + '/../Hyst.jar'
+from hybridpy.tool_flowstar import FlowstarTool
+from hybridpy.tool_dreach import DReachTool
+from hybridpy.tool_spaceex import SpaceExTool
+from hybridpy.tool_hycreate import HyCreateTool
+from hybridpy.tool_pysim import PySimTool
 
 # tools for which models can be generated
 TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
-         'spaceex':SpaceExTool(), 'dreach':DReachTool()}
+         'spaceex':SpaceExTool(), 'dreach':DReachTool(), 'pysim':PySimTool()}
 
 # return codes for Engine.run()
 def enum(**enums):
@@ -169,7 +166,11 @@ class Engine(object):
         self.output_lines = []
         self._add_terminal_output("Running " + self.tool_name + " on model " + self.model_path + "\n")
 
-        hyst_path = get_env_var_path('hyst', DEFAULT_HYST_PATH)
+        hyst_path = get_env_var_path('hyst', None)
+
+        if hyst_path is None:
+            raise RuntimeError('Hyst not found. Did you set HYST_BIN to point to Hyst.jar?')
+
         params = ['java', '-jar', hyst_path, self.model_path]
         params += self.tool_params
         params += ['-o', self.save_model_path, format_flag] # do after to override any user flags
