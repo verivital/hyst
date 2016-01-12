@@ -949,8 +949,8 @@ public abstract class AutomatonUtil
 			
 			if (Math.abs(expectedVal - actualVal) > TOL)
 			{
-				rv = "Expressions expected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
-						"' differ at point" + varList + " = " + Arrays.toString(hp.dims) + 
+				rv = "Expressions are NOT equal.\nexpected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
+						"' differ at point " + varList + " = " + Arrays.toString(hp.dims) + 
 						".\nexpected evalues to " + expectedVal + "; actual evalutes to " + actualVal;
 				break;
 			}
