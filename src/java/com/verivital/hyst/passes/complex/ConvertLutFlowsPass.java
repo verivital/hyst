@@ -478,11 +478,12 @@ public class ConvertLutFlowsPass extends TransformationPass
 		{
 			Expression input = inputList[d].copy();
 			Expression minVal = new Constant(rangeList[d].min);
-			Constant scale = new Constant(1.0 / rangeList[d].width());			
+			Operation width = new Operation(Operator.SUBTRACT, 
+					new Constant(rangeList[d].max), new Constant(rangeList[d].min));
 			
 			vars[d] = new Operation(Operator.SUBTRACT, 
-					new Operation(Operator.MULTIPLY, scale, input),
-					new Operation(Operator.MULTIPLY, minVal, scale));
+					new Operation(Operator.DIVIDE, input, width),
+					new Operation(Operator.DIVIDE, minVal, width));
 			oneMinusVars[d] = new Operation(Operator.SUBTRACT, new Constant(1), vars[d].copy());
 		}
 		

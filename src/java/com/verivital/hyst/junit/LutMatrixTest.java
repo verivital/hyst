@@ -451,7 +451,7 @@ public class LutMatrixTest
 		
 		new ConvertLutFlowsPass().runTransformationPass(c, null);
 		
-		// we are interest in the guard from on_3_3 to on_3_2
+		// we are interested in the guard from on_3_3 to on_3_2
 		
 		AutomatonTransition at = null;
 		AutomatonMode am = ha.modes.get("on_3_3");
@@ -520,4 +520,28 @@ public class LutMatrixTest
 			Assert.fail(str);
 	}
 	
+	@Test
+	public void testLutLinearNoSmall()
+	{
+		String lutStr = "lut([(input-x)*5,(input-x-v)],  [-2.0000, -1.9000, -1.0000, -0.1000, " +
+				"0; -1.9000, -1.8000, -0.9000, 0, 0.1000; -1.0000, -0.9000, 0, 0.9000, 1.0000; " +
+				"-0.1000, 0, 0.9000, 1.8000, 1.9000; 0, 0.1000, 1.0000, 1.9000, 2.0000], " +
+				"[-1.0000, -0.0800, 0, 0.0800, 1.0000], [-1.0000, -0.0800, 0, 0.0800, 1.0000])";
+		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// we are interested in on_0_0
+		// we want to make sure there are no small coefficients there
+		// due to floating-point roundoff issues
+		
+		AutomatonMode am = ha.modes.get("on_0_0");
+		
+		String der = am.flowDynamics.get("v").toDefaultString();
+		
+		Assert.assertFalse("Small numbers found (from floating-point roundoff) in converted dynamics" +
+				" for v:\n" + der, der.contains("0.0000000000"));
+	}
 }
