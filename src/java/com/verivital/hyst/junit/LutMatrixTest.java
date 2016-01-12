@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
@@ -497,4 +498,26 @@ public class LutMatrixTest
 		if (str != null)
 			Assert.fail(str);
 	}
+	
+	@Test
+	public void testDerivativeOf()
+	{
+		// test extracted from testLutLinearReset
+		// (5-x-v)', with x' == v and v' == 6 * 5.0 - 1 * v - 6 * x
+		
+		HashMap <String, Expression> map = new HashMap <String, Expression>(); 
+		map.put("x", FormulaParser.parseValue("v"));
+		map.put("v", FormulaParser.parseValue("6 * 5.0 - 1 * v - 6 * x"));
+		
+		Expression input = FormulaParser.parseValue("(5-x-v)");
+		Expression der = AutomatonUtil.derivativeOf(input, map);
+		
+		Expression expected = FormulaParser.parseValue("-v - (6 * 5.0 - v - 6*x)");
+		
+		String str = AutomatonUtil.areExpressionsEqual(expected, der);
+		
+		if (str != null)
+			Assert.fail(str);
+	}
+	
 }
