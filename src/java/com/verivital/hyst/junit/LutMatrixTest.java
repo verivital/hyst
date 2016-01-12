@@ -20,6 +20,7 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -523,10 +524,11 @@ public class LutMatrixTest
 	@Test
 	public void testLutLinearNoSmall()
 	{
-		String lutStr = "lut([(input-x)*5,(input-x-v)],  [-2.0000, -1.9000, -1.0000, -0.1000, " +
-				"0; -1.9000, -1.8000, -0.9000, 0, 0.1000; -1.0000, -0.9000, 0, 0.9000, 1.0000; " +
-				"-0.1000, 0, 0.9000, 1.8000, 1.9000; 0, 0.1000, 1.0000, 1.9000, 2.0000], " +
-				"[-1.0000, -0.0800, 0, 0.0800, 1.0000], [-1.0000, -0.0800, 0, 0.0800, 1.0000])";
+		String lutStr = "lut([x, v],  " +
+				"[-2, -1.9; " +
+				"-1.9, -1.8]," +
+				"[-1, 0], " +
+				"[-1, 0])";
 		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;
