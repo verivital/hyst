@@ -254,6 +254,7 @@ public class PySimPrinter extends ToolPrinter
 		{
 			this.opNames.put(Operator.AND, "and");
 			this.opNames.put(Operator.OR, "or");
+			this.opNames.put(Operator.POW, "**");
 		}
 		
 		@Override
