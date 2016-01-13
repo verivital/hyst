@@ -223,23 +223,6 @@ public class Interval
 		return min == -Double.MAX_VALUE || max == Double.MAX_VALUE;
 	}
 	
-	@Override
-	public boolean equals(Object o)
-	{
-		double TOL = 1e-10;
-		boolean rv = false;
-
-		if (o instanceof Interval)
-		{
-			Interval rhs = (Interval)o;
-
-			if (Math.abs(rhs.max - max) < TOL && Math.abs(rhs.min - min) < TOL)
-				rv = true;
-		}
-
-		return rv;
-	}
-
 	public static Interval add(Interval i, Interval j)
 	{
 		Interval rv = new Interval();
@@ -507,5 +490,34 @@ public class Interval
 	public Interval copy()
 	{
 		return new Interval(this);
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		double TOL = 1e-10;
+		
+		return equals(o, TOL);
+	}
+	
+	/**
+	 * Comparison with explicit tolerance for floating-point difference
+	 * @param o the object to compare
+	 * @param tol the floating-point tolerance to consider equal
+	 * @return true if intervals are the same
+	 */
+	public boolean equals(Object o, double tol)
+	{
+		boolean rv = false;
+
+		if (o instanceof Interval)
+		{
+			Interval rhs = (Interval)o;
+
+			if (Math.abs(rhs.max - max) < tol && Math.abs(rhs.min - min) < tol)
+				rv = true;
+		}
+
+		return rv;
 	}
 }

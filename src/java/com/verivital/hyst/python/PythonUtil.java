@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import com.verivital.hyst.geometry.Interval;
+import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
@@ -392,7 +393,58 @@ public class PythonUtil
 	}
 	
 	/**
-	 * Use python-sympy to simplify an expression
+	 * Simpliy an expression using python, chopping values to zero smaller than some
+	 * tolerance
+	 * @param e the expression to simplify
+	 * @param tol the tolerance for chopping, some small value like 1e-8
+	 * @return the simplified expression
+	 */
+	public static Expression pythonSimplifyExpressionChop(Expression e, double tol)
+	{
+		// proceed in two phases, first simplify, then chop, then simplify
+		e = pythonSimplifyExpression(e);
+		
+		e = chop(e, tol);
+		
+		e = pythonSimplifyExpression(e);
+		
+		return e;
+	}
+	
+	/**
+	 * Chop an expression (set values close to zero to zero)
+	 * @param e the original expression
+	 * @param tol the tolerance (how close to zero should we chop), for example 1e-8
+	 * @return the chopped expression (not simplified!)
+	 */
+	public static Expression chop(Expression e, double tol)
+	{
+		Expression rv = e;
+		
+		if (e instanceof Constant)
+		{
+			Constant c = (Constant)e;
+			
+			if (c.getVal() >= -tol && c.getVal() <= tol)
+				rv = new Constant(0);
+		}
+		else if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+			Operation rvOp = new Operation(o.op);
+			
+			for (Expression c : o.children)
+				rvOp.children.add(chop(c, tol));
+			
+			rv = rvOp;
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Use python-sympy to simplify an expression. If python doesn't exist on the system,
+	 * this does nothing.
 	 * @param e the input expression
 	 * @return the output expression
 	 */
@@ -401,7 +453,9 @@ public class PythonUtil
 		Expression rv = e;
 		
 		// optimization: only simplify if it's an operation
-		if (e instanceof Operation)
+		if (e instanceof Operation && PythonBridge.hasPython() && 
+				AutomatonUtil.expressionContainsOnlyAllowedOps(e, 
+				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
 		{
 			PythonBridge pb = PythonBridge.getInstance();
 			StringBuilder s = new StringBuilder();
@@ -529,7 +583,7 @@ public class PythonUtil
 		@Override
 		protected String printConstantValue(double d)
 		{
-			return "S(" + constFormatter.format(d) + ")";
+			return "S('" + constFormatter.format(d) + "')";
 		}
 	}
 }

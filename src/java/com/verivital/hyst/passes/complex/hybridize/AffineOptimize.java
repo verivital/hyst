@@ -13,7 +13,6 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -76,7 +75,7 @@ public class AffineOptimize
 			// make the min interval 0, so that we get something like: x + y + 4 + [0, 0.1]
 			double val = inter.min;
 			linearized = new Operation(Operator.ADD, linearized, new Constant(val));
-			linearized = SimplifyExpressionsPass.simplifyExpression(linearized);
+			linearized = PythonUtil.pythonSimplifyExpression(linearized);
 			
 			inter.min -= val;
 			inter.max -= val;

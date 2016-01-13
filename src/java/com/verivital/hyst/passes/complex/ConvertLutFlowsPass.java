@@ -28,7 +28,7 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
+import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 
@@ -497,8 +497,11 @@ public class ConvertLutFlowsPass extends TransformationPass
 		Expression e = interpolateEnumerator.accumulator;
 		
 		Hyst.logDebug("nLinearInterpolation result expression for " + Arrays.toString(indexList) + ": " + e.toDefaultString());
-		e = SimplifyExpressionsPass.simplifyExpression(e);
-		Hyst.logDebug("after simplification: " + e.toDefaultString());
+		
+		double CHOP_TOL = 1e-8;
+		e = PythonUtil.pythonSimplifyExpressionChop(e, CHOP_TOL);
+		
+		Hyst.logDebug("after pythonSimplifyExpressionChop: " + e.toDefaultString());
 		
 		return e;
 	}
