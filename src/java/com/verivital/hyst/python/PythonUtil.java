@@ -16,6 +16,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
@@ -452,8 +453,12 @@ public class PythonUtil
 	{
 		Expression rv = e;
 		
+		// explicitly reject these, we don't want nondeterminism
+		if (!PythonBridge.hasPython())
+			throw new AutomatonExportException("pythonSimplifyExpression called, but python was not enabled");
+		
 		// optimization: only simplify if it's an operation
-		if (e instanceof Operation && PythonBridge.hasPython() && 
+		if (e instanceof Operation && 
 				AutomatonUtil.expressionContainsOnlyAllowedOps(e, 
 				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
 		{
