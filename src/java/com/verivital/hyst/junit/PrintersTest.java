@@ -1,5 +1,11 @@
 package com.verivital.hyst.junit;
 
+import java.util.ArrayList;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -17,18 +23,12 @@ import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
-import java.io.File;
-import java.util.ArrayList;
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxyFactory;
-import matlabcontrol.MatlabProxyFactoryOptions;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * A unit test suite for testing various types of printers. While
@@ -353,4 +353,22 @@ public class PrintersTest {
 		sp.printProcedure(example_name);
 	}
 
+	@Test
+	public void testHyCreatePowExpression()
+	{
+		// should use Math.pow, not ^
+		String[][] dynamics = { { "y", "t^2" }, { "t", "1" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		
+		ToolPrinter printer = new HyCreate2Printer();
+		printer.setOutputString();
+		printer.print(c, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
+		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output", 
+				out.contains("Math.pow($t, 2)"));
+	}
 }

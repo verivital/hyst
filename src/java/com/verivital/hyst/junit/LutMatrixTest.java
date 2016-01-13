@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
@@ -13,11 +14,15 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.MatrixExpression;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
 public class LutMatrixTest
@@ -434,5 +439,144 @@ public class LutMatrixTest
 		byte b = AutomatonUtil.classifyExpressionOps(e);
 		
 		Assert.assertNotEquals("Classification of lut expression should be nonzero", 0, b);
+	}
+	
+	@Test
+	public void testLutLinearReset()
+	{
+		String lutStr = "lut([(5-x)*5,(5-x-v)], reshape([-2, -1.5, -1, -0.5, 0, " +
+				"-1.5, -1, -0.5, 0, 0.5, -1, -0.5, 0, 0.5, 1, -0.5, 0, 0.5, 1, 1.5, 0, " +
+				"0.5, 1.0, 1.5, 2],5,5) , [-1, -0.5, 0, 0.5, 1], [-1, -0.5, 0, 0.5, 1])";
+		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// we are interested in the guard from on_3_3 to on_3_2
+		
+		AutomatonTransition at = null;
+		AutomatonMode am = ha.modes.get("on_3_3");
+		
+		for (AutomatonTransition t : ha.transitions)
+		{
+			if (t.from.name.equals("on_3_3") && t.to.name.equals("on_3_2"))
+				at = t;
+		}
+		
+		Assert.assertNotNull("Didn't find mode 3_3", am);
+		Assert.assertNotNull("Didn't find transition 3_3 -> 3_2", at);
+		
+		// derivative of x should be v
+		Expression expectedX = FormulaParser.parseValue("v");
+		Expression xDer = am.flowDynamics.get("x").asExpression();
+		Assert.assertEquals(null, AutomatonUtil.areExpressionsEqual(expectedX, xDer));
+		
+		// derivative of v should be 6 * 5.0 - 1 * v - 6 * x
+		Expression expectedV = FormulaParser.parseValue("6 * 5.0 - 1 * v - 6 * x");
+		Expression vDer = am.flowDynamics.get("v").asExpression();
+		Assert.assertEquals(null, AutomatonUtil.areExpressionsEqual(expectedV, vDer));
+		
+		// in on_3_3 -> on_3_2, there is a change along the second input, which is (5-x-v)
+		// the condition should be that (5-x-v) <= 0.5 and the derivative is negative
+		// derivative is negative if (5-x-v)' <= 0, which is the same as
+		// -x' - v' = -v - (6 * 5.0 - 1 * v - 6 * x)
+		Expression guard = at.guard;
+		
+		Assert.assertTrue(guard instanceof Operation && guard.asOperation().op == Operator.AND);
+		Expression left = guard.asOperation().getLeft();
+		Expression right = guard.asOperation().getRight();
+		
+		// left is the value condition (I guess the left/right part is implementation specific)
+		Expression expectedLeft = FormulaParser.parseValue("5-x-v"); //  <= 0.5
+		Assert.assertEquals(null, AutomatonUtil.areExpressionsEqual(
+				expectedLeft, left.asOperation().getLeft()));
+		
+		// right is the derivative condition
+		Expression expectedRight = FormulaParser.parseValue("-v - (6 * 5.0 - v - 6*x)"); // <= 0
+		String str = AutomatonUtil.areExpressionsEqual(
+				expectedRight, right.asOperation().getLeft());
+		
+		if (str != null)
+			Assert.fail(str);
+	}
+	
+	@Test
+	public void testDerivativeOf()
+	{
+		// test extracted from testLutLinearReset
+		// (5-x-v)', with x' == v and v' == 6 * 5.0 - 1 * v - 6 * x
+		
+		HashMap <String, Expression> map = new HashMap <String, Expression>(); 
+		map.put("x", FormulaParser.parseValue("v"));
+		map.put("v", FormulaParser.parseValue("6 * 5.0 - 1 * v - 6 * x"));
+		
+		Expression input = FormulaParser.parseValue("(5-x-v)");
+		Expression der = AutomatonUtil.derivativeOf(input, map);
+		
+		Expression expected = FormulaParser.parseValue("-v - (6 * 5.0 - v - 6*x)");
+		
+		String str = AutomatonUtil.areExpressionsEqual(expected, der);
+		
+		if (str != null)
+			Assert.fail(str);
+	}
+	
+	@Test
+	public void testLutLinearNoSmall()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String lutStr = "lut([x, v],  " +
+				"[-2, -1.9; " +
+				"-1.9, -1.8]," +
+				"[-1, 0], " +
+				"[-1, 0])";
+		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// we are interested in on_0_0
+		// we want to make sure there are no small coefficients there
+		// due to floating-point roundoff issues
+		
+		AutomatonMode am = ha.modes.get("on_0_0");
+		
+		String der = am.flowDynamics.get("v").toDefaultString();
+		
+		Assert.assertFalse("Small numbers found (from floating-point roundoff) in converted dynamics" +
+				" for v:\n" + der, der.contains("0.0000000000"));
+	}
+	
+	@Test
+	public void testLutLinearNoSmallFullTable()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String lutStr = "lut([(input-x)*5,(input-x-v)], " +
+				"[-2.0000, -1.9000; " +
+				"-1.9000, -1.8000]" +
+				", [-1.0000, -0.0800]" +
+				", [-1.0000, -0.0800])";
+		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// we are interested in on_0_0
+		// we want to make sure there are no small coefficients there
+		// due to floating-point roundoff issues
+		
+		AutomatonMode am = ha.modes.get("on_0_0");
+		
+		String der = am.flowDynamics.get("v").toDefaultString();
+		
+		Assert.assertFalse("Small numbers found (from floating-point roundoff) in converted dynamics" +
+				" for v:\n" + der, der.contains("0.0000000000"));
 	}
 }

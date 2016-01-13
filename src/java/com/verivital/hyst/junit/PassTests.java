@@ -286,16 +286,9 @@ public class PassTests {
 
 			Expression.expressionPrinter = rp;
 
-			// dynamics should be approximately x' =.536*x - 0.0718 + [0, 0.0046]
-			String correctDynamics = "0.5357 * x - 0.0717 + [0, 0.0046]";
-			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
 
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
-
-			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x - 0.0958 + [0, 0.0054]";
-			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
 
 			// invariant x <= 10 should be present in first mode
 			// time trigger invariant c <= 0.5 should be present in first mode
@@ -411,15 +404,20 @@ public class PassTests {
 			Expression.expressionPrinter = rp;
 			
 			// dynamics should be approximately x' =.536*x - 0.0718 + [0, 0.0046]
-			String correctDynamics = "0.5357 * x - 0.0717 + [0, 0.0046]";
-			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
+			double TOL = 1e-2;
+			ComparableEi correctDynamics = new ComparableEi("0.5357 * x - 0.0717", 
+					new Interval(0, 0.0046), TOL);
+			ComparableEi computedDynamics = new ComparableEi(m0.flowDynamics.get("x"), TOL);
+			
+			Assert.assertEquals("mode0.x' incorrect", correctDynamics, computedDynamics);
 
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
 
 			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x - 0.0958 + [0, 0.0054]";
-			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
+			correctDynamics = new ComparableEi("0.619 * x - 0.0958)", new Interval(0, 0.0054), TOL);
+			Assert.assertEquals("mode0.x' incorrect", correctDynamics, 
+					new ComparableEi(m1.flowDynamics.get("x"), TOL));
 
 			// invariant x <= 10 should be present in first mode
 			// time trigger invariant c <= 0.5 should be present in first mode

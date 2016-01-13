@@ -882,11 +882,25 @@ public abstract class AutomatonUtil
 	
 	/**
 	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
-	 * a counter-example description string if they are not.
+	 * a counter-example description string if they are not. Uses a tolerance of 1e-9.
 	 * @param expected the expected expression
 	 * @param actual the actual expression
 	 */
 	public static String areExpressionsEqual(Expression expected, Expression actual)
+	{
+		double TOL = 1e-9;
+		
+		return areExpressionsEqual(expected, actual, TOL);
+	}
+	
+	/**
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
+	 * a counter-example description string if they are not.
+	 * @param expected the expected expression
+	 * @param actual the actual expression
+	 * @param tol the tolerance to use
+	 */
+	public static String areExpressionsEqual(Expression expected, Expression actual, double tol)
 	{
 		String rv = null;
 	
@@ -940,17 +954,15 @@ public abstract class AutomatonUtil
 		}
 		
 		// compare a and b at the constructed sample points
-		double TOL = 1e-9;
-		
 		for (HyperPoint hp : samples)
 		{
 			double expectedVal = RungeKutta.evaluateExpression(expected, hp, varList);
 			double actualVal = RungeKutta.evaluateExpression(actual, hp, varList);
 			
-			if (Math.abs(expectedVal - actualVal) > TOL)
+			if (Math.abs(expectedVal - actualVal) > tol)
 			{
-				rv = "Expressions expected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
-						"' differ at point" + varList + " = " + Arrays.toString(hp.dims) + 
+				rv = "Expressions are NOT equal.\nexpected='" + expected.toDefaultString() + "' and actual='" + actual.toDefaultString() + 
+						"' differ at point " + varList + " = " + Arrays.toString(hp.dims) + 
 						".\nexpected evalues to " + expectedVal + "; actual evalutes to " + actualVal;
 				break;
 			}
