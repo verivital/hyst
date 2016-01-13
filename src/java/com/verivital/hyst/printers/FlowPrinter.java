@@ -364,7 +364,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!inv.equals(Constant.TRUE))
 			{
-				printCommentblock("Original invariant: " + inv);
+				printCommentBlock("Original invariant: " + inv);
 				printLine(getFlowConditionExpression(inv));
 			}
 
@@ -545,7 +545,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!guard.equals(Constant.TRUE))
 			{
-				printCommentblock("Original guard: " + t.guard);
+				printCommentBlock("Original guard: " + t.guard);
 				printLine(getFlowConditionExpression(guard));
 			}
 			

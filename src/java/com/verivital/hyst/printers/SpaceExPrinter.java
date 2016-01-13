@@ -577,7 +577,7 @@ public class SpaceExPrinter extends ToolPrinter
 	 * Comment a block of text using start and end comment markings
 	 */
 	@Override
-	protected void printCommentblock(String comment) 
+	protected void printCommentBlock(String comment) 
 	{
 		printLine(this.getCommentCharacterStart() + " " + 
 				comment.replace("\n", "\n" + this.indentation + " ") + "\n" + this.getCommentCharacterEnd());

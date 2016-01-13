@@ -58,17 +58,10 @@ public class PySimPrinter extends ToolPrinter
 		printProcedure();
 	}
 	
-	/**
-	 * Custom printing for comment blocks (used for header)
-	 */
-	protected void printCommentblock(String comment) 
+	@Override
+	protected String createCommentText(String text)
 	{
-		String s = "'''\n" + comment + "\n'''";
-		
-		if (outputType == OutputType.STDOUT || outputType == OutputType.FILE)
-			outputStream.println(s);
-		else if (outputType == OutputType.GUI)
-			outputFrame.addOutput(s);
+		return "'''\n" + text + "\n'''";
 	}
 	
 	private void printModes() 

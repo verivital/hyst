@@ -172,7 +172,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter {
 
 	protected void printDocument(String originalFilename) {
 
-		printCommentblock(
+		printCommentBlock(
 				Hyst.TOOL_NAME + "\n" + "Hybrid Automaton in " + Hyst.TOOL_NAME + "\n" + "Converted from file: "
 						+ originalFilename + "\n" + "Command Line arguments: " + Hyst.programArguments);
 

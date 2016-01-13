@@ -22,6 +22,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
 public class LutMatrixTest
@@ -524,11 +525,43 @@ public class LutMatrixTest
 	@Test
 	public void testLutLinearNoSmall()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		String lutStr = "lut([x, v],  " +
 				"[-2, -1.9; " +
 				"-1.9, -1.8]," +
 				"[-1, 0], " +
 				"[-1, 0])";
+		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		BaseComponent ha = (BaseComponent)c.root;
+		
+		new ConvertLutFlowsPass().runTransformationPass(c, null);
+		
+		// we are interested in on_0_0
+		// we want to make sure there are no small coefficients there
+		// due to floating-point roundoff issues
+		
+		AutomatonMode am = ha.modes.get("on_0_0");
+		
+		String der = am.flowDynamics.get("v").toDefaultString();
+		
+		Assert.assertFalse("Small numbers found (from floating-point roundoff) in converted dynamics" +
+				" for v:\n" + der, der.contains("0.0000000000"));
+	}
+	
+	@Test
+	public void testLutLinearNoSmallFullTable()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String lutStr = "lut([(input-x)*5,(input-x-v)], " +
+				"[-2.0000, -1.9000; " +
+				"-1.9000, -1.8000]" +
+				", [-1.0000, -0.0800]" +
+				", [-1.0000, -0.0800])";
 		String[][] dynamics = {{"t", "1", "0"}, {"x", "v", "0"}, {"v", lutStr, "0"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent)c.root;

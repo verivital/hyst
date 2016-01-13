@@ -61,6 +61,11 @@ public class ExpressionInterval
 		this(FormulaParser.parseValue(text));
 	}
 
+	public ExpressionInterval(String expString, Interval i)
+	{
+		this(FormulaParser.parseValue(expString), i);
+	}
+
 	public ExpressionInterval copy()
 	{
 		ExpressionInterval rv = null;
