@@ -179,11 +179,10 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 		}
 		
 		int pi = gs.getPrinterIndex();
+		printerParams = gs.getPrinterParams();
 		
 		if (pi < printerBox.getItemCount())
 		{
-			printerParams = gs.getPrinterParams();
-			
 			while (printerParams.size() > printers.length)
 				printerParams.remove(printerParams.size() - 1);
 			
