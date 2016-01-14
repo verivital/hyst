@@ -5,6 +5,12 @@ package com.verivital.hyst.printers;
 
 
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -20,19 +26,13 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
-import static com.verivital.hyst.printers.ToolPrinter.doubleToString;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 
 /**
@@ -44,6 +44,7 @@ import java.util.TreeMap;
 public class FlowPrinter extends ToolPrinter
 {
 	private BaseComponent ha;
+	private int DEFAULT_MAX_JUMPS = 999999999;
 	
 	public FlowPrinter()
 	{
@@ -172,7 +173,13 @@ public class FlowPrinter extends ToolPrinter
 		printLine("cutoff " + toolParams.get("cutoff"));
 		printLine("precision " + toolParams.get("precision"));
 		printLine("output out");
-		printLine("max jumps " + toolParams.get("jumps"));
+		
+		int jumps = Integer.parseInt(toolParams.get("jumps"));
+		
+		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
+			jumps = config.settings.spaceExConfig.maxIterations;
+				
+		printLine("max jumps " + jumps);
 		printLine("print on");
 		printLine("}");
 	}
@@ -374,9 +381,13 @@ public class FlowPrinter extends ToolPrinter
 	{
 		boolean rv = false;
 		
-		for (ExpressionInterval e : flowDynamics.values())
+		for (ExpressionInterval entry : flowDynamics.values())
 		{
-			if (expressionContainsOperator(e.getExpression(), Operator.DIVIDE, Operator.COS, Operator.SIN, Operator.SQRT, Operator.EXP))
+			Expression e = entry.getExpression();
+			
+			byte classification = AutomatonUtil.classifyExpressionOps(e);
+			
+			if ((classification | AutomatonUtil.OPS_NONLINEAR) != 0)
 			{
 				rv = true;
 				break;
@@ -385,32 +396,6 @@ public class FlowPrinter extends ToolPrinter
 		
 		return rv;
 	}
-
-	private boolean expressionContainsOperator(Expression e, Operator ... operators)
-	{
-		boolean rv = false;
-		Operation o = e.asOperation();
-		
-		if (o != null)
-		{
-			if (Arrays.asList(operators).contains(o.op))
-				rv = true;
-			else
-			{
-				for (Expression child : o.children)
-				{
-					rv = expressionContainsOperator(child, operators);
-					
-					if (rv)
-						break;
-				}
-			}
-		}
-		
-		return rv;
-	}
-
-
 
 	public static String getFlowConditionExpression(Expression e)
 	{
@@ -460,7 +445,7 @@ public class FlowPrinter extends ToolPrinter
 				
 				// Flow doesn't like < or >... needs <= or >=
 				if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || op.equals(Operator.NOTEQUAL))
-					throw new AutomatonExportException("Flow* printer doesn't support operator " + op);
+					throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
 
 				// make sure it's of the form p ~ c
 				if (o.children.size() == 2 && o.getRight() instanceof Constant)
@@ -471,7 +456,7 @@ public class FlowPrinter extends ToolPrinter
 					
 					rv += getFlowConditionExpression(o.getLeft());
 					rv += " - (" + getFlowConditionExpression(o.getRight());
-					rv += ")" + Expression.expressionPrinter.printOperator(op) + "0";
+					rv += ") " + Expression.expressionPrinter.printOperator(op) + " 0";
 				}
 			}
 			else
@@ -499,6 +484,10 @@ public class FlowPrinter extends ToolPrinter
 		{
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
 		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
 		
 		for (Entry<String, Interval> e : ranges.entrySet())
 		{
@@ -644,6 +633,10 @@ public class FlowPrinter extends ToolPrinter
 			{
 				throw new AutomatonExportException("Constant mismatch in initial mode: " + modeName, e2);
 			}
+			catch (UnsupportedConditionException e2)
+			{
+				throw new AutomatonExportException("Non-box initial mode: " + modeName, e2);
+			} 
 			
 			Collection <String> vars = AutomatonUtil.getVariablesInExpression(resetExp);
 			
@@ -695,7 +688,7 @@ public class FlowPrinter extends ToolPrinter
 		toolParams.put("orders", "3-8");
 		toolParams.put("cutoff", "1e-15");
 		toolParams.put("precision", "53");
-		toolParams.put("jumps", "99999999");
+		toolParams.put("jumps", "" + DEFAULT_MAX_JUMPS);
 		toolParams.put("print", "on");
 		toolParams.put("aggregation", "parallelotope");
 

@@ -10,8 +10,7 @@ import com.verivital.hyst.grammar.antlr.HystExpressionBaseVisitor;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.AddSubContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.AndContext;
-import com.verivital.hyst.grammar.antlr.HystExpressionParser.LocSubExpressionContext;
-import com.verivital.hyst.grammar.antlr.HystExpressionParser.MatrixExpressionContext;
+import com.verivital.hyst.grammar.antlr.HystExpressionParser.FunctionContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.NegativeUnaryContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.NotContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.OpContext;
@@ -19,6 +18,7 @@ import com.verivital.hyst.grammar.antlr.HystExpressionParser.OrContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.PowContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.ResetSubExpressionContext;
 import com.verivital.hyst.grammar.antlr.HystExpressionParser.TimesDivContext;
+import com.verivital.hyst.ir.AutomatonExportException;
 
 
 public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
@@ -110,61 +110,15 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		
 		return rv;
 	}
-	
-	@Override public Expression visitLut(@NotNull HystExpressionParser.LutContext ctx)
-	{
-		String[] varList = ctx.varListExpression().getText().split(",");
-		double[][] values = parseMatrix(ctx.matrixExpression(0).getText());
-		double[][] breakpoints = parseMatrix(ctx.matrixExpression(1).getText());
-		
-		return new Lut(varList, values, breakpoints);
-	}
-	
-	private double[][] parseMatrix(String s)
-	{
-		String[] rows = s.split(";");
-		
-		
-		return null;
-	}
 
 	@Override public Expression visitFlowFalse(@NotNull HystExpressionParser.FlowFalseContext ctx)
 	{
 		return Constant.FALSE;
 	}
 	
-	@Override public Expression visitLocSubExp(@NotNull HystExpressionParser.LocSubExpContext ctx)
-	{
-		return new Operation(Operator.EQUAL, new Operation(Operator.LOC, 
-				new Variable(ctx.dottedVar().getText())), new Variable(ctx.VAR().getText()));
-	}
-	
-	@Override public Expression visitLocSubBlankExp(@NotNull HystExpressionParser.LocSubBlankExpContext ctx)
-	{
-		return new Operation(Operator.EQUAL, new Operation(Operator.LOC, 
-				new Variable("")), new Variable(ctx.VAR().getText()));
-	}
-	
-	@Override public Expression visitLocAndExp(@NotNull HystExpressionParser.LocAndExpContext ctx)
-	{
-		return visit(ctx.and());
-	}
-	
 	@Override public Expression visitLocExp(@NotNull HystExpressionParser.LocExpContext ctx)
 	{
-		Expression rv = null;
-		
-		for (LocSubExpressionContext l : ctx.locSubExpression())
-		{
-			Expression e = visit(l);
-			
-			if (rv == null)
-				rv = e;
-			else
-				rv = new Operation(Operator.AND, rv, e);
-		}
-		
-		return rv;
+		return visit(ctx.and());
 	}
 	
 	@Override public Expression visitLocFalse(@NotNull HystExpressionParser.LocFalseContext ctx)
@@ -339,7 +293,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		}
 		
 		// negative constants
-		if (rv.asOperation() != null & rv.asOperation().children.size() == 1 && rv.asOperation().op == Operator.NEGATIVE)
+		if (rv.asOperation() != null && rv.asOperation().children.size() == 1 && rv.asOperation().op == Operator.NEGATIVE)
 		{
 			if (rv.asOperation().children.get(0) instanceof Constant)
 			{
@@ -353,46 +307,167 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		return rv;
 	}
 	
-	@Override public Expression visitTanFunc(@NotNull HystExpressionParser.TanFuncContext ctx) 
+	private class NameOperator
 	{
-		AddSubContext child = ctx.addSub();
+		public NameOperator(String name, Operator op)
+		{
+			this.name = name;
+			this.op = op;
+		}
 		
-		return new Operation(Operator.TAN, visit(child));
+		public String name;
+		public Operator op;
 	}
 	
-	@Override public Expression visitSqrtFunc(@NotNull HystExpressionParser.SqrtFuncContext ctx) 
+	@Override public Expression visitFunction(@NotNull HystExpressionParser.FunctionContext ctx)
 	{
-		AddSubContext child = ctx.addSub();
+		String name = ctx.VAR().getText().toLowerCase();
+		List<AddSubContext> args = ctx.addSub();
+		Expression rv = null;
 		
-		return new Operation(Operator.SQRT, visit(child));
+		NameOperator[] singleParamFuncs = 
+		{
+			new NameOperator("tan", Operator.TAN),
+			new NameOperator("sqrt", Operator.SQRT),
+			new NameOperator("sin", Operator.SIN),
+			new NameOperator("cos", Operator.COS),
+			new NameOperator("exp", Operator.EXP),
+			new NameOperator("ln", Operator.LN)
+		};
+		
+		for (NameOperator no : singleParamFuncs)
+		{
+			if (name.equals(no.name))
+			{
+ 				if (args.size() != 1)
+ 					throw new AutomatonExportException("Function '" + no.name + "' expects single argument.");
+ 				
+ 				rv = new Operation(no.op, visit(args.get(0)));
+			}
+		}
+		
+		// special case: loc can take 0 or 1 arguments
+		if (name.equals("loc"))
+		{
+			if (args.size() == 0)
+				rv = new Operation(Operator.LOC);
+			else if (args.size() == 1)
+				rv = new Operation(Operator.LOC, visit(args.get(0)));
+			else
+				throw new AutomatonExportException("Function 'loc' expects 0 or 1 arguments.");
+		}
+		
+		// special case: lookup table
+		if (name.equals("lut"))
+			rv = processLut(ctx);
+		
+		if (name.equals("reshape"))
+			rv = processReshape(ctx);
+		
+		// unsupported
+		if (rv == null)
+			throw new AutomatonExportException("Unknown function '" + ctx.VAR().getText() + "'");
+		
+		return rv;
 	}
 	
-	@Override public Expression visitSinFunc(@NotNull HystExpressionParser.SinFuncContext ctx) 
+	private Expression processReshape(FunctionContext ctx)
 	{
-		AddSubContext child = ctx.addSub();
+		List<AddSubContext> args = ctx.addSub();
 		
-		return new Operation(Operator.SIN, visit(child));
+		if (args.size() < 2)
+			throw new AutomatonExportException("Function 'reshape' expects at least 2 arguments: array, [width]+");
+		
+		MatrixExpression data = (MatrixExpression)(visit(args.get(0)));
+		
+		if (data.getNumDims() != 1)
+			throw new AutomatonExportException("Function 'reshape' expects fist argument to be a 1-d matrix. Instead got " +
+					data.getNumDims() + "-d data: " 
+					+ data.toDefaultString());
+		
+		Expression[] expressions = new Expression[data.getDimWidth(0)];
+		
+		for (int i = 0; i < data.getDimWidth(0); ++i)
+			expressions[i] = data.get(i);
+		
+		int[] vals = new int[args.size() - 1];
+		
+		for (int a = 1; a < args.size(); ++a)
+		{
+			Expression e = visit(args.get(a));
+			
+			if (!(e instanceof Constant))
+				throw new AutomatonExportException("width arguments in function 'reshape' must be integer constants");
+			
+			vals[a-1] = Integer.parseInt(e.toDefaultString()); 
+		}
+		
+		return new MatrixExpression(expressions, vals);
+	}
+
+	/**
+	 * Create a lookup table expression from a function context. Luts expect three arguments:
+	 * 1. var list, 2. table, and 3. breakpoints
+	 * @param ctx the function context
+	 * @return the constructed expression
+	 */
+	private Expression processLut(FunctionContext ctx)
+	{
+		List<AddSubContext> args = ctx.addSub();
+		
+		if (args.size() < 3)
+			throw new AutomatonExportException("Function 'lut' expects at least 3 arguments: varlist, table, [breakpoints]+");
+		
+		MatrixExpression vars = (MatrixExpression)(visit(args.get(0)));
+		
+		if (vars.getNumDims() != 1)
+			throw new AutomatonExportException("Function 'lut' expects fist argument to be a 1-d list of variables");
+		
+		Expression[] varList = new Expression[vars.getDimWidth(0)];
+		
+		for (int v = 0; v < vars.getDimWidth(0); ++v)
+			varList[v] = vars.get(v);
+		
+		MatrixExpression data = (MatrixExpression)visit(args.get(1));
+		MatrixExpression[] breakPoints = new MatrixExpression[args.size() - 2];
+		
+		for (int a = 2; a < args.size(); ++a)
+		{
+			MatrixExpression bp = (MatrixExpression)visit(args.get(a));
+			breakPoints[a-2] = bp;
+		}
+		
+		return new LutExpression(varList, data, breakPoints);
 	}
 	
-	@Override public Expression visitCosFunc(@NotNull HystExpressionParser.CosFuncContext ctx) 
+	@Override public Expression visitMatrix(@NotNull HystExpressionParser.MatrixContext ctx) 
 	{
-		AddSubContext child = ctx.addSub();
+		int len = ctx.matrixRow().size();
 		
-		return new Operation(Operator.COS, visit(child));
+		Expression[][] rows = new Expression[len][];
+		
+		for (int i = 0; i < len; ++i)
+		{
+			MatrixExpression row = (MatrixExpression)visit(ctx.matrixRow(i));
+			
+			rows[i] = new Expression[row.getDimWidth(0)];
+			
+			for (int j = 0; j < row.getDimWidth(0); ++j)
+				rows[i][j] = row.get(j);
+		}
+		
+		return new MatrixExpression(rows);
 	}
 	
-	@Override public Expression visitExpFunc(@NotNull HystExpressionParser.ExpFuncContext ctx) 
+	@Override public Expression visitMatrixRowExp(@NotNull HystExpressionParser.MatrixRowExpContext ctx) 
 	{
-		AddSubContext child = ctx.addSub();
+		int len = ctx.addSub().size();
+		Expression[] expressions = new Expression[len];
 		
-		return new Operation(Operator.EXP, visit(child));
-	}
-	
-	@Override public Expression visitLnFunc(@NotNull HystExpressionParser.LnFuncContext ctx) 
-	{
-		AddSubContext child = ctx.addSub();
+		for (int i = 0; i < len; ++i)
+			expressions[i] = visit(ctx.addSub(i));
 		
-		return new Operation(Operator.LN, visit(child));
+		return new MatrixExpression(expressions);
 	}
 	
 	@Override public Expression visitNumber(@NotNull HystExpressionParser.NumberContext ctx) 
@@ -415,18 +490,5 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 		AddSubContext child = ctx.addSub();
 		
 		return visit(child);
-	}
-	
-	private class VarList extends Expression
-	{
-		String[] variables;
-		
-		public VarList(String[] vars)
-		{
-			this.variables = vars;
-		}
-
-		@Override
-		public Expression copy() { return null; }
 	}
 }

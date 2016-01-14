@@ -212,7 +212,7 @@ class HybridTool(object):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
 
         self.original_model_path = args.model
-
+        
         if args.image != "-":
             self.image_path = os.path.realpath(args.image)
 

@@ -22,9 +22,12 @@ import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.XspeedPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import matlabcontrol.MatlabConnectionException;
+import matlabcontrol.MatlabInvocationException;
 
 /**
  * A unit test suite for testing various types of printers. While ModelParserTest focuses on validating that
@@ -223,7 +226,7 @@ public class PrintersTest
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
 		c.settings.plotVariableNames[1] = "x"; 
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & t = 0"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t = 0"));
 		
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
@@ -252,7 +255,7 @@ public class PrintersTest
 		Configuration c = makeSampleConfiguration();
 		
 		// add a second initial mode
-		c.init.put("stopped", FormulaParser.parseLoc("x = 5 & t = 6"));
+		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
 		
 		FlowPrinter.convertInitialModes(c);
 		
@@ -327,4 +330,46 @@ public class PrintersTest
 			tp.print(c, "scenario=" + scenario, loadedFilename);
 		}
     }
+}
+
+	@Test
+	public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
+		if (!MatlabBridge.hasMatlab())
+			return;
+		
+		String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
+		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+		sp.setToolParamsString("semantics=1");
+		sp.printProcedure(example_name);
+	}
+
+	@Test
+	public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
+		if (!MatlabBridge.hasMatlab())
+			return;
+		
+		String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
+		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
+		sp.setToolParamsString("semantics=0");
+		sp.printProcedure(example_name);
+	}
+
+	@Test
+	public void testHyCreatePowExpression()
+	{
+		// should use Math.pow, not ^
+		String[][] dynamics = { { "y", "t^2" }, { "t", "1" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		
+		ToolPrinter printer = new HyCreate2Printer();
+		printer.setOutputString();
+		printer.print(c, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
+		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output", 
+				out.contains("Math.pow($t, 2)"));
+	}
 }

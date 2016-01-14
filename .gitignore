@@ -6,7 +6,6 @@ src/bin/*
 .project
 .settings*
 .*.xml
-
 *.bbl
 *.aux
 *.blg

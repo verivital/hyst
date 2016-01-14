@@ -13,6 +13,7 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 
 /**
@@ -42,7 +43,7 @@ public class RemoveSimpleUnsatInvariantsPass extends TransformationPass
 	/**
 	 * Check if the given expression is unsatisfiable using simple range checks on all the variables.
 	 * @param e the expression to check
-	 * @return true if the expression is unsatisfiable
+	 * @return true if the expression is provably unsatisfiable
 	 */
 	private static boolean isUnsat(Expression e)
 	{
@@ -61,10 +62,14 @@ public class RemoveSimpleUnsatInvariantsPass extends TransformationPass
 				rv = true;
 				break;
 			}
-			catch (ConstantMismatchException x)
+			catch (ConstantMismatchException ex)
 			{
 				rv = true;
 				break;
+			}
+			catch (UnsupportedConditionException ex)
+			{
+				// not provably unsatisfiable, do nothing
 			}
 		}
 		

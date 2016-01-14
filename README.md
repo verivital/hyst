@@ -161,6 +161,22 @@ The basic process is:
 
 Please create unit tests and possibly regression tests for any changes submitted (e.g., see unit tests here: https://github.com/verivital/hyst/tree/master/src/java/com/verivital/hyst/junit and see regression tests here: https://github.com/verivital/hyst/tree/master/src/tests/regression ), this way we will know if we accidentally break any changes you've committed through other changes in Hyst.
 
+#### Code Quality:
+
+If you plan to do Hyst development that will work its way back into the main branch, please make an effort to produce high quality code. In addition to general practices of organizing your code flow in a logical manner, breaking up code into classes and methods which make sense for whatever logic being implemented, please pay attention to the following guidelines:
+
+* Add tests. You should at least have one or two tests showing that your printer or transformation pass works as expected. Add individual tests for complicated subcomponents or key methods.
+* Avoid duplicate code. If the same functionailty is implemented twice, generalize it and make a method called in both instances.
+* Avoid catching or throwing general exceptions. For errors in the printer use `AutomatonExportException` rather than `RuntimeException`.
+* When catching and rethrowing `Exception` objects, pass the old `Exception` into the constructor of the new one, so the trace is maintained. For example, if `e` is a caught `Exception`, you might do `throw new AutomatonExportExcpetion("error message", e);`
+* Instead of printing status messages to stdout, use `Hyst.log` or `Hyst.logDebug`
+* Delete commented-out garbage code.
+* Use meaningful variable and method names.
+* Use Java naming conventions for class and method names. Class names should be CapitalizedCamelCase, and methods should be lowercaseFirstCamelCase.
+* Use consistent a per-file code format. We have different conventions between different files, which isn't ideal, but each file should be consistent. In Eclipse you can right click within a file and do Source -> Format and it will reformat it for you.
+* Please try to keep lines less than 120 characters. If your lines are too long, consider breaking them up into multiple shorter lines that are easier to read.
+* If you copy a printer as a template, for example the Flow* printer, your final printer shouldn't make references to Flow* or its parameters. Read through your code before submitting.
+
 #### BUILDING HYST: 
 
 To build Hyst, proceed to the hyst/src/ directory and run "ant". This will create the Hyst.jar file.

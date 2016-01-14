@@ -37,6 +37,7 @@ public class AutomatonTransition
 	/**
 	 * The way to create a new transition in a hybrid automaton is to do
 	 * HybridAutomaton.createTransition(from, to), which will manage the internal state of the automaton
+	 * Guard is initially null, be sure to set it
 	 * 
 	 * @param parent the hybrid automaton
 	 * @param from the mode the transition comes from
@@ -116,13 +117,14 @@ public class AutomatonTransition
 		if (label != null && label.length() == 0)
 			throw new AutomatonValidationException("label was blank");
 		
-		Configuration.validateExpression(guard, "transition reset: " + DefaultExpressionPrinter.instance.print(guard));
+		if (guard == null)
+			throw new AutomatonValidationException("transition guard is null: " + from.name + " -> " + to.name);
 		
 		for (Entry<String, ExpressionInterval> e : reset.entrySet())
 		{
-			Expression ex = e.getValue().getExpression();
-			Configuration.validateExpression(ex, "transition reset for " + e.getKey() + ": "
-					+ DefaultExpressionPrinter.instance.print(ex));
+			if (e.getValue() == null)
+				throw new AutomatonValidationException("transition reset is null for variable " + e.getKey() + ": " 
+						+ from.name + " -> " + to.name);
 		}
 	}
 	

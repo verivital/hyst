@@ -36,6 +36,7 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 public class HybridizeMixedTriggeredPass extends TransformationPass 
 {
@@ -240,6 +241,10 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		{
 			throw new AutomatonExportException("Constant mismatch in initial values.", e);
 		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException("Initial values were not a box", e);
+		}
 		
 		int numVars = ha.variables.size();
 		
@@ -290,7 +295,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			initBox.enumerateCornersUnique(new HyperRectangleCornerEnumerator()
 			{
 				@Override
-				public void enumerate(HyperPoint p)
+				protected void enumerate(HyperPoint p)
 				{
 					rv.add(p);
 				}
@@ -351,10 +356,10 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		sim.run(timeMax);
 		long simEndMs = System.currentTimeMillis();
 		
-		PythonBridge pb = PythonBridge.getInstance(-1);
+		PythonBridge.getInstance().setTimeout(-1);
 
 		long optStartMs = System.currentTimeMillis();
-		hybridizeFlows(sim.modes, sim.rects, pb);
+		hybridizeFlows(sim.modes, sim.rects);
 		long optTime = System.currentTimeMillis() - optStartMs;
 		long simTime = simEndMs - simStartMs;
 		
@@ -689,7 +694,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
 				{
-					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval(0));
 					
 					preMode.invariant = Constant.TRUE;
 					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
@@ -760,7 +765,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				// possibly add a second transition to an intermediate pre-mode with zero dynamics (for plotting)
 				if (addIntermediate)
 				{
-					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval("0"));
+					AutomatonMode preMode = ha.createMode("_pre" + modeName, new ExpressionInterval(0));
 					
 					preMode.invariant = Constant.TRUE;
 					preMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(0)));
@@ -845,10 +850,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	/**
 	 * Change the (nonlinear) flow in each mode to a hybridized one with affine dynamics
 	 * @param am the mode to change 
-	 * @param hr the constraint set, in the order of ha.variablenames
+	 * @param rects the constraint rectangle, in the order of ha.variablenames
 	 */
-	private void hybridizeFlows(ArrayList<AutomatonMode> modes,
-			ArrayList<HyperRectangle> rects, PythonBridge pb)
+	private void hybridizeFlows(ArrayList<AutomatonMode> modes,	ArrayList<HyperRectangle> rects)
 	{
 		if (modes.size() == 0)
 			throw new AutomatonExportException("hybridizeFlows was called 0 modes");
@@ -872,7 +876,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			params.add(op);
 		}
 		
-		 AffineOptimize.createAffineDynamics(pb, params);
+		 AffineOptimize.createAffineDynamics(params);
 		
 		 for (int i = 0; i < modes.size(); ++i)
 		 {
@@ -993,7 +997,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		ha.variables.add(TT_VARIABLE);
 		ttVarIndex = ha.variables.size() - 1;
 		
-		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval("0"));
+		originalMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(0));
 	}
 
 	/**
@@ -1007,7 +1011,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		errorMode.invariant = Constant.TRUE;
 		
 		for (String v : ha.variables)
-			errorMode.flowDynamics.put(v, new ExpressionInterval("0"));
+			errorMode.flowDynamics.put(v, new ExpressionInterval(0));
 		
 		return errorMode;
 	}

@@ -4,7 +4,7 @@
     <property name="main.package"          value="exporter"/>
     <property name="parser.package"        value="${main.package}/parser"/>
 	<property name="main.src.dir"          value="src/java/com/verivital/hyst"/>
-    <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> <!-- note: did not need src here due to relative paths, check if this works on your setups -->
+    <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> 
     <property name="grammar.file"          value="${grammar.src.dir}/HystExpression.g4"/>
 	<property name="release.path"          value="release"/>
 	<property name="release_slsf.path"     value="release_slsf"/>
@@ -162,6 +162,12 @@
 	
 	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
 	
+	<target name ="run_jar_test" depends="build-config,build,copyjar" description="Test running the .jar">
+		<exec dir="${lib.path}" executable="java" failonerror="true" outputproperty="devnull">
+			<arg line="-jar ${jar.path} -help" />
+		</exec>
+	</target>
+	
 	<!-- This will unit test every class with *Test*.java in it -->
 	<target name ="unit_test" depends="build-config,build" description="Run the JUnit tests">
 		<mkdir dir="${reports.path}"/>
@@ -188,7 +194,7 @@
 	</target>
 	
 	<!-- run all tests (unit and regression) -->
-	<target name ="test" depends="unit_test,regression_test" description="Run the Unit and Regression Tests">
+	<target name ="test" depends="run_jar_test,unit_test,regression_test" description="Run the Unit and Regression Tests">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

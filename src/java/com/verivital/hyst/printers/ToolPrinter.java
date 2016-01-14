@@ -11,8 +11,6 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 import java.util.Map;
 
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
-import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.main.Hyst;
@@ -52,6 +50,7 @@ public abstract class ToolPrinter
 		GUI,
 		FILE,
 		NONE,
+		STRING,
 	};
 	
 	public void setConfig(Configuration c) {
@@ -61,7 +60,7 @@ public abstract class ToolPrinter
 	protected OutputType outputType = OutputType.STDOUT;
 	private PrintStream outputStream; // used if printType = STDOUT or FILE
 	private HystFrame outputFrame; // used if printType = GUI
-	
+	public StringBuffer outputString; // used if printType = STRING
 	
 	// static 
 	private static DecimalFormat df = new DecimalFormat("0.#");
@@ -81,6 +80,12 @@ public abstract class ToolPrinter
 	public void setOutputNone()
 	{
 		outputType = OutputType.NONE;
+	}
+	
+	public void setOutputString()
+	{
+		outputType = OutputType.STRING;
+		outputString = new StringBuffer();
 	}
 	
 	/**
@@ -111,6 +116,9 @@ public abstract class ToolPrinter
 		
 		try
 		{
+			outputString = null;
+			outputStream = null;
+			
 			if (outputType == OutputType.STDOUT) {
 				outputStream = System.out;
 			}
@@ -119,6 +127,8 @@ public abstract class ToolPrinter
 				shouldCloseStream = true;
 				outputStream = new PrintStream(new BufferedOutputStream(new FileOutputStream(outputFilename)));
 			}
+			else if (outputType == OutputType.STRING)
+				outputString = new StringBuffer();
 			
 			this.config = c;
 			checkPreconditions(c);
@@ -162,6 +172,8 @@ public abstract class ToolPrinter
 			outputStream.println();
 		else if (outputType == OutputType.GUI)
 			outputFrame.addOutput("\n");
+		else if (outputType == OutputType.STRING)
+			outputString.append("\n");
 	}
 
 	/**
@@ -194,6 +206,8 @@ public abstract class ToolPrinter
 			outputStream.println(s);
 		else if (outputType == OutputType.GUI)
 			outputFrame.addOutput(s);
+		else if (outputType == OutputType.STRING)
+			outputString.append(s);
 	}
 	
 	/**
@@ -238,6 +252,8 @@ public abstract class ToolPrinter
 			outputStream.println(s);
 		else if (outputType == OutputType.GUI)
 			outputFrame.addOutput(s);
+		else if (outputType == OutputType.STRING)
+			outputString.append(s);
 		
 		if (indent && line.equals("{")) 
 			increaseIndentation();
@@ -260,6 +276,8 @@ public abstract class ToolPrinter
 			outputStream.print(newS);
 		else if (outputType == OutputType.GUI)
 			outputFrame.addOutput(newS);
+		else if (outputType == OutputType.STRING)
+			outputString.append(newS);
 	}
 	
 	/**

@@ -31,15 +31,10 @@ public class SpaceExImporter
 	 */
 	public static SpaceExDocument importModels(String cfgFilename, String ... xmlFilenames)
 	{
-		//System.out.println("Working Directory = " + System.getProperty("user.dir"));
-		Path currentRelativePath = Paths.get("");
-		String s = currentRelativePath.toAbsolutePath().toString();
-		//System.out.println("Current relative path is: " + s);
-		
 		for (String name : xmlFilenames)
 		{
 			if (!new File(name).exists()) 
-				throw new AutomatonExportException(name + " not found; full path tried: " + s + name);
+				throw new AutomatonExportException(name + " not found; full path tried: " + new File(name).getAbsolutePath());
 		}
 		
 		if (!new File(cfgFilename).exists()) 

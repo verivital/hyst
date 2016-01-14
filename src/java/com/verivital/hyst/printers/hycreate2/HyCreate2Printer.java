@@ -42,6 +42,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 
 public class HyCreate2Printer extends ToolPrinter
@@ -181,6 +182,10 @@ public class HyCreate2Printer extends ToolPrinter
 			catch (ConstantMismatchException ex)
 			{
 				throw new AutomatonExportException("Constant mismatch in initial states", ex);
+			}
+			catch (UnsupportedConditionException ex)
+			{
+				throw new AutomatonExportException("Non-box initial states", ex);
 			}
 			
 			boolean first = true;
@@ -680,6 +685,7 @@ public class HyCreate2Printer extends ToolPrinter
 			opNames.put(Operator.TAN, "Math.tan");
 			opNames.put(Operator.LN, "Math.ln");
 			opNames.put(Operator.SQRT, "Math.sqrt");
+			opNames.put(Operator.EXP, "Math.exp");
 			
 			opNames.put(Operator.AND, "&&");
 			opNames.put(Operator.OR, "||");
@@ -689,6 +695,20 @@ public class HyCreate2Printer extends ToolPrinter
 		public String printVariable(Variable v)
 		{
 			return "$" + v.name;
+		}
+		
+		@Override
+		public String printOperation(Operation o)
+		{
+			// custom printing for pow operators
+			String rv = null;
+			
+			if (o.op == Operator.POW)
+				rv = "Math.pow(" + print(o.getLeft()) + ", " + print(o.getRight()) + ")";
+			else
+				rv = super.printOperation(o);
+			
+			return rv;
 		}
 	};
 }

@@ -1,4 +1,4 @@
-function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
+function [out_slsf_model, out_slsf_model_path, out_config] = SpaceExToStateflow(varargin)
 %SPACEEXTOSTATEFLOW SpaceEx to Stateflow conversion
 %
 % example call without semantics preservation:
@@ -84,47 +84,11 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     % Specify options from the input argument
     [options, path_name, xml_filename, cfg_filename] = ...
         option_SpaceExToStateflow(varargin);
-    xml_filepath = [path_name, '\', xml_filename];
-    cfg_filepath = [path_name, '\',cfg_filename];
-    % add option for using model without .cfg file
-    try
-    % read spaceex XML model file
-        xml = xmlread(xml_filepath);
-        [pathstr,name,ext] = fileparts(xml_filepath);
-
-        % matlab functions cannot start with numbers, although some
-        % model files may, so replace all these possibilities
-        %
-        % TODO: put this as a pass / general fix in Hyst in case other tools don't
-        % support arbitrary names (I thought we've run into this
-        % before...)
-        expression = '(^|\.)\d*';
-        replace = '${digitToWord($0)}';
-
-        name = regexprep(name,expression,replace);
-
-    catch exception
-        %if ~exist('..\examples\xml_filename', 'file')
-            disp('The xml file does not exist');
-            throw(exception)
-        %end 
-    end
-    try
-        cfg_reader = java.io.FileReader(cfg_filepath);
-        % create SpaceexDocuments
-        % read both spaceex XML model and configuration files
-        xml_cfg = de.uni_freiburg.informatik.swt.spaxeexxmlreader.SpaceExXMLReader(xml, cfg_reader);
-        doc = xml_cfg.read();
-        componentTemplates = com.verivital.hyst.importer.TemplateImporter.createComponentTemplates(doc);
-
-        config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-
-    catch exception
-       %if ~exist('..\examples\cfg_filename', 'file')
-            disp('The configuration file does not exist');
-            throw(exception);
-       %end
-    end
+    
+    xml_filepath = [path_name, filesep, xml_filename];
+    cfg_filepath = [path_name, filesep, cfg_filename];
+    
+    [config, name] = createConfigFromSpaceEx(xml_filepath, cfg_filepath);
     
     output_path = ['.', filesep, 'output_slsf_models', filesep];
     if isequal(exist(output_path, 'dir'),7) == 0
@@ -179,5 +143,5 @@ function [out_slsf_model, out_slsf_model_path] = SpaceExToStateflow(varargin)
     % output
     out_slsf_model_path = slsf_model_path;
     out_slsf_model = m;
-    %out_ha = ha;
+    out_config = config;
 end

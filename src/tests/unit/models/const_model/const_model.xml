@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="base">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="c" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="charging" x="362.0" y="231.5" width="369.0" height="124.0">
+      <flow>x' == 1</flow>
+    </location>
+  </component>
+  <component id="net">
+    <param name="global_c" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="base" as="base_1" x="496.0" y="118.0">
+      <map key="x">x</map>
+      <map key="c">0</map>
+    </bind>
+  </component>
+</sspaceex>
+

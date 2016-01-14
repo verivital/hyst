@@ -17,7 +17,6 @@ public class Operation extends Expression
 {
 	public Operator op;
 	public List <Expression> children = null;
-        //private Operator mOperator;
 	
 	// shallow copy exps
 	public Operation(Operator operator, Expression... exps) 

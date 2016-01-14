@@ -1,5 +1,20 @@
 package com.verivital.hyst.junit;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
+
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
@@ -28,23 +43,11 @@ import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
+
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 /**
  * JUnit tests for transformation passes
@@ -95,9 +98,8 @@ public class PassTests {
 		ha.variables.add("x");
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
-		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & t == 0"));
-
+		c.settings.plotVariableNames[1] = "x"; 
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t == 0"));
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
 		am1.flowDynamics.put("t", new ExpressionInterval(new Constant(1)));
@@ -123,24 +125,9 @@ public class PassTests {
 	 * @return the constructed Configuration
 	 */
 	private static Configuration makeSampleBaseConfiguration() {
-		BaseComponent ha = new BaseComponent();
-		ha.variables.add("x");
-		ha.variables.add("y");
-
-		Configuration c = new Configuration(ha);
-
-		c.settings.plotVariableNames[0] = "x";
-		c.settings.plotVariableNames[1] = "y";
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & y == 0"));
-
-		AutomatonMode am1 = ha.createMode("running");
-		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
-		am1.flowDynamics.put("y", new ExpressionInterval(new Constant(1)));
-		am1.invariant = Constant.TRUE;
-
-		c.validate();
-
-		return c;
+		String[][] dynamics = {{"x","1"}, {"y", "1"}}; 
+		
+		return AutomatonUtil.makeDebugConfiguration(dynamics);
 	}
 
 	@Test
@@ -176,55 +163,6 @@ public class PassTests {
 	}
 
 	/**
-	 * Create a single-mode confiruation
-	 * 
-	 * @param dynamics
-	 *            a list of variable names, dynamics and possibly initial states
-	 *            for each variable, for example {{"x", "x+1", "0.5"}, {"y",
-	 *            "3"}} would corespond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
-	 * @return the constructed configuration
-	 */
-	private Configuration makeDebugConfiguration(String[][] dynamics) {
-		final int VAR_INDEX = 0;
-		final int FLOW_INDEX = 1;
-		final int INIT_INDEX = 2;
-		BaseComponent ha = new BaseComponent();
-		AutomatonMode am = ha.createMode("running");
-		StringBuilder initStringBuilder = new StringBuilder();
-
-		for (int i = 0; i < dynamics.length; ++i) {
-			if (dynamics[i].length < 2 || dynamics[i].length > 3)
-				throw new AutomatonExportException("expected 2 or 3 values in passed-in array (varname, flow, init)");
-
-			String var = dynamics[i][VAR_INDEX];
-			String flow = var + "' == " + dynamics[i][FLOW_INDEX];
-
-			ha.variables.add(var);
-
-			String initVal = dynamics[i].length == 3 ? dynamics[i][INIT_INDEX] : "0";
-			String initStr = var + " == " + initVal;
-
-			if (initStringBuilder.length() > 0)
-				initStringBuilder.append(" & " + initStr);
-			else
-				initStringBuilder.append(initStr);
-
-			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
-			am.flowDynamics.put(var, new ExpressionInterval(flowExp));
-		}
-
-		Configuration c = new Configuration(ha);
-
-		am.invariant = Constant.TRUE;
-		c.settings.plotVariableNames[0] = ha.variables.get(0);
-		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0);
-		c.init.put("running", FormulaParser.parseLoc(initStringBuilder.toString()));
-
-		c.validate();
-		return c;
-	}
-
-	/**
 	 * An ExpresssionPrinter which prints constants to a certain number of
 	 * digits after the decimel
 	 *
@@ -236,6 +174,17 @@ public class PassTests {
 		}
 	}
 
+	/**
+	 * Check two expressions for equality, raising an assertion exception if there are errors
+	 */
+	void assertExpressionsEqual(String message, Expression expected, Expression actual)
+	{
+		String msg = AutomatonUtil.areExpressionsEqual(expected, actual);
+		
+		if (msg != null)
+			Assert.fail(message + "\n" + msg);
+	}
+	
 	/**
 	 * Test hybridization (grid) pass
 	 */
@@ -266,8 +215,21 @@ public class PassTests {
 			// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
 			Expression.expressionPrinter = new RoundPrinter(3);
 			ExpressionInterval ei = m.flowDynamics.get("x");
-			Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] correctly", "7.5 * x + 5.5 * y + -12 + [0, 1.5]",
-					ei.toString());
+			
+			Expression e = ei.getExpression();
+			Interval i = ei.getInterval();
+			
+			// expected "7.5 * x + 5.5 * y + -12 + [0, 1.5]"
+			double TOL = 1e-9;
+			
+			Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] in correctly (interval min wrong)", 0, i.min, TOL);
+			Assert.assertEquals("Hybrizied mode x=[1,2], y=[2,3] in correctly (interval max wrong)", 1.5, i.max, TOL);
+			
+			Expression correctE = FormulaParser.parseValue("7.5 * x + 5.5 * y - 12");
+			String msg = AutomatonUtil.areExpressionsEqual(correctE, e);
+			
+			if (msg != null)
+				Assert.fail(msg);
 
 			Assert.assertEquals("single initial state", c.init.size(), 1);
 		} catch (AutomatonExportException ex) {
@@ -303,7 +265,7 @@ public class PassTests {
 		am.invariant = FormulaParser.parseInvariant("x <= 10");
 
 		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26"));
+		c.init.put("on", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26"));
 		c.validate();
 
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center";
@@ -324,17 +286,9 @@ public class PassTests {
 
 			Expression.expressionPrinter = rp;
 
-			// dynamics should be approximately x' =.536*x - 0.0718 + [0,
-			// 0.0046]
-			String correctDynamics = "0.5357 * x + -0.0717 + [0, 0.0046]";
-			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
 
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
-
-			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x + -0.0958 + [0, 0.0054]";
-			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
 
 			// invariant x <= 10 should be present in first mode
 			// time trigger invariant c <= 0.5 should be present in first mode
@@ -373,8 +327,8 @@ public class PassTests {
 
 		ha.variables.add("x");
 		c.settings.plotVariableNames[0] = "x";
-		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseLoc("x = 0"));
+		c.settings.plotVariableNames[1] = "x"; 
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0"));
 		am.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
 		am.invariant = Constant.TRUE;
 		c.validate();
@@ -432,7 +386,7 @@ public class PassTests {
 		am.invariant = FormulaParser.parseInvariant("x <= 10");
 
 		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26"));
+		c.init.put("on", FormulaParser.parseGuard("x >= 0.24 & x <= 0.26"));
 		c.validate();
 
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center,addintermediate=true";
@@ -448,18 +402,22 @@ public class PassTests {
 			Assert.assertNotEquals("mode named '_m_0 exists'", null, m0);
 
 			Expression.expressionPrinter = rp;
-
-			// dynamics should be approximately x' =.536*x - 0.0718 + [0,
-			// 0.0046]
-			String correctDynamics = "0.5357 * x + -0.0717 + [0, 0.0046]";
-			Assert.assertEquals("mode0.x' == " + correctDynamics, correctDynamics, m0.flowDynamics.get("x").toString());
+			
+			// dynamics should be approximately x' =.536*x - 0.0718 + [0, 0.0046]
+			double TOL = 1e-2;
+			ComparableEi correctDynamics = new ComparableEi("0.5357 * x - 0.0717", 
+					new Interval(0, 0.0046), TOL);
+			ComparableEi computedDynamics = new ComparableEi(m0.flowDynamics.get("x"), TOL);
+			
+			Assert.assertEquals("mode0.x' incorrect", correctDynamics, computedDynamics);
 
 			AutomatonMode m1 = ha.modes.get("_m_1");
 			Assert.assertNotEquals("mode named '_m_1 exists'", null, m1);
 
 			// dynamics should be approx x=0.619 * x + -0.0958 + [0, 0.0054]
-			correctDynamics = "0.619 * x + -0.0958 + [0, 0.0054]";
-			Assert.assertEquals("mode1.x' == " + correctDynamics, correctDynamics, m1.flowDynamics.get("x").toString());
+			correctDynamics = new ComparableEi("0.619 * x - 0.0958)", new Interval(0, 0.0054), TOL);
+			Assert.assertEquals("mode0.x' incorrect", correctDynamics, 
+					new ComparableEi(m1.flowDynamics.get("x"), TOL));
 
 			// invariant x <= 10 should be present in first mode
 			// time trigger invariant c <= 0.5 should be present in first mode
@@ -528,7 +486,7 @@ public class PassTests {
 
 		am.flowDynamics.put("x", new ExpressionInterval("y"));
 		am.flowDynamics.put("y", new ExpressionInterval("(1-x*x)*y-x"));
-		c.init.put("running", FormulaParser.parseLoc("-0.51 <= x & x <= -0.5 & -2.61 <= y & y <= -2.6"));
+		c.init.put("on", FormulaParser.parseInitialForbidden("-0.51 <= x & x <= -0.5 & -2.61 <= y & y <= -2.6"));
 		c.validate();
 
 		String params = "step=0.01,maxtime=0.02,epsilon=0.01,addforbidden=false";
@@ -657,7 +615,7 @@ public class PassTests {
 		am.flowDynamics.put("x", new ExpressionInterval("1"));
 
 		c.settings.plotVariableNames[1] = "x";
-		c.init.put("running", FormulaParser.parseGuard("x >= 0 & x <= 1"));
+		c.init.put("on", FormulaParser.parseGuard("x >= 0 & x <= 1"));
 		c.validate();
 
 		String params = "step=1,maxtime=10,epsilon=0.01,simtype=star,picount=1";
@@ -733,7 +691,7 @@ public class PassTests {
 	@Test
 	public void testContinuizationPassSineWave() {
 		String[][] dynamics = { { "y", "cos(t)" }, { "t", "1" } };
-		Configuration c = makeDebugConfiguration(dynamics);
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 
 		String continuizationParam = "-var y -period 0.1 -times 1.57 3.14 -timevar t -bloats 0.1 0.2";
 
@@ -741,28 +699,29 @@ public class PassTests {
 		BaseComponent ha = (BaseComponent) c.root;
 
 		// we should have four error modes, and two normal modes
-		AutomatonMode running1 = null, running2 = null;
+		AutomatonMode on1 = null, on2 = null;
 		int numErrorModes = 0;
-
-		for (AutomatonMode am : ha.modes.values()) {
-			if (am.name.equals("running"))
-				running1 = am;
-			else if (am.name.equals("running_2"))
-				running2 = am;
+		
+		for (AutomatonMode am : ha.modes.values())
+		{
+			if (am.name.equals("on"))
+				on1 = am;
+			else if (am.name.equals("on_2"))
+				on2 = am;
 			else if (am.name.contains("error"))
 				++numErrorModes;
 		}
 
-		Assert.assertNotEquals("running found", null, running1);
-		Assert.assertNotEquals("running_2 found", null, running2);
+		Assert.assertNotEquals("on found", null, on1);
+		Assert.assertNotEquals("on_2 found", null, on2);
 		Assert.assertEquals("four error modes", numErrorModes, 4);
 	}
-
-	@Test
-	public void testContinuizationPassDoubleIntegrator() {
-		String[][] dynamics = { { "x", "v", "0.05" }, { "v", "a", "0" }, { "a", "-10 * v - 3 * a", "9.5" } };
-		Configuration c = makeDebugConfiguration(dynamics);
-
+	
+	@Test 
+	public void testContinuizationPassDoubleIntegrator()
+	{
+		String[][] dynamics = {{"x", "v", "0.05"}, {"v", "a", "0"}, {"a", "-10 * v - 3 * a", "9.5"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		String continuizationParam = "-var a -period 0.005 -times 1.5 5 -timevar t -bloats 4 4";
 
 		try {
@@ -773,18 +732,19 @@ public class PassTests {
 			// we should have four error modes, and two normal modes
 			AutomatonMode running1 = null, running2 = null;
 			int numErrorModes = 0;
-
-			for (AutomatonMode am : ha.modes.values()) {
-				if (am.name.equals("running"))
+			
+			for (AutomatonMode am : ha.modes.values())
+			{
+				if (am.name.equals("on"))
 					running1 = am;
-				else if (am.name.equals("running_2"))
+				else if (am.name.equals("on_2"))
 					running2 = am;
 				else if (am.name.contains("error"))
 					++numErrorModes;
 			}
-
-			Assert.assertNotEquals("running found", null, running1);
-			Assert.assertNotEquals("running_2 found", null, running2);
+		
+			Assert.assertNotEquals("on found", null, running1);
+			Assert.assertNotEquals("on_2 found", null, running2);
 			Assert.assertEquals("four error modes", numErrorModes, 4);
 
 			Assert.assertTrue("time-triggered invariant is correct",

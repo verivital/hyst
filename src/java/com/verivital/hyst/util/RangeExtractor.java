@@ -12,7 +12,6 @@ import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
@@ -24,13 +23,16 @@ import com.verivital.hyst.ir.AutomatonExportException;
 public class RangeExtractor
 {
 	/**
-	 * Get ranges for variables in a logical expression, ignores loc assignements
+	 * Get ranges for variables in a logical expression, ignores loc assignments
 	 * @param expression the expression to parse
 	 * @param ranges where to store the ranges for the variables we encounter
 	 * @throws EmptyRangeException if expression is Constant.FALSE or otherwise unsatisfiable for any variable in 'variables'
+	 * @throws ConstantMismatchException if there are conflicting assignments to constants
+	 * @throws UnsupportedConditionException if the expression contains non-interval operations on the desired variable
+	 
 	 */
 	public static void getVariableRanges(Expression expression, TreeMap <String, Interval> ranges) 
-			throws EmptyRangeException, ConstantMismatchException
+			throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		try
 		{
@@ -40,7 +42,7 @@ public class RangeExtractor
 		catch (AutomatonExportException e)
 		{
 			throw new AutomatonExportException("Error while parsing expression: " + 
-					DefaultExpressionPrinter.instance.print(expression), e);
+					expression.toDefaultString(), e);
 		}
 	}
 	
@@ -126,9 +128,11 @@ public class RangeExtractor
 	 * @param expression the expression to parse
 	 * @param variable the name of the variable
 	 * @throws EmptyRangeException if expression is Constant.FALSE or otherwise unsatisfiable for any variable in 'variables'
+	 * @throws ConstantMismatchException is there are constants which contradict each other
+	 * @throws UnsupportedConditionException if there are conditions not suited for interval range extraction
 	 */
 	public static Interval getVariableRange(Expression expression, String variable)
-			throws EmptyRangeException, ConstantMismatchException
+			throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
 		TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
 		
@@ -148,16 +152,23 @@ public class RangeExtractor
 		}
 		catch (AutomatonExportException e)
 		{
-			throw new AutomatonExportException("Error while parsing expression: " + expression.toDefaultString(), e);
+			// this can occur, for example, if the conditions are not box-edges
+			throw new EmptyRangeException("Error getting range for " + variable + " in expression: " + 
+					expression.toDefaultString(), e);
 		}
 		catch (EmptyRangeException e)
 		{
-			throw new EmptyRangeException("Could not get range for " + variable + " in expression: " + 
+			throw new EmptyRangeException("Empty range for " + variable + " in expression: " + 
 					expression.toDefaultString(), e);
 		}
 		catch (ConstantMismatchException e)
 		{
 			throw new ConstantMismatchException("Constant mismatch in expression: " + expression.toDefaultString(), e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new UnsupportedConditionException("Unsupported operation for range extraction in expression: " 
+					+ expression.toDefaultString(), e);
 		}
 		
 		return rv;
@@ -218,10 +229,11 @@ public class RangeExtractor
 	 * @param vars a set of variables we are interested in. if null then get all variables
 	 * @param constantMap a map of variableName -> value for all constants in the original expression
 	 * @throws EmptyRangeException if expression is Constant.FALSE or otherwise unsatisfiable for the selected variables
+	 * @throws UnsupportedConditionException if the expression contains non-interval operations on the desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression, 
 			TreeMap <String, Interval> ranges, Collection <String> vars, 
-			Map<String, Double> constantMap) throws EmptyRangeException
+			Map<String, Double> constantMap) throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();
 		
@@ -294,15 +306,20 @@ public class RangeExtractor
 						}
 						else
 						{
-							// both variables, skip
-							shouldSkip = true;
+							// both are variables. This is only allowed it it's an alias assignment, which
+							// we detect by checking if the operator is '=='
+							if (op == Operator.EQUAL)
+								shouldSkip = true;
+							else
+								throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
+									"side should be variable, the other side a constant): " + expression.toDefaultString());
 						}
 					}
 				}
 				else
 				{
-					throw new AutomatonExportException("Unsupported condition (one side should be variable," +
-								" the other side a constant): " + expression);
+					throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
+							"side should be variable, the other side a constant): " + expression.toDefaultString());
 				}
 				
 				if (!shouldSkip)
@@ -342,7 +359,8 @@ public class RangeExtractor
 						i.max = val;
 					}
 					else 
-						throw new AutomatonExportException("Unsupported expression in condition: " + expression);
+						throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
+									+ expression.toDefaultString());
 					
 					if (i.max < i.min)
 						throw new EmptyRangeException("range for " + varName + " is unsatisfiable");
@@ -362,12 +380,14 @@ public class RangeExtractor
 				throw new EmptyRangeException("expression contains false");
 			}
 			else
-				throw new AutomatonExportException("Unsupported expression type (variable as condition?): " + expression);
+				throw new AutomatonExportException("Unsupported expression type (variable as condition?): " 
+						+ expression.toDefaultString());
 		}
 		else if (expression == Constant.FALSE) // if any variable is false, the range for all is empty
 			throw new EmptyRangeException("expression contains FALSE");
 		else if (expression != Constant.TRUE && expressionContainsVariables(expression, vars))
-			throw new AutomatonExportException("Unsupported expression: " + expression);
+			throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
+					+ expression.toDefaultString());
 		
 	}
 	
@@ -464,7 +484,21 @@ public class RangeExtractor
 			super(msg, e);
 		}
 	}
-
+	
+	@SuppressWarnings("serial")
+	public static class UnsupportedConditionException extends Exception
+	{
+		public UnsupportedConditionException(String msg)
+		{
+			super(msg);
+		}
+		
+		public UnsupportedConditionException(String msg, Exception e)
+		{
+			super(msg, e);
+		}
+	}
+	
 	public static int countVariableOccurances(Expression expression, String variable)
 	{
 		int rv = 0;
@@ -524,6 +558,10 @@ public class RangeExtractor
 		catch (ConstantMismatchException ex)
 		{
 			throw new AutomatonExportException(description + " variable range was contradictory", ex);
+		}
+		catch (UnsupportedConditionException ex)
+		{
+			throw new AutomatonExportException(description + " variable range was not a box", ex);
 		}
 
 		return ranges;

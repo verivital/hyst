@@ -45,7 +45,7 @@ function [time, valuesALL, labels] = simulationLoop(model, iterations, maxTime, 
         end
 
         % holds names of model parameters
-        printer = com.verivital.hyst.printers.StateflowSpPrinter();
+        printer = com.verivital.hyst.printers.SimulinkStateflowPrinter();
 
         % set standard values
         if ((nargin < 8) || (plot_option == -1))

@@ -55,12 +55,19 @@ public class SimplifyExpressionsPass extends TransformationPass
 				runRec(ci.child);
 		}
 	}
-
+	
 	/**
 	 * Simplify a single expression and return it
 	 * Boolean expressions are simplified to Constant.FALSE or Constant.TRUE
 	 */
 	public static Expression simplifyExpression(Expression e)
+	{
+		Expression rv = simplifyExpressionRec(e);
+		
+		return rv;
+	}
+	
+	private static Expression simplifyExpressionRec(Expression e)
 	{
 		Expression rv = e;
 		
@@ -73,7 +80,7 @@ public class SimplifyExpressionsPass extends TransformationPass
 			{
 				Expression child = o.children.get(i);
 				
-				o.children.set(i, simplifyExpression(child));
+				o.children.set(i, simplifyExpressionRec(child));
 			}
 
 			if (op == Operator.AND && o.getLeft() instanceof Constant)

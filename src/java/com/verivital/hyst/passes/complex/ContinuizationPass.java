@@ -538,7 +538,7 @@ public class ContinuizationPass extends TransformationPass
 				rv.flowDynamics.put(v, new ExpressionInterval(new Constant(0)));
 			
 			// update forbidden states
-			config.forbidden.put(badModeName, null);
+			config.forbidden.put(badModeName, Constant.TRUE);
 		}
 		
 		return rv;
@@ -694,7 +694,7 @@ public class ContinuizationPass extends TransformationPass
 		for (AutomatonMode am : ha.modes.values())
 		{
 			if (!am.urgent)
-				am.flowDynamics.put(timeVar, new ExpressionInterval("1"));
+				am.flowDynamics.put(timeVar, new ExpressionInterval(1));
 		}
 		
 		Entry<String, Expression> e = config.init.entrySet().iterator().next();

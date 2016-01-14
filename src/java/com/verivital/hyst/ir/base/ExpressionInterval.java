@@ -58,7 +58,12 @@ public class ExpressionInterval
 	 */
 	public ExpressionInterval(String text)
 	{
-		this(FormulaParser.parseNumber(text));
+		this(FormulaParser.parseValue(text));
+	}
+
+	public ExpressionInterval(String expString, Interval i)
+	{
+		this(FormulaParser.parseValue(expString), i);
 	}
 
 	public ExpressionInterval copy()

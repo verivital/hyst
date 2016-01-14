@@ -15,7 +15,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 
 public class FormulaParser
 {
-	public static Expression getExpression(String text, String part)
+	private static Expression getExpression(String text, String part)
 	{
 		Expression rv = null;
 		HystExpressionParser par = null;
@@ -37,7 +37,7 @@ public class FormulaParser
 		}
 		catch (AutomatonExportException e)
 		{
-			throw new AutomatonExportException("Could not parse " + part + ": '" + text + "'", e);
+			throw new AutomatonExportException("Could not parse " + part + ": '" + text + "'\n" + e.getLocalizedMessage(), e);
 		}
 		catch (ParseCancellationException e)
 		{
@@ -103,25 +103,23 @@ public class FormulaParser
 	}
 	
 	/**
-	 * Parse a number like 2 * x - 5
-	 * @param text
-	 * @return
+	 * Parse a number like 2 * x - 5.
+	 * @param text the number text
+	 * @return a parsed Expression
 	 */
-	public static Expression parseNumber(String text)
+	public static Expression parseValue(String text)
 	{
 		Expression rv = null;
 		
 		try
 		{
 			rv = getExpression(text, "number (addsub)");
-			
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
 			String msg = e.getMessage();
 			
-			throw new AutomatonExportException("Parser Error; " + msg + "; sample expected syntax: x' := x + y & y' := 0", e);
+			throw new AutomatonExportException("ParseNumber Error; " + msg + "; sample expected syntax: 2 * x + sin(y) ", e);
 		}
 		
 		return rv;
@@ -134,7 +132,6 @@ public class FormulaParser
 		try
 		{
 			rv = getExpression(text, "invariant");
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -153,7 +150,6 @@ public class FormulaParser
 		try
 		{
 			rv = getExpression(text, "reset");
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -172,7 +168,6 @@ public class FormulaParser
 		try
 		{
 			rv = getExpression(text, "guard");
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -203,23 +198,20 @@ public class FormulaParser
 	}
 	
 	/**
-	 * Parses locations with expressions over state variables
+	 * Parses initial/forbidden expressions in the spaceex config files (may include loc() functions)
 	 * 
 	 * Used to Parse: initially and forbidden expressions from SpaceEx XML config file
-	 * 
-	 * TODO: TJ: change name to parseInitial or parseForbidden? or maybe parseState? this name is a little confusing and I had to look through SpaceExXMLReader.java to find it over here
 	 * 
 	 * @param text
 	 * @return
 	 */
-	public static Expression parseLoc(String text)
+	public static Expression parseInitialForbidden(String text)
 	{
 		Expression rv = null;
 		
 		try
 		{
 			rv = getExpression(text, "initial/forbidden");
-			checkNoLut(rv);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -229,14 +221,5 @@ public class FormulaParser
 		}
 		
 		return rv;
-	}
-
-	/**
-	 * Check to make sure the expression below does not contain a look up table (which are only allowed in flows)
-	 * @param e the expression to check
-	 */
-	private static void checkNoLut(Expression e)
-	{
-		
 	}
 }

@@ -1,5 +1,9 @@
 package com.verivital.hyst.passes.complex;
 
+import java.util.Map.Entry;
+
+import matlabcontrol.MatlabProxy;
+
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -9,12 +13,6 @@ import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.util.Classification;
-import java.util.Map.Entry;
-import matlabcontrol.MatlabConnectionException;
-import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxyFactory;
-import matlabcontrol.MatlabProxyFactoryOptions;
 
 /**
  * Perform order reduction
@@ -150,7 +148,7 @@ public class OrderReductionPass extends TransformationPass {
 
 				// put initial conditions
 				config.init.clear();
-				config.init.put(e.getKey(), FormulaParser.getExpression(initialCondition, "initial/forbidden"));
+				config.init.put(e.getKey(), FormulaParser.parseInitialForbidden(initialCondition));
 				config.settings.plotVariableNames = plotVars;
 				config.DO_VALIDATION = false;
 			}

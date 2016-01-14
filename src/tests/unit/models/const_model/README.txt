@@ -1,0 +1,1 @@
+This model includes constants specified in the model (as a bound / binded network component) and not in the configuration / cfg initial states. This model is based upon the typical buck converter example, where the system (A matrix) dynamics are specified as constants in the bind of the network component.

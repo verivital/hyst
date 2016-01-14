@@ -41,7 +41,7 @@ public class PythonBridge
 	private BufferedReader stderr = null;
 	private Writer stdin = null;
 	
-	public enum Status
+	private enum Status
 	{
 		FALSE,
 		TRUE,
@@ -54,11 +54,11 @@ public class PythonBridge
 	
 	/**
 	 * This sets whether python should be blocked (pretend it doesn't exist). This is useful for unit testing.
-	 * @param val
+	 * @param isBlocked
 	 */
-	public static void setBlockPython(boolean val)
+	public static void setBlockPython(boolean isBlocked)
 	{
-		blockPython = val;
+		blockPython = isBlocked;
 	}
 	
 	public static boolean hasPython()
