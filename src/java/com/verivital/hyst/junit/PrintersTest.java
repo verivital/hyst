@@ -16,8 +16,10 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.XspeedPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -329,8 +331,7 @@ public class PrintersTest
 			tp.setOutputNone();
 			tp.print(c, "scenario=" + scenario, loadedFilename);
 		}
-    }
-}
+	}
 
 	@Test
 	public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {

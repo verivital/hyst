@@ -31,6 +31,7 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 public class XspeedPrinter extends ToolPrinter {
 	private BaseComponent ha;
@@ -1055,6 +1056,9 @@ public class XspeedPrinter extends ToolPrinter {
 		} catch (ConstantMismatchException e) {
 			
 			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} catch (UnsupportedConditionException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 		int init = ControlVarI.size();
 		int ini = 0;
@@ -1957,7 +1961,13 @@ public class XspeedPrinter extends ToolPrinter {
 
 		if (config.init.size() > 1) {
 			Hyst.log("Multiple initial modes detected (not supported by Flow*). Converting to single urgent one.");
-			convertInitialModes(config);
+			
+			try {
+				convertInitialModes(config);
+			} catch (UnsupportedConditionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 		AutomatonUtil.convertUrgentTransitions(ha, config);
@@ -1970,8 +1980,9 @@ public class XspeedPrinter extends ToolPrinter {
 	 * 
 	 * @param c
 	 *            the configuration to convert
+	 * @throws UnsupportedConditionException 
 	 */
-	public static void convertInitialModes(Configuration c) {
+	public static void convertInitialModes(Configuration c) throws UnsupportedConditionException {
 		final String INIT_NAME = "_init";
 		BaseComponent ha = (BaseComponent) c.root;
 		Collection<String> constants = ha.constants.keySet();
