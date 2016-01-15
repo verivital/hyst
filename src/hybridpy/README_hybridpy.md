@@ -19,6 +19,15 @@ export HYCREATE_BIN="/home/stan/tools/HyCreate2.8/HyCreate2.8.jar"
 
 export PYTHONPATH="${PYTHONPATH}:/home/stan/repositories/hyst/src/hybridpy"
 
+#### Pysim
+
+Pysim is a simple simulation library for a hybrid automata. It is written in python, and can be run using hypy.
+
+pysim dependencies:
+
+* scipy: http://www.scipy.org/install.html
+
+* matplotlib:  http://matplotlib.org/users/installing.html
 
 #### Example
 

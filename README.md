@@ -244,20 +244,93 @@ Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> sel
 To run the .class files directly, rather than from the .jar, you also need this jar on your classpath (option -cp to java).
 
 *******************************************************************************
-HYPY (by Stanley Bak)
+Python Interface and Hypy (by Stanley Bak)
 *******************************************************************************
 
-DEPENDENCIES:
+Hyst has an optional interface with python, which may be required for some transformation passes. To test if python and the required packages are detected correctly, use the -testpython flag from the command line. If python is not setup correctly, you can add the -debug flag to get terminal output to get more insight into the problem.
+
+Currently, Python 2.7 needs to be installed, as well as the following packages:
 
 * sympy: https://github.com/sympy/sympy/releases
 
-pip install sympy
+* scipy: http://www.scipy.org/install.html
 
-For plotting:
+The python executable will be looked for on the paths given in the environment variable HYST_PYTHON_PATH, as well as PATH. It will look for binaries named python2.7 and python.
 
-* matplotlib: http://matplotlib.org/
+*******************************************************************************
+Running the Regression Tests and hypy (by Stanley Bak)
+*******************************************************************************
 
-pip install matplotlib
+The regression tests make use of hypy, which is a python library for running reachability tools and producing plots. 
+
+#### Description
+
+Hypy can be used to run Hyst (including its transformation passes), as well as various reachability and simulation tools, and then interpret their output. This can then be looped in a python script, enabling high-level hybrid systems analysis which involves running tools multiple times.
+
+#### Setup
+
+For easy usage, point your PYTHONPATH environment variable to this directory. To setup hypy to run the tools, you'll need to define environment variables to the appropriate binaries. At a minimum (for conversion), you must set HYST_BIN to point to the Hyst jar file. On Ubuntu, in your ~/.profile file you can do something like:
+
+export HYST_BIN="/home/stan/repositories/hyst/src/Hyst.jar"
+export FLOWSTAR_BIN="/home/stan/tools/flowstar-1.2.3/flowstar"
+export SPACEEX_BIN="/home/stan/tools/spaceex/spaceex"
+export DREACH_BIN="/home/stan/tools/dreach/dReal-2.15.01-linux/bin/dReach"
+export HYCREATE_BIN="/home/stan/tools/HyCreate2.8/HyCreate2.8.jar"
+
+export PYTHONPATH="${PYTHONPATH}:/home/stan/repositories/hyst/src/hybridpy"
+
+#### Pysim
+
+Pysim is a simple simulation library for a hybrid automata. It is written in python, and can be run using hypy.
+
+pysim dependencies:
+
+* scipy: http://www.scipy.org/install.html
+
+* matplotlib:  http://matplotlib.org/users/installing.html
+
+#### Example
+
+A simple hypy script to test if it's working (you may need to adjust your path to the model file) is:
+
+
+'''
+Test hypy on the toy model (path may need to be adjusted)
+'''
+
+# assumes hybridpy is on your PYTHONPATH
+import hybridpy.hypy as hypy
+
+def main():
+    '''run the toy model and produce a plot'''
+    
+    model = "/home/stan/repositories/hyst/examples/toy/toy.xml"
+    out_image = "toy_output.png"
+    tool = "pysim" # pysim is the built-in simulator; try flowstar or spaceex
+
+    e = hypy.Engine()
+    e.set_model(model) # sets input model path
+    e.set_tool(tool) # sets tool name to use
+    #e.set_print_terminal_output(True) # print output to terminal? 
+    #e.set_save_model_path(converted_model_path) # save converted model?
+    e.set_output_image(out_image) # sets output image path
+    #e.set_tool_params(["-tp", "jumps=2"]) # sets parameters for hyst conversion
+
+    code = e.run()
+
+    if code != hypy.RUN_CODES.SUCCESS:
+        print "engine.run() returned error: " + str(code)
+        exit(1)
+        
+    print "Completed successfully"
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
 
 *******************************************************************************
 MODEL TRANSFORMATION PASSES:

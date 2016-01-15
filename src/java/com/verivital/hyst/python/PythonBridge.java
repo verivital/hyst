@@ -239,7 +239,7 @@ public class PythonBridge
 		if (process != null)
 			error("openProcess called but process is already open.");
 			
-		String processNames[] = {"python2.7", "python"};
+		String processNames[] = {"python2.7", "python", "python2.7.exe", "python.exe"};
 		final String ENV_VAR = "HYST_PYTHON_PATH";
 		String loc = null;
 		
