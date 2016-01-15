@@ -308,7 +308,7 @@ def main():
 
     runcode = e.run()
 
-    if image_path is not None and image_tool is not None:
+    if runcode == RUN_CODES.SUCCESS and image_path is not None and image_tool is not None:
         # plot it
         params = image_tool.split(" ")
         params.append(image_path)
