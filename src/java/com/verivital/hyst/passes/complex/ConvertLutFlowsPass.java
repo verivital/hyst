@@ -28,6 +28,7 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
@@ -41,6 +42,12 @@ import com.verivital.hyst.util.PreconditionsFlag;
  */
 public class ConvertLutFlowsPass extends TransformationPass
 {
+	public static int SIMPLIFY_PYTHON = 0;
+	public static int SIMPLIFY_INTERNAL = 1;
+	public static int SIMPLIFY_NONE = 2;
+	
+	public static int simplifyMode = SIMPLIFY_PYTHON;
+	
 	public ConvertLutFlowsPass()
 	{
 		// this pass is doing the conversion, if we don't skip we'd have an infinite loop
@@ -499,7 +506,11 @@ public class ConvertLutFlowsPass extends TransformationPass
 		Hyst.logDebug("nLinearInterpolation result expression for " + Arrays.toString(indexList) + ": " + e.toDefaultString());
 		
 		double CHOP_TOL = 1e-8;
-		e = PythonUtil.pythonSimplifyExpressionChop(e, CHOP_TOL);
+		
+		if (simplifyMode == SIMPLIFY_PYTHON)
+			e = PythonUtil.pythonSimplifyExpressionChop(e, CHOP_TOL);
+		else if (simplifyMode == SIMPLIFY_INTERNAL)
+			e = SimplifyExpressionsPass.simplifyExpression(e);
 		
 		Hyst.logDebug("after pythonSimplifyExpressionChop: " + e.toDefaultString());
 		
