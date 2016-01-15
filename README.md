@@ -271,13 +271,17 @@ Hypy can be used to run Hyst (including its transformation passes), as well as v
 
 For easy usage, point your PYTHONPATH environment variable to this directory. To setup hypy to run the tools, you'll need to define environment variables to the appropriate binaries. At a minimum (for conversion), you must set HYST_BIN to point to the Hyst jar file. On Ubuntu, in your ~/.profile file you can do something like:
 
-export HYST_BIN="/home/stan/repositories/hyst/src/Hyst.jar"
-export FLOWSTAR_BIN="/home/stan/tools/flowstar-1.2.3/flowstar"
-export SPACEEX_BIN="/home/stan/tools/spaceex/spaceex"
-export DREACH_BIN="/home/stan/tools/dreach/dReal-2.15.01-linux/bin/dReach"
-export HYCREATE_BIN="/home/stan/tools/HyCreate2.8/HyCreate2.8.jar"
+# tool environment variables
+TOOL_DIR="/home/stan/tools"
+HYST_DIR="/home/stan/repositories/hyst"
 
-export PYTHONPATH="${PYTHONPATH}:/home/stan/repositories/hyst/src/hybridpy"
+export FLOWSTAR_BIN="$TOOL_DIR/flowstar-1.2.3/flowstar"
+export SPACEEX_BIN="$TOOL_DIR/spaceex/spaceex"
+export DREACH_BIN="$TOOL_DIR/dreach/dReal-2.15.01-linux/bin/dReach"
+export HYCREATE_BIN="$TOOL_DIR/tools/HyCreate2.8/HyCreate2.8.jar"
+
+export HYST_BIN="$HYST_DIR/src/Hyst.jar"
+export PYTHONPATH="${PYTHONPATH}:$HYST_DIR/src/hybridpy"
 
 #### Pysim
 

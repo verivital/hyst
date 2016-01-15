@@ -138,7 +138,7 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	private void printProcedure() 
 	{
-		printLine("import hybridpy.pysim.simulate as pysim");
+		printLine("import hybridpy.pysim.simulate as sim");
 		printLine("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
 		printNewline();
 		
@@ -181,7 +181,7 @@ public class PySimPrinter extends ToolPrinter
 		printLine("init = [" + join(", ", initPt.dims) + "]");
 		printLine("init_mode = '" + config.init.keySet().iterator().next() + "'");
 		printLine("max_time = " + getTimeParam());
-		printLine("result = pysim.simulate(ha, init, init_mode, max_time)");
+		printLine("result = sim.simulate(ha, init, init_mode, max_time)");
 		printNewline();
 	}
 	
@@ -215,7 +215,7 @@ public class PySimPrinter extends ToolPrinter
 		
 		printLine("dim_x = " + xIndex);
 		printLine("dim_y = " + yIndex);
-		printLine("pysim.plot_sim_result(result, filename, dim_x, dim_y)");
+		printLine("sim.plot_sim_result(result, filename, dim_x, dim_y)");
 	}
 
 	private String getTimeParam()

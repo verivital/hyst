@@ -23,6 +23,15 @@ class RunCode(object):
     SKIP = 3 # for example, non-affine dynamics in SpaceEx
     TIMEOUT = 143
 
+def random_string():
+    '''makes a short random string'''
+    
+    time_part = str(long(time.clock() * 10000))
+    rand_part = str(long(random.random()*10000000))
+    
+    return time_part + "_" + rand_part
+
+
 def is_windows():
     '''check if the current platform is windows'''
     return sys.platform == "win32"
@@ -289,9 +298,8 @@ class HybridTool(object):
         if self.explicit_temp_dir is not None:
             name = self.explicit_temp_dir
         else:
-            name = os.path.join(tempfile.gettempdir(), self.tool_name + \
-                        "_" + str(time.time()) + "_" + str(random.random()))
-
+            name = os.path.join(tempfile.gettempdir(), self.tool_name + "_" + random_string())
+                       
         os.makedirs(name)
 
         return name

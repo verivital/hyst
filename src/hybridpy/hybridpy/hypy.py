@@ -5,12 +5,13 @@ import subprocess
 import os
 import time
 import sys
-import random
 import argparse
 import shutil
+import subprocess
 
 import hybridpy.hybrid_tool as hybrid_tool
 from hybridpy.hybrid_tool import get_env_var_path
+from hybridpy.hybrid_tool import random_string
 
 from hybridpy.tool_flowstar import FlowstarTool
 from hybridpy.tool_dreach import DReachTool
@@ -221,7 +222,7 @@ class Engine(object):
 
         if self.save_model_path is None:
             self.save_model_path = os.path.join(tempfile.gettempdir(), self.tool_name + \
-                    "_" + str(time.time()) + "_" + str(random.random()) + tool.default_ext())
+                    "_" + random_string() + tool.default_ext())
 
         rv = RUN_CODES.SUCCESS
 
@@ -233,8 +234,8 @@ class Engine(object):
         if rv == RUN_CODES.SUCCESS and run_tool:
 
             if self.process_output_dir is not None:
-                self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + \
-                                        str(time.time()) + "_" + str(random.random()))
+                self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + random_string())
+                
                 tool.output_obj = {} # new output object created
                 tool.output_obj['lines'] = [] # (stdout_line, timestamp) tuple list
 
@@ -270,6 +271,7 @@ def main():
     parser.add_argument('model', help='input model file')
     parser.add_argument('image', nargs='?', help='output image file')
     parser.add_argument('--output', '-o', metavar='PATH', help='output model file')
+    parser.add_argument('--image_tool', '-it', metavar='PATH', help='path to tool which displays image')
     parser.add_argument('--timeout', '-to', metavar='SECONDS', type=float, \
                         help='sets timeout (seconds) for running the tool (Hyst runs without timeout)')
     parser.add_argument('tool_param', nargs='*', help='tool parameter passed to Hyst')
@@ -280,6 +282,7 @@ def main():
     model_path = args.model
     image_path = args.image
     model_save_path = args.output
+    image_tool = args.image_tool
     timeout = args.timeout
     tool_params = args.tool_param
 
@@ -303,7 +306,20 @@ def main():
     if timeout is not None:
         e.set_timeout(timeout)
 
-    return e.run()
+    runcode = e.run()
+
+    if image_path is not None and image_tool is not None:
+        # plot it
+        params = image_tool.split(" ")
+        params.append(image_path)
+        
+        if subprocess.call(params) != 0:
+            print "Hypy: Error running image tool (nonzero exit code): " + str(params)
+
+    return runcode
 
 if __name__ == "__main__":
-    main()
+    if main() == RUN_CODES.SUCCESS:
+        sys.exit(0)
+    else:
+        sys.exit(1)        
