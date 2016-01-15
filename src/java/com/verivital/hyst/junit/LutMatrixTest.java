@@ -1,11 +1,16 @@
 package com.verivital.hyst.junit;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -20,17 +25,29 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
+@RunWith(Parameterized.class)
 public class LutMatrixTest
 {
 	@Before 
 	public void setUpClass() 
 	{      
 	    Expression.expressionPrinter = null;
+	    ConvertLutFlowsPass.simplifyMode = ConvertLutFlowsPass.SIMPLIFY_NONE;
+	}
+	
+	@Parameters
+	public static Collection<Object[]> data() 
+	{
+		return Arrays.asList(new Object[][] { { false }, { true } });
+	}
+
+	public LutMatrixTest(boolean block) 
+	{
+		PythonBridge.setBlockPython(block);
 	}
 	
 	@Test
