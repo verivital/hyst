@@ -179,7 +179,7 @@ public class XspeedPrinterTest
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
 		c.settings.plotVariableNames[1] = "x"; 
-		c.init.put("running", FormulaParser.parseLoc("x = 0 & t = 0"));
+		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t = 0"));
 		
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
