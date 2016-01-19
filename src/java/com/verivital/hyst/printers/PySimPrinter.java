@@ -245,6 +245,7 @@ public class PySimPrinter extends ToolPrinter
 		
 		public PySimExpressionPrinter()
 		{
+			this.opNames.put(Operator.EQUAL, "==");
 			this.opNames.put(Operator.AND, "and");
 			this.opNames.put(Operator.OR, "or");
 			this.opNames.put(Operator.POW, "**");
