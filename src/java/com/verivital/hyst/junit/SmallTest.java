@@ -799,7 +799,7 @@ public class SmallTest
 	{
 		String[] args = {"-help"};
 		
-		Hyst.silentUsage = true;
+		Hyst.IS_UNIT_TEST = true;
 		Hyst.convert(args);
 	}
 	

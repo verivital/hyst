@@ -24,7 +24,7 @@ def get_hypy_path():
     return os.path.realpath(rv)
 
 sys.path.append(get_hypy_path())
-import hybridpy as hypy
+import hybridpy.hypy as hypy
 
 # timeout for running the tools
 TIMEOUT = 2.0

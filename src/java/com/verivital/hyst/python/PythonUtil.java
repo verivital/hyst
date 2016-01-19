@@ -16,7 +16,6 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**

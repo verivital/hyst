@@ -36,8 +36,8 @@ public abstract class ToolPrinter
 
 	// don't need to be modified
 	protected String indentation = "";
-	protected String indentationAmount = "  ";
-	protected String commentChar = getCommentCharacter();
+	protected String indentationAmount = "    ";
+	protected String commentChar = getCommentPrefix();
 	protected String decreaseIndentationString = "}";
 	
 	// checks to do before printing (assign to the preconditions.skip in your ToolPrinter constructor to omit checks)
@@ -194,13 +194,23 @@ public abstract class ToolPrinter
 	}
 	
 	/**
+	 * Create a comment block sting from comment text
+	 * @param text the text of the commend
+	 * @return the comment string
+	 */
+	protected String createCommentText(String text)
+	{
+		return this.indentation + commentChar + " " + 
+				text.replace("\n", "\n" + this.indentation + commentChar + " ") + "\n";
+	}
+	
+	/**
 	 * Print several lines of text in a comment block
 	 * @param comment
 	 */
-	protected void printCommentblock(String comment) 
+	protected void printCommentBlock(String comment) 
 	{
-		String s = this.indentation + commentChar + " " + 
-				comment.replace("\n", "\n" + this.indentation + commentChar + " ") + "\n";
+		String s = createCommentText(comment);
 		
 		if (outputType == OutputType.STDOUT || outputType == OutputType.FILE)
 			outputStream.println(s);
@@ -229,7 +239,7 @@ public abstract class ToolPrinter
 	 * Print header information as a comment with parameters, etc.
 	 */
 	protected void printCommentHeader() {
-		printCommentblock(getCommentHeader());
+		printCommentBlock(getCommentHeader());
 	}
 	
 	protected void printLine(String line) {
@@ -296,7 +306,7 @@ public abstract class ToolPrinter
 	 * Get a single-line comment character for the tool's output format
 	 * @return
 	 */
-	protected abstract String getCommentCharacter();
+	protected abstract String getCommentPrefix();
 
 	/**
 	 * Should this tool be considered release-quality, which will make it show up in the GUI

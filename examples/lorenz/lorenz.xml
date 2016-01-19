@@ -14,7 +14,7 @@ z'== x * y - 2.6667*z</flow>
     <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
     <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
     <param name="z" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
-    <bind component="main" as="main_1" x="278.0" y="113.0">
+    <bind component="main" as="main_1" x="218.0" y="261.0">
       <map key="x">x</map>
       <map key="y">y</map>
       <map key="z">z</map>

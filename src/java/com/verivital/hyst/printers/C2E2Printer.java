@@ -46,7 +46,7 @@ public class C2E2Printer extends ToolPrinter
 	private TreeMap<String,Integer> modeNamesToIds = new TreeMap<String, Integer>();
 	
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "# ";
 	}

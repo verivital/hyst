@@ -420,7 +420,7 @@ public class SMTPrinter extends ToolPrinter
     }
 
     @Override
-    protected String getCommentCharacter() {
+    protected String getCommentPrefix() {
         return ";";
     }
     
