@@ -64,7 +64,7 @@ public class ContinuizationPass extends TransformationPass
 	@Option(name="-period",required=true,usage="period of controller", metaVar="TIME")
 	private double period;
 	
-	@Option(name="-noerrormodes",usage="skip created error modes")
+	@Option(name="-noerrormodes",usage="skip creating error modes")
 	boolean skipErrorModes = false;
 	
 	@Option(name="-times",required=true,handler=StringArrayOptionHandler.class,usage="time domain boundaries", metaVar="TIME1 TIME2 ...")

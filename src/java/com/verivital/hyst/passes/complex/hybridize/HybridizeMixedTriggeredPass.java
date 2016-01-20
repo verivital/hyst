@@ -40,6 +40,7 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 public class HybridizeMixedTriggeredPass extends TransformationPass 
 {
+	private final static String PASS_PARAM = "-hybridizemt";
 	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,picount=#)(,pimaxtime=#)" +
 			"(,simtype={CENTER|star|corners|starcorners|rand10|rand#})(,addforbidden={TRUE|false})(,addintermediate={true|FALSE})";
 	
@@ -93,7 +94,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     @Override
     public String getCommandLineFlag()
     {
-        return "-hybridizemt";
+        return PASS_PARAM;
     }
 
     @Override
@@ -460,7 +461,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     				if (advanceSimulationToPseudoInvariant(startBox))
     				{
     					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
-    					stepPseudoInvariant(startBox);
+    					stepSpaceTrigger(startBox);
     					continue;
     				}
     				else
@@ -651,7 +652,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		 * one used to construct the hyperplane.
 		 * @param startBox the bloated box surrounding the simPoints before they were advanced (the incoming set)
 		 */
-		private void stepPseudoInvariant(HyperRectangle startBox)
+		private void stepSpaceTrigger(HyperRectangle startBox)
 		{
 			String modeName = MODE_PREFIX + modes.size();
 			Hyst.logDebug("making pseudo-invariant mode named " + modeName + ", startBox was " + startBox + "; (already advanced)");
