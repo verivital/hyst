@@ -87,7 +87,8 @@ public class PythonBridge
 	
 	public static PythonBridge getInstance()
 	{
-		return getInstance(DEFAULT_TIMEOUT);
+		int timeout = instance == null ? DEFAULT_TIMEOUT : instance.timeoutMs;
+		return getInstance(timeout);
 	}
 	
 	public static PythonBridge getInstance(int timeoutMs)
@@ -140,6 +141,7 @@ public class PythonBridge
 	 */
 	public void setTimeout(int timeoutMs)
 	{
+		log("setTimeout(" + timeoutMs + ") called");
 		this.timeoutMs = timeoutMs;
 	}
 	
