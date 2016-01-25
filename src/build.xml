@@ -127,8 +127,9 @@
 		<pathelement location="bin"/>
 	</path>
 	
-	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" description="Create a jar for the Hyst project">
-		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}">
+	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" 
+			description="Create a jar for the Hyst project">
+		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}" whenmanifestonly="fail">
 			<zipgroupfileset dir="${lib.path}" includes="${runtimejarnames.path}"/>
 			<zipgroupfileset dir="${z3.path}" includes="**/*.jar"/>
 			<manifest>
@@ -192,9 +193,34 @@
 		    <arg line="run_tests.py" />
 		</exec>
 	</target>
+
+	<!-- run the python tests -->
+	<target name ="python_test" depends="check_python,python_run_test,python_message">
+	</target>
+	
+	<target name ="python_run_test" depends="check_python" if="pythonDetected" description="Run Python Tests">
+		<echo message="Python detected, running python tests." />
+	</target>
+	
+	<target name ="python_message" depends="check_python" unless="pythonDetected" description="Run Python Tests">
+		<echo message="Note: Python not detected with -check_python; skipping python tests." />
+	</target>
+	
+	<!-- check if python exists (sets property pythonDetected) -->
+	<target name ="check_python" depends="build-config,build" description="Check if Python Exists">
+		
+		<exec dir="${lib.path}" executable="java" resultproperty="javaExitCode">
+			<arg line="-jar ${jar.path} -testpython" />
+		</exec>
+		
+	 	<condition property="pythonDetected" value="true">
+	         <!-- set this property, only if isWindows set -->
+	         <equals arg1="${javaExitCode}" arg2="0" />
+	    </condition>
+	</target>
 	
 	<!-- run all tests (unit and regression) -->
-	<target name ="test" depends="run_jar_test,unit_test,regression_test" description="Run the Unit and Regression Tests">
+	<target name ="test" depends="run_jar_test,unit_test,regression_test,python_test" description="Run the Unit and Regression Tests">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

@@ -332,12 +332,35 @@ if __name__ == "__main__":
     main()
 
 
+*******************************************************************************
+Adding Tools to Hypy:
+*******************************************************************************
+
+When you run hypy, it will (1) convert using Hyst and (2) run the desired tool. If that fails, you are better off doing these two steps independently, first just running hyst and producing a model file, then take the model file and running it directly in the tool (one of these two will fail and you can investigate further).
+
+The implementation of hypy is in hyst/src/hybridpy. Each supported tool in hypy has a tool-specific script which provides a common interface to each tool. This tool-specific script is implemented in the tool_*.py file, and it inherits from the HybridTool object (defined in hybrid_tool.ph). You need to write custom functions (override the abstract ones in HybridTool) that (1) run the tool, (2) produce an image at the desired path, and (3) read the output into a python object (optional). Such files already exists for flow*, spaceex, hycreate, and dreach (but that one doesn't produce an image since dreach makes that difficult). For example, you can find the tool-specific file for flowstar in hyst/src/hybridpy/hybridpy/tool_flowstar.py . After you write the tool-specific file, you need to modify hypy.py to add the appropriate import statement for your tool-specific script and add the tool object to the list of known tools near the top of the fily:
 
 
+# tools for which models can be generated
+TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
+         'spaceex':SpaceExTool(), 'dreach':DReachTool()}
 
+
+Each tool-specific file should be directly runnable from the command line rather than through hypy. If run directly, no hyst conversion is done. This is enabled by adding the following at the bottom of a tool-specific script (for Flow*, for example):
+
+if __name__ == "__main__":
+    tool_main(FlowstarTool())
+
+the tool_main is a generic method (defined in hybrid_tool.py), which will call the appropriate methods in the passing-in HybridTool object. If you need extra parameters from the command line, see how it is done in tool_spaceex.py.
+
+Once the tool-specific script is written and you added your tool to hypy.py, you should test by running hypy from a terminal. You should try:
+
+(1) the direct run approach: python /path/to/tool_<toolname>.py <input model> <(optional) output image png path>
+
+(2) the conversion and run approach: python /path/to/hybridpy.py <tool name> <input .xml model> <output image png path>
 
 *******************************************************************************
-MODEL TRANSFORMATION PASSES:
+Model Transformation Passes:
 *******************************************************************************
 
 * Hybridization (by Pradyot Prakash)

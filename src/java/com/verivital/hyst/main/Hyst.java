@@ -127,7 +127,8 @@ public class Hyst
 		ARG_PARSE_ERROR,
 		INTERNAL_ERROR,
 		GUI_QUIT,
-		EXPORT_AUTOMATON_EXCEPTION
+		EXPORT_AUTOMATON_EXCEPTION,
+		NOPYTHON // exit if -checkpython fails
 	};
 
 	public static void main(String[] args)
@@ -485,14 +486,16 @@ public class Hyst
 		if (testPython)
 		{
 			if (PythonBridge.hasPython())
+			{
 				System.out.println("Python and required packages sucessfully detected.");
+				System.exit(ExitCode.SUCCESS.ordinal());
+			}
 			else
 			{
 				System.out.println("Python and required packages NOT detected."); 
-				System.out.println("Use -debug to examine error information.");
+				System.out.println(PythonBridge.getInstanceErrorString); 
+				System.exit(ExitCode.NOPYTHON.ordinal());
 			}
-			
-			System.exit(ExitCode.SUCCESS.ordinal());
 		}
 
 		if (!rv || xmlFilenames.size() == 0 || cfgFilename == null || printerIndex < 0 || printerIndex >= printers.length)

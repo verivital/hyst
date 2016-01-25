@@ -32,9 +32,12 @@ import com.verivital.hyst.util.FileOperations;
 public class PythonBridge
 {
 	private static PythonBridge instance = null;
-	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy"};
+	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy", "matplotlib"};
 	
+	// if hasPython() gives false, this gets set 
+	public static String getInstanceErrorString = "No Error"; 
 	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
+	
 	private int timeoutMs;
 	private Process process = null;
 	private BufferedReader stdout = null;
@@ -72,15 +75,19 @@ public class PythonBridge
 				try
 				{
 					getInstance();
+					getInstanceErrorString = "No Error";
 				}
 				catch (AutomatonExportException e)
 				{
+					getInstanceErrorString = e.getLocalizedMessage();
 					pythonStatus = Status.FALSE;
 				}
 			}
 			
 			rv = pythonStatus == Status.TRUE;
 		}
+		else
+			getInstanceErrorString = "Python Programatically Blocked";
 		
 		return rv;
 	}
