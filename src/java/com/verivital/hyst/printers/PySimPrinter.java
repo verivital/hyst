@@ -8,8 +8,9 @@ package com.verivital.hyst.printers;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
-import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -20,8 +21,11 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.util.RangeExtractor;
+import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
+import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
+import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 
 /**
@@ -115,8 +119,6 @@ public class PySimPrinter extends ToolPrinter
 
 	private void printJumps()
 	{
-		printNewline();
-		
 		/*
 		t = ha.new_transition(one, two)
 	    t.guard = lambda(x): x[0] >= 2
@@ -140,22 +142,40 @@ public class PySimPrinter extends ToolPrinter
 	{
 		printLine("import hybridpy.pysim.simulate as sim");
 		printLine("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
+		printLine("from hybridpy.pysim.hybrid_automaton import HyperRectangle");
+				printLine("from hybridpy.pysim.simulate import init_list_to_q_list");
+		
 		printNewline();
 		
-		printLine("def simulate():");
+		printLine("def define_ha():");
 		increaseIndentation();
 		printLine("'''make the hybrid automaton, simulate it, and return the result'''");
 		printComment("Variable ordering: " + ha.variables);
 		printLine("ha = HybridAutomaton()");
 		printModes();
 		printJumps();
-		printSimulate();
-		printLine("return result");
+		printNewline();
+		printLine("return ha");
 		decreaseIndentation();
 		printNewline();
 		
-		printLine("def plot(result, filename='plot.png'):");
+		printLine("def define_init_states(ha):");
 		increaseIndentation();
+		printLine("'''returns a list of (mode, HyperRectangle)'''");
+		printInit();
+		decreaseIndentation();
+		printNewline();
+		
+		printLine("def simulate(max_time=20.0):");
+		increaseIndentation();
+		printLine("'''simulate the automaton from each initial rect'''");
+		printSimulate();
+		decreaseIndentation();
+		printNewline();
+		
+		printLine("def plot(result, filename='plot.png', dim_x=1, dim_y=0):");
+		increaseIndentation();
+		printLine("'''plot a simulation result to a file'''");
 		printPlot();
 		decreaseIndentation();
 		printNewline();
@@ -165,24 +185,108 @@ public class PySimPrinter extends ToolPrinter
 		increaseIndentation();
 		printLine("plot(simulate())");
 		decreaseIndentation();
+		printNewline();
 	}
 	
+	private void printInit()
+	{
+		/*
+		# Variable ordering: [x, t, tglobal]
+	    rv = []
+	
+	    r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
+	    rv.append((ha.modes['loc1'], r))
+	    
+	    r = HyperRectangle([(7.5, 8.5), (0.0, 0.0), (0.0, 0.0)])
+	    rv.append((ha.modes['loc2'], r))
+	    
+	    return rv
+		 */
+		printComment("Variable ordering: " + ha.variables);
+		printLine("rv = []");
+		printNewline();
+		
+		for (Entry<String, Expression> e : config.init.entrySet())
+		{
+			String modeName = e.getKey();
+			Expression exp = e.getValue();
+			
+			try
+			{
+				printHyperRectangleFromInitExpression(exp);
+			}
+			catch (AutomatonExportException exception)
+			{
+				throw new AutomatonExportException("Error printing initial states in mode " + modeName,
+						exception);
+			}
+			
+			printLine("rv.append((ha.modes['" + modeName + "'], r))");
+			printNewline();
+		}
+		
+		printLine("return rv");
+	}
+	
+	private void printHyperRectangleFromInitExpression(Expression exp)
+	{
+		// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
+		StringBuilder sb = new StringBuilder("r = HyperRectangle([");
+		
+		TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getVariableRanges(exp, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		
+		for (String s : ha.variables)
+		{
+			if (s != ha.variables.get(0))
+				sb.append(", ");
+			
+			Interval i = ranges.get(s);
+			
+			if (i == null)
+				throw new AutomatonExportException("Initial range for variable " + s + " was not defined");
+			
+			sb.append("(" + doubleToString(i.min) + ", " + doubleToString(i.max) + ")");
+		}
+		
+		sb.append("])");
+		printLine(sb.toString());
+	}
+
 	private void printSimulate()
 	{
 		/*
-		init = [1, 0]
-    	init_mode = 'one'
-    	max_time = 5.0
-    	result = ha.simulate(init, init_mode, max_time)
+		ha = define_ha()
+    	init_states = define_init_states(ha)
+    	q_list = init_list_to_q_list(init_states, center=True, star=True, corners=False)
+    	result = sim.simulate_multi(q_list, max_time)
+    	
+    	return result
 		*/
 		
 		printNewline();
-		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
-		printLine("init = [" + join(", ", initPt.dims) + "]");
-		printLine("init_mode = '" + config.init.keySet().iterator().next() + "'");
-		printLine("max_time = " + getTimeParam());
-		printLine("result = sim.simulate(ha, init, init_mode, max_time)");
+		printLine("ha = define_ha()");
+		printLine("init_states = define_init_states(ha)");
+		printLine("q_list = init_list_to_q_list(init_states, center=True, star=True, corners=False)");
+		printLine("result = sim.simulate_multi(q_list, max_time)");
 		printNewline();
+		printLine("return result");
 	}
 	
 	private String join(String sep, double[] vals)
@@ -203,19 +307,13 @@ public class PySimPrinter extends ToolPrinter
 	private void printPlot()
 	{
 		/*
-		dim_x = 2
-    	dim_y = 3
-    	axis_range = [-0.02, 0, -0.03, 0.02]
-
-    	plot_sim_result(result, 'plot.png', dim_x, dim_y, axis_range, draw_func=draw)
+		draw_events = len(result) == 1
+    	sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events)
 	    */
 		
-		int xIndex = ha.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yIndex = ha.variables.indexOf(config.settings.plotVariableNames[1]);
-		
-		printLine("dim_x = " + xIndex);
-		printLine("dim_y = " + yIndex);
-		printLine("sim.plot_sim_result(result, filename, dim_x, dim_y)");
+		printNewline();
+		printLine("draw_events = len(result) == 1");
+		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events)");
 	}
 
 	private String getTimeParam()
