@@ -166,7 +166,7 @@ public class PySimPrinter extends ToolPrinter
 		decreaseIndentation();
 		printNewline();
 		
-		printLine("def simulate(max_time=20.0):");
+		printLine("def simulate(max_time=" + getTimeParam() + "):");
 		increaseIndentation();
 		printLine("'''simulate the automaton from each initial rect'''");
 		printSimulate();
@@ -287,21 +287,6 @@ public class PySimPrinter extends ToolPrinter
 		printLine("result = sim.simulate_multi(q_list, max_time)");
 		printNewline();
 		printLine("return result");
-	}
-	
-	private String join(String sep, double[] vals)
-	{
-		StringBuffer rv = new StringBuffer();
-		
-		for (double d : vals)
-		{
-			if (rv.length() > 0)
-				rv.append(sep);
-			
-			rv.append(d);
-		}
-		
-		return rv.toString();
 	}
 
 	private void printPlot()

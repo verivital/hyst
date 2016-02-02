@@ -487,12 +487,12 @@ public class Hyst
 		{
 			if (PythonBridge.hasPython())
 			{
-				System.out.println("Python and required packages sucessfully detected.");
+				System.out.println("Python and required packages successfully detected.");
 				System.exit(ExitCode.SUCCESS.ordinal());
 			}
 			else
 			{
-				System.out.println("Python and required packages NOT detected."); 
+				System.out.println("Python and all required packages NOT detected."); 
 				System.out.println(PythonBridge.getInstanceErrorString); 
 				System.exit(ExitCode.NOPYTHON.ordinal());
 			}

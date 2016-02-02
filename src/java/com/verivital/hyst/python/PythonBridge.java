@@ -181,6 +181,17 @@ public class PythonBridge
 				error("Python import failed on required package '" + pack + "'");
 			}
 		}
+		
+		// test hypy
+		try
+		{
+			send("import hybridpy.hypy as hypy");
+		}
+		catch (AutomatonExportException e)
+		{
+			error("Python import failed on required package 'hybridpy.hypy'. "
+					+ "Is Hyst's hybridpy directory on your PYTHONPATH?");
+		}
 	}
 	
 	private static void log(String description)
