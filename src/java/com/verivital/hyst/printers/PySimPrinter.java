@@ -17,6 +17,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
@@ -36,6 +37,7 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  */
 public class PySimPrinter extends ToolPrinter
 {
+	private static final String COMMENT_CHAR = "#";
 	private BaseComponent ha;
 	
 	public PySimPrinter()
@@ -46,7 +48,7 @@ public class PySimPrinter extends ToolPrinter
 	@Override
 	protected String getCommentPrefix()
 	{
-		return "# ";
+		return COMMENT_CHAR + " ";
 	}
 	
 	/**
@@ -68,11 +70,11 @@ public class PySimPrinter extends ToolPrinter
 		return "'''\n" + text + "\n'''";
 	}
 	
-	private void printModes() 
+	private static void appendModes(StringBuilder rv, BaseComponent ha) 
 	{
 		for (AutomatonMode am : ha.modes.values())
 		{
-			printNewline();
+			appendNewline(rv);
 			
 			/*
 			 one = ha.new_mode('one')
@@ -80,11 +82,12 @@ public class PySimPrinter extends ToolPrinter
              one.inv = lambda(x): x[0] <= 2
 			*/
 			
-			printLine(am.name + " = ha.new_mode('" + am.name + "')");
-			printLine(am.name + ".inv = lambda state: " + am.invariant);
+			appendIndentedLine(rv, am.name + " = ha.new_mode('" + am.name + "')");
+			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
 
 			if (!am.urgent)
-				printLine(am.name + ".der = lambda state, _: " + getMapString(am.flowDynamics));
+				appendIndentedLine(rv, am.name + ".der = lambda state, _: " + 
+						getMapString(am.flowDynamics, ha));
 		}
 	}
 	
@@ -94,7 +97,7 @@ public class PySimPrinter extends ToolPrinter
 	 * @param map
 	 * @return the mapped string
 	 */
-	private String getMapString(Map <String, ExpressionInterval> map)
+	private static String getMapString(Map <String, ExpressionInterval> map, BaseComponent ha)
 	{
 		StringBuffer rv = new StringBuffer();
 		rv.append("[");
@@ -117,7 +120,7 @@ public class PySimPrinter extends ToolPrinter
 		return rv.toString();
 	}
 
-	private void printJumps()
+	private static void appendJumps(StringBuilder rv, BaseComponent ha)
 	{
 		/*
 		t = ha.new_transition(one, two)
@@ -127,11 +130,11 @@ public class PySimPrinter extends ToolPrinter
 		
 		for (AutomatonTransition at : ha.transitions)
 		{
-			printNewline();
+			appendNewline(rv);
 			
-			printLine("t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
-			printLine("t.guard = lambda state: "+ at.guard);
-			printLine("t.reset = lambda state: "+ getMapString(at.reset));
+			appendIndentedLine(rv, "t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
+			appendIndentedLine(rv, "t.guard = lambda state: "+ at.guard);
+			appendIndentedLine(rv, "t.reset = lambda state: "+ getMapString(at.reset, ha));
 		}
 	}
 	
@@ -141,30 +144,8 @@ public class PySimPrinter extends ToolPrinter
 	private void printProcedure() 
 	{
 		printLine("import hybridpy.pysim.simulate as sim");
-		printLine("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
-		printLine("from hybridpy.pysim.hybrid_automaton import HyperRectangle");
-				printLine("from hybridpy.pysim.simulate import init_list_to_q_list");
 		
-		printNewline();
-		
-		printLine("def define_ha():");
-		increaseIndentation();
-		printLine("'''make the hybrid automaton, simulate it, and return the result'''");
-		printComment("Variable ordering: " + ha.variables);
-		printLine("ha = HybridAutomaton()");
-		printModes();
-		printJumps();
-		printNewline();
-		printLine("return ha");
-		decreaseIndentation();
-		printNewline();
-		
-		printLine("def define_init_states(ha):");
-		increaseIndentation();
-		printLine("'''returns a list of (mode, HyperRectangle)'''");
-		printInit();
-		decreaseIndentation();
-		printNewline();
+		printLine(automatonToString(config));
 		
 		printLine("def simulate(max_time=" + getTimeParam() + "):");
 		increaseIndentation();
@@ -188,7 +169,58 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 	}
 	
-	private void printInit()
+	/**
+	 * Converts the given hybrid automaton to a python-parsable String
+	 * @param config the (flat) configuration
+	 * @return
+	 */
+	public static String automatonToString(Configuration config)
+	{
+		StringBuilder rv = new StringBuilder();
+		
+		if (!(config.root instanceof BaseComponent))
+			throw new AutomatonExportException("PySim expected flat automaton");
+			
+		BaseComponent ha = (BaseComponent)config.root;
+		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
+		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HyperRectangle");
+		appendLine(rv, "from hybridpy.pysim.simulate import init_list_to_q_list");
+		appendNewline(rv); 
+		
+		appendLine(rv, "def define_ha():");
+		appendIndentedLine(rv, "'''make the hybrid automaton, simulate it, and return the result'''");
+		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
+		appendIndentedLine(rv, "ha = HybridAutomaton()");
+		appendModes(rv, ha);
+		appendJumps(rv, ha);
+		appendNewline(rv); 
+		appendIndentedLine(rv, "return ha");
+		appendNewline(rv); 
+		
+		appendLine(rv, "def define_init_states(ha):");
+		appendIndentedLine(rv, "'''returns a list of (mode, HyperRectangle)'''");
+		appendInit(rv, config);
+		appendNewline(rv);
+		
+		return rv.toString();
+	}
+
+	private static void appendNewline(StringBuilder rv)
+	{
+		rv.append("\n");
+	}
+	
+	private static void appendLine(StringBuilder rv, String string)
+	{
+		rv.append(string + "\n");
+	}
+	
+	private static void appendIndentedLine(StringBuilder rv, String string)
+	{
+		rv.append("    " + string + "\n");
+	}
+
+	private static void appendInit(StringBuilder rv, Configuration config)
 	{
 		/*
 		# Variable ordering: [x, t, tglobal]
@@ -202,9 +234,11 @@ public class PySimPrinter extends ToolPrinter
 	    
 	    return rv
 		 */
-		printComment("Variable ordering: " + ha.variables);
-		printLine("rv = []");
-		printNewline();
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
+		appendIndentedLine(rv, "rv = []");
+		appendNewline(rv);
 		
 		for (Entry<String, Expression> e : config.init.entrySet())
 		{
@@ -213,7 +247,7 @@ public class PySimPrinter extends ToolPrinter
 			
 			try
 			{
-				printHyperRectangleFromInitExpression(exp);
+				appendHyperRectangleFromInitExpression(rv, exp, ha);
 			}
 			catch (AutomatonExportException exception)
 			{
@@ -221,14 +255,15 @@ public class PySimPrinter extends ToolPrinter
 						exception);
 			}
 			
-			printLine("rv.append((ha.modes['" + modeName + "'], r))");
-			printNewline();
+			appendIndentedLine(rv, "rv.append((ha.modes['" + modeName + "'], r))");
+			appendNewline(rv);
 		}
 		
-		printLine("return rv");
+		appendIndentedLine(rv, "return rv");
 	}
 	
-	private void printHyperRectangleFromInitExpression(Expression exp)
+	private static void appendHyperRectangleFromInitExpression(StringBuilder rv, 
+			Expression exp, BaseComponent ha)
 	{
 		// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
 		StringBuilder sb = new StringBuilder("r = HyperRectangle([");
@@ -266,7 +301,8 @@ public class PySimPrinter extends ToolPrinter
 		}
 		
 		sb.append("])");
-		printLine(sb.toString());
+		
+		appendIndentedLine(rv, sb.toString());
 	}
 
 	private void printSimulate()
