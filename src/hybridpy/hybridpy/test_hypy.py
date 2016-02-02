@@ -22,10 +22,10 @@ class TestHypy(unittest.TestCase):
         e.set_tool(tool) # sets tool name to use
         #e.set_print_terminal_output(True) # print output to terminal? 
         #e.set_save_model_path(converted_model_path) # save converted model?
-        e.set_output_image(out_image) # sets output image path
+        #e.set_output_image(out_image) # sets output image path
         #e.set_tool_params(["-tp", "jumps=2"]) # sets parameters for hyst conversion
 
-        code = e.run()
+        code = e.run(make_image=False)
         
         self.assertEqual(code, hypy.RUN_CODES.SUCCESS)
 

@@ -7,7 +7,6 @@ import time
 import sys
 import argparse
 import shutil
-import subprocess
 
 import hybridpy.hybrid_tool as hybrid_tool
 from hybridpy.hybrid_tool import get_env_var_path

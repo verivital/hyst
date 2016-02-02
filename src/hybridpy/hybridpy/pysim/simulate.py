@@ -5,7 +5,6 @@ Simulation logic for Hybrid Automata
 from scipy import integrate
 import matplotlib.pyplot as plt
 from matplotlib import colors
-import matplotlib.patches as mpatches
 
 class SimulationEvent(object):
     '''
@@ -43,7 +42,7 @@ def simulate_step(q, delta):
     q is a symbolic state (mode, point), where mode is an AutomatonMode object, and point is [x_0, ..., x_n]
     delta is the amount of continuous post step to do (the reach time increment)
 
-    this returns a tuple (q', events), where q' is the successor symbolic state,
+    this returns a tuple (q', events), where q' is the successor symbolic state (may be None if no successor),
     and events is a list of SimulationEvent (may be of size zero) 
     '''
     rv_events = []
@@ -230,6 +229,11 @@ def simulate_one(q, time, num_steps=500):
 
         (q, new_events) = simulate_step(q, step_size)
         events += new_events
+
+        # no successor state (invariant became false)
+        if q is None:
+            break
+        
         mode = q[0]
         state = q[1]
 
