@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -833,6 +834,86 @@ public abstract class AutomatonUtil
 	}
 	
 	/**
+	 * Create a twp-mode configuration with modes named "mode1" and "mode2", for unit testing
+	 * @param dynamics1 a list of variable names, dynamics and possibly initial states for each variable,
+	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 * @param inv the invariant string of the first mode
+	 * @param guard the guard string to go from the first mode to the second
+	 * @param dynamics2 a list of variable names and dynamics for the second mode
+	 * 
+	 * @return the constructed configuration
+	 */
+	public static Configuration makeDebugConfiguration(String[][] dynamics1, String inv, String guard, 
+			String[][] dynamics2) 
+	{
+		final int VAR_INDEX = 0;
+		final int FLOW_INDEX = 1;
+		final int INIT_INDEX = 2;
+		final String MODE1_NAME = "mode1";
+		final String MODE2_NAME = "mode2";
+		
+		BaseComponent ha = new BaseComponent();
+		AutomatonMode mode1 = ha.createMode(MODE1_NAME);
+		AutomatonMode mode2 = ha.createMode(MODE2_NAME);
+		StringBuilder initStringBuilder = new StringBuilder();
+		
+		if (dynamics1.length != dynamics2.length)
+			throw new AutomatonExportException("Expected dynamics1 and dynamics2 of same length");
+		
+		for (int i = 0; i < dynamics1.length; ++i)
+		{
+			if (dynamics1[i].length < 2 || dynamics1[i].length > 3)
+				throw new AutomatonExportException("expected 2 or 3 values in passed-in array dynamics1 (varname, flow, init)");
+			
+			if (dynamics2[i].length != 2)
+				throw new AutomatonExportException("expected 2 values in passed-in array dynamics2 (varname, flow)");
+			
+			String var = dynamics1[i][VAR_INDEX];
+			String flow = var + "' == " + dynamics1[i][FLOW_INDEX];
+			
+			ha.variables.add(var);
+			
+			if (!dynamics2[i][VAR_INDEX].equals(var))
+				throw new AutomatonExportException("expected same variable ordering in both dynamics arrays");
+			
+			String initVal = dynamics1[i].length == 3 ? dynamics1[i][INIT_INDEX] : "0";
+			String initStr = var + " == " + initVal;
+					
+			if (initStringBuilder.length() > 0)
+				initStringBuilder.append(" & " + initStr);
+			else
+				initStringBuilder.append(initStr);
+			
+			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			mode1.flowDynamics.put(var, new ExpressionInterval(flowExp));
+			
+			// now do mode 2
+			var = dynamics2[i][VAR_INDEX];
+			flow = var + "' == " + dynamics2[i][FLOW_INDEX];
+			
+			flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			mode2.flowDynamics.put(var, new ExpressionInterval(flowExp));
+		}
+		
+		// add invariant
+		mode1.invariant = FormulaParser.parseInvariant(inv);
+		mode2.invariant = Constant.TRUE;
+		
+		// add transition / guard
+		AutomatonTransition at = ha.createTransition(mode1, mode2);
+		at.guard = FormulaParser.parseGuard(guard);
+		
+		Configuration c = new Configuration(ha);
+
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
+		c.init.put(MODE1_NAME, FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
+			
+		c.validate();
+		return c;
+	}
+	
+	/**
 	 * Create a single-mode configuration with a mode named "on", for unit testing
 	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
 	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
@@ -1046,6 +1127,76 @@ public abstract class AutomatonUtil
 		}
 		else
 			throw new AutomatonExportException("Unsupported Expression type in derivativeOf: " + e.toDefaultString());
+		
+		return rv;
+	}
+	
+	/**
+	 * Get the gradient vector within a mode. This uses the 'average' dynamics if there's nondeterminism.
+	 * @param am the mode
+	 * @param pt the point where to, in the automaton's variable ordering
+	 * @return the gradient vector (with the automaton's variable ordering)
+	 */
+	public static double[] getGradientAtPoint(AutomatonMode am, HyperPoint pt)
+	{
+		List <String> vars = am.automaton.variables;
+		Map <String, Expression> flowDynamics = centerDynamics(am.flowDynamics);
+		
+		double[] rv = new double[pt.dims.length];
+		
+		for (int dim = 0; dim < pt.dims.length; ++dim)
+		{
+			String varName = vars.get(dim);
+			Expression e = flowDynamics.get(varName);
+			
+			double d = evaluateExpression(e, pt, vars);
+		
+			rv[dim] = d;
+		}
+		
+		return rv;
+	}
+	
+	public static double evaluateExpression(Expression e, HyperPoint pt, List <String> variableNames)
+	{
+		// create value map
+		TreeMap<String, Expression> valMap = new TreeMap<String, Expression>();
+		
+		for (int i = 0; i < pt.dims.length; ++i)
+			valMap.put(variableNames.get(i), new Constant(pt.dims[i]));
+		
+		ValueSubstituter vs = new ValueSubstituter(valMap);
+		
+		Expression substituted = vs.substitute(e);
+		
+		Expression result = SimplifyExpressionsPass.simplifyExpression(substituted);
+		
+		double rv = 0;
+		
+		if (result instanceof Constant)
+			rv = ((Constant)result).getVal();
+		else
+			throw new AutomatonExportException("Could not simplify flow expression completely while simulating: " + e);
+		
+		return rv;
+	}
+	
+	public static Map<String, Expression> centerDynamics(Map<String, ExpressionInterval> flowDynamics)
+	{
+		LinkedHashMap<String, Expression> rv = new LinkedHashMap<String, Expression>();
+		
+		for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
+		{
+			ExpressionInterval ei = e.getValue();
+			double mid = 0;
+			Interval i = ei.getInterval();
+			
+			if (i != null)
+				mid = i.middle();
+			
+			Expression eMid = new Operation(Operator.ADD, ei.getExpression(), new Constant(mid)); 
+			rv.put(e.getKey(), eMid);
+		}
 		
 		return rv;
 	}

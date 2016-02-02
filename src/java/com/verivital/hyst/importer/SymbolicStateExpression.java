@@ -29,7 +29,7 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  * @author Stanley Bak
  *
  */
-public class SymbolicState
+public class SymbolicStateExpression
 {
 	// example: [ ["on", "off"], ["blocked", "trickle", "flowing"] ]
 	private List<Collection <String>> discStates;
@@ -41,7 +41,7 @@ public class SymbolicState
 	 * Create a new symbolic state
 	 * @param entireSpace should this state be initialized to the entire state space?
 	 */
-	public SymbolicState(boolean entireSpace)
+	public SymbolicStateExpression(boolean entireSpace)
 	{
 		if (doc == null)
 			throw new RuntimeException("static SymbolicState.setComponent() method must be called before constructor");
@@ -65,9 +65,9 @@ public class SymbolicState
 	/**
 	 * Create a deep copy of the symbolic state
 	 */
-	public SymbolicState copy()
+	public SymbolicStateExpression copy()
 	{
-		SymbolicState rv = new SymbolicState(false);
+		SymbolicStateExpression rv = new SymbolicStateExpression(false);
 		
 		rv.contStates = contStates.copy();
 		
@@ -249,7 +249,7 @@ public class SymbolicState
 		if (doc == null)
 			throw new RuntimeException("doc cannot be null");
 			
-		SymbolicState.doc = doc;
+		SymbolicStateExpression.doc = doc;
 		
 		instanceNames = getInstanceNames("", root);
 		instanceTypes = getInstanceTypes(root);
@@ -330,10 +330,10 @@ public class SymbolicState
 	 * @param e the expression to parse
 	 * @param description the text description of the states being parsed, like "initial states"
 	 */
-	public static List<SymbolicState> extractSymbolicStates(Expression e, String description)
+	public static List<SymbolicStateExpression> extractSymbolicStates(Expression e, String description)
 	{
-		List<SymbolicState> rv = new ArrayList<SymbolicState>();
-		rv.add(new SymbolicState(true));
+		List<SymbolicStateExpression> rv = new ArrayList<SymbolicStateExpression>();
+		rv.add(new SymbolicStateExpression(true));
 		
 		try
 		{
@@ -348,15 +348,15 @@ public class SymbolicState
 		return rv;
 	}
 	
-	private static void extractSymbolicStatesRec(List<SymbolicState> rv, Expression e)
+	private static void extractSymbolicStatesRec(List<SymbolicStateExpression> rv, Expression e)
 	{
 		Operation o = e.asOperation();
 		
 		if (o.op == Operator.OR)
 		{
-			List<SymbolicState> rvRight = new ArrayList<SymbolicState>();
+			List<SymbolicStateExpression> rvRight = new ArrayList<SymbolicStateExpression>();
 			
-			for (SymbolicState ss : rv)
+			for (SymbolicStateExpression ss : rv)
 				rvRight.add(ss.copy());
 			
 			extractSymbolicStatesRec(rv, o.getLeft());
@@ -376,14 +376,14 @@ public class SymbolicState
 			String instance = locFunction.children.size() == 0 ? "" : ((Variable)locFunction.children.get(0)).name;
 			String state = ((Variable)o.getRight()).name;
 			
-			for (SymbolicState ss : rv)
+			for (SymbolicStateExpression ss : rv)
 				ss.addDiscreteConstraint(instance, state);
 		}
 		else if (Operator.isComparison(o.op))
 		{
 			// base case: continuous constraint
 			
-			for (SymbolicState ss : rv)
+			for (SymbolicStateExpression ss : rv)
 				ss.addContinuousConstraint(e);
 		}
 		else

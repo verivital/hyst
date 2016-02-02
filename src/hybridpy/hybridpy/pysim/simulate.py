@@ -2,7 +2,7 @@
 Simulation logic for Hybrid Automata
 '''
 
-from scipy import integrate
+from scipy.integrate import ode # pylint false positive
 import matplotlib.pyplot as plt
 from matplotlib import colors
 
@@ -27,43 +27,87 @@ class ModeSim(object):
     A container object for a part of a simulation in a single mode
     '''
     points = None # list of points, each point is a list of values for each dimension [x_0, ..., x_n]
+    times = None # list of times, corresponding to the points list. These are absolute times.
     mode_name = None
 
-    def __init__(self, mode_name, points):
+    def __init__(self, mode_name, points, times):
         self.points = points
         self.mode_name = mode_name
+        self.times = times
 
     def __str__(self):
         return '[ModeSim: ' + self.mode_name + ' - ' + str(self.points) + ']'
 
-def simulate_step(q, delta):
+def get_active_transitions(mode, state):
     '''
-    Simulate a single step (discrete post or part of a continuous post)
-    q is a symbolic state (mode, point), where mode is an AutomatonMode object, and point is [x_0, ..., x_n]
-    delta is the amount of continuous post step to do (the reach time increment)
-
-    this returns a tuple (q', events), where q' is the successor symbolic state (may be None if no successor),
-    and events is a list of SimulationEvent (may be of size zero) 
+    get the transitions that are active in the given state
+    returns a list of active (guard is true) transitions
     '''
-    rv_events = []
-    rv_state = None
 
-    mode = q[0]
-    state = q[1]
-
-    # check discrete post
     active_transitions = []
 
     for transition in mode.transitions:
         if transition.guard(state):
             active_transitions.append(transition)
 
+    return active_transitions
+
+def find_jump_bisection(solver, mode, init_value, init_time, cross_delta, cross_value, tol=1e-9):
+    '''do a binary search to find a discrete event's time/value
+    returns (time, value) within time tol, where cross is true, or None on ode-error
+    '''
+
+    if cross_delta < tol:
+        return (init_time + cross_delta, cross_value)
+    else:
+        # check the middle
+        mid_delta = cross_delta / 2.0
+        mid_time = init_time + mid_delta
+        
+        solver.set_initial_value(init_value, init_time)
+        solver.integrate(mid_time)
+
+        if not solver.successful() or solver.t != mid_time:
+            # ode error occured
+            return None
+
+        mid_value = solver.y
+
+        if len(get_active_transitions(mode, mid_value)) > 0:
+            return find_jump_bisection(solver, mode, init_value, init_time, mid_delta, mid_value, tol)
+        else:
+            return find_jump_bisection(solver, mode, mid_value, mid_time, mid_delta, cross_value, tol)
+
+def simulate_step(q, solver, max_time, jump_error_tol=1e-9):
+    '''
+    Simulate a single step (discrete post or part of a continuous post)
+    q is a symbolic state (mode, point), where mode is an AutomatonMode object, and point is [x_0, ..., x_n]
+    solver is the ode solver object to use
+    max_time the maximum time we're simulating for
+
+    this returns a tuple (q', cur_time, events), where: 
+    q' is the successor symbolic state (may be None if no successor),
+    cur_time is the current time,
+    and events is a list of SimulationEvent (size zero if normal continuous post)
+    '''
+    rv_events = []
+    rv_time = None
+    rv_state = None
+
+    mode = q[0]
+    state = q[1]
+
+    print ". mode = " + str(mode)
+
+    # check discrete post
+    active_transitions = get_active_transitions(mode, state)
+
     if len(active_transitions) != 0:
         if len(active_transitions) > 1:
             transition_names = ", ".join([str(t) for t in active_transitions])
-
             print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
               ' at state ' + str(state) + ': ' + transition_names
+
             rv_events.append(("Multiple Transitions", state, "red"))
 
         t = active_transitions[0]
@@ -82,12 +126,26 @@ def simulate_step(q, delta):
             rv_events.append(SimulationEvent("False Invariant", state, "red"))
             print 'Warning: Invariant became false in mode ' + str(mode.name) + ' at state ' + str(state)
         else:
-            # do a single step
-            sol = integrate.odeint(mode.der, state, [0, delta]) # pylint false positive
-            state = sol[1].tolist()
-            rv_state = (mode, state)
 
-    return (rv_state, rv_events)
+            init_time = solver.t
+            init_value = solver.y
+            solver.integrate(max_time, step=True)
+            rv_state = solver.y
+            rv_time = solver.t
+
+            # if any transition is enabled, we should use a substep
+            if len(get_active_transitions(mode, state)) > 0:
+                cross_delta = rv_time - init_time
+                res = find_jump_bisection(solver, mode, init_value, init_time, 
+                                              cross_delta, rv_state, tol=jump_error_tol)
+                
+                if res == None: # ode solver failed during bisection
+                    rv_state = None 
+                else:
+                    rv_time = res[0]
+                    rv_state = res[1]
+
+    return (rv_state, rv_time, rv_events)
 
 def _dist(a, b):
     'maximum distance in any dimension (inf norm) between two hyperpoints'
@@ -145,7 +203,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
     return rv
 
-def simulate_multi(q_list, time, num_steps=500):
+def simulate_multi(q_list, time, max_step=0.1, max_jumps=500):
     '''    
     Simulate the hybrid automaton from multiple initial points
     q_list - a list of symbolic states: (AutomatonMode, point), where point is [x_0, ..., x_n]
@@ -160,7 +218,7 @@ def simulate_multi(q_list, time, num_steps=500):
     rv = []
 
     for q in q_list:
-        rv.append(simulate_one(q, time, num_steps))
+        rv.append(simulate_one(q, time, max_step, max_jumps))
 
     return rv
 
@@ -189,45 +247,80 @@ def mode_name_to_color(mode_to_color, mode_name):
 
     return rv
 
-def simulate_one(q, time, num_steps=500):
+def simulate_one_time(q, time, max_step=0.1, max_jumps=500):
+    '''
+    Simulate for the given time, returning the symbolic state.
+
+    Returns the resultant symbolic state, or None if the simulation errored (invariant became false or zeno)
+    '''
+
+    rv = None
+    ha = q[0].parent
+    res = simulate_one(q, time, max_step, max_jumps)
+
+    # get the last state
+    last_mode_sim = res['traces'][-1]
+    last_point = last_mode_sim.points[-1]
+    last_time = last_mode_sim.times[-1]
+    mode_name = last_mode_sim.mode_name
+
+    # check if the total time adds up (no errors occured)
+    tol = 1e-12 # floating-point error tolerance
+
+    if abs(last_time - time) < tol:
+        rv = (ha.modes[mode_name], last_point)
+
+    return rv
+
+def simulate_one(q, time, max_step=0.1, max_jumps=500, solver='vode', jump_error_tol=None):
     '''    
     Simulate the hybrid automaton from a single initial point 
     q - a symbolic state: (AutomatonMode, point), where point is [x_0, ..., x_n]
     time - the total desired simulation time (discrete events may reduce the actual time)
-    num_steps - the amount discrete and continuous post sub-steps
-    simtype - a string describing how to sample the initial sets, a concatination of 'center', 'star', and 'corner'
+    max_step - the maximum time in a continuous-step post operation
+    max_jumps - the maximum number of discrete sub-steps
+    solver - the ode solver to use (parameter of scipy's set_integrator)
+    jump_error_tol - the time-error allowed on jumps
 
     Returns a dict with keys {'traces', 'events'} where:
     'traces': list of ModeSim objects
     'events': list of SimulationEvent objects
     '''
 
-    if num_steps <= 0:
-        raise RuntimeError("num_steps should be greater than zero: " + str(num_steps))
+    if jump_error_tol is None:
+        jump_error_tol = max(1e-10, float(time) / 1e10)
+
+    if max_jumps <= 0:
+        raise RuntimeError("max_jumps should be greater than zero: " + str(max_jumps))
 
     if time <= 0:
         raise RuntimeError("Time should be greater than zero: " + str(time))
 
-    step_size = time / float(num_steps)
-    steps_left = num_steps
+    mode = q[0]
+    state = q[1]
+    solver = ode(mode.der)
+    solver.set_integrator('vode', max_step=max_step)
+    solver.set_initial_value(state, 0)
+
+    jumps_left = max_jumps
     traces = []
     events = []
     points = [] # part of the current mode_sim
+    times = []
     
     mode = q[0]
     state = q[1]
     points.append(state)
-    traces.append(ModeSim(mode.name, points))
+    times.append(0)
+    traces.append(ModeSim(mode.name, points, times))
 
     if mode == None:
         raise RuntimeError("Initial mode was not set.")
 
     events.append(SimulationEvent('Init', state))
 
-    while steps_left > 0:
-        steps_left -= 1
-
-        (q, new_events) = simulate_step(q, step_size)
+    while solver.successful() and solver.t < time:
+        (q, cur_time, new_events) = simulate_step(q, solver, time, jump_error_tol)
         events += new_events
 
         # no successor state (invariant became false)
@@ -240,9 +333,29 @@ def simulate_one(q, time, num_steps=500):
         if len(new_events) > 0: # discrete post
             points = []
             points.append(state)
-            traces.append(ModeSim(mode.name, points))
+
+            times = []
+            times.append(cur_time)
+
+            traces.append(ModeSim(mode.name, points, times))
+            jumps_left -= 1
+
+            if jumps_left < 0:
+                print "Warning: max jumps (" + str(max_jumps) + ") reached"
+                events.append(SimulationEvent('Max Jumps Reached', state, 'red'))
+                break
+
+            solver = ode(mode.der)
+            solver.set_integrator('vode', max_step=max_step)
+            solver.set_initial_value(state, cur_time)
+
         else: # continuous post
             points.append(state)
+            times.append(cur_time)
+
+    if not solver.successful():
+        print "Warning: ODE solver failed to integrate dynamics"
+        events.append(SimulationEvent('ODE Solver Failed', state, 'red'))
 
     last_state = points[len(points) - 1]
     events.append(SimulationEvent("End", last_state))

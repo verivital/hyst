@@ -5,7 +5,6 @@ package com.verivital.hyst.printers;
 
 
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,6 +13,7 @@ import java.util.TreeMap;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -37,8 +37,9 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  */
 public class PySimPrinter extends ToolPrinter
 {
+	private static PySimExpressionPrinter pySimExpressionPrinter = new PySimExpressionPrinter();
 	private static final String COMMENT_CHAR = "#";
-	private BaseComponent ha;
+	public BaseComponent ha;
 	
 	public PySimPrinter()
 	{
@@ -133,8 +134,8 @@ public class PySimPrinter extends ToolPrinter
 			appendNewline(rv);
 			
 			appendIndentedLine(rv, "t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
-			appendIndentedLine(rv, "t.guard = lambda state: "+ at.guard);
-			appendIndentedLine(rv, "t.reset = lambda state: "+ getMapString(at.reset, ha));
+			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
+			appendIndentedLine(rv, "t.reset = lambda state: " + getMapString(at.reset, ha));
 		}
 	}
 	
@@ -176,6 +177,11 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	public static String automatonToString(Configuration config)
 	{
+		ExpressionPrinter savedPrinter = Expression.expressionPrinter;
+				
+		Expression.expressionPrinter = pySimExpressionPrinter;
+		pySimExpressionPrinter.ha = (BaseComponent)config.root;
+		
 		StringBuilder rv = new StringBuilder();
 		
 		if (!(config.root instanceof BaseComponent))
@@ -188,7 +194,7 @@ public class PySimPrinter extends ToolPrinter
 		appendNewline(rv); 
 		
 		appendLine(rv, "def define_ha():");
-		appendIndentedLine(rv, "'''make the hybrid automaton, simulate it, and return the result'''");
+		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
 		appendIndentedLine(rv, "ha = HybridAutomaton()");
 		appendModes(rv, ha);
@@ -201,6 +207,9 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "'''returns a list of (mode, HyperRectangle)'''");
 		appendInit(rv, config);
 		appendNewline(rv);
+		
+		// restore expressionPrinter
+		Expression.expressionPrinter = savedPrinter;
 		
 		return rv.toString();
 	}
@@ -351,15 +360,15 @@ public class PySimPrinter extends ToolPrinter
 	protected void printAutomaton()
 	{	
 		this.ha = (BaseComponent)config.root;
-		Expression.expressionPrinter = new PySimExpressionPrinter();
+		Expression.expressionPrinter = pySimExpressionPrinter;
+		pySimExpressionPrinter.ha = ha;
 
 		printDocument(originalFilename);
 	}
 	
-	private class PySimExpressionPrinter extends DefaultExpressionPrinter
+	private static class PySimExpressionPrinter extends DefaultExpressionPrinter
 	{
-		ArrayList <String> vars = ha.variables;
-		Map<String, Interval> constants = ha.constants;
+		BaseComponent ha;
 		String BASE = "state";
 		
 		public PySimExpressionPrinter()
@@ -385,14 +394,17 @@ public class PySimPrinter extends ToolPrinter
 		@Override
 		protected String printVariable(Variable v)
 		{
+			if (ha == null)
+				throw new AutomatonExportException("pySimPrinter.ha must be set before printing (was null)");
+			
 			String rv = null;
 			String name = v.name;
 			
-			int index = vars.indexOf(name);
+			int index = ha.variables.indexOf(name);
 			
 			if (index == -1)
 			{
-				Interval value = constants.get(name);
+				Interval value = ha.constants.get(name);
 				
 				if (value == null)
 					throw new AutomatonExportException("PySimPrinter tried to " +

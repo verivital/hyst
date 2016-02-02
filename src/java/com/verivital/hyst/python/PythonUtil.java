@@ -44,8 +44,6 @@ public class PythonUtil
 	public static Interval intervalOptimize(Expression exp, Map<String, Interval> bounds)
 	{
 		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
-		
 		StringBuilder s = new StringBuilder();
 		s.append(makeExpressionVariableSymbols(exp));
 		
@@ -100,8 +98,6 @@ public class PythonUtil
 		
 		if (size != boundsList.size())
 			throw new AutomatonExportException("expression list and bounds list should be same size");
-		
-		pb.send("import math");
 		
 		// python needs explicit functions (not lambdas) for Pool.map
 		String FUNC_PREFIX = "_func";
@@ -345,8 +341,6 @@ public class PythonUtil
 			List<Map<String, Interval>> boundsList)
 	{
 		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
-		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
 
 		StringBuilder s = new StringBuilder();
@@ -498,8 +492,6 @@ public class PythonUtil
 			List<Map<String, Interval>> boundsList, double maxSize)
 	{
 		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
-		
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
 
 		StringBuilder s = new StringBuilder();

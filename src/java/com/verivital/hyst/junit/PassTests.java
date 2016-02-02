@@ -40,7 +40,6 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
-import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
@@ -315,58 +314,6 @@ public class PassTests {
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass)
-	 */
-	@Test
-	public void testPseudoInvariantSimulatePass() {
-		// make a trivial automation with x' == 1
-		BaseComponent ha = new BaseComponent();
-		Configuration c = new Configuration(ha);
-		AutomatonMode am = ha.createMode("running");
-
-		ha.variables.add("x");
-		c.settings.plotVariableNames[0] = "x";
-		c.settings.plotVariableNames[1] = "x"; 
-		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0"));
-		am.flowDynamics.put("x", new ExpressionInterval(new Constant(1)));
-		am.invariant = Constant.TRUE;
-		c.validate();
-
-		// run the pseudo-invariant pass on it
-		String params = "2.0,5.0"; // simulation time = 2.0 and then 5.0
-		new PseudoInvariantSimulatePass().runTransformationPass(c, params);
-
-		// there should be four modes: running_init, running_pi_0, running_pi_1,
-		// and running_final
-		Assert.assertEquals("four modes after pass", 4, ha.modes.size());
-
-		AutomatonMode piInit = ha.modes.get("running_init");
-		AutomatonMode pi0 = ha.modes.get("running_pi_0");
-		AutomatonMode pi1 = ha.modes.get("running_pi_1");
-		AutomatonMode piFinal = ha.modes.get("running_final");
-
-		Assert.assertTrue("init mode is urgent", piInit.urgent == true);
-		Assert.assertTrue("first mode is not null", pi0 != null);
-		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
-		Assert.assertTrue("first mode's invariant is x <= 2",
-				pi0.invariant.toDefaultString().contains("-1 * x >= -2.0000"));
-		Assert.assertTrue("second mode's invariant is x <= 5",
-				pi1.invariant.toDefaultString().contains("-1 * x >= -4.9999"));
-		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
-
-		// the transition from init to final should contain both pi guards
-		for (AutomatonTransition at : ha.transitions) {
-			if (at.from == piInit && at.to == piFinal) {
-				Assert.assertTrue("guard from init to final contains x >= 2",
-						at.guard.toDefaultString().contains("-1 * x <= -2.0000"));
-				Assert.assertTrue("guard from init to final contains x >= 5",
-						at.guard.toDefaultString().contains("-1 * x <= -4.9999"));
-			}
-		}
-	}
-
-	/**
 	 * Test hybridization (time-triggered) pass
 	 */
 	@Test
@@ -522,7 +469,7 @@ public class PassTests {
 	@Test
 	public void testCheckHyperPlane() {
 		// tests the HybridizeTimeTriggeredPass.testHyperPlane() function
-		// this function tests whether a pseudo-invariant constructed at the
+		// this function tests whether a state-triggered transition constructed at the
 		// given point would be on one side (in front of) of a given box
 
 		// we'll use a 1d model with x' = 1, and check if the box [1,2] is on
@@ -599,10 +546,10 @@ public class PassTests {
 		if (!PythonBridge.hasPython())
 			return;
 
-		// time-triggered hybridized pass tests with pseudo-invariants
+		// time-triggered hybridized pass tests with state-triggered transitions
 		// 1d system with x'==1, init box is [0, 1], use star to construct guide
 		// simulation
-		// pseudo-invariant count is 1, which means it should be constructed
+		// state-triggered count is 1, which means it should be constructed
 		// right around x == 1 (the edge of the box)
 
 		Configuration c = makeSampleBaseConfiguration();

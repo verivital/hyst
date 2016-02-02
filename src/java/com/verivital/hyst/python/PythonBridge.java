@@ -32,7 +32,7 @@ import com.verivital.hyst.util.FileOperations;
 public class PythonBridge
 {
 	private static PythonBridge instance = null;
-	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy", "matplotlib"};
+	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy", "matplotlib", "math"};
 	
 	// if hasPython() gives false, this gets set 
 	public static String getInstanceErrorString = "No Error"; 
@@ -490,7 +490,7 @@ public class PythonBridge
 	        
 	        // if anything was printed to stderr, it's an error
 	        if (sbStderr.length() > 0)
-	        	error("Python produced output on stderr:\n" + sbStderr.toString() + 
+	        	error("Python produced output on stderr:\n'" + sbStderr.toString() + "'" +
 	        			(sbStdout.length() > 0 ? "\n\nstdout was:\n" + sbStdout.toString() : ""));
 	        
 	        rv = sbStdout.toString();
@@ -581,6 +581,18 @@ public class PythonBridge
 	 */
 	public String send(String s)
 	{
+		if (s.contains("\n"))
+		{
+			// multiline command: get rid of newline within functions
+			// if there are one or more new lines, followed by a line that starts with a space,
+			// then eliminate the newline
+			s = s.replaceAll("\\n\\n+ ", "\n ");
+			s = s.replaceAll("\\n\\n+\\t", "\n\t");
+			
+			// multiline command: hide prompt until the end
+			s = "sys.ps1 = ''\n" + s + "\nsys.ps1='>>> '";
+		}
+		
 		return send(s, false);
 	}
 	
@@ -619,13 +631,5 @@ public class PythonBridge
 		result = sendAndWait(s);
 		
 		return result;
-	}
-	
-	public void importPythonBridgeModule(String module)
-	{
-		String result = send("from pythonbridge import " + module);
-		
-		if (result.length() != 0)
-			error("import file created output on stdout: '" + result + "'");
 	}
 }

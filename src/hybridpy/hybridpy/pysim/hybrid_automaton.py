@@ -87,6 +87,9 @@ class AutomatonMode(object):
         self.name = name
         self.transitions = []
 
+    def __str__(self):
+        return '[AutomatonMode: ' + self.name + ']'
+
 class AutomatonTransition(object):
     'A transition of a hybrid automaton'
     parent = None # the HybridAutomaton
