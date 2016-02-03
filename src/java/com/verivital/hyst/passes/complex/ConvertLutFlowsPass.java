@@ -35,13 +35,35 @@ import com.verivital.hyst.util.PreconditionsFlag;
 
 
 /**
- * A model transformation pass which re-scales time
+ * A model transformation pass which converts look-up tables
  * 
  * @author Stanley Bak (October 2014)
  *
  */
 public class ConvertLutFlowsPass extends TransformationPass
 {
+	@Override
+	public String getCommandLineFlag()
+	{
+		return "-convertluts";
+	}
+
+	@Override
+	public String getName()
+	{
+		return "Convert Look-Up-Tables Pass";
+	};
+	
+	@Override
+	protected void runPass()
+	{
+		if (!(config.root instanceof BaseComponent))
+			throw new AutomatonExportException("Only BaseComponents are supported until the IR is updated to support" + 
+					"checking if a mode is initial (github issue #10).");
+		
+		convertLuts(config.root);
+	}
+	
 	public static int SIMPLIFY_PYTHON = 0;
 	public static int SIMPLIFY_INTERNAL = 1;
 	public static int SIMPLIFY_NONE = 2;
@@ -58,16 +80,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		// urgent modes are supported
 		preconditions.skip(PreconditionsFlag.NO_URGENT);
-	}
-
-	@Override
-	protected void runPass(String params)
-	{
-		if (!(config.root instanceof BaseComponent))
-			throw new AutomatonExportException("Only BaseComponents are supported until the IR is updated to support" + 
-					"checking if a mode is initial (github issue #10).");
-		
-		convertLuts(config.root);
 	}
 	
 	private void convertLuts(Component c)
@@ -564,5 +576,5 @@ public class ConvertLutFlowsPass extends TransformationPass
 			else
 				accumulator = new Operation(Operator.ADD, term, accumulator);
 		}
-	};
+	}
 }

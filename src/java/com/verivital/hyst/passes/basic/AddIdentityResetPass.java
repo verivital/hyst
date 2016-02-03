@@ -1,6 +1,7 @@
 package com.verivital.hyst.passes.basic;
 
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
@@ -11,7 +12,12 @@ import com.verivital.hyst.passes.TransformationPass;
 public class AddIdentityResetPass extends TransformationPass
 {
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
+	{
+		addIdentityResets(config);
+	}
+	
+	public static void addIdentityResets(Configuration config)
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		
@@ -35,10 +41,5 @@ public class AddIdentityResetPass extends TransformationPass
 	public String getName()
 	{
 		return "Add Identity Resets Pass";
-	}
-	
-	public String getParamHelp()
-	{
-		return null;
 	}
 }

@@ -8,6 +8,8 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertHavocFlows;
+import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -17,11 +19,9 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
-import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
-import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 
 /**
  * This class contains the checks that should be done before running a printer or pass. For example, some may explicitly
@@ -138,7 +138,7 @@ public class Preconditions
 		if (convert)
 		{
 			Hyst.log("Converting Havoc Flows");
-			new ConvertHavocFlowsPass().runTransformationPass(c, null);
+			ConvertHavocFlows.run(c);
 		}
 	}
 
@@ -149,7 +149,7 @@ public class Preconditions
 	 */
 	private static void convertDisjunctiveGuards(Configuration c)
 	{
-		new SplitDisjunctionGuardsPass().runVanillaPass(c, SplitDisjunctionGuardsPass.PRINT_PARAM);
+		SplitDisjunctionGuardsPass.split(c.root);
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class Preconditions
 			Hyst.log("Preconditions check detected interval-valued constants. ");
 			Hyst.log("Running conversion pass to make them variables, as required by the preconditions.");
 			
-			new ConvertIntervalConstantsPass().runVanillaPass(c, null);
+			ConvertIntervalConstants.run(c);
 		}
 	}
 
@@ -378,7 +378,7 @@ public class Preconditions
 			Hyst.log("Preconditions check detected look-up-tables in dynamics. ");
 			Hyst.log("Running conversion pass to split them, as required by the preconditions.");
 		
-			new ConvertLutFlowsPass().runTransformationPass(config, null);
+			new ConvertLutFlowsPass().runTransformationPass(config, "");
 		}
 	}
 	

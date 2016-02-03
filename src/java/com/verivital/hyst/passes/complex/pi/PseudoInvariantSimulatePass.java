@@ -2,7 +2,9 @@ package com.verivital.hyst.passes.complex.pi;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeSet;
+
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -30,9 +32,8 @@ import com.verivital.hyst.util.AutomatonUtil;
  */
 public class PseudoInvariantSimulatePass extends TransformationPass
 {
-	BaseComponent ha;
-	TreeSet <Double> simTimes;
-	int numVars;
+	@Option(name="-times", required=true, handler=StringArrayOptionHandler.class,usage="simulation times", metaVar="TIME1 TIME2 ...")
+	List<String> timesStr;
 	
 	@Override
 	public String getCommandLineFlag()
@@ -46,17 +47,36 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		return "Pseudo-Invariant Simulation Pass";
 	}
 	
-	@Override
-	public String getParamHelp()
+	private ArrayList <Double> convertTimesStr()
 	{
-		return "[time1;time2;...]";
+		ArrayList <Double> rv = new ArrayList <Double>(timesStr.size());
+		double lastTime = 0;
+		
+		for (String time : timesStr)
+		{
+			try
+			{
+				double d = Double.parseDouble(time);
+				
+				if (d < lastTime)
+					throw new AutomatonExportException("times should be greater than zero and in increasing order:" +
+							d);
+				
+				rv.add(d);
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AutomatonExportException("Error parsing pseudo-invariant time: " + e);
+			}
+		}
+		
+		return rv;
 	}
 	
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		BaseComponent ha = (BaseComponent)config.root;
-		initialize(ha, params);
 
 		// construct the param string for the static-based pseudo-invariant pass
 		String piParams = null;
@@ -64,7 +84,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		init.modeName = config.init.entrySet().iterator().next().getKey();
 		init.hp = AutomatonUtil.getInitialPoint(ha, config);
 		
-		List <SymbolicStatePoint> states = pythonSimulate(config, init, new ArrayList<Double>(simTimes));
+		List <SymbolicStatePoint> states = pythonSimulate(config, init, convertTimesStr());
 		
 		for (SymbolicStatePoint ss : states)
 		{
@@ -81,9 +101,12 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		}
 		
 		// run the traditional pseudo-invariants pass
+		System.out.println(". piParams = " + piParams);
+		System.out.print("This is where we left off for this. We need to convert pi-pass to " +
+				"use args4j, and maybe have a programatic (static) interface for it.");
 		new PseudoInvariantPass().runTransformationPass(config, piParams);
 	}
-	
+
 	/**
 	 * Simulate the automaton, getting the state at a series of times
 	 * @param automaton
@@ -111,8 +134,6 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 				+ point + ", " + timesStr + ")");
 		
 		String result = pb.send(s.toString());
-		
-		System.out.println(".pisim result = '" + result + "'");
 		
 		// parse result into SymbolicState objects
 		// result is semi-colon separated lists, first is the mode name, rest is the point 
@@ -167,35 +188,5 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			a.add(d);
 		
 		return commaSeparated(a);
-	}
-
-	private void initialize(BaseComponent ha, String params)
-	{
-		String[] parts = params.split(",");
-		
-		if (parts.length < 1)
-			throw new AutomatonExportException("Expected param with 'time1;time2;...'");
-		
-		simTimes = new TreeSet <Double>();
-		
-		for (int p = 0; p < parts.length; ++p)
-		{
-			try
-			{
-				double time = Double.parseDouble(parts[p]);
-				
-				if (time < 0)
-					throw new AutomatonExportException("Pseudo-invariant time was negative: " + time);
-				
-				simTimes.add(time);
-			}
-			catch (NumberFormatException e)
-			{
-				throw new AutomatonExportException("Error parsing pseudo-invariant time: " + e);
-			}
-		}
-		
-		this.ha = ha;
-		numVars = ha.variables.size();
 	}
 }

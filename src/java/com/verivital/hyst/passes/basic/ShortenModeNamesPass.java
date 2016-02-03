@@ -35,7 +35,7 @@ public class ShortenModeNamesPass extends TransformationPass
 	}
 
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		HashMap <String, String> nameMap = makeNameMap(ha);

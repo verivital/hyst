@@ -27,13 +27,13 @@ import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
+import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
-import com.verivital.hyst.passes.complex.RegularizePass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
@@ -107,12 +107,12 @@ public class Hyst
 			new SplitDisjunctionGuardsPass(),
 			new RemoveSimpleUnsatInvariantsPass(),
 			new ShortenModeNamesPass(),
-			new RegularizePass(),
 			new ContinuizationPass(),
 			new HybridizeGridPass(),
 			new HybridizeMixedTriggeredPass(),
 			new FlattenAutomatonPass(),
 			new OrderReductionPass(),
+			new ConvertLutFlowsPass(),
 	};
 
 	// passes that the user has selected

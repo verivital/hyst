@@ -52,15 +52,16 @@ public class PseudoInvariantPass extends TransformationPass
 		return "Pseudo-Invariant at Point Pass";
 	}
 	
-	@Override
+	/*@Override
 	public String getParamHelp()
 	{
 		return "[(modename|)pt1;inv_dir1|pt2;inv_dir2|...] (point/invariant direction is a comma-separated list of reals)";
-	}
+	}*/
 	
 	@Override
-	protected void runPass(String stringParams)
+	protected void runPass()
 	{
+		String stringParams = "TODO: convert this pass to args4j";
 		BaseComponent ha = (BaseComponent)config.root;
 		initialize(ha, stringParams);
 		

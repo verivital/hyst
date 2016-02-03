@@ -346,13 +346,10 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                 state = post_jump_q[1]
                 jump_time = times[-1]
 
-                points = []
-                points.append(state)
-
-                times = []
-                times.append(jump_time)
-
+                points = [state]
+                times = [jump_time]
                 traces.append(ModeSim(mode.name, points, times))
+                
                 jumps_left -= 1
 
                 if jumps_left < 0:
@@ -365,10 +362,6 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
             else: # continuous post
                 points.append(solver.y)
                 times.append(solver.t)
-
-        if solver.t != end_time:
-            raise SimulationException("Final simulation time incorrect; solver.t = {}, end_time = {}".format(
-                    solver.t, end_time))
 
         last_state = points[-1]
         events.append(SimulationEvent("End", last_state))   

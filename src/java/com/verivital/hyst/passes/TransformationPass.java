@@ -1,22 +1,34 @@
 package com.verivital.hyst.passes;
 
+import java.io.ByteArrayOutputStream;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
- * A transformation pass will modify a hybrid automaton (Configuration object). It may have preconditions set,
- * for example, only working on flat automata. Define the pass behavior by defining the abstract method runPass().
- * The user can use the command line or GUI to manually select transformation passes. To do this, override the 
- * name / help / command-line flag methods, and add the pass to the list in Hyst.java. Otherwise, the pass will
- * only be accessible in code.
+ * A transformation pass is a behavior which modifies a Configuration (Hybrid Automaton) object.
+ * Transformation passes can be called from the command line and accept params.
+ * When your runPass() method gets called, the pass will have done automatic command-line parsing 
+ * using the args4j library. To use parameters, all you need to do is define the annotations for 
+ * member variables.
+ * 
+ * See TimeScalePass for a simple example of these annotations.
+ * 
+ * @author Stanley Bak
+ *
  */
 public abstract class TransformationPass
 {
 	protected Preconditions preconditions = new Preconditions(false); // run all checks / conversions by default
-	protected Configuration config = null; // set before runPass is called
+	protected Configuration config = null; // is assigned before runPass is called
+	private CmdLineParser parser = new CmdLineParser(this);
 	
 	/**
 	 * Run the pass on the given configuration, modifying it in place. This first checks preconditions, then runs
@@ -73,45 +85,57 @@ public abstract class TransformationPass
 	}
 	
 	/**
-	 * Get the flag used to run this pass on the command line. If null (the default), this pass cannnot
-	 * be used as a command-line pass
-	 * @return null or a command-line flag used to run this pass
-	 */
-	public String getCommandLineFlag()
-	{
-		return null;
-	}
-	
-	/**
-	 * Get the name of this pass. Can be null if the pass is not a command-line pass.
-	 * @return the name text
-	 */
-	public String getName()
-	{
-		return null;
-	}
-	
-	/**
-	 * Get the help text for the parameter (if any). Can be null if parameter is ignored
-	 * @return the parameter help
-	 */
-	public String getParamHelp()
-	{
-		return null;
-	}
-	
-	/**
-	 * Get the longer version of the help text for this pass. Can be null.
+	 * Get the longer version of the help text for this pass.
 	 * @return the help text, or null if not specified
 	 */
 	public String getLongHelp()
 	{
-		return null;
+		return getParamHelp();
+	}
+	
+	public String getParamHelp()
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream(); 
+		parser.printUsage(out);
+		
+		return out.toString();
+	}
+
+	private void runPass(String params)
+	{
+		String[] args = AutomatonUtil.extractArgs(params);
+		
+		try
+		{
+			parser.parseArgument(args);
+		}
+		catch (CmdLineException e)
+		{
+			String message = "Error Parsing " + getName() + " Arguments: " + 
+					e.getMessage() + "\n" + getParamHelp();
+			
+			throw new AutomatonExportException(message);
+		}
+		
+		runPass();
 	}
 	
 	/**
-	 * Run the pass on the given configuration (stored in the global config object), modifying it in place
-	 * @param params the parameter string given to the pass
+	 * Get the flag used to run this pass on the command line. If null (the default), this pass cannnot
+	 * be used as a command-line pass
+	 * @return null or a command-line flag used to run this pass
 	 */
-	protected abstract void runPass(String params);
+	public abstract String getCommandLineFlag();
+	
+	/**
+	 * Get the name of this pass.
+	 * @return the name text
+	 */
+	public abstract String getName();
+	
+	/**
+	 * Run the pass on the given configuration (stored in the global config object), modifying it in place.
+	 * The command-line args are parsed before this is called
+	 */
+	protected abstract void runPass();
 }

@@ -19,6 +19,8 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
+import com.verivital.hyst.internalpasses.ConvertHavocFlows;
+import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
@@ -29,10 +31,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
-import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
-import com.verivital.hyst.passes.flatten.FlattenRenameUtils;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
@@ -40,6 +39,7 @@ import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
+import com.verivital.hyst.util.FlattenRenameUtils;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -105,7 +105,7 @@ public class ModelParserTest
 				.isConstant() == false);
 
 		// run conversion pass of interval constants -> variables
-		new ConvertIntervalConstantsPass().runTransformationPass(c, null);
+		ConvertIntervalConstants.run(c);
 
 		Assert.assertTrue("x is no longer a constant",
 				!bc.constants.containsKey("x"));
@@ -738,7 +738,7 @@ public class ModelParserTest
 
 			// it isn't run automatically during flatten since some printers
 			// (SpaceEx) can print havoc dynamics directly
-			new ConvertHavocFlowsPass().runTransformationPass(c, null);
+			ConvertHavocFlows.run(c);
 
 			BaseComponent ha = (BaseComponent) c.root;
 

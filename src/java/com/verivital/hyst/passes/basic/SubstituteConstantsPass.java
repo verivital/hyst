@@ -36,7 +36,7 @@ public class SubstituteConstantsPass extends TransformationPass
 	}
 	
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		runRec(config.root);
 	}

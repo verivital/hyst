@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.flatten;
+package com.verivital.hyst.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,15 +10,14 @@ import java.util.Map.Entry;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.AutomatonValidationException;
+import com.verivital.hyst.internalpasses.RenameParams;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.passes.basic.RenameParamPass;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 
 /**
  * Utility function for automaton flattening dealing with renaming of variables
@@ -65,7 +64,7 @@ public class FlattenRenameUtils
 		renameMapping.putAll(getRenamings(child.constants.keySet(), ci.constMapping, prefix));
 		renameMapping.putAll(getRenamings(child.labels, ci.labelMapping, prefix));
 		
-		RenameParamPass.swapNames(child, renameMapping);
+		RenameParams.swapNames(child, renameMapping);
 		
 		if (child instanceof NetworkComponent)
 		{

@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.flatten;
+package com.verivital.hyst.passes.complex;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +18,9 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.basic.RemoveDiscreteUnreachablePass;
 import com.verivital.hyst.passes.basic.RemoveSimpleUnsatInvariantsPass;
+import com.verivital.hyst.util.FlattenRenameUtils;
 import com.verivital.hyst.util.Preconditions;
 
 /**
@@ -79,7 +81,20 @@ public class FlattenAutomatonPass extends TransformationPass
 	}
 	
 	@Override
-	public void runPass(String params)
+	public String getCommandLineFlag()
+	{
+		return "-flatten";
+	}
+
+	@Override
+	public String getName()
+	{
+		return "Flatten Hybrid Automaton Pass";
+	}
+	
+	
+	@Override
+	public void runPass()
 	{
 		FlattenRenameUtils.convertToFullyQualifiedParams(config.root);
 		FlattenRenameUtils.convertSettingsSeparator(config);
@@ -171,18 +186,6 @@ public class FlattenAutomatonPass extends TransformationPass
 		rv.variables = ordered;
 	}
 
-	@Override
-	public String getCommandLineFlag()
-	{
-		return "-flatten";
-	}
-
-	@Override
-	public String getName()
-	{
-		return "Flatten Hybrid Automaton Pass";
-	}
-	
 	/**
 	 * Get the set of labels shared between these components
 	 * @param left

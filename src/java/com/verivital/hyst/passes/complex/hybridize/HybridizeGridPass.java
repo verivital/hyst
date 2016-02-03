@@ -93,12 +93,30 @@ public class HybridizeGridPass extends TransformationPass
 	{
 		return "-hybridizegrid";
 	}
-
+	
 	@Override
+	protected void runPass()
+	{
+		String params = "TEMP: CONVERT THIS TO ARGS4J!";
+		
+		PythonBridge.getInstance().setTimeout(-1);
+		
+		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
+		ha = (BaseComponent)config.root;
+		AutomatonMode mode = ha.modes.values().iterator().next();
+		originalDynamics = mode.flowDynamics;
+		originalInvariant = mode.invariant;
+
+		parseParams(params);
+		createHybridAutomaton();
+		doOptimization();
+	}
+
+	/*@Override
 	public String getParamHelp()
 	{
 		return "[<variable for dim_1>,..,<variable for dim_n>,<min of dim1>,<max of dim1>,..<min of dim_n>,<max of dim_n>,<#partitions in dim1>,..,<#partitions in dim_n>,<For affine -> a/linear -> l>]";
-	}
+	}*/
 	
 	public String getLongHelp()
 	{
@@ -121,22 +139,6 @@ public class HybridizeGridPass extends TransformationPass
 		
 		if (!PythonBridge.hasPython())
 			throw new PreconditionsFailedException("Python (and required libraries) needed to run Hybridize Grid pass.");
-	}
-
-	@Override
-	protected void runPass(String params)
-	{
-		PythonBridge.getInstance().setTimeout(-1);
-		
-		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
-		ha = (BaseComponent)config.root;
-		AutomatonMode mode = ha.modes.values().iterator().next();
-		originalDynamics = mode.flowDynamics;
-		originalInvariant = mode.invariant;
-
-		parseParams(params);
-		createHybridAutomaton();
-		doOptimization();
 	}
 	
 	private void parseParams(String params)

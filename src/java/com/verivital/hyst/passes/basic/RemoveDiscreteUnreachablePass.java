@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.flatten;
+package com.verivital.hyst.passes.basic;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,7 +30,7 @@ public class RemoveDiscreteUnreachablePass extends TransformationPass
 	}
 	
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		

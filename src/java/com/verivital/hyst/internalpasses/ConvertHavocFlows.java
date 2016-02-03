@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.flatten;
+package com.verivital.hyst.internalpasses;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,37 +12,32 @@ import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
-import com.verivital.hyst.passes.TransformationPass;
-import com.verivital.hyst.util.Preconditions;
-import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.passes.basic.RemoveDiscreteUnreachablePass;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
- * This pass converts interval havoc flows (variables with no differential equation defined, only invariants), into ones where
- * there's an incoming (nondeterministic) reset, and dynamics of var' == 0.
- * @author sbak
- *
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object.
+ * By convention, call the static run() method to perform the transformation.
+ * 
+ * @author Stanley Bak
  */
-public class ConvertHavocFlowsPass extends TransformationPass
+public class ConvertHavocFlows
 {
-	public ConvertHavocFlowsPass()
-	{
-		preconditions = new Preconditions(true); // skip all checks
-		
-		// except require that it's flat
-		preconditions.skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()] = false;
-	}
-	
-	@Override
-	protected void runPass(String params)
+	/**
+	 * This pass converts interval havoc flows (variables with no differential equation defined, only invariants), into ones where
+	 * there's an incoming (nondeterministic) reset, and dynamics of var' == 0.
+	 */
+	public static void run(Configuration config)
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		HashSet <String> havocVariables = new HashSet <String>();
@@ -99,7 +94,7 @@ public class ConvertHavocFlowsPass extends TransformationPass
 					Hyst.logDebug("Converting havoc flow from variable " + name + " to range " + range + " in mode " + am.name);
 					
 					// add a reset on this variable for all incoming transitions to be the range interval
-					addResetToIncomingTransitions(ha, am.name, name, range);
+					addResetToIncomingTransitions(config, ha, am.name, name, range);
 					
 					// set the flow for this variable to be 0, since it's an interval which doesn't change
 					am.flowDynamics.put(name, new ExpressionInterval(new Constant(0)));
@@ -154,11 +149,11 @@ public class ConvertHavocFlowsPass extends TransformationPass
 			}
 		}
 		
-		validateDynamicsAssigned();
+		validateDynamicsAssigned(config);
 	}
 	
 
-	private void validateDynamicsAssigned()
+	private static void validateDynamicsAssigned(Configuration config)
 	{
 		// Validation: make sure every variable has defined dynamics in every (non-urgent) mode
 		BaseComponent bc = (BaseComponent)config.root;
@@ -211,7 +206,8 @@ public class ConvertHavocFlowsPass extends TransformationPass
 		return o;
 	}
 	
-	private void addResetToIncomingTransitions(BaseComponent ha, String modeName, String varName, Interval range)
+	private static void addResetToIncomingTransitions(Configuration config, BaseComponent ha,
+			String modeName, String varName, Interval range)
 	{
 		// check initial mode
 		Expression initExp = config.init.get(modeName);

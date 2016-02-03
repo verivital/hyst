@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.basic;
+package com.verivital.hyst.internalpasses;
 
 import java.util.Iterator;
 import java.util.Map.Entry;
@@ -11,33 +11,31 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.util.AutomatonUtil;
-import com.verivital.hyst.util.Preconditions;
 
 /**
- * Convert a single constant in the configuration to a variable. The param is the constant to convert (may have dots).
- *
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object.
+ * By convention, call the static run() method to perform the transformation.
+ * 
+ * @author Stanley Bak
  */
-public class ConvertConstToVariablePass extends TransformationPass
+public class ConvertConstToVariable
 {
-	public ConvertConstToVariablePass()
+	/**
+	 * Convert a single constant in the configuration to a variable. 
+	 * @param varName the constant to convert (may have dots).
+	 *
+	 */
+	public static void run(Configuration config, String varName)
 	{
-		// no preconditions
-		preconditions = new Preconditions(true);
-	}
-
-	@Override
-	protected void runPass(String params)
-	{
-		String varName = params;
-		
 		Interval value = convertRec(config.root, varName);
 		
 		// if it was a value-mapped constant, add the value as an initial state
@@ -57,7 +55,7 @@ public class ConvertConstToVariablePass extends TransformationPass
 	 * @param c the component to run it on
 	 * @param name the variable name
 	 */
-	private Interval convertRec(Component c, String name)
+	private static Interval convertRec(Component c, String name)
 	{
 		Interval rv = null;
 		
@@ -74,7 +72,7 @@ public class ConvertConstToVariablePass extends TransformationPass
 	 * @param nc the component to run it on
 	 * @param name the (dotted) variable name to convert
 	 */
-	private Interval convertNetwork(NetworkComponent nc, String name)
+	private static Interval convertNetwork(NetworkComponent nc, String name)
 	{
 		Interval rv = null;
 		
@@ -114,7 +112,7 @@ public class ConvertConstToVariablePass extends TransformationPass
 	 * @param parentName the variable name in c
 	 * @param dy the dynamics to set
 	 */
-	private void setVariableDynamics(Component c, String parentName, ExpressionInterval dy)
+	private static void setVariableDynamics(Component c, String parentName, ExpressionInterval dy)
 	{
 		// add the variable if it doesn't exist
 		if (!c.variables.contains(parentName))
@@ -162,7 +160,7 @@ public class ConvertConstToVariablePass extends TransformationPass
 	 * @param nc the current component
 	 * @param name the constant's name we're changing
 	 */
-	private void changeMapping(NetworkComponent nc, String name)
+	private static void changeMapping(NetworkComponent nc, String name)
 	{
 		nc.constants.remove(name);
 		nc.variables.add(name);
@@ -196,7 +194,7 @@ public class ConvertConstToVariablePass extends TransformationPass
 	 * @param bc the component to convert
 	 * @param name the variable name to convert
 	 */
-	private Interval convertBase(BaseComponent bc, String name)
+	private static Interval convertBase(BaseComponent bc, String name)
 	{
 		Interval rv = null;
 		

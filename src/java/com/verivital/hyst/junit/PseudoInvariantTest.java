@@ -18,10 +18,8 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.pi.SymbolicStatePoint;
-import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -63,7 +61,7 @@ public class PseudoInvariantTest
 		List <Double> times = Arrays.asList(0.5, 2.0);
 		
 		List<SymbolicStatePoint> result = PseudoInvariantSimulatePass.pythonSimulate(c, start, times);
-		double TOL = 1e-10;
+		double TOL = 1e-6;
 		
 		Assert.assertEquals("mode1", result.get(0).modeName);
 		Assert.assertEquals(1.0, result.get(0).hp.dims[0], TOL);
@@ -88,7 +86,7 @@ public class PseudoInvariantTest
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		// run the pseudo-invariant pass on it
-		String params = "2.0,5.0"; // simulation time = 2.0 and then 5.0
+		String params = "-times 2.0 5.0"; // simulation time = 2.0 and then 5.0
 		new PseudoInvariantSimulatePass().runTransformationPass(c, params);
 
 		// there should be four modes: running_init, running_pi_0, running_pi_1,
@@ -119,6 +117,4 @@ public class PseudoInvariantTest
 			}
 		}
 	}
-
-	private String UNIT_BASEDIR = "tests/unit/models/";
 }

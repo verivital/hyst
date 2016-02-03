@@ -21,9 +21,6 @@ def simulate_times(ha, mode_name, point, times, num_steps=10):
         # simulate from q for delta time
         q = sim_time(q, delta, num_steps)
 
-        if q == None: # invariant became false
-            break
-
         entry = q[0].name
 
         for d in q[1]:

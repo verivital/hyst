@@ -1,4 +1,4 @@
-package com.verivital.hyst.passes.basic;
+package com.verivital.hyst.internalpasses;
 
 
 import java.util.ArrayList;
@@ -6,14 +6,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
@@ -22,18 +21,37 @@ import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.passes.TransformationPass;
-
 
 /**
- * Swaps params (variable / constant / label) names for alternates.
- * Params are a colon separated list of names: oldname1:newname1:oldname2:newname2:...
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object.
+ * By convention, call the static run() method to perform the transformation.
  * 
- * If new name exists, a number will be appended to it (the number starts at 2 and is incremented until a fresh variable is found)
- *
+ * @author Stanley Bak
  */
-public class RenameParamPass extends TransformationPass
+public class RenameParams
 {
+	/**
+	 * Swaps params (variable / constant / label) names for alternates.
+	 * Params are a colon separated list of names: oldname1:newname1:oldname2:newname2:...
+	 * 
+	 * If new name exists, a number will be appended to it (the number starts at 2 and is incremented until a fresh variable is found)
+	 *
+	 * @param convertMap the mapping of oldName -> newName
+	 */
+    public static void run(Configuration config, Map <String, String> convertMap)
+	{
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		swapNames(ha, convertMap);
+		
+		// modify the configuration
+		SwapExpressionModifier swapper = new SwapExpressionModifier(convertMap);
+		ExpressionModifier.modifyInitForbidden(config, swapper);
+			
+		swapPlotVariables(config, convertMap);
+	}
+	
 	/**
 	 * Swap the parameter names used in this component
 	 * @param c the component to swap
@@ -66,7 +84,7 @@ public class RenameParamPass extends TransformationPass
 	 * @param mappingList the list to rename in
 	 * @param convertMap the list of renamings
 	 */
-	public static void renameMapping(ArrayList<ComponentMapping> mappingList,
+	private static void renameMapping(ArrayList<ComponentMapping> mappingList,
 			Map<String, String> convertMap)
 	{
 		for (ComponentMapping mapping : mappingList)
@@ -129,23 +147,8 @@ public class RenameParamPass extends TransformationPass
 		// rename labels
 		swapLabels(c, convertMap);
 	}
-	
-	@Override
-	protected void runPass(String params)
-	{
-		BaseComponent ha = (BaseComponent)config.root;
-		Map <String, String> convertMap = getConversionMap(ha, params);
-		SwapExpressionModifier swapper = new SwapExpressionModifier(convertMap);
-		
-		swapNames(ha, convertMap);
-		
-		// modify the configuration
-		ExpressionModifier.modifyInitForbidden(config, swapper);
-			
-		swapPlotVariables(ha, convertMap);
-	}
 
-	private void swapPlotVariables(BaseComponent ha, Map<String, String> convertMap)
+	private static void swapPlotVariables(Configuration config, Map<String, String> convertMap)
 	{
 		for (int i = 0; i < config.settings.plotVariableNames.length; ++i)
 		{
@@ -261,22 +264,6 @@ public class RenameParamPass extends TransformationPass
 		private Map<String, Variable> convertMap = new HashMap<String, Variable>();
 		private ArrayList <Variable> newVariables = new ArrayList <Variable>();
 		
-		private boolean isNewVariableInstance(Variable v)
-		{
-			boolean rv = false;
-			
-			for (Variable var : newVariables)
-			{
-				if (var == v) // instance comparison
-				{
-					rv = true;
-					break;
-				}
-			}
-			
-			return rv;
-		}
-		
 		public SwapExpressionModifier(Map<String, String> convertNameMap)
 		{
 			for (Entry<String, String> e : convertNameMap.entrySet())
@@ -312,34 +299,5 @@ public class RenameParamPass extends TransformationPass
 			
 			return rv;
 		}
-	}
-
-	/**
-	 * Gets the map for the conversion. Ensures that the variables we're changing to are fresh.
-	 * @param params the colon separated list of pairs
-	 * @return
-	 */
-	private Map<String, String> getConversionMap(BaseComponent ha, String params)
-	{
-		Map<String, String> rv = new TreeMap<String, String>();
-		String[] parts = params.split(":");
-		
-		if (parts.length % 2 != 0)
-			throw new AutomatonExportException("swap names param needs pairs of names");
-		
-		for (int i = 0; i < parts.length; i += 2)
-		{
-			String from = parts[i];
-			String originalTo = parts[i + 1];
-			String to = originalTo;
-			int suffix = 2;
-			
-			while (ha.variables.contains(to) || ha.constants.containsKey(to) || rv.containsKey(to))
-				to = originalTo + (suffix++);
-			
-			rv.put(from,  to);
-		}
-		
-		return rv;
 	}
 }

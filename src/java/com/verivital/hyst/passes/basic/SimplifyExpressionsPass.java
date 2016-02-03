@@ -15,10 +15,8 @@ import com.verivital.hyst.util.Preconditions;
 
 
 /**
- * This pass splits guards with disjunctions into multiple transitions.
- * 
- * For example, A -- (x == 1 || x == 2) --> B would be split into two transitions
- * from A to B, one with (x==1) and one with (x == 2)
+ * This pass attempts to simplify expressions in the automaton. Uses internal rules and
+ * not anything fancy.
  * 
  * @author Stanley Bak (October 2014)
  *
@@ -31,7 +29,7 @@ public class SimplifyExpressionsPass extends TransformationPass
 	}
 	
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		runRec(config.root);
 	}

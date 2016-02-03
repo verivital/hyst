@@ -38,7 +38,18 @@ import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
-public class HybridizeMixedTriggeredPass extends TransformationPass 
+/**
+ * This is the mixed-triggered hybridization pass. Its implementation matches with the HSCC paper, 
+ * and it the parameters were already constructed (for example using a simulation).
+ * 
+ * The required parameters of the pass are two lists:
+ * E_1 E_2 ... E_{n-1} - list of splitting elements, each one is either a time (float) or a point (comma-separated floats)
+ * D_1 D_2 ... D_n - list of domains, each one is a rectangle: x_min,x_max;y_min,ymax; ... ;z_min,zmax
+ * 
+ * @author Stanley Bak
+ *
+ */
+public class HybridizeMixedTriggeredPass extends TransformationPass
 {
 	private final static String PASS_PARAM = "-hybridizemt";
 	private final static String USAGE = "step=<val>,maxtime=<val>,epsilon=<val>(,picount=#)(,pimaxtime=#)" +
@@ -96,11 +107,27 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     {
         return PASS_PARAM;
     }
+    
 
-    @Override
-    public String getParamHelp()
+	@Override
+    protected void runPass()
     {
-        return USAGE;
+		String params = "TODO, CONVERT THIS TO ARGS4J!";
+		
+        Expression.expressionPrinter = DefaultExpressionPrinter.instance;
+
+        this.ha = (BaseComponent)config.root;
+        this.originalMode = ha.modes.values().iterator().next();
+        parseParams(params);
+        makeTimeTriggerVariable(); // sets timeVariable
+        ha.validate();
+
+        ha.modes.remove(originalMode.name);
+        simulateAndConstruct();
+        assignInitialStates();
+        assignForbiddenStates();
+
+        config.settings.spaceExConfig.timeTriggered = true;
     }
     
     @Override
@@ -173,7 +200,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 						Hyst.log("Using " + randCount + " random simulations on boundary");
 					}
 					else
-						throw new AutomatonExportException("Unknown simulation type parameter: " + part+ "; usage: " + USAGE);
+						throw new AutomatonExportException("Unknown simulation type parameter: " + part);
 				}
 				else if (name.equals("addforbidden"))
 				{
@@ -182,7 +209,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 					else if (value.equals("false"))
 						addForbidden = false;
 					else
-						throw new AutomatonExportException("Unknown addforbidden parameter: " + part + "; usage: " + USAGE);
+						throw new AutomatonExportException("Unknown addforbidden parameter: " + part);
 				}
 				else if (name.equals("addintermediate"))
 				{
@@ -191,26 +218,26 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 					else if (value.equals("false"))
 						addIntermediate = false;
 					else
-						throw new AutomatonExportException("Unknown addintermediate parameter: " + part + "; usage: " + USAGE);
+						throw new AutomatonExportException("Unknown addintermediate parameter: " + part);
 				}
 				else
-					throw new AutomatonExportException("Unknown parameter for pass: '" + name + "'; usage: " + USAGE);
+					throw new AutomatonExportException("Unknown parameter for pass: '" + name + "'");
 			}
 			catch (NumberFormatException e)
 			{
-				throw new AutomatonExportException("Error parsing pass parameter '" + part + "': " + USAGE, e);
+				throw new AutomatonExportException("Error parsing pass parameter '" + part + "'", e);
 			}
 		}
 		
 		// errors if not set
 		if (timeStep <= 0)
-			throw new AutomatonExportException("Positive time must be set as pass parameter: " + USAGE);
+			throw new AutomatonExportException("Positive time must be set as pass parameter.");
 		
 		if (timeMax <= 0)
-			throw new AutomatonExportException("Positive max time must be set as pass parameter: " + USAGE);
+			throw new AutomatonExportException("Positive max time must be set as pass parameter");
 		
 		if (epsilon < 0)
-			throw new AutomatonExportException("Nonnegative epsilon must be set as pass parameter: " + USAGE);
+			throw new AutomatonExportException("Nonnegative epsilon must be set as pass parameter");
 		
 		// generated values
 		if (piMaxTime < 0)
@@ -1044,23 +1071,4 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			}
 		}
 	}
-
-	@Override
-    protected void runPass(String params)
-    {
-        Expression.expressionPrinter = DefaultExpressionPrinter.instance;
-
-        this.ha = (BaseComponent)config.root;
-        this.originalMode = ha.modes.values().iterator().next();
-        parseParams(params);
-        makeTimeTriggerVariable(); // sets timeVariable
-        ha.validate();
-
-        ha.modes.remove(originalMode.name);
-        simulateAndConstruct();
-        assignInitialStates();
-        assignForbiddenStates();
-
-        config.settings.spaceExConfig.timeTriggered = true;
-    }
 }

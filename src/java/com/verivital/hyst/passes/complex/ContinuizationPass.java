@@ -1,13 +1,10 @@
 package com.verivital.hyst.passes.complex;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
@@ -73,8 +70,6 @@ public class ContinuizationPass extends TransformationPass
 	@Option(name="-bloats",required=true,handler=StringArrayOptionHandler.class,usage="bloating terms for each time domain", metaVar="VAL1 VAL2 ...")
 	List<String> bloats;
 	
-	CmdLineParser parser = new CmdLineParser(this);
-	
 	@Override
 	protected void checkPreconditons(Configuration c, String name)
 	{
@@ -129,16 +124,6 @@ public class ContinuizationPass extends TransformationPass
 	}
 	
 	@Override
-	public String getParamHelp()
-	{
-		ByteArrayOutputStream out = new ByteArrayOutputStream(); 
-		
-		parser.printUsage(out);
-		
-		return out.toString();
-	}
-	
-	@Override
 	public String getLongHelp()
 	{
 		String header = 
@@ -153,7 +138,7 @@ public class ContinuizationPass extends TransformationPass
 	}
 	
 	@Override
-	public void runPass(String paramStr)
+	public void runPass()
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		AutomatonMode approxMode = null; // mode of the continuous approximation
@@ -166,7 +151,7 @@ public class ContinuizationPass extends TransformationPass
 			approxMode = trans.to; 
 		}
 		
-		parseParams(paramStr);
+		processParams();
 		
 		// extract derivatives
 		LinkedHashMap <String, ExpressionInterval> flows = approxMode.flowDynamics;
@@ -630,22 +615,8 @@ public class ContinuizationPass extends TransformationPass
 	 * Parses the pass params
 	 * @param params the pass param string
 	 */
-	private void parseParams(String params)
-	{
-		String[] args = AutomatonUtil.extractArgs(params);
-		
-		try
-		{
-			parser.parseArgument(args);
-		}
-		catch (CmdLineException e)
-		{
-			String message = "Error parsing Continuization Pass arguments: " + e.getMessage() + "\n" +
-					getParamHelp();
-			
-			throw new AutomatonExportException(message);
-		}
-		
+	private void processParams()
+	{	
 		// make sure variables exists in automaton
 		if (!config.root.variables.contains(varName))
 			throw new AutomatonExportException("Varname '" + varName + "' not found in automaton.");
