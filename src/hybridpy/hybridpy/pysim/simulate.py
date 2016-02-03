@@ -56,10 +56,12 @@ def get_active_transitions(mode, state):
 
     return active_transitions
 
-def find_jump_bisection(solver, mode, init_value, init_time, cross_delta, cross_value, tol=1e-9):
+def find_event_bisection(solver, event_func, init_value, init_time, cross_delta, cross_value, tol=1e-9):
     '''
-    do a binary search to find a discrete event's time/value
+    do a binary search to find a discrete event's time / value
     this modifies the solver object, use solver.t and solver.y to access result 
+    event_func is a function which takes in the state, and returns True if the event occurred
+    upon returning, event_func(solver.t) should be True (assuming it was true when this was called)
 
     may raise a SimulationException on ODE solver erorrs
     '''
@@ -81,10 +83,29 @@ def find_jump_bisection(solver, mode, init_value, init_time, cross_delta, cross_
 
         mid_value = solver.y
 
-        if len(get_active_transitions(mode, mid_value)) > 0:
-            return find_jump_bisection(solver, mode, init_value, init_time, mid_delta, mid_value, tol)
+        if event_func(mid_value):
+            return find_event_bisection(solver, event_func, init_value, init_time, mid_delta, mid_value, tol)
         else:
-            return find_jump_bisection(solver, mode, mid_value, mid_time, mid_delta, cross_value, tol)
+            return find_event_bisection(solver, event_func, mid_value, mid_time, mid_delta, cross_value, tol)
+
+def solver_over_max_time(solver, max_time, init_time, init_state):
+    '''
+    The solver went over the maximum solving time, interpolate between the last two pointer to be
+    exactly at the final time.
+    Modifies solver in place, use solver.y to get the result
+    '''
+
+    delta = solver.t - init_time
+    desired_delta = max_time - init_time
+    frac = float(desired_delta) / delta
+
+    frac_state = []
+
+    for i in xrange(len(init_state)):
+        delta_state = solver.y[i] - init_state[i]
+        frac_state.append(init_state[i] + frac * delta_state)
+
+    solver.set_initial_value(frac_state, max_time)
 
 def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
     '''
@@ -103,44 +124,55 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
     becomes false
     '''
     rv_post_jump_q = None
-    state = solver.y
 
     # check discrete post
-    active_transitions = get_active_transitions(mode, state)
+    active_transitions = get_active_transitions(mode, solver.y)
 
     if len(active_transitions) != 0:
         if len(active_transitions) > 1:
             transition_names = ", ".join([str(t) for t in active_transitions])
-            print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
-              ' at state ' + str(state) + ': ' + transition_names
 
-            events.append(("Multiple Transitions", state, "red"))
+            # todo: we want some way to programatically disable this printing
+            print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
+              ' at state ' + str(solver.y) + ': ' + transition_names
+
+            events.append(("Multiple Transitions", solver.y, "red"))
 
         t = active_transitions[0]
-        events.append(SimulationEvent(str(t), state, "grey"))
-        post_state = t.reset(state)
+        events.append(SimulationEvent(str(t), solver.y, "grey"))
+        post_state = t.reset(solver.y)
 
         # resets to None are identity resets
-        for dim in xrange(len(state)):
+        for dim in xrange(len(post_state)):
             if post_state[dim] == None:
-                post_state[dim] = state[dim]
+                post_state[dim] = solver.y[dim]
 
         rv_post_jump_q = (t.to_mode, post_state)
-    elif mode.inv(state) == False:
+    elif mode.inv(solver.y) == False:
         raise SimulationException('Invariant became false')
     else:
         # continuous post
         init_time = solver.t
-        init_value = solver.y
+        init_state = solver.y
         solver.integrate(max_time, step=True)
 
         if not solver.successful():
-            raise SimulationException('ODE solver error during continuous post')
+            raise SimulationException("ODE solver error during continuous post")
 
-        # if any transition is enabled, we should use a substep
-        if len(get_active_transitions(mode, state)) > 0:
-            cross_delta = solver.t - init_time
-            find_jump_bisection(solver, mode, init_value, init_time, cross_delta, solver.y, tol=jump_error_tol)
+        # the solver's step might go over the maximum time we want. if so, interpolate the state        
+        if solver.t > max_time:
+            solver_over_max_time(solver, max_time, init_time, init_state)
+
+        # limit the size of the step if certain events occur
+        is_invariant_false = lambda state: mode.inv(state) == False
+        is_transition_enabled = lambda state: len(get_active_transitions(mode, state)) > 0
+    
+        for event_func in is_invariant_false, is_transition_enabled:
+            if event_func(solver.y):
+                step_size = solver.t - init_time
+
+                find_event_bisection(solver, event_func, init_state, init_time, 
+                        step_size, solver.y, tol=jump_error_tol)
 
     return rv_post_jump_q
 
@@ -257,7 +289,6 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     # get the last state
     last_mode_sim = res['traces'][-1]
     last_point = last_mode_sim.points[-1]
-    last_time = last_mode_sim.times[-1]
     mode_name = last_mode_sim.mode_name
 
     return (ha.modes[mode_name], last_point)
@@ -304,7 +335,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     if mode == None:
         raise RuntimeError("Initial mode was not set.")
 
-    events.append(SimulationEvent('Init', str(solver.y)))
+    events.append(SimulationEvent('Init', solver.y))
 
     try:
         while solver.t < end_time:
@@ -335,16 +366,20 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                 points.append(solver.y)
                 times.append(solver.t)
 
+        if solver.t != end_time:
+            raise SimulationException("Final simulation time incorrect; solver.t = {}, end_time = {}".format(
+                    solver.t, end_time))
+
         last_state = points[-1]
         events.append(SimulationEvent("End", last_state))   
     except SimulationException as e:
-        events.append(SimulationEvent(e.strerror, solver.y, "red"))
+        events.append(SimulationEvent(str(e), solver.y, "red"))
 
         if reraise_errors:
             raise e
         else:
-            print "Warning: SimulationException occuring in mode {} at state {}: {}".format(
-                mode.name, solver.y, e.strerror)
+            print "Warning: {} (SimulationException) in mode {} at state {}".format(
+                str(e), mode.name, solver.y)
 
     return {'traces':traces, 'events':events}
 
@@ -359,10 +394,10 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
     # possible label locations
     rad = '80'
     locs = [(15, 20, 'left', 'bottom', 'angle,angleA=180,angleB=-90,rad=' + rad), 
-            (0, 25, 'center', 'bottom', 'angle,angleA=-90,angleB=-89,rad=' + rad), 
+            #(0, 25, 'center', 'bottom', 'angle,angleA=-90,angleB=-89,rad=' + rad), 
             (-15, 20, 'right', 'bottom', 'angle,angleA=0,angleB=-90,rad=' + rad), 
             (15, -20, 'left', 'top', 'angle,angleA=180,angleB=90,rad=' + rad), 
-            (0, -25, 'center', 'top', 'angle,angleA=90,angleB=89,rad=' + rad), 
+            #(0, -25, 'center', 'top', 'angle,angleA=90,angleB=89,rad=' + rad), 
             (-15, -20, 'right', 'top', 'angle,angleA=0,angleB=90,rad=' + rad),]
 
     msg = event.text
@@ -392,7 +427,7 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
     return rv
 
 def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None, 
-                          draw_events=True, axis_range=None, draw_func=None, legend=True):
+                          draw_events=True, axis_range=None, draw_func=None, legend=True, show=False):
     '''plot mutliple simulations
     result_list - the result for simulate_multi
     '''
@@ -425,7 +460,8 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
 
     if filename != None:
         plt.savefig(filename, dpi=300)
-    else:
+    
+    if show:
         plt.show()
 
 def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=None):
