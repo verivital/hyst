@@ -1,20 +1,22 @@
 package com.verivital.hyst.passes.complex.pi;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.DoubleArrayOptionHandler;
 
 
 /**
@@ -32,8 +34,8 @@ import com.verivital.hyst.util.AutomatonUtil;
  */
 public class PseudoInvariantSimulatePass extends TransformationPass
 {
-	@Option(name="-times", required=true, handler=StringArrayOptionHandler.class,usage="simulation times", metaVar="TIME1 TIME2 ...")
-	List<String> timesStr;
+	@Option(name="-times", required=true, handler=DoubleArrayOptionHandler.class,usage="simulation times", metaVar="TIME1 TIME2 ...")
+	private List<Double> times;
 	
 	@Override
 	public String getCommandLineFlag()
@@ -47,64 +49,38 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		return "Pseudo-Invariant Simulation Pass";
 	}
 	
-	private ArrayList <Double> convertTimesStr()
-	{
-		ArrayList <Double> rv = new ArrayList <Double>(timesStr.size());
-		double lastTime = 0;
-		
-		for (String time : timesStr)
-		{
-			try
-			{
-				double d = Double.parseDouble(time);
-				
-				if (d < lastTime)
-					throw new AutomatonExportException("times should be greater than zero and in increasing order:" +
-							d);
-				
-				rv.add(d);
-			}
-			catch (NumberFormatException e)
-			{
-				throw new AutomatonExportException("Error parsing pseudo-invariant time: " + e);
-			}
-		}
-		
-		return rv;
-	}
-	
 	@Override
 	protected void runPass()
 	{
+		Collections.sort(times);
+		Hyst.log("Simulation times: " + times);
 		BaseComponent ha = (BaseComponent)config.root;
 
-		// construct the param string for the static-based pseudo-invariant pass
-		String piParams = null;
 		SymbolicStatePoint init = new SymbolicStatePoint();
 		init.modeName = config.init.entrySet().iterator().next().getKey();
 		init.hp = AutomatonUtil.getInitialPoint(ha, config);
+		List <SymbolicStatePoint> states = pythonSimulate(config, init, times);
 		
-		List <SymbolicStatePoint> states = pythonSimulate(config, init, convertTimesStr());
+		List <String> modes = new ArrayList <String>(times.size());
+		List <HyperPoint> points = new ArrayList <HyperPoint>(times.size());
+		List <HyperPoint> dirs = new ArrayList <HyperPoint>(times.size());
 		
 		for (SymbolicStatePoint ss : states)
 		{
 			AutomatonMode mode = ha.modes.get(ss.modeName);
 			double[] gradient = AutomatonUtil.getGradientAtPoint(mode, ss.hp);
 			double[] invariantDir = negate(gradient);
-		
-			if (piParams == null)
-				piParams = "";
-			else
-				piParams += "|";
 			
-			piParams += ss.modeName + ";" + commaSeparated(ss.hp.dims) + ";" + commaSeparated(invariantDir);
+			modes.add(mode.name);
+			points.add(new HyperPoint(ss.hp));
+			dirs.add(new HyperPoint(invariantDir));
 		}
 		
+		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs);
+		Hyst.log("Calling transitional pseudo-invariant pass with params: " + paramString);
+				
 		// run the traditional pseudo-invariants pass
-		System.out.println(". piParams = " + piParams);
-		System.out.print("This is where we left off for this. We need to convert pi-pass to " +
-				"use args4j, and maybe have a programatic (static) interface for it.");
-		new PseudoInvariantPass().runTransformationPass(config, piParams);
+		new PseudoInvariantPass().runTransformationPass(config, paramString);
 	}
 
 	/**
@@ -188,5 +164,16 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			a.add(d);
 		
 		return commaSeparated(a);
+	}
+
+	public static String makeParamString(double ... times)
+	{
+		StringBuilder rv = new StringBuilder();
+		rv.append("-times");
+		
+		for (double t : times)
+			rv.append(" " + t);
+		
+		return rv.toString();
 	}
 }

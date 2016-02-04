@@ -46,6 +46,7 @@ import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.StringOperations;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -274,7 +275,7 @@ public class Hyst
 
 	private static void runPrinter(ToolPrinter printer, Configuration config)
 	{
-		String originalFilename = joinStrings(xmlFilenames, " ");
+		String originalFilename = StringOperations.join(" ", xmlFilenames.toArray(new String[]{}));
 
 		if (outputFilename != null)
 			printer.setOutputFile(outputFilename);
@@ -316,21 +317,6 @@ public class Hyst
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		}
 		catch (Exception e) {}
-	}
-
-	public static String joinStrings(ArrayList<String> list, String sep)
-	{
-		String rv = null;
-
-		for (String s : list)
-		{
-			if (rv == null)
-				rv = s;
-			else
-				rv += sep + s;
-		}
-
-		return rv;
 	}
 
 	public static String makeSingleArgument(String[] ar)

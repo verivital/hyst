@@ -26,8 +26,6 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass.IntervalTerm;
-import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
-import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass.PseudoInvariantParams;
 import com.verivital.hyst.printers.DReachPrinter.DReachExpressionPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -680,44 +678,6 @@ public class SmallTest
 		sampleFlow = "x' == x^2.1234";
 		e3 = FormulaParser.parseFlow(sampleFlow);
 		Assert.assertEquals("(x = x ^ 2.1234)", exp_printer.print(e3));
-	}
-	
-	@Test
-	public void testPseudoInvariantCondition1()
-	{
-		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
-		double[] point = {1.5, 1.5};
-		double[] dir = {1.0, 0};
-		String expectedResult = "1 * x >= 1.5";
-		
-		PseudoInvariantPass pi = new PseudoInvariantPass();
-		pi.vars = new ArrayList<String>(2);
-		pi.vars.add("x");
-		pi.vars.add("y");
-		PseudoInvariantParams pip = pi.new PseudoInvariantParams(point, dir);
-		
-		if (!DefaultExpressionPrinter.instance.print(pip.inv).equals(expectedResult))
-			Assert.fail("created pseudo-invariant was " + pip.inv + " instead of the expected " + expectedResult);
-	}
-	
-	@Test
-	public void testPseudoInvariantCondition2()
-	{
-		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
-		double[] point = {0, 0};
-		double[] dir = {0, 1};
-		String expectedResult = "1 * y >= 0";
-		
-		PseudoInvariantPass pi = new PseudoInvariantPass();
-		pi.vars = new ArrayList<String>(2);
-		pi.vars.add("x");
-		pi.vars.add("y");
-		PseudoInvariantParams pip = pi.new PseudoInvariantParams(point, dir);
-		
-		String got = DefaultExpressionPrinter.instance.print(pip.inv);
-		
-		if (!got.equals(expectedResult))
-			Assert.fail("created pseudo-invariant was " + got + " instead of the expected " + expectedResult);
 	}
 	
 	@Test

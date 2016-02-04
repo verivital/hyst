@@ -1,56 +1,63 @@
 package com.verivital.hyst.passes.complex.pi;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
 
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.OptionDef;
-import org.kohsuke.args4j.spi.OptionHandler;
-import org.kohsuke.args4j.spi.Parameters;
-import org.kohsuke.args4j.spi.Setter;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
+import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertFromStandardForm;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.util.HyperPointArrayOptionHandler;
+import com.verivital.hyst.util.StringOperations;
 
 
 /**
  * This pass splits the initial mode into two using the technique of pseudo-invariants:
- * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants", CyPhy 2014, Bak 2014
+ * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-Invariants", CyPhy 2014, Bak 2014
  * 
- * The parameter is a time. The center of the initial set is simulated for this time before splitting orthogonal to the gradient.
+ * The parameters define the list of (mode, point, direction), which define the mode to apply the
+ * transformation, the continuous point, and the direction of the hyperplane which defines the invariant.
+ * 
+ * -modes MODE1 MODE2 ...
+ * -points POINT1 POINT2 ...
+ * -dirs DIR1 DIR2 ...
+ * 
+ * where PT and DIR are comma-separated lists of doubles, surrounded by parenthesis, like (1,-2,3)
  * 
  * @author Stanley Bak (October 2014)
  *
  */
 public class PseudoInvariantPass extends TransformationPass
 {
-	private int UNIQUE_ID = 0;
-	BaseComponent ha;
-	public List <String> vars;
+	@Option(name="-modes", required=true, handler=StringArrayOptionHandler.class,usage="mode names", 
+			metaVar="MODE1 MODE2 ...")
+	private List <String> modes;
+
+	@Option(name="-points", required=true, handler=HyperPointArrayOptionHandler.class,
+			usage="points where to create pseudo-invariant hyperplane", metaVar="POINT1 POINT2 ...")
+	private List <HyperPoint> points;
 	
-	AutomatonMode applyMode;
-	String applyModeName;
-	LinkedList <PseudoInvariantParams> params = new LinkedList <PseudoInvariantParams>();
-	String initModeName;
+	@Option(name="-dirs", required=true, handler=HyperPointArrayOptionHandler.class,
+			usage="directions (corresponding to each point) for each pseudo-invariant hyperplane", 
+			metaVar="DIR1 DIR2 ...")
+	private List <HyperPoint> dirs;
 	
-	int numVars;
+	private BaseComponent ha;
 	
 	@Override
 	public String getCommandLineFlag()
@@ -59,209 +66,165 @@ public class PseudoInvariantPass extends TransformationPass
 	}
 	
 	@Override
+	public String getParamHelp()
+	{
+		String s = super.getParamHelp();
+		s += "\nwhere POINT and DIR are each comma-separated (no spaces) lists of numbers, "
+				+ "surrounded by parenthesis, like (1,-2,3)";
+		
+		return s;
+	}
+	
+	@Override
 	public String getName()
 	{
 		return "Pseudo-Invariant at Point Pass";
 	}
 	
-	/*@Override
-	public String getParamHelp()
+	private void checkParams()
 	{
-		return "[(modename|)pt1;inv_dir1|pt2;inv_dir2|...] (point/invariant direction is a comma-separated list of reals)";
-	}*/
+		int len = modes.size();
+		
+		if (len == 0)
+			throw new AutomatonExportException("Expected at least one mode in params.");
+		
+		if (points.size() != len)
+			throw new AutomatonExportException("Expected " + len + " points in params, got " + points.size());
+		else if (dirs.size() != len)
+			throw new AutomatonExportException("Expected " + len + " dirs in params, got " + points.size());
+		
+		int dims = ha.variables.size();
+		
+		if (points.get(0).dims.length != dims)
+			throw new AutomatonExportException("Expected points with " + dims + " dimensions: " + ha.variables);
+		
+		if (dirs.get(0).dims.length != dims)
+			throw new AutomatonExportException("Expected dirs with " + dims + " dimensions: " + ha.variables);
+	}
 	
+	/**
+	 * Make the param string for calling this programatically
+	 * @param modes 
+	 * @param points
+	 * @param dirs
+	 * @return a string you can call runPass() with
+	 */
+	public static String makeParamString(List <String> modes, List <HyperPoint> points, List <HyperPoint> dirs)
+	{
+		StringBuilder rv = new StringBuilder();
+		
+		rv.append("-modes");
+		
+		for (String m : modes)
+			rv.append(" " + m);
+		
+		rv.append(" -points");
+		
+		for (HyperPoint p : points)
+			rv.append(" (" + StringOperations.join("),(", p.dims) + ")");
+		
+		rv.append(" -dirs");
+		
+		for (HyperPoint p : dirs)
+			rv.append(" (" + StringOperations.join("),(", p.dims) + ")");
+		
+		return rv.toString();
+	}
+
 	@Override
 	protected void runPass()
 	{
-		String stringParams = "TODO: convert this pass to args4j";
-		BaseComponent ha = (BaseComponent)config.root;
-		initialize(ha, stringParams);
+		ha = (BaseComponent)config.root;
+		checkParams();
 		
-		// first make an incoming mode for incoming transitions
-		// This mode has zero dynamics (x'=0) and outgoing guards based on the current state
+		ConvertToStandardForm.run(config);
 		
-		AutomatonMode initMode = makeInitMode();
-		AutomatonMode modeToSplit = applyMode;
+		// since we split modes, some of them become synonyms
+		ArrayList<HashSet<String>> synonyms = new ArrayList<HashSet<String>>();
 		
-		// make modes for each step in the automaton
-		AutomatonMode modes[] = new AutomatonMode[params.size()];
-		
-		for (int i = 0; i < params.size(); ++i)
-			modes[i] = modeToSplit.copy(ha, params.get(i).modeName);
-		
-		for (int i = 0; i < params.size(); ++i)
+		for (int i = 0; i < modes.size(); ++i)
 		{
-			PseudoInvariantParams pip = params.get(i);
+			AutomatonMode am = ha.modes.get(modes.get(i));
+			HyperPoint point = points.get(i);
+			HyperPoint dir = points.get(i);
 			
-			// apply the method of pseudo-invariants
-			// copy the initial mode
-			AutomatonMode secondMode = modes[i];
-			
-			// copy outgoing transitions (automatic)
-			for (AutomatonTransition t : ha.transitions)
-			{
-				if (t.from == modeToSplit)
-					t.copy(ha).from = secondMode;
-			}
-			
-			// copy create incoming transition, adding the guard to determine which one to go to
-			secondMode.invariant = pip.inv;
-			
-			// create the transition from the incoming mode
-			AutomatonTransition atFromIncoming = ha.createTransition(initMode, secondMode);
-			atFromIncoming.guard = createPiGuard(pip.inv, i);
-			
-			// create the transition to the next pseudo-invariant modes
-			for (int nextI = i+1; nextI < params.size(); ++nextI)
-			{
-				AutomatonMode nextMode = modes[nextI];
-				AutomatonTransition atToNext = ha.createTransition(secondMode, nextMode);
-				
-				atToNext.guard = negateEqualCondition(pip.inv);
-				
-				for (int otherModeI = i+1; otherModeI <= nextI; ++otherModeI)
-				{
-					PseudoInvariantParams otherModePip = params.get(otherModeI);
-					
-					// it should be in this set
-					if (otherModeI == nextI)
-						atToNext.guard = new Operation(Operator.AND, atToNext.guard, otherModePip.inv);
-					else
-						atToNext.guard = new Operation(Operator.AND, atToNext.guard, negateEqualCondition(otherModePip.inv));
-				}
-			}
-			
-			// create the last transition which goes to applymode
-			AutomatonMode nextMode = applyMode;
-
-			AutomatonTransition atToNext = ha.createTransition(secondMode, nextMode);
-			atToNext.guard = negateEqualCondition(pip.inv);
-			
-			for (int otherModeI = i+1; otherModeI < params.size(); ++otherModeI)
-			{
-				PseudoInvariantParams otherModePip = params.get(otherModeI);
-				
-				// it should be in this set
-				atToNext.guard = new Operation(Operator.AND, atToNext.guard, negateEqualCondition(otherModePip.inv));
-			}
-			
-			Hyst.log("Created pi mode #" + i + " with invariant: " + pip.inv.toDefaultString());
+			createPseudoInvariant(am, point, dir);
 		}
 		
-		// add the transition from initial mode to applyMode
-		AutomatonTransition atFromIncoming = ha.createTransition(initMode, applyMode);
-		atFromIncoming.guard = createPiGuard(null, params.size());
-		
-		// rename applyMode to applyMode_final
-		ha.modes.remove(applyModeName);
-		applyMode.name = checkNewModeName(applyMode.name + "_final");
-		ha.modes.put(applyMode.name, applyMode);
+		ConvertFromStandardForm.run(config);
 	}
 
-	/**
-	 * Create a pseudoInvariant initial state guard. This consists of the negation of a set of previous mode's guards, as well
-	 * as an extra guard for this mode
-	 * @param g the extra guard (can be null)
-	 * @param i the maximum index of the previous modes in params list to negate
-	 * @return the guard expression
-	 */
-	private Expression createPiGuard(Expression g, int i)
+	private void createPseudoInvariant(AutomatonMode afterMode, HyperPoint point, HyperPoint dir)
 	{
-		Expression guard = g;
+		String beforeName = makeModeName(afterMode);
+		Hyst.log("Creating PI mode " + beforeName + " from point " + point + " and direction " + dir);
 		
-		for (int j = 0; j < i; ++j)
+		AutomatonMode beforeMode = afterMode.copyWithTransitions(beforeName);
+		
+		Expression piInv = createInvariantExpression(ha.variables, point, dir);
+		Expression piGuard = createGuardExpression(ha.variables, point, dir);
+		
+		// incoming transitions to afterMode should have an extra condition (the pi guard)
+		for (AutomatonTransition at : ha.transitions)
 		{
-			Expression cond = negateEqualCondition(params.get(j).inv);
-			
-			if (guard == null)
-				guard = cond;
-			else
-				guard = new Operation(guard, Operator.AND, cond);
+			if (at.to == afterMode)
+				at.guard = Expression.and(at.guard, piGuard);
 		}
 		
-		return guard;
+		// beforeMode should have an extra invariant (the pseudo-invariant)
+		beforeMode.invariant = Expression.and(beforeMode.invariant, piInv);
+		
+		// there should be a transition between the two modes
+		AutomatonTransition at = ha.createTransition(beforeMode, afterMode);
+		at.guard = piGuard;
+					
+		Hyst.log("Created PI mode " + beforeName + " with invariant: " + piInv.toDefaultString());
 	}
 
 	/**
-	 * Negate a simple operation, retaining equals, like 'x <= 5' -> 'x >= 5'
-	 * @param exp
+	 * Create the expression for the invariant
+	 * @param vars the variable names, in order
+	 * @param point
+	 * @param dir
 	 * @return
 	 */
-	private Expression negateEqualCondition(Expression exp)
+	public static Expression createInvariantExpression(List <String> vars, HyperPoint point, HyperPoint dir)
 	{
-		Expression rv = null;
+		double rhs = dot(point.dims, dir.dims);
 		
-		if (exp instanceof Operation)
-		{
-			Operation o = (Operation)exp;
-			Expression left = o.getLeft();
-			Expression right = o.getRight();
-			Operator op = o.op;
-			
-			Operator[][] opposites = new Operator[][]
-			{
-				{Operator.GREATEREQUAL, Operator.LESSEQUAL},
-				{Operator.NOTEQUAL, Operator.EQUAL},
-			};
-			
-			for (Operator[] opposite : opposites)
-			{
-				if (op.equals(opposite[0]))
-				{
-					rv = new Operation(left.copy(), opposite[1], right.copy());
-					break;
-				}
-				else if (op.equals(opposite[1]))
-				{
-					rv = new Operation(left.copy(), opposite[0], right.copy());
-					break;
-				}
-			}
-			
-			if (rv == null)
-				throw new AutomatonExportException("Expression was not simple comparison in negateCondition: " + exp);
-		}
-		else
-			throw new AutomatonExportException("negateCondititon called on non-operation: " + exp);
-		
-		
-		return rv;
+		return makeExpressionFromLinearInequality(vars, dir.dims, Operator.LESSEQUAL, rhs);
 	}
-
-	private String checkNewModeName(String name)
+	
+	/**
+	 * Create the expression for the invariant
+	 * @param vars the variable names, in order
+	 * @param point
+	 * @param dir
+	 * @return
+	 */
+	public static Expression createGuardExpression(List <String> vars, HyperPoint point, HyperPoint dir)
 	{
-		if (ha != null && ha.modes.get(name) != null)
-			throw new AutomatonExportException("Mode with name '" + name + "' already exists in automaton.");
+		double rhs = dot(point.dims, dir.dims);
+		
+		return makeExpressionFromLinearInequality(vars, dir.dims, Operator.GREATEREQUAL, rhs);
+	}
+	
+
+	/**
+	 * Create the name for the predecessor am on a pseudo-invariant split
+	 * @param am the original mode
+	 * @return a unique name, for after the pi
+	 */
+	private String makeModeName(AutomatonMode am)
+	{
+		String baseName = am.name;
+		int id = 2;
+		String name = baseName + "_" + id;
+		
+		while (ha.modes.containsKey(name))
+			name = baseName + "_" + (++id);
 			
 		return name;
-	}
-
-	private AutomatonMode makeInitMode()
-	{
-		AutomatonMode rv = ha.createMode(initModeName);
-		
-		// invariant
-		rv.invariant = Constant.TRUE;
-		
-		// flow dynamics (urgent)
-		rv.flowDynamics = null;
-		rv.urgent = true;
-		
-		// redirect initial states to this mode
-		if (config.init.containsKey(applyModeName))
-		{
-			Expression e = config.init.remove(applyModeName);
-			config.init.put(initModeName, e);
-		}
-		
-		// redirect incoming transitions to this mode
-		for (AutomatonTransition t : ha.transitions)
-		{
-			if (t.to.equals(applyMode))
-				t.to = rv; 
-		}
-		
-		return rv;
 	}
 
 	/**
@@ -299,7 +262,7 @@ public class PseudoInvariantPass extends TransformationPass
 		return new Operation(sum, op, new Constant(rhs));
 	}
 
-	private double dot(double[] a, double[] b)
+	private static double dot(double[] a, double[] b)
 	{
 		double rv = 0;
 		
@@ -307,110 +270,5 @@ public class PseudoInvariantPass extends TransformationPass
 			rv += a[i] * b[i];
 		
 		return rv;
-	}
-	
-	private void initialize(BaseComponent ha, String allParams)
-	{
-		this.ha = ha;
-		this.vars = ha.variables;
-		numVars = ha.variables.size();
-		
-		String[] splitParams = allParams.split("\\|");
-		int firstIndex = 0;
-		
-		if (splitParams.length == 0)
-			throw new AutomatonExportException("pseudo-invariant params are blank!");
-		
-		if (ha.modes.get(splitParams[0]) != null)
-		{
-			firstIndex = 1;
-			applyModeName = splitParams[0];
-		}
-		else
-		{
-			firstIndex = 0;
-			applyModeName = config.init.keySet().iterator().next();
-		}
-			
-		applyMode = ha.modes.get(applyModeName);
-		initModeName = checkNewModeName(applyModeName + "_init");
-		
-		for (int i = firstIndex; i < splitParams.length; ++i)
-		{
-			String params = splitParams[i];
-			
-			double[] pt = new double[numVars];
-			double[] gradient = new double[numVars];
-			
-			String[] sides = params.split(";");
-			
-			if (sides.length != 2)
-				throw new AutomatonExportException("Parsing pass parameters, each |-separated entry should have two vectors separated by ';': "
-						+ params);
-			
-			String[] parts1 = sides[0].split(",");
-			String[] parts2 = sides[1].split(",");
-			
-			if (parts1.length != parts2.length || parts1.length != numVars)
-				throw new AutomatonExportException("Parsing pass parameters, should have two vectors of length " + 
-						numVars + ": " + params);
-				
-			try
-			{
-				for (int j = 0; j < numVars; ++j)
-				{
-					pt[j] = Double.parseDouble(parts1[j]);
-					gradient[j] = Double.parseDouble(parts2[j]);
-				}
-			}
-			catch (NumberFormatException e)
-			{
-				throw new AutomatonExportException("Error parsing pass parameter: " + params + "; " + e);
-			}
-			
-			this.params.add(new PseudoInvariantParams(pt, gradient));
-		}
-	}
-	
-	public class PseudoInvariantParams
-	{
-		public String modeName;
-		
-		public Expression inv;
-		
-		public PseudoInvariantParams(double[] pt, double[] dir)
-		{
-			double rhs = dot(pt, dir);
-			
-			inv = makeExpressionFromLinearInequality(vars, dir, Operator.GREATEREQUAL, rhs);
-			
-			Hyst.log("Making invariant from point " + arrayString(pt) + " and dir " + arrayString(dir) + ": " + 
-					DefaultExpressionPrinter.instance.print(inv));
-			
-			if (inv == null)
-				throw new AutomatonExportException("Invariant was null from dir: " + arrayString(dir));
-			
-			modeName = checkNewModeName(applyModeName + "_pi_" + (UNIQUE_ID++));
-		}
-	}
-	
-	private String arrayString(double[] array)
-	{
-		StringBuffer s = new StringBuffer("[");
-		boolean first = true;
-		
-		for (double d : array)
-		{
-			if (first)
-				first = false;
-			else
-				s.append(", ");
-			
-			s.append(d);
-		}
-		
-		s.append("]");
-		
-		return s.toString();
 	}
 }

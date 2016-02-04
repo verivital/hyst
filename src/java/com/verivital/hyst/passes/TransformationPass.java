@@ -90,7 +90,7 @@ public abstract class TransformationPass
 	 */
 	public String getLongHelp()
 	{
-		return getParamHelp();
+		return "";
 	}
 	
 	public String getParamHelp()
@@ -111,8 +111,9 @@ public abstract class TransformationPass
 		}
 		catch (CmdLineException e)
 		{
-			String message = "Error Parsing " + getName() + " Arguments: " + 
-					e.getMessage() + "\n" + getParamHelp();
+			String message = "Error Parsing " + getName() + ",\n Message: " +
+					e.getMessage() + "\nArguments: '" + params + "'\n" +
+					getParamHelp();
 			
 			throw new AutomatonExportException(message);
 		}

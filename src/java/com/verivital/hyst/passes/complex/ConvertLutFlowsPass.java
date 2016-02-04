@@ -32,6 +32,7 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.util.StringOperations;
 
 
 /**
@@ -193,21 +194,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		makeOriginalModeUrgent(am, newModes);
 	}
-	
-	private String join(int[] list, String sep)
-	{
-		StringBuilder rv = new StringBuilder();
-		
-		for (int i : list)
-		{
-			if (rv.length() != 0)
-				rv.append(sep);
-			
-			rv.append(i);
-		}
-		
-		return rv.toString();
-	}
 
 	/**
 	 * Should this value be skipped? We create modes between two table values, i and i + 1, so if the
@@ -300,7 +286,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 				continue;
 			
 			// shouldn't skip, construct mode
-			AutomatonMode am = ha.createMode(original.name + "_" + join(indexList, "_"));
+			AutomatonMode am = ha.createMode(original.name + "_" + StringOperations.join("_", indexList));
 			
 			rv.add(am);
 		}
@@ -326,7 +312,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 			if (shouldSkip(indexList, lut.table))
 				continue;
 
-			String name = original.name + "_" + join(indexList, "_");
+			String name = original.name + "_" + StringOperations.join("_", indexList);
 			AutomatonMode am = ha.modes.get(name);
 			am.invariant = original.invariant.copy(); 
 			
@@ -382,7 +368,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 					Expression guard = new Operation(inputExpr, Operator.LESSEQUAL, leftBreakpoint);
 					int[] leftIndexList = Arrays.copyOf(indexList, indexList.length);
 					--leftIndexList[varIndex];
-					String leftName = original.name + "_" + join(leftIndexList, "_");
+					String leftName = original.name + "_" + StringOperations.join("_", leftIndexList);
 					AutomatonMode leftMode = ha.modes.get(leftName);
 					
 					if (leftMode == null)
@@ -408,7 +394,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 					Expression guard = new Operation(inputExpr, Operator.GREATEREQUAL, rightBreakpoint);
 					int[] rightIndexList = Arrays.copyOf(indexList, indexList.length);
 					++rightIndexList[varIndex];
-					String rightName = original.name + "_" + join(rightIndexList, "_");
+					String rightName = original.name + "_" + StringOperations.join("_", rightIndexList);
 					AutomatonMode rightMode = ha.modes.get(rightName);
 					
 					if (rightMode == null)

@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -13,11 +14,12 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.passes.complex.pi.SymbolicStatePoint;
 import com.verivital.hyst.python.PythonBridge;
@@ -41,6 +43,40 @@ public class PseudoInvariantTest
 	public PseudoInvariantTest(boolean block) 
 	{
 		PythonBridge.setBlockPython(block);
+	}
+	
+	@Test
+	public void testPseudoInvariantCondition1()
+	{
+		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
+		HyperPoint point = new HyperPoint(1.5, 1.5);
+		HyperPoint dir = new HyperPoint(1.0, 0);
+		String expectedResult = "1 * x >= 1.5";
+		
+		ArrayList <String> vars = new ArrayList<String>(2);
+		vars.add("x");
+		vars.add("y");
+		
+		Expression inv = PseudoInvariantPass.createInvariantExpression(vars, point, dir); 
+		
+		Assert.assertEquals(expectedResult, DefaultExpressionPrinter.instance.print(inv));
+	}
+	
+	@Test
+	public void testPseudoInvariantCondition2()
+	{
+		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
+		HyperPoint point = new HyperPoint(0, 0);
+		HyperPoint dir = new HyperPoint(0, 1);
+		String expectedResult = "1 * y >= 0";
+		
+		ArrayList <String> vars = new ArrayList<String>(2);
+		vars.add("x");
+		vars.add("y");
+		
+		Expression inv = PseudoInvariantPass.createInvariantExpression(vars, point, dir); 
+		
+		Assert.assertEquals(expectedResult, DefaultExpressionPrinter.instance.print(inv));
 	}
 	
 	/**
@@ -86,35 +122,34 @@ public class PseudoInvariantTest
 		BaseComponent ha = (BaseComponent)c.root;
 		
 		// run the pseudo-invariant pass on it
-		String params = "-times 2.0 5.0"; // simulation time = 2.0 and then 5.0
+		// simulation time = 2.0 and then 5.0
+		String params = PseudoInvariantSimulatePass.makeParamString(2.0, 5.0); 
 		new PseudoInvariantSimulatePass().runTransformationPass(c, params);
 
-		// there should be four modes: running_init, running_pi_0, running_pi_1,
+		// there should be four modes: on, on_2, on_3
 		// and running_final
-		Assert.assertEquals("four modes after pass", 4, ha.modes.size());
+		Assert.assertEquals("three modes after pass", 3, ha.modes.size());
 
-		AutomatonMode piInit = ha.modes.get("running_init");
-		AutomatonMode pi0 = ha.modes.get("running_pi_0");
-		AutomatonMode pi1 = ha.modes.get("running_pi_1");
-		AutomatonMode piFinal = ha.modes.get("running_final");
+		AutomatonMode pi0 = ha.modes.get("on_2");
+		AutomatonMode pi1 = ha.modes.get("on_3");
+		AutomatonMode piFinal = ha.modes.get("on");
 
-		Assert.assertTrue("init mode is urgent", piInit.urgent == true);
 		Assert.assertTrue("first mode is not null", pi0 != null);
 		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
+		
 		Assert.assertTrue("first mode's invariant is x <= 2",
-				pi0.invariant.toDefaultString().contains("-1 * x >= -2.0000"));
+				pi0.invariant.toDefaultString().equals("2 * x <= 4"));
 		Assert.assertTrue("second mode's invariant is x <= 5",
-				pi1.invariant.toDefaultString().contains("-1 * x >= -4.9999"));
+				pi1.invariant.toDefaultString().equals("5 * x <= 25"));
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
-
-		// the transition from init to final should contain both pi guards
-		for (AutomatonTransition at : ha.transitions) {
-			if (at.from == piInit && at.to == piFinal) {
-				Assert.assertTrue("guard from init to final contains x >= 2",
-						at.guard.toDefaultString().contains("-1 * x <= -2.0000"));
-				Assert.assertTrue("guard from init to final contains x >= 5",
-						at.guard.toDefaultString().contains("-1 * x <= -4.9999"));
-			}
-		}
+		
+		// the initial state for final should contain both pi guards
+		Expression e = c.init.get("on");
+		Assert.assertNotNull("on is one of the initial states", e);
+		
+		Assert.assertTrue("init(on) contains x >= 2",
+				e.toDefaultString().contains("2 * x >= 4"));
+		Assert.assertTrue("init(on) contains x >= 5",
+				e.toDefaultString().contains("5 * x >= 25"));
 	}
 }
