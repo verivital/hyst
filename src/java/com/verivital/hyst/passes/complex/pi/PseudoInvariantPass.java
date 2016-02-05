@@ -1,8 +1,6 @@
 package com.verivital.hyst.passes.complex.pi;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
@@ -140,8 +138,6 @@ public class PseudoInvariantPass extends TransformationPass
 		ConvertToStandardForm.run(config);
 		
 		// since we split modes, some of them become synonyms
-		ArrayList<HashSet<String>> synonyms = new ArrayList<HashSet<String>>();
-		
 		for (int i = 0; i < modes.size(); ++i)
 		{
 			AutomatonMode am = ha.modes.get(modes.get(i));

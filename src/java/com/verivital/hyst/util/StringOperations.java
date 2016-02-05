@@ -44,4 +44,14 @@ public class StringOperations
 		
 		return join(sep, strings);
 	}
+	
+	public static String join(String sep, Double[] list)
+	{
+		String[] strings = new String[list.length];
+		
+		for (int i = 0; i < list.length; ++i)
+			strings[i] = ToolPrinter.doubleToString(list[i]);
+		
+		return join(sep, strings);
+	}
 }

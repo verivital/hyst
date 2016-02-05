@@ -55,6 +55,15 @@ public abstract class TransformationPass
 		runVanillaPass(c, params);
 	}
 	
+	/**
+	 * Check the preconditions, throwing a PreconditionsException or converting the automaton if
+	 * they're not met
+	 * @param c the Configuration object to check / convert
+	 * @param name the name of the pass, for error reporting
+	 * 
+	 * @throws PreconditionsFailedException if the automaton does not match the assumptions and 
+	 * 										cannot be converted
+	 */
 	protected void checkPreconditons(Configuration c, String name)
 	{
 		preconditions.check(c, name);

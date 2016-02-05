@@ -55,7 +55,7 @@ public class ConvertFromStandardForm
 		
 		if (config.forbidden.size() != 1 || !config.forbidden.containsKey(ERROR_MODE_NAME))
 			throw new AutomatonExportException("Malformed Input Standard Form Automaton; expected"
-					+ " single forbidden mode named " + INIT_MODE_NAME);
+					+ " single forbidden mode named " + ERROR_MODE_NAME);
 		else
 		{
 			// sanity checks

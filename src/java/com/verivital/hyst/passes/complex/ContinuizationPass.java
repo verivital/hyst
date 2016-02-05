@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
@@ -15,6 +14,8 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertFromStandardForm;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -27,18 +28,12 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
 import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
-import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.util.StringOperations;
 
 public class ContinuizationPass extends TransformationPass
 {
-	private static final String PASS_PARAM = "-continuize";
-	
-	public ContinuizationPass()
-	{
-		preconditions.skip(PreconditionsFlag.NO_URGENT);
-	}
-	
 	private static class DomainValues
 	{
 		double startTime;
@@ -64,57 +59,39 @@ public class ContinuizationPass extends TransformationPass
 	@Option(name="-noerrormodes",usage="skip creating error modes")
 	boolean skipErrorModes = false;
 	
-	@Option(name="-times",required=true,handler=StringArrayOptionHandler.class,usage="time domain boundaries", metaVar="TIME1 TIME2 ...")
-	List<String> times;
+	@Option(name="-times",required=true,handler=DoubleArrayOptionHandler.class,usage="time domain boundaries", metaVar="TIME1 TIME2 ...")
+	List<Double> times;
 	
-	@Option(name="-bloats",required=true,handler=StringArrayOptionHandler.class,usage="bloating terms for each time domain", metaVar="VAL1 VAL2 ...")
-	List<String> bloats;
+	@Option(name="-bloats",required=true,handler=DoubleArrayOptionHandler.class,usage="bloating terms for each time domain", metaVar="VAL1 VAL2 ...")
+	List<Double> bloats;
 	
-	@Override
-	protected void checkPreconditons(Configuration c, String name)
+	public static String makeParamString(String var, String timeVar, double period, boolean skipError,
+			List <Double> times, List <Double> bloats)
 	{
-		super.checkPreconditons(c, name);
+		StringBuffer rv = new StringBuffer();
+		rv.append("-var " + var);
 		
-		// check for single-mode automation, with single initial urgent initialization mode
-		BaseComponent bc = (BaseComponent)c.root;
+		if (timeVar != null)
+			rv.append(" -timevar " + timeVar);
 		
-		if (bc.modes.size() != 2 && bc.modes.size() != 1)
-			throw new PreconditionsFailedException("Expected one or two (urgent + normal) modes.");
+		rv.append(" -period " + period);
 		
-		if (c.init.size() != 1)
-			throw new PreconditionsFailedException("Expected single initial mode.");
+		if (skipError == true)
+			rv.append(" -noerrormodes");
 		
-		if (bc.modes.size() == 2)
-		{
-			String firstModeName = c.init.keySet().iterator().next();
-			AutomatonMode firstMode = bc.modes.get(firstModeName);
-			
-			if (!firstMode.urgent)
-				throw new PreconditionsFailedException("First mode should be urgent.");
-			
-			if (bc.transitions.size() != 1)
-				throw new PreconditionsFailedException("Expected single transition.");
-			
-			AutomatonTransition at = bc.transitions.get(0);
-			
-			if (at.from != firstMode)
-				throw new PreconditionsFailedException("Expected transition to be from initial mode.");
-			
-			if (at.to == firstMode)
-				throw new PreconditionsFailedException("Expected transition to be to noninitial mode.");
-			
-			if (at.to.urgent)
-				throw new PreconditionsFailedException("Noninitial mode shouldn't be urgent.");
-			
-			if (at.guard != Constant.TRUE)
-				throw new PreconditionsFailedException("Transition from initial state shouldn't have a guard.");
-		}
+		rv.append(" -times ");
+		rv.append(StringOperations.join(" ", times.toArray(new Double[]{})));
+		
+		rv.append(" -bloats ");
+		rv.append(StringOperations.join(" ", bloats.toArray(new Double[]{})));
+		
+		return rv.toString();
 	}
 	
 	@Override
 	public String getCommandLineFlag()
 	{
-		return PASS_PARAM;
+		return "-pass_continuization";
 	}
 	
 	@Override
@@ -138,18 +115,28 @@ public class ContinuizationPass extends TransformationPass
 	}
 	
 	@Override
+	protected void checkPreconditons(Configuration c, String name)
+	{
+		super.checkPreconditons(c, name);
+		BaseComponent ha = ((BaseComponent)c.root);
+		
+		// make sure it's a continuous approximation (single mode)
+		if (ha.modes.size() != 1)
+			throw new PreconditionsFailedException("Automaton must be a continuous approximation (single-mode).");
+		
+		if (ha.transitions.size() != 0)
+			throw new PreconditionsFailedException("Automaton must be a continuous approximation (no transitions).");
+	}
+	
+	@Override
 	public void runPass()
 	{
+		ConvertToStandardForm.run(config);
+		
 		BaseComponent ha = (BaseComponent)config.root;
 		AutomatonMode approxMode = null; // mode of the continuous approximation
 		
-		if (ha.modes.size() == 1)
-			approxMode = ha.modes.values().iterator().next();
-		else
-		{
-			AutomatonTransition trans = ha.transitions.get(0);
-			approxMode = trans.to; 
-		}
+		approxMode = ha.modes.values().iterator().next();
 		
 		processParams();
 		
@@ -167,13 +154,17 @@ public class ContinuizationPass extends TransformationPass
 			createModesWithTimeConditions(ha, approxMode);
 		else
 			domains.get(0).mode = approxMode; // timeVarName not provided (single mode only)
-
+		
 		// substitute every occurrence of c_i with c_i + \omega_i
 		substituteCyberVariables();
+		
+		ConvertFromStandardForm.run(config);
 		
 		// add the range conditions to each of the modes
 		if (skipErrorModes == false)
 			addRangeConditionsToModes(ha);
+		
+		
 	}
 
 	/**
@@ -636,20 +627,17 @@ public class ContinuizationPass extends TransformationPass
 		double lastTime = 0;
 		
 		for (int i = 0; i < times.size(); ++i)
-		{	
-			String time = times.get(i);
-			String bloat = bloats.get(i);
-			
+		{
 			DomainValues dv = new DomainValues();
 			domains.add(dv);
 			
 			dv.startTime = lastTime;
-			lastTime = dv.endTime = parsePositiveDouble(time, "time domain boundary");
+			lastTime = dv.endTime = times.get(i);
 			
 			if (dv.startTime >= dv.endTime)
 				throw new AutomatonExportException("Time domains must be created along with increasing times.");
 		
-			dv.bloat = parsePositiveDouble(bloat, "bloating term for time=[" + dv.startTime + ", " + dv.endTime + "]");
+			dv.bloat = bloats.get(i);
 		}
 	}
 
@@ -673,23 +661,6 @@ public class ContinuizationPass extends TransformationPass
 		e.setValue(init);
 		
 		config.validate();
-	}
-
-	private static double parsePositiveDouble(String val, String desc)
-	{
-		double rv = 0;
-		
-		try
-		{
-			rv = Double.parseDouble(val);
-		}
-		catch (NumberFormatException e)
-		{
-			throw new AutomatonExportException("Continuization Pass - Error parsing " + desc + " as double: " 
-					+ val + ". " + e.getLocalizedMessage());
-		}
-		
-		return rv;
 	}
 	
 	/**
