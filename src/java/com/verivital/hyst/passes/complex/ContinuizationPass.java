@@ -136,9 +136,19 @@ public class ContinuizationPass extends TransformationPass
 		BaseComponent ha = (BaseComponent)config.root;
 		AutomatonMode approxMode = null; // mode of the continuous approximation
 		
-		approxMode = ha.modes.values().iterator().next();
+		for (AutomatonMode m : ha.modes.values())
+		{
+			if (!m.name.equals(ConvertToStandardForm.INIT_MODE_NAME) && 
+					!m.name.equals(ConvertToStandardForm.ERROR_MODE_NAME))
+				approxMode = ha.modes.values().iterator().next();
+				break;
+		}
+		
+		if (approxMode == null)
+			throw new AutomatonExportException("Continuous apporx mode not found");
 		
 		processParams();
+		
 		
 		// extract derivatives
 		LinkedHashMap <String, ExpressionInterval> flows = approxMode.flowDynamics;
