@@ -26,6 +26,8 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
+import com.verivital.hyst.printers.PySimPrinter;
+import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -35,6 +37,7 @@ public class LutMatrixTest
 	@Before 
 	public void setUpClass() 
 	{      
+		ConvertLutFlowsPass.MAX_CONVERSIONS = 5;
 	    Expression.expressionPrinter = null;
 	    ConvertLutFlowsPass.simplifyMode = ConvertLutFlowsPass.SIMPLIFY_NONE;
 	}
@@ -595,5 +598,29 @@ public class LutMatrixTest
 		
 		Assert.assertFalse("Small numbers found (from floating-point roundoff) in converted dynamics" +
 				" for v:\n" + der, der.contains("0.0000000000"));
+	}
+	
+	@Test
+	public void testLutPrinter()
+	{
+		// Test the auto-conversion of a lut
+		String lutStr = "lut([u1, u2], " +
+				"reshape([.4,.3,.35,.3,.2,.22,.22,.4,.35,.5,.20,.22,.5,.4,.35,.35,.3,.45,.5,.4],5,4)," +
+				"[1000,1500,2000,2500,3000]," +
+				"[0.1,0.2,0.3,0.4])";
+		
+		String[][] dynamics = {{"t", "1", "0"}, {"u1", "2000", "1000"}, {"u2", "0.3", "0.1"},
+				{"out", "out + " + lutStr, "0"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		
+		Assert.assertTrue("output doesn't contain 'lut('", !out.contains("lut("));
 	}
 }

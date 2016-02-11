@@ -43,6 +43,8 @@ import com.verivital.hyst.util.StringOperations;
  */
 public class ConvertLutFlowsPass extends TransformationPass
 {
+	public static int MAX_CONVERSIONS = 1000;
+	
 	@Override
 	public String getCommandLineFlag()
 	{
@@ -105,7 +107,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 	{
 		// The automaton is modified in place, so we separate the process of iterating the modes and finding lut dynamics
 		// and the process of conversion (which modifies ha)
-		int MAX_CONVERSIONS = 1000;
 		int numConversions = 0;
 		
 		while (true)
@@ -343,7 +344,9 @@ public class ConvertLutFlowsPass extends TransformationPass
 			// must be done before creating transitions, since inputs may use variableWithLut
 			Expression replaceLutExpression = nLinearInterpolation(lut, indexList, rangeList);
 			ExpressionInterval originalExpInt = original.flowDynamics.get(variableWithLut);
+			
 			Expression newFlow = replaceLutSubexpression(originalExpInt.getExpression(), lut, replaceLutExpression);
+			
 			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
 			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
 			
@@ -437,7 +440,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		if (expression == lut)
 			rv = replaceLutExpression;
-		else if (rv instanceof Operation)
+		else if (expression instanceof Operation)
 		{
 			Operation o = expression.asOperation();
 			Operation newO = new Operation(o.op);
