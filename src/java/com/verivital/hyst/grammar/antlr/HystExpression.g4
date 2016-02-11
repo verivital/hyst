@@ -79,7 +79,7 @@ dottedVar
 	;
 
 locExpression
-	: and EOF # LocExp
+	: or EOF # LocExp
 	| EOF # LocFalse
     ;
 

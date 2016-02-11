@@ -1348,4 +1348,20 @@ public class ModelParserTest
 		Assert.assertEquals(C, resultC);
 
 	}
+	
+	@Test
+	public void testDisjunctionForbidden()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/sys.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/sys.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		Assert.assertEquals("two forbidden states", 2, config.forbidden.size());
+	}
 }

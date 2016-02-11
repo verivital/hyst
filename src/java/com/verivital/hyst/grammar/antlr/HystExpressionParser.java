@@ -929,8 +929,8 @@ public class HystExpressionParser extends Parser {
 		}
 	}
 	public static class LocExpContext extends LocExpressionContext {
-		public AndContext and() {
-			return getRuleContext(AndContext.class,0);
+		public OrContext or() {
+			return getRuleContext(OrContext.class,0);
 		}
 		public TerminalNode EOF() { return getToken(HystExpressionParser.EOF, 0); }
 		public LocExpContext(LocExpressionContext ctx) { copyFrom(ctx); }
@@ -968,7 +968,7 @@ public class HystExpressionParser extends Parser {
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(149);
-				and();
+				or();
 				setState(150);
 				match(EOF);
 				}
@@ -2157,7 +2157,7 @@ public class HystExpressionParser extends Parser {
 		"\2\u008c\u0091\7\b\2\2\u008d\u008e\7\24\2\2\u008e\u0090\7\b\2\2\u008f"+
 		"\u008d\3\2\2\2\u0090\u0093\3\2\2\2\u0091\u008f\3\2\2\2\u0091\u0092\3\2"+
 		"\2\2\u0092\u0095\3\2\2\2\u0093\u0091\3\2\2\2\u0094\u0096\7\4\2\2\u0095"+
-		"\u0094\3\2\2\2\u0095\u0096\3\2\2\2\u0096\23\3\2\2\2\u0097\u0098\5\30\r"+
+		"\u0094\3\2\2\2\u0095\u0096\3\2\2\2\u0096\23\3\2\2\2\u0097\u0098\5\26\f"+
 		"\2\u0098\u0099\7\2\2\3\u0099\u009c\3\2\2\2\u009a\u009c\7\2\2\3\u009b\u0097"+
 		"\3\2\2\2\u009b\u009a\3\2\2\2\u009c\25\3\2\2\2\u009d\u009e\5\30\r\2\u009e"+
 		"\u009f\7\26\2\2\u009f\u00a0\5\26\f\2\u00a0\u00a3\3\2\2\2\u00a1\u00a3\5"+
