@@ -26,7 +26,6 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.simulation.RungeKutta.StepListener;
-import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -537,7 +536,8 @@ public class ContinuizationPass extends TransformationPass
 	 */
 	private void estimateRanges(final BaseComponent ha, final AutomatonMode approxMode)
 	{
-		int SIM_STEPS = 1000; // maybe make this a parameter
+		System.out.println("TODO working here, get rid of simulator");
+		/*int SIM_STEPS = 1000; // maybe make this a parameter
 		
 		// minimum range is used to determine step size
 		double minRange = Double.MAX_VALUE;
@@ -603,7 +603,7 @@ public class ContinuizationPass extends TransformationPass
 		}
 		
 		Hyst.log("Ranges after bloating were:");
-		logAllRanges();
+		logAllRanges();*/
 	}
 
 	private void logAllRanges()

@@ -31,7 +31,6 @@ import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationPa
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.simulation.RungeKutta;
-import com.verivital.hyst.simulation.Simulator;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
@@ -447,7 +446,8 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     		if (isNondeterministicDynamics(originalMode.flowDynamics))
     			throw new AutomatonExportException("Nondeterministic Dynamics are not implemented in simulation.");
     		
-    		this.flowDynamics = Simulator.centerDynamics(originalMode.flowDynamics);
+    		System.out.println("todo, change simulator.centerdynamics");
+    		this.flowDynamics = null; //Simulator.centerDynamics(originalMode.flowDynamics);
     		this.varNames = originalMode.automaton.variables;
     		
     		HyperRectangle.setDimensionNames(this.varNames);
@@ -644,6 +644,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     	 */
     	private void microStep(HyperPoint p)
     	{
+    		System.out.println("todo: change this");
     		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeMicroStep);
     	}
     	

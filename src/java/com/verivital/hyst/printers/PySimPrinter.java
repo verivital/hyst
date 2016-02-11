@@ -87,7 +87,7 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
 
 			if (!am.urgent)
-				appendIndentedLine(rv, am.name + ".der = lambda state, _: " + 
+				appendIndentedLine(rv, am.name + ".der = lambda _, state: " + 
 						getMapString(am.flowDynamics, ha));
 		}
 	}
@@ -155,7 +155,9 @@ public class PySimPrinter extends ToolPrinter
 		decreaseIndentation();
 		printNewline();
 		
-		printLine("def plot(result, filename='plot.png', dim_x=1, dim_y=0):");
+		int xDim = ha.variables.indexOf(config.settings.plotVariableNames[0]);
+		int yDim = ha.variables.indexOf(config.settings.plotVariableNames[1]);
+		printLine("def plot(result, filename='plot.png', dim_x=" + xDim + ", dim_y=" + yDim + "):");
 		increaseIndentation();
 		printLine("'''plot a simulation result to a file'''");
 		printPlot();
