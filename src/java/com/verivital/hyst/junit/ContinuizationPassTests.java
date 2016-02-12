@@ -20,6 +20,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -52,6 +53,8 @@ public class ContinuizationPassTests
 	{
 		if (!PythonBridge.hasPython())
 			return;
+		
+		Hyst.debugMode = true;
 		
 		String[][] dynamics = {{"t", "1"}, {"y", "sin(t)"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);

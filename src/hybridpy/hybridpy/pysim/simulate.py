@@ -42,6 +42,9 @@ class ModeSim(object):
     def __str__(self):
         return '[ModeSim: ' + self.mode_name + ' - ' + str(self.points) + ']'
 
+    def __repr__(self):
+        return str(self)
+
 def get_active_transitions(mode, state):
     '''
     get the transitions that are active in the given state
@@ -276,9 +279,9 @@ def mode_name_to_color(mode_to_color, mode_name):
 
 def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     '''
-    Simulate for the given time, returning the symbolic state.
+    Simulate for the given time.
 
-    Returns the resultant symbolic state
+    Returns the final symbolic state.
 
     throws a SimulationException if the simulation didn't complete
     '''
@@ -286,12 +289,11 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     ha = q[0].parent
     res = simulate_one(q, time, max_jumps, solver_name, reraise_errors=True)
 
-    # get the last state
-    last_mode_sim = res['traces'][-1]
-    last_point = last_mode_sim.points[-1]
-    mode_name = last_mode_sim.mode_name
+    mode_sim = res['traces'][-1]
+    mode = ha.modes[mode_sim.mode_name]
+    point = mode_sim.points[-1]
 
-    return (ha.modes[mode_name], last_point)
+    return (mode, point)
 
 def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, reraise_errors=False):
     '''
@@ -314,7 +316,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     if max_jumps <= 0:
         raise RuntimeError("max_jumps should be greater than zero: " + str(max_jumps))
 
-    if end_time <= 0:
+    if end_time < 0:
         raise RuntimeError("max_time should be greater than zero: {!s}".format(end_time))
 
     mode = q[0]

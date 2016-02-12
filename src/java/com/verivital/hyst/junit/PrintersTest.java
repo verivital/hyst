@@ -23,6 +23,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -448,5 +449,29 @@ public class PrintersTest {
 	{
 		// may need to add precondition to convert to standard form
 		runAllPrintersOnModel("disjunction_forbidden"); 
+	}
+	
+	@Test
+	public void testPysimPrint()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "controller_heater/controller_heater.cfg";
+		String xmlPath = UNIT_BASEDIR + "controller_heater/controller_heater.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		
+		System.out.println(out);
 	}
 }
