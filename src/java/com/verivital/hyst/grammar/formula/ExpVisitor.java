@@ -118,7 +118,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor <Expression>
 	
 	@Override public Expression visitLocExp(@NotNull HystExpressionParser.LocExpContext ctx)
 	{
-		return visit(ctx.and());
+		return visit(ctx.or());
 	}
 	
 	@Override public Expression visitLocFalse(@NotNull HystExpressionParser.LocFalseContext ctx)

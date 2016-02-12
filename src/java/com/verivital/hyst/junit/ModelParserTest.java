@@ -1279,7 +1279,6 @@ public class ModelParserTest
 		AutomatonMode mode = ha.modes.get("running");
 		cls.setLinearMatrix(mode);
 
-		// System.out.println("mode = " + mode);
 		String A = sp.convertFlowToAMatrix(mode);
 		String resultA = "[-1.0 4.0 ;-2.0 -3.0 ;]";
 		Assert.assertEquals(resultA, A);
@@ -1347,5 +1346,29 @@ public class ModelParserTest
 		String resultC = "[1 2.0 ;0 1 ;]";
 		Assert.assertEquals(C, resultC);
 
+	}
+	
+	@Test
+	public void testDisjunctionForbidden()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		// [[loc1]] with equation x >= 5
+		// [[loc1]] with equation t >= 5
+		// [[loc3]] with equation t <= 5
+		Assert.assertEquals("two forbidden states", 2, config.forbidden.size());
+		String loc1 = config.forbidden.get("loc1").toDefaultString();
+		String loc3 = config.forbidden.get("loc3").toDefaultString();
+		Assert.assertTrue(loc1.contains("x >= 5"));
+		Assert.assertTrue(loc1.contains("t >= 5"));
+		Assert.assertEquals(loc3, "t <= 5");
 	}
 }
