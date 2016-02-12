@@ -371,4 +371,10 @@ public class PrintersTest {
 		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output", 
 				out.contains("Math.pow($t, 2)"));
 	}
+	
+	@Test
+	public void testPrintDisjunction() {
+		// may need to add precondition to convert to standard form
+		runAllPrintersOnModel("disjunction_forbidden"); 
+	}
 }

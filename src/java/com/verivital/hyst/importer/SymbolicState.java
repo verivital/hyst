@@ -125,14 +125,14 @@ public class SymbolicState
 		
 		Collection <String> states = discStates.get(index);
 		
-		if (!states.contains(state))
-			throw new AutomatonExportException("Unrealizable symbolic state due to contradictory discrete location assignment: "+
-					"loc(" + instance + ") = " + state);
-		
 		String id = instanceTypes.get(index);
 		
 		if (!componentContainsDiscreteState(id, state))
 			throw new AutomatonExportException("Automaton doesn't contain a state with the given name: loc(" + instance + ") = " + state);
+		
+		if (!states.contains(state))
+			throw new AutomatonExportException("Unrealizable symbolic state due to contradictory discrete location assignment: "+
+					"loc(" + instance + ") = " + state);
 		
 		// set it to the (single) discrete state
 		states.clear();
@@ -335,12 +335,16 @@ public class SymbolicState
 		List<SymbolicState> rv = new ArrayList<SymbolicState>();
 		rv.add(new SymbolicState(true));
 		
+		System.out.println(">> Extracting symbolic states from e = " + e.toDefaultString());
+		
 		try
 		{
 			extractSymbolicStatesRec(rv, e);
 		}
 		catch (AutomatonExportException ex)
 		{
+			System.out.println("!! Exception: " + ex.toString());
+			
 			throw new AutomatonExportException("Error while processing " + description + "  with expression: " + 
 					e.toDefaultString() + " and return value: " + rv + ".", ex);
 		}
@@ -351,6 +355,11 @@ public class SymbolicState
 	private static void extractSymbolicStatesRec(List<SymbolicState> rv, Expression e)
 	{
 		Operation o = e.asOperation();
+		
+		System.out.println("\nextractRec start (op: '" + o.op.toDefaultString() + "')" + 
+				"\n  left: '" + o.getLeft().toDefaultString() + "'" + 
+				"\n  right: '" + o.getRight().toDefaultString() + "'" + 
+				"\n  rv: " + rv);
 		
 		if (o.op == Operator.OR)
 		{
@@ -388,10 +397,33 @@ public class SymbolicState
 		}
 		else
 			throw new AutomatonExportException("Error extracting symbolic states from expression: " + e);
+		
+		System.out.println("extractRec END (op: '" + o.op.toDefaultString() + "')" + 
+				"\n  e: '" + e.toDefaultString() + "'" +
+				"\n  rv: " + rv);
 	}
 	
-	public String toString() {
-		// TODO: add discrete part
-		return this.contStates.toDefaultString();
+	public String toString() 
+	{
+		StringBuilder discStr = new StringBuilder();
+		// disc states example: [ ["on", "off"], ["blocked", "trickle", "flowing"] ]
+	
+		discStr.append("[");
+		for (Collection<String> modes : discStates)
+		{
+			discStr.append("[");
+			String prefix = "";
+			
+			for (String m : modes)
+			{
+				discStr.append(prefix + m);
+				prefix = ", ";
+			}
+			
+			discStr.append("] ");
+		}
+		discStr.append("]");
+		
+		return discStates.toString() + " with equation " + this.contStates.toDefaultString();
 	}
 }

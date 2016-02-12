@@ -1353,8 +1353,8 @@ public class ModelParserTest
 	public void testDisjunctionForbidden()
 	{
 		// test model with input and output variables
-		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/sys.cfg";
-		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/sys.xml";
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
 
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
 		Map<String, Component> componentTemplates = TemplateImporter
