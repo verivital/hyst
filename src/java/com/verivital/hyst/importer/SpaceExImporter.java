@@ -5,8 +5,6 @@ package com.verivital.hyst.importer;
 
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.main.Hyst;

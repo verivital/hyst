@@ -335,16 +335,12 @@ public class SymbolicState
 		List<SymbolicState> rv = new ArrayList<SymbolicState>();
 		rv.add(new SymbolicState(true));
 		
-		System.out.println(">> Extracting symbolic states from e = " + e.toDefaultString());
-		
 		try
 		{
 			extractSymbolicStatesRec(rv, e);
 		}
 		catch (AutomatonExportException ex)
 		{
-			System.out.println("!! Exception: " + ex.toString());
-			
 			throw new AutomatonExportException("Error while processing " + description + "  with expression: " + 
 					e.toDefaultString() + " and return value: " + rv + ".", ex);
 		}
@@ -355,11 +351,6 @@ public class SymbolicState
 	private static void extractSymbolicStatesRec(List<SymbolicState> rv, Expression e)
 	{
 		Operation o = e.asOperation();
-		
-		System.out.println("\nextractRec start (op: '" + o.op.toDefaultString() + "')" + 
-				"\n  left: '" + o.getLeft().toDefaultString() + "'" + 
-				"\n  right: '" + o.getRight().toDefaultString() + "'" + 
-				"\n  rv: " + rv);
 		
 		if (o.op == Operator.OR)
 		{
@@ -397,10 +388,6 @@ public class SymbolicState
 		}
 		else
 			throw new AutomatonExportException("Error extracting symbolic states from expression: " + e);
-		
-		System.out.println("extractRec END (op: '" + o.op.toDefaultString() + "')" + 
-				"\n  e: '" + e.toDefaultString() + "'" +
-				"\n  rv: " + rv);
 	}
 	
 	public String toString() 

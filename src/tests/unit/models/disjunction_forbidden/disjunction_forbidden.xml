@@ -40,7 +40,7 @@ t &gt;= eps</guard>
       <middlepoint x="486.5" y="399.75" />
     </transition>
     <transition source="2" target="1" bezier="true">
-      <guard>x &lt; 3 &amp; 
+      <guard>x &lt;= 3 &amp; 
 t &gt;= eps</guard>
       <labelposition x="-123.0" y="-55.0" width="92.0" height="82.0" />
       <middlepoint x="293.5" y="418.25" />
