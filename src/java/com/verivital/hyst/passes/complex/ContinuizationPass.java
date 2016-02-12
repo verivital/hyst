@@ -8,7 +8,9 @@ import java.util.Map.Entry;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
+import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
@@ -25,7 +27,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.simulation.RungeKutta.StepListener;
+import com.verivital.hyst.printers.PySimPrinter;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
@@ -156,7 +159,7 @@ public class ContinuizationPass extends TransformationPass
 		if (ei == null)
 			throw new AutomatonExportException("flow not found for variable " + varName + " in mode " + approxMode.name);
 		
-		// estimate ranges based on simulation, stored in params.ranges
+		// estimate ranges based on simulation, stored in domains.ranges
 		estimateRanges(ha, approxMode);
 		
 		if (timeVarName != null)
@@ -530,50 +533,44 @@ public class ContinuizationPass extends TransformationPass
 	}
 
 	/**
-	 * Estimate ranges of the cyber variable derivative in each region and store in params
+	 * Estimate ranges of the cyber variable derivative in each region and store in domains.ranges
 	 * @param ha the two-mode automaton
 	 * @param params <in/out> the time divisions and where the resultant ranges are stored
 	 */
 	private void estimateRanges(final BaseComponent ha, final AutomatonMode approxMode)
 	{
-		System.out.println("TODO working here, get rid of simulator");
-		
 		// simulate from initial state
-		/*HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
-		Hyst.log("Init point from config: " + initPt);
+		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
+		String initMode = config.init.keySet().iterator().next();
+		Hyst.log("Init point from config: '" + initMode + "' with " + initPt);
 
 		if (ha.transitions.size() != 0) // if initial urgent transition exists
 		{
 			AutomatonTransition t = ha.transitions.get(0);
-			initPt = Simulator.processReset(initPt, ha.variables, t.reset);
-			Hyst.log("Init point after urgent transition: " + initPt);
+			initPt = AutomatonUtil.processReset(initPt, ha.variables, t.reset);
+			initMode = t.to.name;
+			Hyst.log("Init point after reset: '" + initMode + "' with " + initPt);
 		}
 		
-		double simTime = domains.get(domains.size() - 1).endTime;
-		int numSteps = (int)(Math.ceil(simTime / stepTime));
+		List <Interval> simTimes = new ArrayList <Interval>();
 		
-		Simulator.simulateFor(simTime, initPt, numSteps, approxMode.flowDynamics, ha.variables, new StepListener()
+		for (DomainValues d : domains)
+			simTimes.add(new Interval(d.startTime, d.endTime));
+		
+		SymbolicStatePoint start = new SymbolicStatePoint(initMode, initPt);
+		List<HyperRectangle> ranges =  pythonSimulateRanges(config, start, simTimes);
+		
+		int varIndex = config.root.variables.indexOf(varName);
+		
+		if (ranges.size() != domains.size())
+			throw new AutomatonExportException("expected single range for each domain from simulation");
+		
+		for (int index = 0; index < domains.size(); ++index)
 		{
-			@Override
-			public void step(int numStepsCompleted, HyperPoint hp)
-			{
-				double curTime = numStepsCompleted * stepTime; 
-				
-				for (DomainValues dv : domains)
-				{
-					if (curTime < dv.startTime || curTime > dv.endTime)
-						continue;
-					
-					ExpressionInterval ei = approxMode.flowDynamics.get(varName);
-					Interval valInterval = ei.evaluate(hp, ha.variables);
-					
-					if (dv.range == null)
-						dv.range = valInterval;
-					else 
-						dv.range = Interval.union(dv.range, valInterval);
-				}
-			}
-		});
+			DomainValues dv = domains.get(index);
+			HyperRectangle range = ranges.get(index);
+			dv.range = range.dims[varIndex];
+		}
 		
 		Hyst.log("Ranges from simulation were:");
 		logAllRanges();
@@ -586,7 +583,7 @@ public class ContinuizationPass extends TransformationPass
 		}
 		
 		Hyst.log("Ranges after bloating were:");
-		logAllRanges();*/
+		logAllRanges();
 	}
 
 	private void logAllRanges()
@@ -654,6 +651,70 @@ public class ContinuizationPass extends TransformationPass
 		e.setValue(init);
 		
 		config.validate();
+	}
+	
+	/**
+	 * Simulate the automaton, getting the ranges reached at a series of times
+	 * @param automaton
+	 * @param start the start state
+	 * @param timeIntervals the times where to return the ranges
+	 * @return the ranges at each of the timeIntervals
+	 */
+	public static List<HyperRectangle> pythonSimulateRanges(Configuration automaton,
+			SymbolicStatePoint start, List<Interval> timeIntervals)
+	{
+		int numVars = automaton.root.variables.size();
+
+		if (start.hp.dims.length != numVars)
+			throw new AutomatonExportException("start point had " + start.hp.dims.length + 
+					" dimensions; expected " + numVars);
+		
+		PythonBridge pb = PythonBridge.getInstance();
+		pb.send("from pythonbridge.pysim_utils import simulate_ranges");
+		
+		StringBuilder s = new StringBuilder();
+		s.append(PySimPrinter.automatonToString(automaton));
+		
+		String point = "[" + StringOperations.join(",", start.hp.dims) + "]";
+		ArrayList <String> intervalStrs = new ArrayList <String>();
+		
+		for (Interval i : timeIntervals)
+			intervalStrs.add("(" + i.min + "," + i.max + ")");
+		
+		String timesStr = "[" + StringOperations.join(",", intervalStrs.toArray(new String[0])) +"]";
+		
+		s.append("print simulate_ranges(define_ha(), '" + start.modeName + "', " 
+				+ point + ", " + timesStr + ")");
+		
+		String result = pb.send(s.toString());
+		
+		// result is semi-colon separated hyperrectangles
+		// each hyperrectangle is a comma-separated list of size 2*N (N = number of dimensions)
+		
+		ArrayList <HyperRectangle> rv = new ArrayList<HyperRectangle>();
+		
+		for (String part : result.split(";"))
+		{
+			String[] comma_parts = part.split(",");
+			
+			if (comma_parts.length != 2 * numVars)
+				throw new AutomatonExportException("Result hyperrectangle had " + 
+						comma_parts.length + " parts, expected " + (2*numVars));
+			
+			HyperRectangle hr = new HyperRectangle(numVars);
+			
+			for (int v = 0; v < numVars; ++v)
+			{
+				Double min = Double.parseDouble(comma_parts[2*v]);
+				Double max = Double.parseDouble(comma_parts[2*v+1]);
+				
+				hr.dims[v] = new Interval(min, max);
+			}
+			
+			rv.add(hr);
+		}
+		
+		return rv;
 	}
 	
 	/**

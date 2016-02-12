@@ -7,6 +7,7 @@ import java.util.List;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -17,6 +18,7 @@ import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
+import com.verivital.hyst.util.StringOperations;
 
 
 /**
@@ -103,8 +105,8 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		StringBuilder s = new StringBuilder();
 		s.append(PySimPrinter.automatonToString(automaton));
 		
-		String point = "[" + commaSeparated(start.hp.dims) + "]";
-		String timesStr = "(" + commaSeparated(times) +")";
+		String point = "[" + StringOperations.join(",", start.hp.dims) + "]";
+		String timesStr = "(" + StringOperations.join(",", times.toArray(new Double[0])) +")";
 		
 		s.append("print simulate_times(define_ha(), '" + start.modeName + "', " 
 				+ point + ", " + timesStr + ")");
@@ -139,31 +141,6 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			rv[i] = -input[i];
 		
 		return rv;
-	}
-
-	private static String commaSeparated(List <Double> pt)
-	{
-		StringBuilder rv = new StringBuilder("");
-		
-		for (double d : pt)
-		{
-			if (rv.length() > 0)
-				rv.append(",");
-			
-			rv.append(d);
-		}
-		
-		return rv.toString();
-	}
-	
-	private static String commaSeparated(double[] pt)
-	{
-		ArrayList <Double> a = new ArrayList<Double>(pt.length);
-		
-		for (double d : pt)
-			a.add(d);
-		
-		return commaSeparated(a);
 	}
 
 	public static String makeParamString(double ... times)

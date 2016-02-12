@@ -68,9 +68,6 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()])
 			Preconditions.convertIntervalConstants(c);
 		
-		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
-			Preconditions.convertBasicOperators(c);
-		
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
 			Preconditions.convertToFlat(c);
@@ -86,6 +83,10 @@ public class Preconditions
 		// this should be done AFTER converting init_forbidden
 		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
 			Preconditions.convertDisjunctiveGuards(c);
+		
+		// this should be done after disjunctions are converted
+		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
+			Preconditions.convertBasicOperators(c);
 		
 		// conversions should be done before checks
 		

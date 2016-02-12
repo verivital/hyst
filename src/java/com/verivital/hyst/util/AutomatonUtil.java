@@ -1207,4 +1207,45 @@ public abstract class AutomatonUtil
 		
 		return rv;
 	}
+
+	/** Process a reset on a point, and return the new point
+	 * 
+	 * @param pt the incoming point
+	 * @param variableNames the list of variables, in order
+	 * @param reset the reset map
+	 * @return the outgoing point
+	 */
+	public static HyperPoint processReset(HyperPoint pt, ArrayList <String> variableNames, 
+			LinkedHashMap<String, ExpressionInterval> reset)
+	{
+		HyperPoint rv = new HyperPoint(pt);
+		
+		for (int i = 0; i < variableNames.size(); ++i)
+		{
+			String v = variableNames.get(i);
+			ExpressionInterval resetAssignment = reset.get(v);
+			
+			if (resetAssignment == null)
+				rv.dims[i] = pt.dims[i];
+			else
+				rv.dims[i] = assignFromExpression(v, pt, variableNames, resetAssignment);
+		}
+		
+		return rv;
+	}
+	
+	private static double assignFromExpression(String v, HyperPoint p, ArrayList<String> variableNames, 
+			ExpressionInterval resetAssignment)
+	{
+		HyperPoint hp = new HyperPoint(p);
+		
+		double d = AutomatonUtil.evaluateExpression(resetAssignment.getExpression(), hp, variableNames);
+		
+		Interval i = resetAssignment.getInterval();
+		
+		if (i != null)
+			d += i.middle();
+		
+		return d;
+	}
 }

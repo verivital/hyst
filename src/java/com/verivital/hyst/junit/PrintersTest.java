@@ -291,6 +291,22 @@ public class PrintersTest {
 
 		runAllPrintersOnConfiguration(c);
 	}
+	
+	/**
+	 * The preconditions should split a disjunctive condition directly
+	 */
+	@Test
+	public void testDisjunctiveGuardSpaceEx() 
+	{
+		Configuration c = makeSampleConfiguration();
+
+		BaseComponent ha = (BaseComponent) c.root;
+		ha.transitions.get(0).guard = FormulaParser.parseGuard("t >= 5 | x >= 7");
+
+		ToolPrinter tp = new SpaceExPrinter();
+		tp.setOutputNone();
+		tp.print(c, "", "model.xml");
+	}
 
 	/**
 	 * The preconditions should split a disjunctive condition directly
@@ -425,8 +441,6 @@ public class PrintersTest {
 		
 		Assert.assertTrue("standard form _error mode exists", out.contains("_error"));
 		Assert.assertFalse("standard form _init mode doesn't exist", out.contains("_init"));
-		
-		System.out.println(out);
 	}
 	
 	@Test

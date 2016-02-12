@@ -1,7 +1,9 @@
 package com.verivital.hyst.junit;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,6 +12,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.HyperRectangle;
+import com.verivital.hyst.geometry.Interval;
+import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -36,6 +42,40 @@ public class ContinuizationPassTests
 	public ContinuizationPassTests(boolean block) 
 	{
 		PythonBridge.setBlockPython(block);
+	}
+	
+	/**
+	 * Test for the python-base range detection
+	 */
+	@Test
+	public void testPythonRangeTestSim()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String[][] dynamics = {{"t", "1"}, {"y", "sin(t)"}};
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+		
+		ArrayList<Interval> timeIntervals = new ArrayList <Interval>();
+		timeIntervals.add(new Interval(0, Math.PI));
+		timeIntervals.add(new Interval(0, 2*Math.PI));
+		
+		SymbolicStatePoint start = new SymbolicStatePoint("on", new HyperPoint(0, 0));
+		
+		List<HyperRectangle> result = ContinuizationPass.pythonSimulateRanges(c, start, timeIntervals);
+
+		Assert.assertEquals(2, result.size());
+		
+		HyperRectangle r1 = result.get(0);
+		HyperRectangle r2 = result.get(1);
+		
+		Interval.COMPARE_TOL = 1e-3;
+		
+		Assert.assertEquals(r1.dims[0], new Interval(0, Math.PI));
+		Assert.assertEquals(r2.dims[0], new Interval(0, 2 * Math.PI));
+		
+		Assert.assertEquals(r1.dims[1], new Interval(0, 1));
+		Assert.assertEquals(r2.dims[1], new Interval(-1, 1));
 	}
 	
 	@Test

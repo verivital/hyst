@@ -113,7 +113,7 @@ public abstract class TransformationPass
 	private void runPass(String params)
 	{
 		if (params == null)
-			throw new AutomatonExportException("Pass params was null");
+			params = "";
 		
 		String[] args = AutomatonUtil.extractArgs(params);
 		
