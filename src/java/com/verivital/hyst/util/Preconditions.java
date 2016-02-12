@@ -10,6 +10,7 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -67,12 +68,6 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()])
 			Preconditions.convertIntervalConstants(c);
 		
-		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
-			Preconditions.convertDisjunctiveGuards(c);
-		
-		if (!skip[PreconditionsFlag.NO_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()])
-			Preconditions.convertDisjunctiveInitForbidden(c);
-		
 		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
 			Preconditions.convertBasicOperators(c);
 		
@@ -84,8 +79,15 @@ public class Preconditions
 				Preconditions.convertAllFlowAssigned(c);
 		}
 		
-		// conversions should be done before checks
+		// this should be done AFTER flattening
+		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()])
+			Preconditions.convertDisjunctiveInitForbidden(c);
 		
+		// this should be done AFTER converting init_forbidden
+		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
+			Preconditions.convertDisjunctiveGuards(c);
+		
+		// conversions should be done before checks
 		
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
@@ -174,17 +176,23 @@ public class Preconditions
 		if ((initClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
 		{
 			// init has an 'or', convert to standard form
-			// this is not supported (yet)
-			throw new PreconditionsFailedException("Initial states contain a disjunction, "
-					+ "but printer doesn't support these.");
+			
+			if (c.root instanceof BaseComponent)
+				ConvertToStandardForm.convertInit(c);
+			else
+				throw new PreconditionsFailedException("init states has unsupported disjunction; "
+						+ "automatic convertion requires flat automaton.");
 		}
 		
 		if ((forbiddenClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
 		{
 			// forbidden has an 'or', convert to standard form
-			// this is not supported (yet)
-			throw new PreconditionsFailedException("Forbidden states contain a disjunction, "
-					+ "but printer doesn't support these.");
+			
+			if (c.root instanceof BaseComponent)
+				ConvertToStandardForm.convertForbidden(c);
+			else
+				throw new PreconditionsFailedException("forbidden states has unsupported disjunction; "
+						+ "automatic convertion requires flat automaton.");
 		}
 	}
 

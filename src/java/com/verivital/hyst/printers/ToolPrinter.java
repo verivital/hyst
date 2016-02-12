@@ -263,7 +263,7 @@ public abstract class ToolPrinter
 		else if (outputType == OutputType.GUI)
 			outputFrame.addOutput(s);
 		else if (outputType == OutputType.STRING)
-			outputString.append(s);
+			outputString.append(s + "\n");
 		
 		if (indent && line.equals("{")) 
 			increaseIndentation();

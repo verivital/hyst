@@ -403,6 +403,33 @@ public class PrintersTest {
 	}
 	
 	@Test
+	public void testDisjunctionFlowstarPrint()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		
+		Assert.assertTrue("standard form _error mode exists", out.contains("_error"));
+		Assert.assertFalse("standard form _init mode doesn't exist", out.contains("_init"));
+		
+		System.out.println(out);
+	}
+	
+	@Test
 	public void testPrintDisjunction() 
 	{
 		// may need to add precondition to convert to standard form

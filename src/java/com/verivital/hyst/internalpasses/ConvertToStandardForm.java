@@ -30,10 +30,34 @@ public class ConvertToStandardForm
 	
 	public static void run(Configuration config)
 	{
+		convertInit(config);
+		
+		convertForbidden(config);
+		
+		config.validate();
+	}
+
+	public static void convertForbidden(Configuration config)
+	{
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		if (config.forbidden.size() != 1 || !config.forbidden.containsKey(ERROR_MODE_NAME))
+			doConvertForbidden(config, ha);
+		else
+		{
+			// sanity checks
+			if (!config.forbidden.get(ERROR_MODE_NAME).equals(Constant.TRUE))
+				throw new AutomatonExportException("Malformed Existing Standard Form Automaton. " +
+						ERROR_MODE_NAME + "'s expression must be Constant.True");
+		}
+	}
+
+	public static void convertInit(Configuration config)
+	{
 		BaseComponent ha = (BaseComponent)config.root;
 		
 		if (config.init.size() != 1 || !config.init.containsKey(INIT_MODE_NAME))
-			convertInit(config, ha);
+			doConvertInit(config, ha);
 		else
 		{
 			// sanity checks
@@ -47,21 +71,9 @@ public class ConvertToStandardForm
 				throw new AutomatonExportException("Malformed Existing Standard Form Automaton. " +
 						INIT_MODE_NAME + " must be urgent.");
 		}
-		
-		if (config.forbidden.size() != 1 || !config.forbidden.containsKey(ERROR_MODE_NAME))
-			convertForbidden(config, ha);
-		else
-		{
-			// sanity checks
-			if (!config.forbidden.get(ERROR_MODE_NAME).equals(Constant.TRUE))
-				throw new AutomatonExportException("Malformed Existing Standard Form Automaton. " +
-						ERROR_MODE_NAME + "'s expression must be Constant.True");
-		}
-		
-		config.validate();
 	}
 
-	private static void convertInit(Configuration config, BaseComponent ha)
+	private static void doConvertInit(Configuration config, BaseComponent ha)
 	{
 		AutomatonMode init = ha.createMode(INIT_MODE_NAME);
 		init.flowDynamics = null;
@@ -81,7 +93,7 @@ public class ConvertToStandardForm
 		config.init.put(INIT_MODE_NAME, Constant.TRUE);
 	}
 
-	private static void convertForbidden(Configuration config, BaseComponent ha)
+	private static void doConvertForbidden(Configuration config, BaseComponent ha)
 	{
 		AutomatonMode error = ha.createMode(ERROR_MODE_NAME);
 		error.invariant = Constant.TRUE;

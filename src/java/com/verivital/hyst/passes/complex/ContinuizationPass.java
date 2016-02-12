@@ -537,26 +537,9 @@ public class ContinuizationPass extends TransformationPass
 	private void estimateRanges(final BaseComponent ha, final AutomatonMode approxMode)
 	{
 		System.out.println("TODO working here, get rid of simulator");
-		/*int SIM_STEPS = 1000; // maybe make this a parameter
-		
-		// minimum range is used to determine step size
-		double minRange = Double.MAX_VALUE;
-		
-		// initialize return data structure and compute minimum range
-		for (DomainValues dv : domains)
-		{
-			double range = dv.endTime - dv.startTime;
-			
-			if (range < minRange)
-				minRange = range;
-		}
-		
-		final double stepTime = minRange / SIM_STEPS;
-		
-		Hyst.log("minimum simulation range is " + minRange + ", simulation step = " + stepTime);
 		
 		// simulate from initial state
-		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
+		/*HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
 		Hyst.log("Init point from config: " + initPt);
 
 		if (ha.transitions.size() != 0) // if initial urgent transition exists

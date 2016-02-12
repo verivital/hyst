@@ -114,15 +114,7 @@ public class FlowPrinter extends ToolPrinter
 			printLine("{");
 			
 			for (Entry<String, Expression> e : config.forbidden.entrySet())
-			{
-				String expString = "";
-				Expression exp = e.getValue();
-				
-				if (exp != null)
-					expString = getFlowConditionExpression(exp);
-				
-				printLine(e.getKey() + " {" + expString + "}");
-			}
+				printLine(e.getKey() + " {" + e.getValue() + "}");
 			
 			printLine("}");
 		}
@@ -364,8 +356,8 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!inv.equals(Constant.TRUE))
 			{
-				printCommentBlock("Original invariant: " + inv);
-				printLine(getFlowConditionExpression(inv));
+				printCommentBlock("Original invariant: " + inv.toDefaultString());
+				printLine(inv.toString());
 			}
 
 			printLine("}"); // end invariant
@@ -393,77 +385,6 @@ public class FlowPrinter extends ToolPrinter
 				break;
 			}
 		}
-		
-		return rv;
-	}
-
-	public static String getFlowConditionExpression(Expression e)
-	{
-		String rv = null;
-		
-		try
-		{
-			rv = getFlowConditionExpressionRec(e);
-		}
-		catch (AutomatonExportException ex)
-		{
-			throw new AutomatonExportException("Error with expression:" + e , ex);
-		}
-		
-		return rv;
-	}
-
-	private static String getFlowConditionExpressionRec(Expression e)
-	{
-		String rv = "";
-		// replace && with '   ' and then print as normal
-		
-		if (e instanceof Operation)
-		{
-			Operation o = (Operation)e;
-			
-			if (o.op == Operator.AND)
-			{
-				rv += getFlowConditionExpressionRec(o.getLeft());
-				rv += "   ";
-				rv += getFlowConditionExpressionRec(o.getRight());
-			}
-			else if (o.op == Operator.EQUAL)
-			{
-				rv += getFlowConditionExpressionRec(o.getLeft());
-				rv += " = ";
-				rv += getFlowConditionExpressionRec(o.getRight());
-			}
-			else if (o.op == Operator.OR)
-			{
-				throw new AutomatonExportException("Flow* printer doesn't support OR operator. " +
-						"Consider using a Hyst pass to eliminate disjunctions)");
-			}
-			else if (Operator.isComparison(o.op))
-			{
-				Operator op = o.op;
-				
-				// Flow doesn't like < or >... needs <= or >=
-				if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || op.equals(Operator.NOTEQUAL))
-					throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
-
-				// make sure it's of the form p ~ c
-				if (o.children.size() == 2 && o.getRight() instanceof Constant)
-					rv = e.toString();
-				else
-				{
-					// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
-					
-					rv += getFlowConditionExpression(o.getLeft());
-					rv += " - (" + getFlowConditionExpression(o.getRight());
-					rv += ") " + Expression.expressionPrinter.printOperator(op) + " 0";
-				}
-			}
-			else
-				rv = e.toString();
-		}
-		else 
-			rv = e.toString();
 		
 		return rv;
 	}
@@ -545,8 +466,8 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!guard.equals(Constant.TRUE))
 			{
-				printCommentBlock("Original guard: " + t.guard);
-				printLine(getFlowConditionExpression(guard));
+				printCommentBlock("Original guard: " + t.guard.toDefaultString());
+				printLine(guard.toString());
 			}
 			
 			printLine("}");
@@ -574,11 +495,67 @@ public class FlowPrinter extends ToolPrinter
 		printLine("}");
 	}
 	
+	public static class FlowstarExpressionPrinter extends DefaultExpressionPrinter
+	{
+		public FlowstarExpressionPrinter()
+		{
+			super();
+			
+			opNames.put(Operator.AND, " ");
+		}
+		
+		@Override
+		public String printOperator(Operator op)
+		{
+			if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || 
+					op.equals(Operator.NOTEQUAL) || op == Operator.OR)
+				throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
+			
+			return super.printOperator(op);
+		}
+		
+		@Override
+		protected String printTrue()
+		{
+			return " ";
+		}
+		
+		@Override
+		protected String printFalse()
+		{
+			return "1 <= 0"; // not really sure if this will work
+		}
+		
+		@Override
+		protected String printOperation(Operation o)
+		{
+			String rv = "";
+			
+			if (Operator.isComparison(o.op))
+			{
+				Operator op = o.op;
+				
+				// make sure it's of the form p ~ c
+				if (o.children.size() == 2 && o.getRight() instanceof Constant)
+					rv = super.printOperation(o);
+				else
+				{
+					// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
+					rv += o.getLeft() + " - (" + o.getRight() + ") " + printOperator(op) + " 0";
+				}
+			}
+			else
+				rv = super.printOperation(o);
+			
+			return rv;
+		}
+	}
+	
 	@Override
 	protected void printAutomaton()
 	{	
 		this.ha = (BaseComponent)config.root;
-		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
+		Expression.expressionPrinter = new FlowstarExpressionPrinter();
 
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");

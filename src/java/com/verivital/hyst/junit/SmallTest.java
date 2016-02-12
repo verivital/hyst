@@ -806,15 +806,25 @@ public class SmallTest
 	}
 	
 	@Test
-	public void testSimpleInvariantFlowPrinter()
+	public void testFlowExpressionPrinter()
 	{
-		Expression e= FormulaParser.parseInvariant("0 <= t");
+		Expression.expressionPrinter = new FlowPrinter.FlowstarExpressionPrinter();
+		Expression e1 = FormulaParser.parseInvariant("t <= 5");
+		Expression e2 = FormulaParser.parseInvariant("5 <= t");
+		Expression e3 = FormulaParser.parseInvariant("5 < t");
 		
-		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
-		String s = FlowPrinter.getFlowConditionExpression(e);
+		Assert.assertEquals(e1.toString(), "t <= 5");
+		Assert.assertEquals(e2.toString(), "5 - (t) <= 0");
 		
-		if (!s.contains("<="))
-			Assert.fail("flow condition expression didn't convert operator <= correctly: " + s);
+		try
+		{
+			e3.toString();
+			Assert.fail("Exception was not raised on strict inequality for flowstar");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
 	}
 	
 	@Test
