@@ -759,10 +759,11 @@ public abstract class AutomatonUtil
 	// these are the flags for the bitmask returned by classifyExpression
 	public static final byte OPS_LINEAR = 1 << 0; // operators like add, subtract, multiply, negative
 	public static final byte OPS_NONLINEAR = 1 << 1; // division, exponentiation, or sine, sqrt, ln, ...
-	public static final byte OPS_BOOLEAN = 1 << 2; // boolean expression operators (==, >=, &&, !)
+	public static final byte OPS_BOOLEAN = 1 << 2; // boolean expression operators (==, >=, &&, ||, !)
 	public static final byte OPS_LOC = 1 << 3; // loc() functions
 	public static final byte OPS_LUT = 1 << 4; // look up table subexpressions
 	public static final byte OPS_MATRIX = 1 << 5; // matrix subexpressions
+	public static final byte OPS_DISJUNCTION = 1 << 6; // or operator (||)
 	
 	/**
 	 * Classify an Expression's operators. This returns a bitmask, which you can use to check for various parts 
@@ -797,12 +798,18 @@ public abstract class AutomatonUtil
 		{
 			if (LINEAR_OPS.contains(o.op))
 				rv |= OPS_LINEAR;
-			else if (NONLINEAR_OPS.contains(o.op))
+			
+			if (NONLINEAR_OPS.contains(o.op))
 				rv |= OPS_NONLINEAR;
-			else if (BOOLEAN_OPS.contains(o.op))
+			
+			if (BOOLEAN_OPS.contains(o.op))
 				rv |= OPS_BOOLEAN;
-			else if (o.op == Operator.LOC)
+			
+			if (o.op == Operator.LOC)
 				rv |= OPS_LOC;
+			
+			if (o.op == Operator.OR)
+				rv |= OPS_DISJUNCTION;
 			
 			for (Expression child : o.children)
 				rv |= classifyExpressionOps(child);

@@ -242,10 +242,11 @@ public class SmallTest
 		try
 		{
 			FormulaParser.parseInitialForbidden(t);
-			
-			Assert.fail("ors are not allowed in loc statements");
 		}
-		catch (AutomatonExportException e) {}
+		catch (AutomatonExportException e) 
+		{
+			Assert.fail("ors should be allowed in loc statements");
+		}
     }
 	
 	@Test

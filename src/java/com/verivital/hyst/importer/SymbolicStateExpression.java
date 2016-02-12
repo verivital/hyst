@@ -125,14 +125,14 @@ public class SymbolicStateExpression
 		
 		Collection <String> states = discStates.get(index);
 		
-		if (!states.contains(state))
-			throw new AutomatonExportException("Unrealizable symbolic state due to contradictory discrete location assignment: "+
-					"loc(" + instance + ") = " + state);
-		
 		String id = instanceTypes.get(index);
 		
 		if (!componentContainsDiscreteState(id, state))
 			throw new AutomatonExportException("Automaton doesn't contain a state with the given name: loc(" + instance + ") = " + state);
+		
+		if (!states.contains(state))
+			throw new AutomatonExportException("Unrealizable symbolic state due to contradictory discrete location assignment: "+
+					"loc(" + instance + ") = " + state);
 		
 		// set it to the (single) discrete state
 		states.clear();
@@ -390,8 +390,27 @@ public class SymbolicStateExpression
 			throw new AutomatonExportException("Error extracting symbolic states from expression: " + e);
 	}
 	
-	public String toString() {
-		// TODO: add discrete part
-		return this.contStates.toDefaultString();
+	public String toString() 
+	{
+		StringBuilder discStr = new StringBuilder();
+		// disc states example: [ ["on", "off"], ["blocked", "trickle", "flowing"] ]
+	
+		discStr.append("[");
+		for (Collection<String> modes : discStates)
+		{
+			discStr.append("[");
+			String prefix = "";
+			
+			for (String m : modes)
+			{
+				discStr.append(prefix + m);
+				prefix = ", ";
+			}
+			
+			discStr.append("] ");
+		}
+		discStr.append("]");
+		
+		return discStates.toString() + " with equation " + this.contStates.toDefaultString();
 	}
 }

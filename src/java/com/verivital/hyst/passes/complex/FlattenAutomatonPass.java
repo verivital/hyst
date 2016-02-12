@@ -52,28 +52,28 @@ public class FlattenAutomatonPass extends TransformationPass
 	public static void flattenAndOptimize(Configuration c)
 	{
 		// 1. do flatteneing
-		new FlattenAutomatonPass().runVanillaPass(c, null);
+		new FlattenAutomatonPass().runVanillaPass(c, "");
 		BaseComponent ha = (BaseComponent)c.root;
 		Hyst.log("\nFlattened Automaton ("+ ha.modes.size() + " locations and " 
 				+ ha.transitions.size() + " transitions)");
 		Hyst.logDebug(c.toString());
 		
 		// 2. remove unreachable (gets rid of lots of modes)
-		new RemoveDiscreteUnreachablePass().runVanillaPass(c, null);
+		new RemoveDiscreteUnreachablePass().runVanillaPass(c, "");
 		int numModes = ha.modes.size();
 		Hyst.log("\nRemoved Discrete Unreachable Modes ("+ numModes + " locations and " 
 				+ ha.transitions.size() + " transitions)");
 		Hyst.logDebug(c.toString());
 		
 		// 3 get rid of unsat modes
-		new RemoveSimpleUnsatInvariantsPass().runVanillaPass(c, null);
+		new RemoveSimpleUnsatInvariantsPass().runVanillaPass(c, "");
 		Hyst.log("\nRemoved Unsat Modes ("+ ha.modes.size() + " locations and " 
 				+ ha.transitions.size() + " transitions)");
 		
 		if (numModes != ha.modes.size())
 		{
 			// 4. remove unreachable again (if modes were deletes
-			new RemoveDiscreteUnreachablePass().runVanillaPass(c, null);
+			new RemoveDiscreteUnreachablePass().runVanillaPass(c, "");
 			Hyst.log("\nRemoved Discrete Unreachable Modes again, since some were removed ("+ ha.modes.size() + " locations and " 
 					+ ha.transitions.size() + " transitions)");
 			Hyst.logDebug(c.toString());

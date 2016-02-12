@@ -1,6 +1,7 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -10,7 +11,10 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
+import com.verivital.hyst.importer.TemplateImporter;
+import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -370,5 +374,38 @@ public class PrintersTest {
 		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
 		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output", 
 				out.contains("Math.pow($t, 2)"));
+	}
+	
+	@Test
+	public void testDisjunctionSpaceExPrint()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		ToolPrinter printer = new SpaceExPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		
+		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5 | t >= 5) "
+				+ "| loc(fakeinput) == loc3 & t <= 5\"";
+		Assert.assertTrue("forbidden is correct (disjunction)", out.contains(expected));
+	}
+	
+	@Test
+	public void testPrintDisjunction() 
+	{
+		// may need to add precondition to convert to standard form
+		runAllPrintersOnModel("disjunction_forbidden"); 
 	}
 }

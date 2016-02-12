@@ -112,6 +112,9 @@ public abstract class TransformationPass
 
 	private void runPass(String params)
 	{
+		if (params == null)
+			throw new AutomatonExportException("Pass params was null");
+		
 		String[] args = AutomatonUtil.extractArgs(params);
 		
 		try

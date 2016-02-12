@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="toy">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="tglobal" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="eps" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <param name="tmax" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="loc1" x="385.0" y="216.5" width="379.0" height="124.0">
+      <invariant>x &lt;= 10 &amp;
+t &lt;= tmax &amp;
+tglobal &lt;= tmax</invariant>
+      <flow>x' == 1 &amp;
+t' == 1 &amp;
+tglobal' == 1</flow>
+    </location>
+    <location id="2" name="loc2" x="406.0" y="606.0" width="424.0" height="132.0">
+      <invariant>x &gt;= 2 &amp;
+t &lt;= tmax &amp;
+tglobal &lt;= tmax</invariant>
+      <flow>x' == -2 &amp;
+t' == 1 &amp;
+tglobal' == 1</flow>
+    </location>
+    <location id="3" name="loc3" x="789.0" y="209.0" width="172.0" height="150.0">
+      <flow>x' == 1 &amp;
+t' == 1 &amp;
+tglobal' == 1</flow>
+    </location>
+    <location id="4" name="loc4" x="789.0" y="449.0" width="118.0" height="86.0">
+      <flow>x' == 1 &amp;
+t' == 1 &amp;
+tglobal' == 1</flow>
+    </location>
+    <transition source="1" target="2" bezier="true">
+      <guard>x &gt;= 9 &amp; 
+t &gt;= eps</guard>
+      <!-- <assignment>x' == 8</assignment> -->
+      <labelposition x="26.0" y="-59.0" width="92.0" height="88.0" />
+      <middlepoint x="486.5" y="399.75" />
+    </transition>
+    <transition source="2" target="1" bezier="true">
+      <guard>x &lt;= 3 &amp; 
+t &gt;= eps</guard>
+      <labelposition x="-123.0" y="-55.0" width="92.0" height="82.0" />
+      <middlepoint x="293.5" y="418.25" />
+    </transition>
+    <transition source="1" target="3">
+      <guard>x &gt;= 2</guard>
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+    <transition source="1" target="4">
+      <guard>t &gt;= 3</guard>
+      <labelposition x="0.0" y="0.0" />
+    </transition>
+  </component>
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="tglobal" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="timeout" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="toy" as="toy_1" x="319.0" y="100.0" width="136.0" height="86.0">
+      <map key="x">x</map>
+      <map key="t">t</map>
+      <map key="tglobal">tglobal</map>
+      <map key="eps">0.1</map>
+      <map key="tmax">timeout</map>
+    </bind>
+  </component>
+</sspaceex>
+

@@ -67,6 +67,7 @@ public class SpaceExPrinter extends ToolPrinter
 		preconditions.skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED.ordinal()] = true;
+		preconditions.skip[PreconditionsFlag.NO_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()] = true;
 	}
 	
     /**
