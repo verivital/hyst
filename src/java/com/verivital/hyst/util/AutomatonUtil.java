@@ -37,7 +37,6 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
@@ -691,8 +690,8 @@ public abstract class AutomatonUtil
 				left.dims[x] -= sampleOffset;
 				right.dims[x] += sampleOffset;
 
-				double leftVal = RungeKutta.evaluateExpression(derFunc, left, variables);
-				double rightVal = RungeKutta.evaluateExpression(derFunc, right, variables);
+				double leftVal = AutomatonUtil.evaluateExpression(derFunc, left, variables);
+				double rightVal = AutomatonUtil.evaluateExpression(derFunc, right, variables);
 
 				rv[y][x] = (rightVal - leftVal) / (2 * sampleOffset);
 			}
@@ -1044,8 +1043,8 @@ public abstract class AutomatonUtil
 		// compare a and b at the constructed sample points
 		for (HyperPoint hp : samples)
 		{
-			double expectedVal = RungeKutta.evaluateExpression(expected, hp, varList);
-			double actualVal = RungeKutta.evaluateExpression(actual, hp, varList);
+			double expectedVal = AutomatonUtil.evaluateExpression(expected, hp, varList);
+			double actualVal = AutomatonUtil.evaluateExpression(actual, hp, varList);
 			
 			if (Math.abs(expectedVal - actualVal) > tol)
 			{

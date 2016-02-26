@@ -295,15 +295,17 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
 
     return (mode, point)
 
-def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, reraise_errors=False):
+def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, 
+                    reraise_errors=False, max_step=None):
     '''
     Simulate the hybrid automaton from a single initial point 
     q - a symbolic state: (AutomatonMode, point), where point is [x_0, ..., x_n]
     end_time - the total desired simulation time (discrete events may reduce the actual time)
-    max_jumps - the maximum number of discrete sub-steps
+    max_jumps - the maximum number of discrete sub-steps, if None, a default 1e-10 is used
     solver_name - the ode solver to use (parameter of scipy's set_integrator)
     jump_error_tol - the time-error allowed on jumps
     reraise_errors - should fatal simulation errors be raised as SimulationExceptions? if False they're printed out
+    max_step - the maximum step time. If None, (end_time / 100) is used.
 
     Returns a dict with keys {'traces', 'events'} where:
     'traces': list of ModeSim objects
@@ -313,6 +315,9 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     if jump_error_tol is None:
         jump_error_tol = max(1e-10, float(end_time) / 1e10)
 
+    if max_step is None:
+        max_step = end_time / 100.0
+
     if max_jumps <= 0:
         raise RuntimeError("max_jumps should be greater than zero: " + str(max_jumps))
 
@@ -321,7 +326,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
 
     mode = q[0]
     solver = ode(mode.der)
-    solver.set_integrator(solver_name)
+    solver.set_integrator(solver_name, max_step=max_step)
     solver.set_initial_value(q[1], 0)
 
     jumps_left = max_jumps
@@ -358,7 +363,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                     raise SimulationException('Max jumps ({}) reached'.format(max_jumps))
 
                 solver = ode(mode.der)
-                solver.set_integrator(solver_name)
+                solver.set_integrator(solver_name, max_step=max_step)
                 solver.set_initial_value(state, jump_time)
 
             else: # continuous post

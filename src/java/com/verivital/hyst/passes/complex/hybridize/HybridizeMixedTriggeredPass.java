@@ -30,7 +30,7 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.python.PythonBridge;
-import com.verivital.hyst.simulation.RungeKutta;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
@@ -428,6 +428,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     	// settings
     	final private double simTimeMicroStep;
     	final private Map <String, Expression> flowDynamics; 
+    	final private AutomatonMode mode;
     	final private List <String> varNames;
     	
     	// constants
@@ -448,6 +449,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     		
     		System.out.println("todo, change simulator.centerdynamics");
     		this.flowDynamics = null; //Simulator.centerDynamics(originalMode.flowDynamics);
+    		this.mode = originalMode;
     		this.varNames = originalMode.automaton.variables;
     		
     		HyperRectangle.setDimensionNames(this.varNames);
@@ -606,7 +608,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			{
 				microStep(p);
 				
-				if (testHyperPlane(p, startBox, flowDynamics, varNames))
+				if (testHyperPlane(p, startBox, mode))
 				{
 					Hyst.log("Found pi point: " + p + " with gradient " + Arrays.toString(gradient(p)));
 					rv = p;
@@ -619,7 +621,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 
 		private double[] gradient(HyperPoint hp)
 		{
-			return RungeKutta.getGradientAtPoint(flowDynamics, varNames, hp);
+			return AutomatonUtil.getGradientAtPoint(mode, hp);
 		}
 
 		private boolean isNondeterministicDynamics(	LinkedHashMap<String, ExpressionInterval> dy)
@@ -645,7 +647,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     	private void microStep(HyperPoint p)
     	{
     		System.out.println("todo: change this");
-    		RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeMicroStep);
+    		//RungeKutta.singleStepRk(flowDynamics, varNames, p, simTimeMicroStep);
     	}
     	
     	/**
@@ -828,18 +830,12 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 * @param box the box to test against
 	 * @return true if the box point are all behind the hyperplane
 	 */
-	public static boolean testHyperPlane(HyperPoint simPoint, HyperRectangle box, Map<String, Expression> dynamics, List <String> varNames) 
+	public static boolean testHyperPlane(HyperPoint simPoint, HyperRectangle box, AutomatonMode mode) 
 	{
 		if (simPoint.dims.length != box.dims.length)
 			throw new RuntimeException("simpoint numdims must be same as box numdims");
 		
-		if (dynamics.size() != varNames.size())
-			throw new RuntimeException("varnames size must be same as dynamics size");
-		
-		if (simPoint.dims.length != varNames.size())
-			throw new RuntimeException("simpoint numdims must be same varNames size");
-		
-		double[] gradient = RungeKutta.getGradientAtPoint(dynamics, varNames, simPoint);
+		double[] gradient = AutomatonUtil.getGradientAtPoint(mode, simPoint);
 		double val = dotProduct(gradient, simPoint);
 		
 		double maxVal = 0;

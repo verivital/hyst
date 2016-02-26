@@ -306,7 +306,8 @@ public class PySimPrinter extends ToolPrinter
 			Interval i = ranges.get(s);
 			
 			if (i == null)
-				throw new AutomatonExportException("Initial range for variable " + s + " was not defined");
+				throw new AutomatonExportException("Initial range for variable " + s + " was not defined in"
+						+ " expression: " + exp.toDefaultString());
 			
 			sb.append("(" + doubleToString(i.min) + ", " + doubleToString(i.max) + ")");
 		}
@@ -379,6 +380,13 @@ public class PySimPrinter extends ToolPrinter
 			this.opNames.put(Operator.AND, "and");
 			this.opNames.put(Operator.OR, "or");
 			this.opNames.put(Operator.POW, "**");
+			
+			this.opNames.put(Operator.SIN, "math.sin");
+			this.opNames.put(Operator.COS, "math.cos");
+			this.opNames.put(Operator.TAN, "math.tan");
+			this.opNames.put(Operator.EXP, "math.exp");
+			this.opNames.put(Operator.SQRT, "math.sqrt");
+			this.opNames.put(Operator.LN, "math.log");
 		}
 		
 		@Override

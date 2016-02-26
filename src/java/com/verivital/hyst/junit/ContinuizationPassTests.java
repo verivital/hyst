@@ -13,7 +13,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.HyperPoint;
-import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -54,36 +53,37 @@ public class ContinuizationPassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		Hyst.debugMode = true;
-		
 		String[][] dynamics = {{"t", "1"}, {"y", "sin(t)"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		
 		ArrayList<Interval> timeIntervals = new ArrayList <Interval>();
-		timeIntervals.add(new Interval(0, Math.PI));
+		timeIntervals.add(new Interval(0, Math.PI/4.0));
 		timeIntervals.add(new Interval(0, 2*Math.PI));
 		
 		SymbolicStatePoint start = new SymbolicStatePoint("on", new HyperPoint(0, 0));
 		
-		List<HyperRectangle> result = ContinuizationPass.pythonSimulateRanges(c, start, timeIntervals);
+		List<Interval> result = ContinuizationPass.pythonSimulateDerivativeRange(c, "y",
+				start, timeIntervals);
 
 		Assert.assertEquals(2, result.size());
 		
-		HyperRectangle r1 = result.get(0);
-		HyperRectangle r2 = result.get(1);
+		Interval i1 = result.get(0);
+		Interval i2 = result.get(1);
 		
 		Interval.COMPARE_TOL = 1e-3;
 		
-		Assert.assertEquals(r1.dims[0], new Interval(0, Math.PI));
-		Assert.assertEquals(r2.dims[0], new Interval(0, 2 * Math.PI));
-		
-		Assert.assertEquals(r1.dims[1], new Interval(0, 1));
-		Assert.assertEquals(r2.dims[1], new Interval(-1, 1));
+		// integral of sin(t) is cos(t)
+		// 0 to pi/4
+		Assert.assertEquals(new Interval(0, Math.sqrt(2)/2.0), i1);
+		Assert.assertEquals(new Interval(-1, 1), i2);
 	}
 	
 	@Test
 	public void testContinuizationPassSineWave() 
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		String[][] dynamics = { { "y", "cos(t)" }, { "t", "1" } };
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 
@@ -116,14 +116,20 @@ public class ContinuizationPassTests
 	@Test 
 	public void testContinuizationPassDoubleIntegrator()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
 		String[][] dynamics = {{"x", "v", "0.05"}, {"v", "a", "0"}, {"a", "-10 * v - 3 * a", "9.5"}};
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
-		String continuizationParam = "-var a -period 0.005 -times 1.5 5 -timevar t -bloats 4 4";
-
+		
+		String continuizationParam = ContinuizationPass.makeParamString("a", "t", 0.005, false, 
+				Arrays.asList(new Double[]{1.5, 5.0}),
+				Arrays.asList(new Double[]{4.0, 4.0}));
+		
 		// this relies on hypy and scipy
 		new ContinuizationPass().runTransformationPass(c, continuizationParam);
 		BaseComponent ha = (BaseComponent) c.root;
-
+		
 		// we should have four error modes, and two normal modes
 		AutomatonMode running1 = null, running2 = null;
 		int numErrorModes = 0;
@@ -141,10 +147,15 @@ public class ContinuizationPassTests
 		Assert.assertNotEquals("on found", null, running1);
 		Assert.assertNotEquals("on_2 found", null, running2);
 		Assert.assertEquals("four error modes", numErrorModes, 4);
+		
+		Assert.assertTrue("on invariant is correct",
+				running1.invariant.toDefaultString().contains("t <= 1.5"));
 
 		Assert.assertTrue("time-triggered invariant is correct",
 				running1.invariant.toDefaultString().contains("t <= 1.505"));
 
+		// bloated range of a in times 0-1.5 is K=[-6.98, 13.5]
+		// [-0.05, 0] * K = [-0.675, 0.349]
 		Assert.assertEquals("mode1 v_der.max is 0.163", 0.163, running1.flowDynamics.get("v").getInterval().max,
 				1e-3);
 		Assert.assertEquals("mode1 v_der.min is -0.046", -0.046, running1.flowDynamics.get("v").getInterval().min,

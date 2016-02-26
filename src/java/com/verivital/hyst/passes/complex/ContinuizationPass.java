@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.geometry.HyperPoint;
-import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -44,6 +43,12 @@ public class ContinuizationPass extends TransformationPass
 		double bloat; // bloating term for this domain
 		Interval range; // simulated range + bloating term
 		AutomatonMode mode;
+		
+		public String toString()
+		{
+			return "[DomainValue mode: " + (mode == null ? "null" : mode.name) + 
+					", times = " + startTime + "-" + endTime + ", range = " + range + "]";
+		}
 	}
 	
 	ArrayList <DomainValues> domains = new ArrayList <DomainValues>();
@@ -147,10 +152,9 @@ public class ContinuizationPass extends TransformationPass
 		}
 		
 		if (approxMode == null)
-			throw new AutomatonExportException("Continuous apporx mode not found");
+			throw new AutomatonExportException("Continuous approx mode not found");
 		
-		processParams();
-		
+		processParams(approxMode);
 		
 		// extract derivatives
 		LinkedHashMap <String, ExpressionInterval> flows = approxMode.flowDynamics;
@@ -160,7 +164,8 @@ public class ContinuizationPass extends TransformationPass
 			throw new AutomatonExportException("flow not found for variable " + varName + " in mode " + approxMode.name);
 		
 		// estimate ranges based on simulation, stored in domains.ranges
-		estimateRanges(ha, approxMode);
+		estimateRanges();
+		
 		
 		if (timeVarName != null)
 			createModesWithTimeConditions(ha, approxMode);
@@ -537,20 +542,14 @@ public class ContinuizationPass extends TransformationPass
 	 * @param ha the two-mode automaton
 	 * @param params <in/out> the time divisions and where the resultant ranges are stored
 	 */
-	private void estimateRanges(final BaseComponent ha, final AutomatonMode approxMode)
+	private void estimateRanges()
 	{
+		ConvertFromStandardForm.run(config);
+		
 		// simulate from initial state
-		HyperPoint initPt = AutomatonUtil.getInitialPoint(ha, config);
+		HyperPoint initPt = AutomatonUtil.getInitialPoint((BaseComponent)config.root, config);
 		String initMode = config.init.keySet().iterator().next();
 		Hyst.log("Init point from config: '" + initMode + "' with " + initPt);
-
-		if (ha.transitions.size() != 0) // if initial urgent transition exists
-		{
-			AutomatonTransition t = ha.transitions.get(0);
-			initPt = AutomatonUtil.processReset(initPt, ha.variables, t.reset);
-			initMode = t.to.name;
-			Hyst.log("Init point after reset: '" + initMode + "' with " + initPt);
-		}
 		
 		List <Interval> simTimes = new ArrayList <Interval>();
 		
@@ -558,9 +557,7 @@ public class ContinuizationPass extends TransformationPass
 			simTimes.add(new Interval(d.startTime, d.endTime));
 		
 		SymbolicStatePoint start = new SymbolicStatePoint(initMode, initPt);
-		List<HyperRectangle> ranges =  pythonSimulateRanges(config, start, simTimes);
-		
-		int varIndex = config.root.variables.indexOf(varName);
+		List<Interval> ranges =  pythonSimulateDerivativeRange(config, varName, start, simTimes);
 		
 		if (ranges.size() != domains.size())
 			throw new AutomatonExportException("expected single range for each domain from simulation");
@@ -568,8 +565,7 @@ public class ContinuizationPass extends TransformationPass
 		for (int index = 0; index < domains.size(); ++index)
 		{
 			DomainValues dv = domains.get(index);
-			HyperRectangle range = ranges.get(index);
-			dv.range = range.dims[varIndex];
+			dv.range = ranges.get(index);
 		}
 		
 		Hyst.log("Ranges from simulation were:");
@@ -584,6 +580,8 @@ public class ContinuizationPass extends TransformationPass
 		
 		Hyst.log("Ranges after bloating were:");
 		logAllRanges();
+		
+		ConvertToStandardForm.run(config);
 	}
 
 	private void logAllRanges()
@@ -596,23 +594,40 @@ public class ContinuizationPass extends TransformationPass
 	 * Parses the pass params
 	 * @param params the pass param string
 	 */
-	private void processParams()
+	private void processParams(AutomatonMode approxMode)
 	{	
 		// make sure variables exists in automaton
 		if (!config.root.variables.contains(varName))
 			throw new AutomatonExportException("Varname '" + varName + "' not found in automaton.");
 		
-		if (timeVarName != null && !config.root.variables.contains(timeVarName))
-		{
-			// time variable doesn't exist, add it
-			Hyst.log("Adding non-existant time variable: " + timeVarName);
-			addTimeVar(timeVarName);
-		}
-		
 		// for every time domain, you should have a corresponding bloat defined
 		if (times.size() != bloats.size())
 			throw new AutomatonExportException("Number of bloat values (" + bloats.size() 
 					+ ") must match number of time domains (" + times.size() + ").");
+				
+		if (bloats.size() > 1 && timeVarName == null)
+		{
+			// look for a time variable in approxMode
+			for (Entry<String, ExpressionInterval> e : approxMode.flowDynamics.entrySet())
+			{
+				if (e.getValue().equalsInterval(new Interval(1,1)))
+				{
+					timeVarName = e.getKey();
+					break;
+				}
+			}
+			
+			// time var not found, create one
+			if (timeVarName == null)
+				timeVarName = "_time";
+		}
+		
+		if (timeVarName != null && !config.root.variables.contains(timeVarName))
+		{
+			// time variable doesn't exist, add it
+			Hyst.log("Adding non-existant time variable: " + timeVarName);
+			addTimeVar(timeVarName, approxMode);
+		}
 		
 		double lastTime = 0;
 		
@@ -635,32 +650,40 @@ public class ContinuizationPass extends TransformationPass
 	 * Add a time variable to the automaton
 	 * @param timeVar
 	 */
-	private void addTimeVar(String timeVar)
+	private void addTimeVar(String timeVar, AutomatonMode approxMode)
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		ha.variables.add(timeVar);
 		
-		for (AutomatonMode am : ha.modes.values())
-		{
-			if (!am.urgent)
-				am.flowDynamics.put(timeVar, new ExpressionInterval(1));
-		}
+		AutomatonMode init = ha.modes.get(ConvertToStandardForm.INIT_MODE_NAME);
+		AutomatonMode error = ha.modes.get(ConvertToStandardForm.ERROR_MODE_NAME);
 		
-		Entry<String, Expression> e = config.init.entrySet().iterator().next();
-		Expression init = Expression.and(e.getValue(), new Operation(timeVar, Operator.EQUAL, 0));
-		e.setValue(init);
+		approxMode.flowDynamics.put(timeVar, new ExpressionInterval(1));
+		
+		if (error != null)
+			error.flowDynamics.put(timeVar, new ExpressionInterval(0));
+		
+		// initial transition
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from == init && at.to == approxMode)
+				at.guard = Expression.and(at.guard, 
+						new Operation(Operator.EQUAL, new Variable(timeVar), new Constant(0)));
+		}
 		
 		config.validate();
 	}
 	
 	/**
-	 * Simulate the automaton, getting the ranges reached at a series of times
-	 * @param automaton
+	 * Simulate the automaton, getting the range of the derivative of a variable
+	 * @param automaton 
+	 * @param derVarName the variable name whose derative we want the range of 
 	 * @param start the start state
 	 * @param timeIntervals the times where to return the ranges
-	 * @return the ranges at each of the timeIntervals
+	 * @return the range of the derivative of derVarName
 	 */
-	public static List<HyperRectangle> pythonSimulateRanges(Configuration automaton,
+	public static ArrayList<Interval> pythonSimulateDerivativeRange(Configuration automaton,
+			String derVarName,
 			SymbolicStatePoint start, List<Interval> timeIntervals)
 	{
 		int numVars = automaton.root.variables.size();
@@ -669,8 +692,14 @@ public class ContinuizationPass extends TransformationPass
 			throw new AutomatonExportException("start point had " + start.hp.dims.length + 
 					" dimensions; expected " + numVars);
 		
+		int derVarIndex = automaton.root.variables.indexOf(derVarName);
+		
+		if (derVarIndex == -1)
+			throw new AutomatonExportException("Derivative variable '" + derVarName 
+					+ "' not found in automaton.");
+		
 		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("from pythonbridge.pysim_utils import simulate_ranges");
+		pb.send("from pythonbridge.pysim_utils import simulate_der_range");
 		
 		StringBuilder s = new StringBuilder();
 		s.append(PySimPrinter.automatonToString(automaton));
@@ -683,35 +712,30 @@ public class ContinuizationPass extends TransformationPass
 		
 		String timesStr = "[" + StringOperations.join(",", intervalStrs.toArray(new String[0])) +"]";
 		
-		s.append("print simulate_ranges(define_ha(), '" + start.modeName + "', " 
-				+ point + ", " + timesStr + ")");
+		s.append("print simulate_der_range(define_ha(), " + derVarIndex + ", '"
+				+ start.modeName + "', " + point + ", " + timesStr + ")");
 		
 		String result = pb.send(s.toString());
 		
 		// result is semi-colon separated hyperrectangles
 		// each hyperrectangle is a comma-separated list of size 2*N (N = number of dimensions)
 		
-		ArrayList <HyperRectangle> rv = new ArrayList<HyperRectangle>();
+		ArrayList <Interval> rv = new ArrayList<Interval>();
 		
 		for (String part : result.split(";"))
 		{
 			String[] comma_parts = part.split(",");
 			
-			if (comma_parts.length != 2 * numVars)
-				throw new AutomatonExportException("Result hyperrectangle had " + 
-						comma_parts.length + " parts, expected " + (2*numVars));
+			if (comma_parts.length != 2)
+				throw new AutomatonExportException("Result interval had " + 
+						comma_parts.length + " parts, expected 2");
 			
-			HyperRectangle hr = new HyperRectangle(numVars);
+			Interval i = new Interval(); 
+					
+			i.min = Double.parseDouble(comma_parts[0]);
+			i.max = Double.parseDouble(comma_parts[1]);
 			
-			for (int v = 0; v < numVars; ++v)
-			{
-				Double min = Double.parseDouble(comma_parts[2*v]);
-				Double max = Double.parseDouble(comma_parts[2*v+1]);
-				
-				hr.dims[v] = new Interval(min, max);
-			}
-			
-			rv.add(hr);
+			rv.add(i);
 		}
 		
 		return rv;

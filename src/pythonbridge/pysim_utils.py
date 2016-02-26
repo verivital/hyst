@@ -15,37 +15,41 @@ def simulate_with_times(q, all_times, max_jumps=500, solver='vode'):
     '''
 
     rv = []
+    ha = q[0].parent
     last_time = 0
 
-    print "all_times = {}".format(repr(all_times))
-
     for time in all_times:
+        if time == last_time:
+            continue
+
         delta = time - last_time
 
         # simulate from q for delta time
         traces = simulate_one(q, delta, max_jumps, solver, reraise_errors=True)['traces']
         
-        TODO."working here, basically we need to offset all the times by last_time"
-        traces = [ModeSim(name, points, times) ]
-        
+        for t in traces:
+            for x in xrange(len(t.times)):
+                t.times[x] += last_time
+
         rv += traces
         last_time = time
-
-    print "simulate_with_times returning {}".format(repr(rv))
+        last_ms = traces[-1]
+        last_mode = ha.modes[last_ms.mode_name]
+        last_point = last_ms.points[-1]
+        q = (last_mode, last_point)
 
     return rv
 
-def simulate_ranges(ha, mode_name, point, time_ranges, max_jumps=500, solver='vode'):
+def simulate_der_range(ha, der_var_index, mode_name, point, time_ranges, max_jumps=500, solver='vode'):
     '''
-    simulates a hybrid automaton from a given mode/point, getting the hyperrectangles reached
-    within a passed-in list of time ranges
+    simulates a hybrid automaton from a given mode/point, getting the interval range 
+    for the derivative of a given variable at der_var_index,
+    for each time in a selected list of time ranges
 
-    time_ranges is an array or (min,max) time intervals which correspond to the result
+    time_ranges is an array of (min,max) time intervals which correspond to the result
 
-    returns a semi-colon-seperated list of hyperrectangles
-    each hyperrectangle is a list of comma-separated values of size 2*N, where
-    N is the number of dimensions. These are min1,max1,min2,max2,... with the 
-    min and max values for each dimension.
+    returns a semi-colon separated list of intervals, where each interval is a comma-seperated
+    pair of numbers 'min,max'
     '''
 
     q = (ha.modes[mode_name], point)
@@ -59,22 +63,15 @@ def simulate_ranges(ha, mode_name, point, time_ranges, max_jumps=500, solver='vo
 
     state_list = simulate_with_times(q, all_times, max_jumps, solver)
 
-    num_dims = len(point)
-    ranges = []
-
-    for _ in xrange(len(time_ranges)):
-        box = []
-         
-        for _ in xrange(num_dims):
-            box.append([float("inf"), float("-inf")])
-            
-        ranges.append(box)
+    ranges = [[float("inf"), float("-inf")] for _ in xrange(len(time_ranges))]
 
     for mode_sim in state_list:
+        mode = ha.modes[mode_sim.mode_name]
 
         for i in xrange(len(mode_sim.times)):
             time = mode_sim.times[i]
             pt = mode_sim.points[i]
+            der_val = mode.der(time, pt)[der_var_index]
 
             for r_index in xrange(len(ranges)):
                 time_range = time_ranges[r_index]
@@ -83,30 +80,23 @@ def simulate_ranges(ha, mode_name, point, time_ranges, max_jumps=500, solver='vo
                     continue
 
                 r = ranges[r_index]
+                r[0] = min(r[0], der_val)
+                r[1] = max(r[1], der_val)
 
-                for dim_index in xrange(num_dims):
-                    val = pt[dim_index]
+    return ranges_to_string(ranges)
 
-                    r[dim_index][0] = min(r[dim_index][0], val)
-                    r[dim_index][1] = max(r[dim_index][1], val)
-
-    print "result = {}", repr(ranges)
-
-    return ranges_to_string(ranges, num_dims)
-
-def ranges_to_string(ranges, num_dims):
+def ranges_to_string(ranges):
     ''' converts a list of interval ranges to a semicolon-separated list of
     comma-separated values
     '''
 
-    box_strings = []
+    interval_strings = []
 
-    for box in ranges:
-        point_str_list = ["{},{}".format(box[dim][0], box[dim][1]) for dim in xrange(num_dims)]
-        box_str = ",".join(point_str_list)
-        box_strings.append(box_str)
+    for i in ranges:
+        i_str = "{},{}".format(i[0], i[1])
+        interval_strings.append(i_str)
 
-    return ";".join(box_strings)
+    return ";".join(interval_strings)
 
 def simulate_times(ha, mode_name, point, times, max_jumps=500, solver='vode'):
     '''simulates a hybrid automaton from a given mode/point, getting the state at a list of passed-in times

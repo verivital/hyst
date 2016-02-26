@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-
 <!--
 This is a basic example to demonstrate the SpaceEx file format for the composition of
 two automata with HIOA parallel composition.
@@ -18,7 +17,6 @@ The controller forces transitions based on the value of the temperature, but is
 has no continuous variables by himself. So it has invariants and guards, but no
 flow or assignments.
 -->
-
 <sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
   <component id="HeaterTemplate">
     <note>This is a simple model of a heater.
@@ -65,40 +63,35 @@ The temperature t is an uncontrolled (input) variable of the controller.</note>
     <param name="turn_off" type="label" local="false" />
     <location id="1" name="controller_off" x="67.0" y="171.0" width="100" height="80">
       <note>Waiting for the temperature to rise.</note>
-      <invariant>t &lt;= t_on</invariant>
+      <invariant>t &gt;= t_on</invariant>
     </location>
     <location id="2" name="controller_on" x="308.0" y="170.0" width="100" height="80">
       <note>Waiting for the temperature to fall.</note>
-      <invariant>t &gt;= t_off</invariant>
+      <invariant>t &lt;= t_off</invariant>
     </location>
     <transition source="1" target="2">
       <note>When the temperature reaches the lower threshold, switch the heater on.</note>
       <label>turn_on</label>
       <guard>t &lt;= t_on</guard>
-      <labelposition x="0.0" y="-47.0" />
+      <labelposition x="0.0" y="-47.0" width="74.0" height="50.0" />
       <middlepoint x="177.5" y="101.0" />
     </transition>
     <transition source="2" target="1">
       <note>When the temperature reaches the upper threshold, switch the heater off.</note>
       <label>turn_off</label>
       <guard>t &gt;= t_off</guard>
-      <labelposition x="0.0" y="10.0" />
+      <labelposition x="0.0" y="10.0" width="86.0" height="50.0" />
       <middlepoint x="181.5" y="249.0" />
     </transition>
   </component>
-
-
   <component id="TimerTemplate">
     <param name="t" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="true" />
-    <param name="t_max" type="real" d1="1" d2="1" local="false" dynamics="const"/>
+    <param name="t_max" type="real" d1="1" d2="1" local="false" dynamics="const" />
     <location id="1" name="ticking">
-	 <flow>t' == 1</flow>
-	 <invariant>t &lt;= t_max</invariant>
+      <flow>t' == 1</flow>
+      <invariant>t &lt;= t_max</invariant>
     </location>
   </component>
-
-
-
   <component id="timed_system">
     <note>The system consists of a heater and a controller and timer.</note>
     <param name="temp" type="real" d1="1" d2="1" local="false" dynamics="any" />
@@ -123,7 +116,6 @@ The temperature t is an uncontrolled (input) variable of the controller.</note>
       <map key="t">time</map>
     </bind>
   </component>
-
   <component id="system">
     <note>The system consists of a heater and a controller.
 The temperatures of the heater is part of the system interface.
@@ -134,14 +126,14 @@ Heater and controller are interacting using synchronization labels, so the label
     <param name="t" type="real" d1="1" d2="1" local="false" dynamics="any" />
     <param name="turn_on" type="label" local="true" />
     <param name="turn_off" type="label" local="true" />
-    <bind component="HeaterTemplate" as="Heater" x="180.0" y="184.0">
+    <bind component="HeaterTemplate" as="Heater" x="364.0" y="204.0">
       <map key="t">t</map>
       <map key="r_up">2</map>
       <map key="r_down">-1</map>
       <map key="turn_on">turn_on</map>
       <map key="turn_off">turn_off</map>
     </bind>
-    <bind component="ControllerTemplate" as="Controller" x="179.0" y="29.0">
+    <bind component="ControllerTemplate" as="Controller" x="375.0" y="74.0">
       <map key="t">t</map>
       <map key="t_on">18</map>
       <map key="t_off">21</map>
@@ -149,6 +141,5 @@ Heater and controller are interacting using synchronization labels, so the label
       <map key="turn_off">turn_off</map>
     </bind>
   </component>
-
 </sspaceex>
 

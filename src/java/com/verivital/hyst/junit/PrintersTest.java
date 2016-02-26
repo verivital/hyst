@@ -472,6 +472,6 @@ public class PrintersTest {
 		
 		Assert.assertTrue("some output exists", out.length() > 10);
 		
-		System.out.println(out);
+		//System.out.println(out);
 	}
 }
