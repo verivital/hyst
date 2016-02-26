@@ -50,8 +50,8 @@ public class PseudoInvariantTest
 	{
 		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
 		HyperPoint point = new HyperPoint(1.5, 1.5);
-		HyperPoint dir = new HyperPoint(1.0, 0);
-		String expectedResult = "1 * x >= 1.5";
+		HyperPoint dir = new HyperPoint(-1.0, 0);
+		String expectedResult = "-1 * x <= -1.5";
 		
 		ArrayList <String> vars = new ArrayList<String>(2);
 		vars.add("x");
@@ -67,8 +67,8 @@ public class PseudoInvariantTest
 	{
 		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
 		HyperPoint point = new HyperPoint(0, 0);
-		HyperPoint dir = new HyperPoint(0, 1);
-		String expectedResult = "1 * y >= 0";
+		HyperPoint dir = new HyperPoint(0, -1);
+		String expectedResult = "-1 * y <= 0";
 		
 		ArrayList <String> vars = new ArrayList<String>(2);
 		vars.add("x");

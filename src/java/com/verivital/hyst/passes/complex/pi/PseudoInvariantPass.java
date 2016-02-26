@@ -178,17 +178,18 @@ public class PseudoInvariantPass extends TransformationPass
 	}
 
 	/**
-	 * Create the expression for the invariant
+	 * Create the expression for the invariant, at the given point with the given gradient. The invariant is
+	 * that we are BEFORE the time at which a trajectory would reach the given point.
 	 * @param vars the variable names, in order
 	 * @param point
 	 * @param dir
 	 * @return
 	 */
-	public static Expression createInvariantExpression(List <String> vars, HyperPoint point, HyperPoint dir)
+	public static Expression createInvariantExpression(List <String> vars, HyperPoint point, HyperPoint gradient)
 	{
-		double rhs = dot(point.dims, dir.dims);
+		double rhs = dot(point.dims, gradient.dims);
 		
-		return makeExpressionFromLinearInequality(vars, dir.dims, Operator.LESSEQUAL, rhs);
+		return makeExpressionFromLinearInequality(vars, gradient.dims, Operator.LESSEQUAL, rhs);
 	}
 	
 	/**
