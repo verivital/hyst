@@ -30,7 +30,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -93,74 +92,7 @@ public class HybridizePassTests
 			Assert.fail(message + "\n" + msg);
 	}
 
-	/**
-	 * Test hybridization (grid) pass
-	 */
-	@Test
-	public void testHybridGridPass()
-	{
-		if (!PythonBridge.hasPython())
-			return;
-
-		Configuration c = makeSampleBaseConfiguration();
-		BaseComponent ha = (BaseComponent) c.root;
-
-		// update dynamics to be 3*t*x+t
-		// approximation should be 7.5*x + 5.5*t
-		// rest is in notebook
-		AutomatonMode am = ha.modes.values().iterator().next();
-		am.flowDynamics.put("x", new ExpressionInterval("3*y*x+y"));
-
-		String params = "x,y,0,2,0,5,2,5,a";
-
-		try
-		{
-			new HybridizeGridPass().runTransformationPass(c, params);
-
-			Assert.assertEquals("10 modes", 10, ha.modes.size());
-
-			AutomatonMode m = ha.modes.get("_m_1_2");
-			Assert.assertNotEquals("mode named '_m_1_2 exists'", null, m);
-
-			// dynamics should be y' == 7.5*x + 5.5*t + [-12, -10.5]
-			Expression.expressionPrinter = new RoundPrinter(3);
-			ExpressionInterval ei = m.flowDynamics.get("x");
-
-			Expression e = ei.getExpression();
-			Interval i = ei.getInterval();
-
-			// expected "7.5 * x + 5.5 * y + -12 + [0, 1.5]"
-			double TOL = 1e-9;
-
-			Assert.assertEquals(
-					"Hybrizied mode x=[1,2], y=[2,3] in correctly (interval min wrong)",
-					0, i.min, TOL);
-			Assert.assertEquals(
-					"Hybrizied mode x=[1,2], y=[2,3] in correctly (interval max wrong)",
-					1.5, i.max, TOL);
-
-			Expression correctE = FormulaParser
-					.parseValue("7.5 * x + 5.5 * y - 12");
-			String msg = AutomatonUtil.areExpressionsEqual(correctE, e);
-
-			if (msg != null)
-				Assert.fail(msg);
-
-			Assert.assertEquals("single initial state", c.init.size(), 1);
-		}
-		catch (AutomatonExportException ex)
-		{
-			Assert.assertEquals(AutomatonExportException.class, ex.getClass()); // vacuously
-																				// true,
-																				// but
-																				// will
-																				// force
-																				// failure
-																				// if
-																				// different
-																				// error
-		}
-	}
+	
 
 	/**
 	 * Test hybridization (time-triggered) pass

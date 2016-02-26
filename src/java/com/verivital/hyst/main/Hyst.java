@@ -30,7 +30,6 @@ import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
-import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
@@ -39,7 +38,6 @@ import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
-import com.verivital.hyst.printers.SMTPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -91,7 +89,6 @@ public class Hyst
 			new HyCompPrinter(),
 			new PythonQBMCPrinter(),
 			new SpaceExPrinter(),
-			new SMTPrinter(),
 			new SimulinkStateflowPrinter(),
 			new PySimPrinter(),
 	};
@@ -109,7 +106,6 @@ public class Hyst
 			new RemoveSimpleUnsatInvariantsPass(),
 			new ShortenModeNamesPass(),
 			new ContinuizationPass(),
-			new HybridizeGridPass(),
 			new HybridizeMixedTriggeredPass(),
 			new FlattenAutomatonPass(),
 			new OrderReductionPass(),

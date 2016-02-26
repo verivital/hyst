@@ -1056,7 +1056,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		if (config.forbidden.size() > 0)
 		{
 			Expression e = config.forbidden.values().iterator().next();
-			config.forbidden = HybridizeGridPass.expressionInvariantsIntersection(ha, e, "forbidden states");
+			config.forbidden = expressionInvariantsIntersection(ha, e, "forbidden states");
 		}
 		
 		if (addForbidden)
@@ -1067,5 +1067,96 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				config.forbidden.put(forbiddenModeName, Constant.TRUE);
 			}
 		}
+	}
+	
+	/**
+	 * Get the modes in a hybrid automaton which intersect an expression
+	 * @param ha the original autommaton (with modes created and invariants assigned)
+	 * @param e the expression
+	 * @param desc a description for errors if e is not a rectangle
+	 * @return a map from mode_name to expression where the value is the intersection of e an the mode's invariant
+	 */
+	public static LinkedHashMap<String, Expression> expressionInvariantsIntersection(BaseComponent ha, Expression e, String desc)
+	{
+		LinkedHashMap<String, Expression> rv = new LinkedHashMap<String, Expression>();
+		
+		TreeMap<String, Interval> rangesExp = RangeExtractor.getVariableRanges(e, desc); 
+		
+		for(AutomatonMode am : ha.modes.values())
+		{
+			TreeMap<String, Interval> rangesMode = RangeExtractor.getVariableRanges(am.invariant, "invariant for mode " + am.name);
+			
+			// if there is a point in both rangesMode and rangesInit, add as initial state
+			TreeMap<String, Interval> intersection = getIntersection(rangesExp, rangesMode);
+			
+			if (intersection != null)
+				rv.put(am.name, boundsToExpression(intersection));
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Convert from a set of bounds (variable -> interval) to an expression
+	 * @param bounds the bounds
+	 * @return the generated expression
+	 */
+	private static Expression boundsToExpression(Map<String, Interval> bounds)
+	{
+		Expression rv = Constant.TRUE;
+		
+		for (Entry<String, Interval> e : bounds.entrySet())
+		{
+			Variable v = new Variable(e.getKey());
+			Interval i = e.getValue();
+			
+			Expression ge = new Operation(Operator.GREATEREQUAL, v, new Constant(i.min));
+			Expression le = new Operation(Operator.LESSEQUAL, v, new Constant(i.max));
+			Expression range = Expression.and(ge, le);
+
+			if (i.isMinOpen())
+				rv = Expression.and(rv, le);
+			else if (i.isMaxOpen())
+				rv = Expression.and(rv, ge);
+			else
+				rv = Expression.and(rv, range);
+		}
+
+		return rv;
+	}
+	
+	/**
+	 * Get the intersection of two sets of constraints
+	 * @param a the first range
+	 * @param b the second range
+	 * @return the intersection
+	 */
+	private static TreeMap<String, Interval> getIntersection(Map<String, Interval> a, Map<String, Interval> b)
+	{
+		TreeMap<String, Interval> rv = new TreeMap<String, Interval>();
+		
+		for (Entry<String, Interval> entryA : a.entrySet())
+		{
+			String variable = entryA.getKey();
+			Interval intervalA = entryA.getValue();
+			Interval intervalB = b.get(variable);
+			
+			if (intervalB == null) // unconstrained in B, any value in intervalA is valid
+				rv.put(variable, intervalA);
+			else
+			{
+				Interval i = Interval.intersection(intervalA, intervalB);
+				
+				if (i == null)
+				{
+					rv = null;
+					break;
+				}
+				else
+					rv.put(variable, i);
+			}
+		}
+		
+		return rv;
 	}
 }
