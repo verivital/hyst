@@ -113,4 +113,14 @@ public class ConvertToStandardForm
 		config.forbidden.clear();
 		config.forbidden.put(ERROR_MODE_NAME, Constant.TRUE);
 	}
+
+	public static AutomatonMode getInitMode(BaseComponent ha)
+	{
+		return ha.modes.get(INIT_MODE_NAME);
+	}
+	
+	public static AutomatonMode getErrorMode(BaseComponent ha)
+	{
+		return ha.modes.get(ERROR_MODE_NAME);
+	}
 }

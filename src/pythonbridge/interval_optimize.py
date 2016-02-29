@@ -21,12 +21,12 @@
 from sympy.core import Mul, Expr, Add, Pow, Symbol, Number, Float
 from sympy.functions.elementary.trigonometric import sin, cos, tan
 from sympy.core import symbols
-from sympy import *
 from sympy.polys import PolynomialError
 from sympy.polys.polyfuncs import horner
 from sympy.mpmath import mpi as interval
 from sympy.mpmath import iv
 import copy
+from sympy import *
 
 def eval_eq(e, subs=None):
     """returns the interval evaluation of this sympy equation, subs is a

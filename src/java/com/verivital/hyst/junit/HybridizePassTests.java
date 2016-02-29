@@ -29,6 +29,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -493,4 +494,82 @@ public class HybridizePassTests
 				m1.invariant.toDefaultString().contains("x >= 1.040000"));
 	}
 
+	@Test
+	public void testMultimodeOptimization()
+	{
+		// do optimization over a four mode automaton, with invariants along a 2x2 unit grid
+		// mode1 at (x,y) = [0,1] x [0,1] has dynamics x' = y' = 1
+		// mode2 at (x,y) = [0,1] x [1,2] has dynamics x' = y' = 3
+		// mode3 at (x,y) = [1,2] x [0,1] has dynamics x' = y' = 2
+		// mode4 at (x,y) = [1,2] x [1,2] has dynamics x' = y' = 4
+		
+		// first rect is [0.25, 1.75] x [0.1, 0.2] which spans modes 1 and 3
+		// expected result: x'= y' = 1.5 + [-0.5,0.5]
+		
+		// second rect is [0.25, 1.75] x [0.1, 1.2] which spans all modes
+		// expected result: 2.5 + [-1.5, 1.5]
+		
+		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
+		BaseComponent ha = (BaseComponent)c.root;
+		AutomatonMode mode1 = ha.modes.values().iterator().next();
+		mode1.invariant = FormulaParser.parseInvariant("0 <= x <= 1 & 0 <= y <= 1");
+		
+		AutomatonMode mode2 = ha.createMode("two");
+		mode2.invariant = FormulaParser.parseInvariant("0 <= x <= 1 & 1 <= y <= 2");
+		mode2.flowDynamics.put("x", new ExpressionInterval("3"));
+		mode2.flowDynamics.put("y", new ExpressionInterval("3"));
+		
+		AutomatonMode mode3 = ha.createMode("three");
+		mode2.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 0 <= y <= 1");
+		mode2.flowDynamics.put("x", new ExpressionInterval("2"));
+		mode2.flowDynamics.put("y", new ExpressionInterval("2"));
+		
+		AutomatonMode mode4 = ha.createMode("four");
+		mode2.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 1 <= y <= 2");
+		mode2.flowDynamics.put("x", new ExpressionInterval("4"));
+		mode2.flowDynamics.put("y", new ExpressionInterval("4"));
+		
+		ArrayList <AutomatonMode> allModes = new ArrayList <AutomatonMode>();
+		allModes.add(mode1);
+		allModes.add(mode2);
+		allModes.add(mode3);
+		allModes.add(mode4);
+		
+		ArrayList <AutomatonMode> modeChain = new ArrayList <AutomatonMode>();
+		
+		// try both optimization methods
+		for (String opt : new String[]{"basinhopping", "interval"})
+		{
+			for (AutomatonMode am : modeChain)
+				ha.modes.remove(c);
+			
+			modeChain.clear();
+			
+			AutomatonMode chain1 = ha.createMode("chain1");
+			AutomatonMode chain2 = ha.createMode("chain2");
+			modeChain.add(chain1);
+			modeChain.add(chain2);
+			
+			ArrayList <HyperRectangle> modeChainInvariants = new ArrayList <HyperRectangle>();
+			modeChainInvariants.add(new HyperRectangle(new double[][]{{0.25, 1.75}, {0.1, 0.2}}));
+			modeChainInvariants.add(new HyperRectangle(new double[][]{{0.25, 1.75}, {0.1, 1.2}}));
+			
+			HybridizeMTRawPass.runOptimization(opt, allModes, modeChain, modeChainInvariants);
+			
+			Interval.COMPARE_TOL = 1e-6;
+			// chain1 expected result: 1.5 + [-0.5,0.5]
+			ExpressionInterval ei = chain1.flowDynamics.get("x");
+			Assert.assertNull("chain1 flow expression was incorrect", 
+					AutomatonUtil.areExpressionsEqual(new Constant(1.5), ei.getExpression()));
+			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(-0.5, 0.5),
+					ei.getInterval());
+			
+			// chain2 expected result: 2.5 + [-1.5, 1.5]
+			ei = chain1.flowDynamics.get("y");
+			Assert.assertNull("chain1 flow expression was incorrect", 
+					AutomatonUtil.areExpressionsEqual(new Constant(2.5), ei.getExpression()));
+			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(-1.5, 1.5),
+					ei.getInterval());
+		}
+	}
 }

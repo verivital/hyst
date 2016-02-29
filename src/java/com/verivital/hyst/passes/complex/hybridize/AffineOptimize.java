@@ -18,6 +18,12 @@ import com.verivital.hyst.util.AutomatonUtil;
 
 public class AffineOptimize
 {
+	public static enum OptimizationType
+	{
+		BASIN_HOPPING,
+		INTERVAL
+	}
+	
 	public static class OptimizationParams
 	{
 		// set these two as input (original dynamics, bounds)
@@ -37,7 +43,7 @@ public class AffineOptimize
 	 * 
 	 * @param params [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
-	public static void createAffineDynamics(List<OptimizationParams> params)
+	public static void createAffineDynamics(OptimizationType type, List<OptimizationParams> params)
 	{
 		if (params.size() == 0)
 			throw new AutomatonExportException("createAffineDynamics was called with params list of length 0");
@@ -47,7 +53,21 @@ public class AffineOptimize
 		
 		createOptimizationParams(params, expList, boundsList);
 		
-		List<Interval> result = PythonUtil.scipyOptimize(expList, boundsList);
+		List<Interval> result;
+		
+		switch (type)
+		{
+			case BASIN_HOPPING:
+			result = PythonUtil.scipyOptimize(expList, boundsList);
+			break;
+			
+			case INTERVAL:
+			result = PythonUtil.intervalOptimizeMulti(expList, boundsList);
+			break;
+			
+			default:
+				throw new AutomatonExportException("Unsupported Optimization Method: " + type.name());
+		}
 		
 		createOptimizationResult(params, result);
 	}

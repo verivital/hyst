@@ -34,8 +34,8 @@ public class AutomatonMode
 	public String name;
 	public final BaseComponent automaton;
 	public Expression invariant;
-	public LinkedHashMap <String, ExpressionInterval> flowDynamics;
 	public boolean urgent = false;
+	public LinkedHashMap <String, ExpressionInterval> flowDynamics;
 	
 	/**
 	 * The correct way to create a new automaton mode is using HybridAutomaton.createMode(name), which will 

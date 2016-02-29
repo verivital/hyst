@@ -337,18 +337,23 @@ public class PythonUtil
 	 * @param boundsList a list of interval bounds for each variable used in the expression
 	 * @return a list of resultant interval bounds
 	 */
-	public static List<Interval> intervalOptimizeMulti(Expression exp,
-			List<Map<String, Interval>> boundsList)
+	public static List<Interval> intervalOptimizeMulti(List <Expression> exps,
+			List<HashMap<String, Interval>> boundsList)
 	{
 		PythonBridge pb = PythonBridge.getInstance();
 		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
 
 		StringBuilder s = new StringBuilder();
-		s.append(makeExpressionVariableSymbols(exp));
 
-		s.append("[str(v) for v in eval_eq_multi(");
-		s.append(pyEvaluatePrinter.print(exp));
-		s.append(",[");
+		s.append("[str(v) for v in eval_eq_multi([");
+		
+		for (Expression exp : exps)
+		{
+			s.append(pyEvaluatePrinter.print(exp));
+			s.append(",");
+		}
+		
+		s.append("],[");
 
 		for (Map<String, Interval> bounds : boundsList)
 		{

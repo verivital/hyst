@@ -9,6 +9,8 @@ import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
 import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.HyperRectangle;
+import com.verivital.hyst.geometry.Interval;
 
 /**
  * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of {@link HyperPoint}s
@@ -16,18 +18,19 @@ import com.verivital.hyst.geometry.HyperPoint;
  *
  * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>. If found, it will stop.</p>
  * 
- * All the HyperPoints must be the same dimensionality. Each Hyperpoint is a 
- * comma-separated (no spaces) list of numbers, surrounded by parenthesis. 
- * for example: (-3,4,15)
+ * All the HyperRectangles must be the same dimensionality. Each HyperRectangles is a 
+ * has two numbers for each dimension (comma-separated), with dimensions separated
+ * by semicolons (no spaces), surrounded by parentheses, like:
+ * (-1,1;-2,-1;0.2,0.4)
  * 
- * The parenthesis are necessary because -3 would be interpreted as an argument on it's own (since it
+ * The parenthesis are necessary because -1 would be interpreted as an argument on it's own (since it
  * starts with a dash).
  *
  * @author Stanley Bak
  */
-public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint> 
+public class HyperRectangleArrayOptionHandler extends OptionHandler<HyperRectangle> 
 {
-	public HyperPointArrayOptionHandler(CmdLineParser parser, OptionDef option, Setter<HyperPoint> setter) 
+	public HyperRectangleArrayOptionHandler(CmdLineParser parser, OptionDef option, Setter<HyperRectangle> setter) 
 	{
 		super(parser, option, setter);
 	}
@@ -55,19 +58,19 @@ public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint>
             if(param.startsWith("-"))
 				break;
 
-            for (String pointStr : param.split(" ")) 
+            for (String partStr : param.split(" ")) 
             {
-            	if (!pointStr.startsWith("(") || !pointStr.endsWith(")"))
+            	if (!partStr.startsWith("(") || !partStr.endsWith(")"))
             	{
             		// deprecated: we don't have proper locale support in Hyst
             		throw new CmdLineException(owner, "Argument should start and end with parenthesis: '" 
-            				+ pointStr + "'");
+            				+ partStr + "'");
             	}
             	
             	// trim parenthesis
-            	pointStr = pointStr.substring(1, pointStr.length() - 1);
+            	partStr = partStr.substring(1, partStr.length() - 1);
             	
-            	String[] dims = pointStr.split(",");
+            	String[] dims = partStr.split(";");
             	
             	if (numDims == -1)
             		numDims = dims.length;
@@ -75,16 +78,35 @@ public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint>
             	{
             		// deprecated: we don't have proper locale support in Hyst
             		throw new CmdLineException(owner, "Argument has wrong number of dimensions (expected " + 
-            				numDims + "): '" + pointStr + "'");
+            				numDims + "): '" + partStr + "'");
             	}
             	
-            	HyperPoint hp = new HyperPoint(dims.length);
+            	HyperRectangle hr = new HyperRectangle(dims.length);
             	
             	for (int i = 0; i < dims.length; ++i)
             	{
             		try
                 	{
-                		hp.dims[i] = Double.parseDouble(dims[i]);
+            			String[] minmax = dims[i].split(",");
+            			
+            			if (minmax.length != 2)
+            			{
+                    		// deprecated: we don't have proper locale support in Hyst
+                    		throw new CmdLineException(owner, "Dimension in HyperRectangle expected two parts: '" 
+                    				+ dims[i] + "' in '" + partStr + "'");
+                    	}
+            			
+            			double min = Double.parseDouble(minmax[0]);
+            			double max = Double.parseDouble(minmax[1]);
+            			
+            			if (max < min)
+            			{
+                    		// deprecated: we don't have proper locale support in Hyst
+                    		throw new CmdLineException(owner, "min > max in dimension in HyperRectangle: '" 
+                    				+ dims[i] + "' in '" + partStr + "'");
+                    	}
+            			
+            			hr.dims[i] = new Interval(min, max);
                 	}
                 	catch (NumberFormatException e)
                 	{
@@ -93,7 +115,7 @@ public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint>
                 	}
             	}
             	
-            	setter.addValue(hp);
+            	setter.addValue(hr);
             }
 		}
 
