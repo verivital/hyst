@@ -2,6 +2,7 @@
 <project name="Hyst Project" default="build" basedir=".">
 	
 	<property name="hypy.src.dir"          value="hybridpy/hybridpy"/>
+	<property name="pythonbridge.src.dir"  value="pythonbridge"/>
     <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> 
     <property name="grammar.file"          value="${grammar.src.dir}/HystExpression.g4"/>
 	<property name="release.path"          value="release"/>
@@ -193,13 +194,17 @@
 
 	<!-- run the python tests -->
 	<target name ="python_run_test" depends="check_python" if="pythonDetected" description="Run Python Tests">
-		<echo message="Python detected, running hypy unit tests." />
+		<echo message="Python detected, running python unit tests." />
 		
-		<!-- this uses unit test discovery with the default settings (looks in test_*.py files) -->
+		<!-- hypy with unit test discovery with the default settings (looks in test_*.py files) -->
 		<exec dir="${hypy.src.dir}" executable="python" failonerror="true">
 		    <arg line="-m unittest discover" />
 		</exec>
 		
+		<!-- pythonbridge with unit test discovery with the default settings -->
+		<exec dir="${pythonbridge.src.dir}" executable="python" failonerror="true">
+		    <arg line="-m unittest discover" />
+		</exec>
 		
 	</target>
 	
