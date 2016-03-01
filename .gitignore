@@ -17,3 +17,7 @@ main.pdf
 
 *.flow
 /bin/
+
+\#*\#
+.\#*
+src/.gitignore
