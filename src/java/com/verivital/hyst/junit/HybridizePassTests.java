@@ -24,6 +24,7 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -546,7 +547,7 @@ public class HybridizePassTests
 		for (String opt : new String[]{"basinhopping", "interval"})
 		{
 			for (AutomatonMode am : modeChain)
-				ha.modes.remove(c);
+				ha.modes.remove(am);
 			
 			modeChain.clear();
 			
@@ -574,6 +575,65 @@ public class HybridizePassTests
 			Assert.assertNull("chain1 flow expression was incorrect", 
 					AutomatonUtil.areExpressionsEqual(new Constant(2.5), ei.getExpression()));
 			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(-1.5, 1.5),
+					ei.getInterval());
+		}
+	}
+	
+	@Test
+	public void testMultimodeOptimizationSimple()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Hyst.debugMode = true;
+		// do optimization over a one mode automaton
+		// mode1 at (x,y) = [0,1] x [1,2] has dynamics x' = x, y' = y
+		
+		// first rect is [0.25, 0.75] x [1.1, 1.2] which spans modes 1
+		// expected result: x' = x + [0,0];  y' = y + [0,0]
+		
+		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
+		BaseComponent ha = (BaseComponent)c.root;
+		AutomatonMode mode1 = ha.modes.values().iterator().next();
+		mode1.invariant = FormulaParser.parseInvariant("0 <= x <= 1 & 0 <= y <= 2");
+		mode1.flowDynamics.put("x", new ExpressionInterval("x"));
+		mode1.flowDynamics.put("y", new ExpressionInterval("y"));
+		
+		ArrayList <AutomatonMode> allModes = new ArrayList <AutomatonMode>();
+		allModes.add(mode1);
+		
+		ArrayList <AutomatonMode> modeChain = new ArrayList <AutomatonMode>();
+		
+		// try both optimization methods
+		for (String opt : new String[]{"basinhopping", "interval"})
+		{
+			for (AutomatonMode am : modeChain)
+			{
+				ha.modes.remove(am.name);
+			}
+			
+			modeChain.clear();
+			
+			AutomatonMode chain1 = ha.createMode("chain1");
+			modeChain.add(chain1);
+			
+			ArrayList <HyperRectangle> modeChainInvariants = new ArrayList <HyperRectangle>();
+			modeChainInvariants.add(new HyperRectangle(new double[][]{{0.25, 0.75}, {0.1, 0.2}}));
+			
+			HybridizeMTRawPass.runOptimization(opt, allModes, modeChain, modeChainInvariants);
+			
+			Interval.COMPARE_TOL = 1e-6;
+			// chain1 expected result: x + [0], y + [0]
+			ExpressionInterval ei = chain1.flowDynamics.get("x");
+			Assert.assertNull("chain1 'x' flow expression was incorrect", 
+					AutomatonUtil.areExpressionsEqual(new Variable("x"), ei.getExpression()));		
+			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(0),
+					ei.getInterval());
+			
+			ei = chain1.flowDynamics.get("y");
+			Assert.assertNull("chain1 'y' flow expression was incorrect", 
+					AutomatonUtil.areExpressionsEqual(new Variable("y"), ei.getExpression()));		
+			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(0),
 					ei.getInterval());
 		}
 	}

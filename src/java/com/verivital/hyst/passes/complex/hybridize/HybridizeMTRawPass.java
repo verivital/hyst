@@ -286,13 +286,29 @@ public class HybridizeMTRawPass extends TransformationPass
 			LinkedHashMap <String, ExpressionInterval> avgFlow = getAverageFlow(boxIntersects);
 			averageFlowList.add(avgFlow);
 			
+			Hyst.logDebug("Processing " + modeChain.get(i).name + ", intersecting modes: " + boxIntersects);
+			
 			for (int imIndex = 0; imIndex < boxIntersects.size(); ++imIndex)
 			{
 				AutomatonMode mode = boxIntersects.get(imIndex);
 				OptimizationParams op = new OptimizationParams();
 				
 				op.bounds = invIntersection(mode, box);
-				op.original = avgFlow;
+				op.original = new LinkedHashMap <String, ExpressionInterval>();
+				
+				for (Entry<String, ExpressionInterval> entry : avgFlow.entrySet())
+				{
+					String var = entry.getKey();
+					
+					Expression dif = new Operation(Operator.SUBTRACT, 
+							entry.getValue().asExpression(), 
+							mode.flowDynamics.get(var).asExpression());
+					
+					
+					op.original.put(var, new ExpressionInterval(dif));
+				}
+				
+				Hyst.logDebug("Mode " + mode.name + ", optimizing: " + op.original);
 				
 				params.add(op);
 			}
@@ -321,7 +337,16 @@ public class HybridizeMTRawPass extends TransformationPass
 				for (Entry<String, ExpressionInterval> entry : op.result.entrySet())
 				{
 					String var = entry.getKey();
-					Interval optI = entry.getValue().getInterval();
+					ExpressionInterval ei = entry.getValue();
+					Interval optI = null;
+					
+					if (ei.getExpression() instanceof Constant)
+					{
+						Constant c = (Constant)ei.getExpression();
+						optI = new Interval(c.getVal());
+					}
+					else
+						optI = entry.getValue().getInterval();
 					
 					Hyst.logDebug("Optimized " + var + " with range " + optI);
 					

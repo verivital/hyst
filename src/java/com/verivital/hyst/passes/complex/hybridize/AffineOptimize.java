@@ -13,6 +13,7 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -51,6 +52,8 @@ public class AffineOptimize
 		ArrayList<HashMap<String, Interval>> boundsList = new ArrayList<HashMap<String, Interval>>();
 		
 		createOptimizationParams(params, expList, boundsList);
+		
+		Hyst.logDebug("Created optimization params; expList=" + expList); 
 		
 		List<Interval> optimizationResult;
 		
