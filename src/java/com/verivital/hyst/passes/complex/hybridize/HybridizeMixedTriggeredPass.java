@@ -28,7 +28,6 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
-import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationType;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -902,7 +901,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			params.add(op);
 		}
 		
-		 AffineOptimize.createAffineDynamics(OptimizationType.BASIN_HOPPING, params);
+		 AffineOptimize.createAffineDynamics("basinhopping", params);
 		
 		 for (int i = 0; i < modes.size(); ++i)
 		 {

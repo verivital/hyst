@@ -2,6 +2,7 @@ package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
@@ -23,7 +24,6 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
-import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationType;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.util.HyperRectangleArrayOptionHandler;
 
@@ -61,7 +61,8 @@ import com.verivital.hyst.util.HyperRectangleArrayOptionHandler;
  * 
  * In addition to these parameters from the paper, the optimization method can be chosen:
  * 
- * opt the optimization method, one of {basinhopping, interval}
+ * opt the optimization method, one of {basinhopping, interval, intervalXXX} where XXX is
+ * the maximum overapproximation error (low values in high dimensions may take longer)
  * 
  * Additionally, the user can (optionally) specify a trigger mode which indicates the
  * transformation should begin; otherwise it begins at time 0.
@@ -242,7 +243,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	 * Do linear approximation over all the modes in the chain. This modifies the
 	 * flow dynamics for each mode in the chain.
 	 * 
-	 * @param optimizationType the optimization engine to use, one of "basinhopping", "interval"
+	 * @param optimizationType the optimization engine to use, one of 
+	 * "basinhopping", "interval", "intervalXX"
 	 * @param oldModes The list of all modes in the original automaton
 	 * @param modeChain the list of modes in the chain
 	 * @param rects the box invariant sets corresponding to each mode in the chain
@@ -253,39 +255,42 @@ public class HybridizeMTRawPass extends TransformationPass
 			List <AutomatonMode> modeChain, 
 			List <HyperRectangle> rects)
 	{
-		// TODO run the optimization over modeChain and modeChainInvariants
-		// This may be tricky because the invariants may intersect multiple modes
-		// There's a question of what are the correct dynamics to use. I guess average
-		// the dynamics in all the modes, then sample at the center.
 		
 		if (modeChain.size() == 0)
 			throw new AutomatonExportException("runOptimization was called an empty modeChain");
 		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		
-		for (int i = 0; i < modeChain.size(); ++i)
+		// parallel lists for every mode in the mode chain
+		int chainLen = modeChain.size();
+		List<List<AutomatonMode>> boxIntersectsList = new ArrayList<List<AutomatonMode>>(chainLen);
+		List<LinkedHashMap <String, ExpressionInterval>> averageFlowList = 
+				new ArrayList<LinkedHashMap <String, ExpressionInterval>>(chainLen);
+		
+		for (int i = 0; i < chainLen; ++i)
 		{
 			AutomatonMode am = modeChain.get(i);
 			BaseComponent ha = am.automaton;
-			HyperRectangle hr = rects.get(i);
+			HyperRectangle box = rects.get(i);
 			
-			OptimizationParams op = new OptimizationParams();
-			op.original = am.flowDynamics;
+			List <AutomatonMode> boxIntersects = getIntersectingModes(oldModes, box);
+			boxIntersectsList.add(boxIntersects);
 			
-			for (int dim = 0; dim < ha.variables.size(); ++dim)
+			LinkedHashMap <String, ExpressionInterval> avgFlow = getAverageFlow(boxIntersects);
+			averageFlowList.add(avgFlow);
+			
+			for (int imIndex = 0; imIndex < boxIntersects.size(); ++imIndex)
 			{
-				String name = ha.variables.get(dim);
-				op.bounds.put(name, hr.dims[dim]);
+				AutomatonMode am = boxIntersects.get(imIndex);
+				OptimizationParams op = new OptimizationParams();
+				op.bounds = intersection(am.invariant, box);
+				op.original = avgFlow;
+				
+				params.add(op);
 			}
-			
-			params.add(op);
 		}
 		
-		OptimizationType oType = optimizationType.equals("basinhopping") ? 
-				AffineOptimize.OptimizationType.BASIN_HOPPING :
-				AffineOptimize.OptimizationType.INTERVAL; 
-					
-		AffineOptimize.createAffineDynamics(oType, params);
+		AffineOptimize.createAffineDynamics(optimizationType, params);
 		
 		for (int i = 0; i < modeChain.size(); ++i)
 		{
@@ -577,7 +582,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		if (domains.size() == 0)
 			throw new AutomatonExportException("expected at least one domain");
 		
-		if (!opt.equals("basinhopping") && !opt.equals("interval"))
+		if (!opt.equals("basinhopping") && !opt.startsWith("interval"))
 			throw new AutomatonExportException("unknown optimization method: " + opt);
 
 		int numDims = config.root.variables.size();

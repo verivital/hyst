@@ -17,13 +17,7 @@ import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 
 public class AffineOptimize
-{
-	public static enum OptimizationType
-	{
-		BASIN_HOPPING,
-		INTERVAL
-	}
-	
+{	
 	public static class OptimizationParams
 	{
 		// set these two as input (original dynamics, bounds)
@@ -41,9 +35,11 @@ public class AffineOptimize
 	 * Create affine dynamics which encompass the original dynamics in some rectangle
 	 * This function is called on several dynamics and several rectangles
 	 * 
+	 * @param optimizationType one of {"basinhopping", "interval", "intervalXXX" where XXX is a 
+	 * real number describing the maximum overapproximation error
 	 * @param params [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
-	public static void createAffineDynamics(OptimizationType type, List<OptimizationParams> params)
+	public static void createAffineDynamics(String optimizationType, List<OptimizationParams> params)
 	{
 		if (params.size() == 0)
 			throw new AutomatonExportException("createAffineDynamics was called with params list of length 0");
@@ -53,23 +49,35 @@ public class AffineOptimize
 		
 		createOptimizationParams(params, expList, boundsList);
 		
-		List<Interval> result;
+		List<Interval> optimizationResult;
 		
-		switch (type)
+		if (optimizationType.equals("basinhopping"))
+			optimizationResult = PythonUtil.scipyOptimize(expList, boundsList);
+		else if (optimizationType.equals("interval"))
+			optimizationResult = PythonUtil.intervalOptimize(expList, boundsList);
+		else if (optimizationType.startsWith("interval"))
 		{
-			case BASIN_HOPPING:
-			result = PythonUtil.scipyOptimize(expList, boundsList);
-			break;
+			String num = optimizationType.substring("interval".length());
 			
-			case INTERVAL:
-			result = PythonUtil.intervalOptimizeMulti(expList, boundsList);
-			break;
-			
-			default:
-				throw new AutomatonExportException("Unsupported Optimization Method: " + type.name());
+			try
+			{
+				double accuracy = Double.parseDouble(num);
+				
+				if (accuracy <= 0)
+					throw new AutomatonExportException("malformed interval optimization param: " + accuracy);
+				
+				optimizationResult = PythonUtil.intervalOptimizeBounded(expList, boundsList, accuracy);
+			}
+			catch (NumberFormatException e)
+			{
+				throw new AutomatonExportException("malformed interval optimization param", e);
+			}
 		}
+		else
+			throw new AutomatonExportException("Unsupported Optimization Method: " + optimizationType);
 		
-		createOptimizationResult(params, result);
+		// output stored in params.result
+		createOptimizationResult(params, optimizationResult);
 	}
 
 	/**
