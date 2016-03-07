@@ -611,7 +611,12 @@ public abstract class AutomatonUtil
 				if (rv.length() > 0)
 					rv += ", ";
 					
-				rv += e.getKey() + ": " + e.getValue().toString(DefaultExpressionPrinter.instance);
+				String valueString = "<null>";
+				
+				if (e.getValue() != null)
+					valueString = e.getValue().toString(DefaultExpressionPrinter.instance);
+				
+				rv += e.getKey() + ": " + valueString;
 			}
 		}
 		

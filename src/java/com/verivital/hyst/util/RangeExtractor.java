@@ -31,9 +31,12 @@ public class RangeExtractor
 	 * @throws UnsupportedConditionException if the expression contains non-interval operations on the desired variable
 	 
 	 */
-	public static void getVariableRanges(Expression expression, TreeMap <String, Interval> ranges) 
+	public static void getVariableRanges(Expression expression, Map <String, Interval> ranges) 
 			throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
+		if (expression == null)
+			throw new NullPointerException("null expression passed into getVariableRanges()");
+			
 		try
 		{
 			Map<String, Double> constantMap = getConstants(expression);
@@ -232,7 +235,7 @@ public class RangeExtractor
 	 * @throws UnsupportedConditionException if the expression contains non-interval operations on the desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression, 
-			TreeMap <String, Interval> ranges, Collection <String> vars, 
+			Map <String, Interval> ranges, Collection <String> vars, 
 			Map<String, Double> constantMap) throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();

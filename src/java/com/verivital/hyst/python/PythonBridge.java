@@ -37,6 +37,7 @@ public class PythonBridge
 	// if hasPython() gives false, this gets set 
 	public static String getInstanceErrorString = "No Error"; 
 	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
+	public static final int NO_TIMEOUT = -1;
 	
 	private int timeoutMs;
 	private Process process = null;
@@ -117,7 +118,7 @@ public class PythonBridge
 	}
 	
 	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * Sets the timeout in milliseconds, use NO_TIMEOUT for no timeout
 	 * @param timeoutMs
 	 */
 	public PythonBridge(int timeoutMs)
@@ -143,7 +144,7 @@ public class PythonBridge
 	}
 	
 	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * Sets the timeout in milliseconds, use NO_TIMEOUT for no timeout
 	 * @param timeoutMs
 	 */
 	public void setTimeout(int timeoutMs)

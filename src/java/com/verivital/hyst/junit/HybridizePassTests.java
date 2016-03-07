@@ -29,6 +29,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
@@ -497,6 +498,10 @@ public class HybridizePassTests
 	@Test
 	public void testMultimodeOptimization()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Hyst.debugMode = true;
 		// do optimization over a four mode automaton, with invariants along a 2x2 unit grid
 		// mode1 at (x,y) = [0,1] x [0,1] has dynamics x' = y' = 1
 		// mode2 at (x,y) = [0,1] x [1,2] has dynamics x' = y' = 3
@@ -520,14 +525,14 @@ public class HybridizePassTests
 		mode2.flowDynamics.put("y", new ExpressionInterval("3"));
 		
 		AutomatonMode mode3 = ha.createMode("three");
-		mode2.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 0 <= y <= 1");
-		mode2.flowDynamics.put("x", new ExpressionInterval("2"));
-		mode2.flowDynamics.put("y", new ExpressionInterval("2"));
+		mode3.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 0 <= y <= 1");
+		mode3.flowDynamics.put("x", new ExpressionInterval("2"));
+		mode3.flowDynamics.put("y", new ExpressionInterval("2"));
 		
 		AutomatonMode mode4 = ha.createMode("four");
-		mode2.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 1 <= y <= 2");
-		mode2.flowDynamics.put("x", new ExpressionInterval("4"));
-		mode2.flowDynamics.put("y", new ExpressionInterval("4"));
+		mode4.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 1 <= y <= 2");
+		mode4.flowDynamics.put("x", new ExpressionInterval("4"));
+		mode4.flowDynamics.put("y", new ExpressionInterval("4"));
 		
 		ArrayList <AutomatonMode> allModes = new ArrayList <AutomatonMode>();
 		allModes.add(mode1);
