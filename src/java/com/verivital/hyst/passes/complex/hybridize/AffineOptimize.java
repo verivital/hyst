@@ -23,25 +23,23 @@ public class AffineOptimize
 	public static class OptimizationParams
 	{
 		// set these two as input (original dynamics, bounds)
-		public LinkedHashMap<String, ExpressionInterval> original = new LinkedHashMap<String, ExpressionInterval>(); 
+		public LinkedHashMap<String, ExpressionInterval> toOptimize = new LinkedHashMap<String, ExpressionInterval>(); 
 		public HashMap<String, Interval> bounds = new HashMap<String, Interval>();
 		
 		// this is set as output
 		public LinkedHashMap<String, ExpressionInterval> result = new LinkedHashMap<String, ExpressionInterval>();
-
-		// this is used internally
-		private LinkedHashMap<String, Expression> linearized = new LinkedHashMap<String, Expression>();
 	}
 	
 	/**
-	 * Create affine dynamics which encompass the original dynamics in some rectangle
-	 * This function is called on several dynamics and several rectangles
+	 * Perform an optimization in order to find out the differences in dynamics, for example,
+	 * between a nonlinear derivative and its linear approximation.
 	 * 
 	 * @param optimizationType one of {"basinhopping", "interval", "intervalXXX" where XXX is a 
 	 * real number describing the maximum overapproximation error
 	 * @param params [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
-	public static void createAffineDynamics(String optimizationType, List<OptimizationParams> params)
+	public static void optimizeDynamics(String optimizationType, 
+			List<OptimizationParams> params)
 	{
 		if (params.size() == 0)
 			throw new AutomatonExportException("createAffineDynamics was called with params list of length 0");
@@ -97,7 +95,7 @@ public class AffineOptimize
 		int curVar = 0;
 		
 		ArrayList <String> orderedVariables = new ArrayList <String>(); // same ordering as the flow hashmap		
-		orderedVariables.addAll(params.get(0).original.keySet());
+		orderedVariables.addAll(params.get(0).toOptimize.keySet());
 		int NUM_VARS = orderedVariables.size();
 		
 		for (Interval inter : result)
@@ -120,7 +118,6 @@ public class AffineOptimize
 			if (Math.abs(inter.max) <= TOL)
 				op.result.put(var, new ExpressionInterval(linearized));
 			else
-			
 				op.result.put(var, new ExpressionInterval(linearized, inter));
 			
 			// increment
@@ -133,7 +130,7 @@ public class AffineOptimize
 	}
 
 	/**
-	 * Create the parameters for optimization of affine dynamics
+	 * Create the parameters for optimization 
 	 * @param params the passed-in parameters
 	 * @param expList [out] the expressions to optimize
 	 * @param boundsList [out] the bounds where to optimize
@@ -142,50 +139,65 @@ public class AffineOptimize
 			List<OptimizationParams> params, ArrayList<Expression> expList,
 			ArrayList<HashMap<String, Interval>> boundsList)
 	{
-		ArrayList <String> orderedVariables = new ArrayList <String>(); // same ordering as the flow hashmap		
-		orderedVariables.addAll(params.get(0).original.keySet());
-		int NUM_VARS = orderedVariables.size();
-		
 		for (OptimizationParams op : params)
 		{
-			LinkedHashMap<String, ExpressionInterval> original = op.original;
+			LinkedHashMap<String, ExpressionInterval> toOptimize = op.toOptimize;
 			HashMap<String, Interval> bounds = op.bounds;
 			
-			double[][] JAC = AutomatonUtil.estimateJacobian(original, bounds);
-	
-			for (int derVar = 0; derVar < NUM_VARS; ++derVar)
+			for (ExpressionInterval ei : toOptimize.values())
 			{
-				String derVarName = orderedVariables.get(derVar);
-				Expression derivativeExp = original.get(derVarName).asExpression();
-				
-				// linear estimate is: JAC[derVar][0] * var0 + JAC[derVar][1] * var1 + ...
-				Expression linearized = null;
-				
-				for (int partialVar = 0; partialVar < NUM_VARS; ++partialVar)
-				{
-					if (JAC[derVar][partialVar] == 0)
-						continue;
-					
-					Operation term = new Operation(Operator.MULTIPLY, new Constant(JAC[derVar][partialVar]),
-							new Variable(orderedVariables.get(partialVar)));
-					
-					if (linearized == null)
-						linearized = term;
-					else
-						linearized = new Operation(Operator.ADD, linearized, term);
-				}
-				
-				// if jacobian was zero for all directions
-				if (linearized == null)
-					linearized = new Constant(0);
-				
-				op.linearized.put(derVarName, linearized);
-				
-				// the function to be optimized is the difference between the linear approximation and the real function
-				Expression optimizeFunc = new Operation(Operator.SUBTRACT, derivativeExp, linearized);
-				expList.add(optimizeFunc);
+				expList.add(ei.asExpression());
 				boundsList.add(bounds);
 			}
 		}
+	}
+	
+	/**
+	 * Create an affine approximation based on sampling the given dynamics
+	 * @param nonlinear the input dynamics 
+	 * @param bounds the bounds where to take the approximation
+	 * @return output (linear) dynamics which are close to the nonlinear ones
+	 */
+	public static LinkedHashMap<String, ExpressionInterval> affineApprox(
+			LinkedHashMap<String, ExpressionInterval> nonlinear,
+			HashMap<String, Interval> bounds)
+	{
+		LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
+		int numVars = nonlinear.size();
+		double[][] jac = AutomatonUtil.estimateJacobian(nonlinear, bounds);
+		ArrayList <String> orderedVariables = new ArrayList <String>(); // same ordering as the flow hashmap		
+		orderedVariables.addAll(nonlinear.keySet());
+		
+		for (int derVar = 0; derVar < numVars; ++derVar)
+		{
+			String var = orderedVariables.get(derVar);
+			Expression derivativeExp = nonlinear.get(var).asExpression();
+			
+			// linear estimate is: JAC[derVar][0] * var0 + JAC[derVar][1] * var1 + ...
+			Expression linearized = null;
+			
+			for (int partialVar = 0; partialVar < numVars; ++partialVar)
+			{
+				if (jac[derVar][partialVar] == 0)
+					continue;
+				
+				Operation term = new Operation(Operator.MULTIPLY, 
+						new Constant(jac[derVar][partialVar]),
+						new Variable(orderedVariables.get(partialVar)));
+				
+				if (linearized == null)
+					linearized = term;
+				else
+					linearized = new Operation(Operator.ADD, linearized, term);
+			}
+			
+			// if jacobian was zero for all directions
+			if (linearized == null)
+				linearized = new Constant(0);
+			
+			rv.put(var, new ExpressionInterval(linearized));
+		}
+		
+		return rv;
 	}
 }

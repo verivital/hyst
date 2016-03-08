@@ -586,21 +586,30 @@ public class HybridizePassTests
 			return;
 		
 		Hyst.debugMode = true;
-		// do optimization over a one mode automaton
-		// mode1 at (x,y) = [0,1] x [1,2] has dynamics x' = x, y' = y
+		// do optimization over a two mode automaton
+		// mode1 at (x,y) = [0,1] x [0,1] has dynamics x' = x, y' = 1
+		// mode2 at (x,y) = [1,2] x [0,1] has dynamics x' = 0, y' = 2
 		
-		// first rect is [0.25, 0.75] x [1.1, 1.2] which spans modes 1
-		// expected result: x' = x + [0,0];  y' = y + [0,0]
+		// optimization rect is [0, 1.5] x [0.1, 0.2] which spans both modes
+		// expected result: x' = x/2 + [-0.75, 0.5];  y' = 1.5 + [-0.5,0.5]
+		// in mode1, x' = x/2 + [0,1], y' == 1.5 + [-0.5,-0.5]
+		// int mode2, x' = x/2 + [-0.75,-0.5], y' == 1.5 + [0.5,0.5]
 		
 		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
 		BaseComponent ha = (BaseComponent)c.root;
 		AutomatonMode mode1 = ha.modes.values().iterator().next();
 		mode1.invariant = FormulaParser.parseInvariant("0 <= x <= 1 & 0 <= y <= 2");
 		mode1.flowDynamics.put("x", new ExpressionInterval("x"));
-		mode1.flowDynamics.put("y", new ExpressionInterval("y"));
+		mode1.flowDynamics.put("y", new ExpressionInterval("1"));
+		
+		AutomatonMode mode2 = ha.createMode("mode2");
+		mode2.invariant = FormulaParser.parseInvariant("1 <= x <= 2 & 0 <= y <= 2");
+		mode2.flowDynamics.put("x", new ExpressionInterval("0"));
+		mode2.flowDynamics.put("y", new ExpressionInterval("2"));
 		
 		ArrayList <AutomatonMode> allModes = new ArrayList <AutomatonMode>();
 		allModes.add(mode1);
+		allModes.add(mode2);
 		
 		ArrayList <AutomatonMode> modeChain = new ArrayList <AutomatonMode>();
 		
@@ -608,9 +617,7 @@ public class HybridizePassTests
 		for (String opt : new String[]{"basinhopping", "interval"})
 		{
 			for (AutomatonMode am : modeChain)
-			{
 				ha.modes.remove(am.name);
-			}
 			
 			modeChain.clear();
 			
@@ -618,22 +625,22 @@ public class HybridizePassTests
 			modeChain.add(chain1);
 			
 			ArrayList <HyperRectangle> modeChainInvariants = new ArrayList <HyperRectangle>();
-			modeChainInvariants.add(new HyperRectangle(new double[][]{{0.25, 0.75}, {0.1, 0.2}}));
+			modeChainInvariants.add(new HyperRectangle(new double[][]{{0, 1.5}, {0.1, 0.2}}));
 			
 			HybridizeMTRawPass.runOptimization(opt, allModes, modeChain, modeChainInvariants);
 			
 			Interval.COMPARE_TOL = 1e-6;
-			// chain1 expected result: x + [0], y + [0]
+			// expected result: x' = x/2 + [-0.75, 0.5];  y' = 1.5 + [-0.5,0.5]
 			ExpressionInterval ei = chain1.flowDynamics.get("x");
 			Assert.assertNull("chain1 'x' flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual(new Variable("x"), ei.getExpression()));		
-			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(0),
+					AutomatonUtil.areExpressionsEqual("x/2", ei.getExpression()));		
+			Assert.assertEquals("chain1 flow x interval was incorrect", new Interval(-0.75, 0.5),
 					ei.getInterval());
 			
 			ei = chain1.flowDynamics.get("y");
 			Assert.assertNull("chain1 'y' flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual(new Variable("y"), ei.getExpression()));		
-			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(0),
+					AutomatonUtil.areExpressionsEqual("1.5", ei.getExpression()));		
+			Assert.assertEquals("chain1 flow y interval was incorrect", new Interval(-0.5, 0.5),
 					ei.getInterval());
 		}
 	}

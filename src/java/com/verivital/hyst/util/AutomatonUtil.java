@@ -978,6 +978,20 @@ public abstract class AutomatonUtil
 	 * @param expected the expected expression
 	 * @param actual the actual expression
 	 */
+	public static String areExpressionsEqual(String expected, Expression actual)
+	{
+		double TOL = 1e-9;
+		Expression e = FormulaParser.parseValue(expected);
+		
+		return areExpressionsEqual(e, actual, TOL);
+	}
+	
+	/**
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
+	 * a counter-example description string if they are not. Uses a tolerance of 1e-9.
+	 * @param expected the expected expression
+	 * @param actual the actual expression
+	 */
 	public static String areExpressionsEqual(Expression expected, Expression actual)
 	{
 		double TOL = 1e-9;

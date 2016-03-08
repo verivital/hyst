@@ -63,7 +63,7 @@ public class PythonTests
 		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		OptimizationParams op = new OptimizationParams();
-		op.original = dy;
+		op.toOptimize = dy;
 		op.bounds = bounds;
 		params.add(op);
 		

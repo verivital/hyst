@@ -284,6 +284,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			boxIntersectsCount.add(boxIntersects.size());
 			
 			LinkedHashMap <String, ExpressionInterval> avgFlow = getAverageFlow(boxIntersects);
+			avgFlow = linearApprox(avgFlow);
 			averageFlowList.add(avgFlow);
 			
 			Hyst.logDebug("Processing " + modeChain.get(i).name + ", intersecting modes: " + boxIntersects);
@@ -294,21 +295,20 @@ public class HybridizeMTRawPass extends TransformationPass
 				OptimizationParams op = new OptimizationParams();
 				
 				op.bounds = invIntersection(mode, box);
-				op.original = new LinkedHashMap <String, ExpressionInterval>();
+				op.toOptimize = new LinkedHashMap <String, ExpressionInterval>();
 				
 				for (Entry<String, ExpressionInterval> entry : avgFlow.entrySet())
 				{
 					String var = entry.getKey();
 					
 					Expression dif = new Operation(Operator.SUBTRACT, 
-							entry.getValue().asExpression(), 
-							mode.flowDynamics.get(var).asExpression());
+							mode.flowDynamics.get(var).asExpression(),
+							entry.getValue().asExpression());
 					
-					
-					op.original.put(var, new ExpressionInterval(dif));
+					op.toOptimize.put(var, new ExpressionInterval(dif));
 				}
 				
-				Hyst.logDebug("Mode " + mode.name + ", optimizing: " + op.original);
+				Hyst.logDebug("Mode " + mode.name + ", optimizing: " + op.toOptimize);
 				
 				params.add(op);
 			}

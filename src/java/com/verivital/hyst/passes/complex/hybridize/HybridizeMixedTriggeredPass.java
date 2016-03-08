@@ -890,7 +890,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			HyperRectangle hr = rects.get(i);
 			
 			OptimizationParams op = new OptimizationParams();
-			op.original = am.flowDynamics;
+			op.toOptimize = am.flowDynamics;
 			
 			for (int dim = 0; dim < ha.variables.size(); ++dim)
 			{
