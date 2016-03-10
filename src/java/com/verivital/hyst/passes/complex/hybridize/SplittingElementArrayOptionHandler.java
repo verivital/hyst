@@ -68,9 +68,7 @@ public class SplittingElementArrayOptionHandler extends OptionHandler<SplittingE
 	            	if (!partStr.contains(";"))
 	            	{
 	            		// time
-	            		TimeSplittingElement tse = new TimeSplittingElement();
-	            		tse.time = Double.parseDouble(partStr);
-	            		splittingElement = tse;
+	            		splittingElement = new TimeSplittingElement(Double.parseDouble(partStr));
 	            	}
 	            	else
 	            	{

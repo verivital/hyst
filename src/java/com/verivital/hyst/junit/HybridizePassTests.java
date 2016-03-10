@@ -24,7 +24,6 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -32,8 +31,11 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.TimeSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
 
@@ -502,7 +504,6 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		Hyst.debugMode = true;
 		// do optimization over a four mode automaton, with invariants along a 2x2 unit grid
 		// mode1 at (x,y) = [0,1] x [0,1] has dynamics x' = y' = 1
 		// mode2 at (x,y) = [0,1] x [1,2] has dynamics x' = y' = 3
@@ -544,10 +545,10 @@ public class HybridizePassTests
 		ArrayList <AutomatonMode> modeChain = new ArrayList <AutomatonMode>();
 		
 		// try both optimization methods
-		for (String opt : new String[]{"basinhopping", "interval"})
+		for (String opt : new String[]{"basinhopping", "interval", "interval0.5"})
 		{
 			for (AutomatonMode am : modeChain)
-				ha.modes.remove(am);
+				ha.modes.remove(am.name);
 			
 			modeChain.clear();
 			
@@ -565,17 +566,13 @@ public class HybridizePassTests
 			Interval.COMPARE_TOL = 1e-6;
 			// chain1 expected result: 1.5 + [-0.5,0.5]
 			ExpressionInterval ei = chain1.flowDynamics.get("x");
-			Assert.assertNull("chain1 flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual(new Constant(1.5), ei.getExpression()));
-			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(-0.5, 0.5),
-					ei.getInterval());
+			Assert.assertNull("chain1 x flow was incorrect", 
+					AutomatonUtil.areExpressionIntervalsEqual("1.5", -0.5, 0.5, ei));
 			
 			// chain2 expected result: 2.5 + [-1.5, 1.5]
-			ei = chain1.flowDynamics.get("y");
-			Assert.assertNull("chain1 flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual(new Constant(2.5), ei.getExpression()));
-			Assert.assertEquals("chain1 flow interval was incorrect", new Interval(-1.5, 1.5),
-					ei.getInterval());
+			ei = chain2.flowDynamics.get("y");
+			Assert.assertNull("chain1 y flow was incorrect", 
+					AutomatonUtil.areExpressionIntervalsEqual("2.5", -1.5, 1.5, ei));
 		}
 	}
 	
@@ -585,7 +582,6 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		Hyst.debugMode = true;
 		// do optimization over a two mode automaton
 		// mode1 at (x,y) = [0,1] x [0,1] has dynamics x' = x, y' = 1
 		// mode2 at (x,y) = [1,2] x [0,1] has dynamics x' = 0, y' = 2
@@ -632,16 +628,117 @@ public class HybridizePassTests
 			Interval.COMPARE_TOL = 1e-6;
 			// expected result: x' = x/2 + [-0.75, 0.5];  y' = 1.5 + [-0.5,0.5]
 			ExpressionInterval ei = chain1.flowDynamics.get("x");
-			Assert.assertNull("chain1 'x' flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual("x/2", ei.getExpression()));		
-			Assert.assertEquals("chain1 flow x interval was incorrect", new Interval(-0.75, 0.5),
-					ei.getInterval());
+			
+			Assert.assertNull("chain1 'x' flow was incorrect", 
+					AutomatonUtil.areExpressionIntervalsEqual("x/2", -0.75, 0.5, ei));		
 			
 			ei = chain1.flowDynamics.get("y");
-			Assert.assertNull("chain1 'y' flow expression was incorrect", 
-					AutomatonUtil.areExpressionsEqual("1.5", ei.getExpression()));		
-			Assert.assertEquals("chain1 flow y interval was incorrect", new Interval(-0.5, 0.5),
-					ei.getInterval());
+			Assert.assertNull("chain1 'y' flow was incorrect", 
+					AutomatonUtil.areExpressionIntervalsEqual("1.5", -0.5, 0.5, ei));		
 		}
+	}
+	
+	@Test
+	public void sciPyOptimize()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Hyst.debugMode = true;
+		
+		Expression e1 = FormulaParser.parseValue("x ^ 2 - (0.536 * x - 0.07182)");
+		Expression e2 = FormulaParser.parseValue("x ^ 2 - (0.619 * x - 0.09579025)");
+		
+		List <Expression> expList = new ArrayList<Expression>();
+		expList.add(e1);
+		expList.add(e2);
+		
+		List<HashMap<String, Interval>> boundsList = new ArrayList<HashMap<String, Interval>>();
+		
+		HashMap<String, Interval> list1 = new HashMap<String, Interval>();
+		list1.put("x", new Interval(0.2, 0.336));
+
+		HashMap<String, Interval> list2 = new HashMap<String, Interval>();
+		list2.put("x", new Interval(0.236, 0.383));
+		
+		boundsList.add(list1);
+		boundsList.add(list2);
+		
+		List<Interval> optimizationResult = PythonUtil.scipyOptimize(expList, boundsList);
+	}
+	
+	/**
+	 * Test the raw hybridization (time-triggered) pass. This uses the quadradic example
+	 * from the soundness argument ppt.
+	 * x' == x^2, x(0) = [.24, .26]
+	 * time-triggered split at 0.5
+	 * domain contraction (DC) #1 using x = [0.2, 0.336], then DC #2 using [0.236, 0.383]
+	 * 
+	 * expected affine dynamics: 
+	 * x'_1 = .536*x – 0.0718 + [0, 0.0046]
+	 * x'_2 = .619*x – 0.0958+ [0, 0.0055]
+	 */
+	@Test
+	public void testHybridMixedTriggeredRawPass()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Hyst.debugMode = true;
+
+		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
+		c.settings.plotVariableNames[0] = c.settings.plotVariableNames[1] = "x"; 
+		BaseComponent ha = (BaseComponent)c.root;
+		AutomatonMode am = ha.modes.values().iterator().next();
+		
+		ha.variables.remove("y");
+		am.flowDynamics.remove("y");
+		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
+		
+		c.validate();
+		
+		List<SplittingElement> splitElements = new ArrayList<SplittingElement>();
+		List<HyperRectangle> domains = new ArrayList<HyperRectangle>();
+		
+		splitElements.add(new TimeSplittingElement(0.5));
+		
+		domains.add(new HyperRectangle(new Interval(0.2, 0.336)));
+		domains.add(new HyperRectangle(new Interval(0.236, 0.383)));
+		
+		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, null, null);
+		
+		new HybridizeMTRawPass().runTransformationPass(c, params);
+		
+		Assert.assertEquals(ha.modes.size(), 2);
+		
+		AutomatonMode mode1 = ha.modes.get("_hybridized0");
+		AutomatonMode mode2 = ha.modes.get("_hybridized1");
+		
+		Assert.assertNotNull(mode1);
+		Assert.assertNotNull(mode2);
+		
+		ExpressionInterval flow1 = mode1.flowDynamics.get("x");
+		ExpressionInterval tt_flow1 = mode1.flowDynamics.get("_tt");
+		Expression inv1 = mode1.invariant;
+		ExpressionInterval flow2 = mode2.flowDynamics.get("x");
+		Expression inv2 = mode2.invariant;
+		
+		ExpressionInterval desired1 = new ExpressionInterval(".536*x – 0.0718", 
+				new Interval(0, 0.0046));
+		ExpressionInterval desired2 = new ExpressionInterval(".619*x – 0.0958", 
+				new Interval(0, 0.0055));
+		
+		AutomatonUtil.areExpressionIntervalsEqual("-1", 0, 0, tt_flow1);
+		AutomatonUtil.areExpressionIntervalsEqual(desired1, flow1);
+		AutomatonUtil.areExpressionIntervalsEqual(desired2, flow2);
+		
+		Assert.assertEquals(1, ha.transitions.size());
+		AutomatonTransition at = ha.transitions.get(0);
+		
+		Assert.fail("check that _tt < 0.5");
+		Assert.assertEquals(at.guard.toDefaultString(), "_tt > 0");
+		
+		Assert.fail("check that inv1 has _tt >= 0 && x \\in [0.2, 0.336]");
+		Assert.fail("check that inv2 has x \\in [0.236, 0.383]");
 	}
 }

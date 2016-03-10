@@ -711,7 +711,7 @@ public abstract class AutomatonUtil
 	 * @param variables the variable, in the order we want
 	 * @return a HyperPoint at the center
 	 */
-	private static HyperPoint boundsCenter(HashMap<String, Interval> bounds, ArrayList<String> variables)
+	public static HyperPoint boundsCenter(HashMap<String, Interval> bounds, ArrayList<String> variables)
 	{
 		HyperPoint rv = new HyperPoint(bounds.size());
 		int dim = 0;
@@ -1265,5 +1265,51 @@ public abstract class AutomatonUtil
 			d += i.middle();
 		
 		return d;
+	}
+
+	public static String areExpressionIntervalsEqual(String desiredExpressionString, 
+			double desiredMin, double desiredMax, ExpressionInterval actual)
+	{
+		Expression e = FormulaParser.parseValue(desiredExpressionString);
+		
+		return areExpressionIntervalsEqual(new ExpressionInterval(e, new Interval(desiredMin, desiredMax)), actual);
+	}
+
+	public static String areExpressionIntervalsEqual(ExpressionInterval desired, ExpressionInterval actual)
+	{
+		Expression desiredE = desired.getExpression();
+		Interval desiredI = desired.getInterval();
+		
+		if (desiredI == null)
+			desiredI = new Interval(0,0);
+		
+		Expression desiredMin = new Operation(Operator.ADD, desiredE, new Constant(desiredI.min));
+		Expression desiredMax = new Operation(Operator.ADD, desiredE, new Constant(desiredI.max));
+		
+		Expression actualE = actual.getExpression();
+		Interval actualI = actual.getInterval();
+		
+		if (actualI == null)
+			actualI = new Interval(0,0);
+		
+		Expression actualMin = new Operation(Operator.ADD, actualE, new Constant(actualI.min));
+		Expression actualMax = new Operation(Operator.ADD, actualE, new Constant(actualI.max));
+		
+		String res = areExpressionsEqual(desiredMin, actualMin);
+		
+		if (res != null)
+			res = "\nDesired: '" + desired.toDefaultString() 
+				+ "'\nActual: '" + actual.toDefaultString() + "'\nMin differs:\n" + res;
+		else
+		{
+			res = areExpressionsEqual(desiredMax, actualMax);
+			
+			if (res != null)
+
+				res = "\nDesired: '" + desired.toDefaultString() 
+					+ "'\nActual: '" + actual.toDefaultString() + "'\nMax differs:\n" + res;
+		}
+		
+		return res;
 	}
 }

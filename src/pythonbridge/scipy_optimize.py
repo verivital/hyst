@@ -44,6 +44,11 @@ def opt(func, bound, niter=30):
         center, minimizer_kwargs=dict(method='L-BFGS-B', bounds=bound),\
         niter=niter, stepsize=stepsize).fun
 
+    # scipy bug: the doc says basinhopping returns a Result object,
+    # but I sometimes get a float, sometimes a numpy float, some sometimes and numpy array
+    minimum = float(minimum)
+    maximum = float(maximum)
+
     return [minimum, maximum]
 
 def __func((x, y)):

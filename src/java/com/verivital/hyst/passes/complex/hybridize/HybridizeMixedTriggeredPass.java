@@ -890,18 +890,19 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			HyperRectangle hr = rects.get(i);
 			
 			OptimizationParams op = new OptimizationParams();
-			op.toOptimize = am.flowDynamics;
+			//op.origDynamics = am.flowDynamics;
 			
 			for (int dim = 0; dim < ha.variables.size(); ++dim)
 			{
 				String name = ha.variables.get(dim);
-				op.bounds.put(name, hr.dims[dim]);
+				//op.bounds.put(name, hr.dims[dim]);
 			}
 			
 			params.add(op);
 		}
 		
-		 AffineOptimize.createAffineDynamics("basinhopping", params);
+		// this call will be wrong because there's no difference with avg dynamics taken anymore
+		 AffineOptimize.optimizeDynamics("basinhopping", params);
 		
 		 for (int i = 0; i < modes.size(); ++i)
 		 {

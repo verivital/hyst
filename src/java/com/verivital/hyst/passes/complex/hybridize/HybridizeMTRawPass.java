@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
 
@@ -20,12 +19,14 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.internalpasses.ConvertFromStandardForm;
 import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationModeParams;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.util.HyperRectangleArrayOptionHandler;
@@ -129,6 +130,64 @@ public class HybridizeMTRawPass extends TransformationPass
 	private int chainModeCount = 0;
 	private AutomatonMode errorMode;
 	private AutomatonMode initMode;
+	
+	/**
+	 * Construct the parameter string
+	 * @param splitElements
+	 * @param domains
+	 * @param opt (can be null)
+	 * @param triggerMode (can be null)
+	 * @return
+	 */
+	public static String makeParamString(List<SplittingElement> splitElements,
+			List<HyperRectangle> domains, String opt, String triggerMode)
+	{
+		StringBuffer rv = new StringBuffer();
+		
+		if (opt != null)
+			rv.append("-opt " + opt + " ");
+		
+		if (triggerMode != null)
+			rv.append("-triggermode " + triggerMode + " ");
+		
+		rv.append("-splitelements ");
+		
+		for (SplittingElement se : splitElements)
+		{
+			if (se instanceof TimeSplittingElement)
+				rv.append("(" + ((TimeSplittingElement)se).time + ") ");
+			else
+			{
+				SpaceSplittingElement sse = (SpaceSplittingElement)se;
+				
+				rv.append("(");
+				
+				for (int d = 0; d < sse.pt.dims.length; ++d)
+					rv.append(sse.pt.dims[d] + ",");
+				
+				rv.append(";");
+				
+				for (int d = 0; d < sse.gradient.length; ++d)
+					rv.append(sse.gradient[d] + ",");
+				
+				rv.append(") ");
+			}
+		}
+		
+		rv.append("-domains ");
+		
+		for (HyperRectangle hr : domains)
+		{
+			rv.append("(");
+			
+			for (int d = 0; d < hr.dims.length; ++d)
+				rv.append(hr.dims[d].min + "," + hr.dims[d].max + ";");
+			
+			rv.append(") ");
+		}
+		
+		return rv.toString().trim();
+	}
 
 	@Override
 	public String getCommandLineFlag()
@@ -179,12 +238,12 @@ public class HybridizeMTRawPass extends TransformationPass
 		Expression previousGuard = null;
 		AutomatonMode previousMode = null;
 		
+		
 		for (int i = 0; i < domains.size(); ++i)
 		{
 			HyperRectangle domain = domains.get(i);
 			
 			AutomatonMode curMode = makeModeInChain(domain);
-			modeChain.add(curMode);
 			
 			// add a transition based on previousGuard
 			if (previousGuard != null)
@@ -262,19 +321,18 @@ public class HybridizeMTRawPass extends TransformationPass
 			List <AutomatonMode> modeChain, 
 			List <HyperRectangle> rects)
 	{
-		
 		if (modeChain.size() == 0)
 			throw new AutomatonExportException("runOptimization was called an empty modeChain");
 		
 		Hyst.logDebug("runOptimization called with oldModes = " + oldModes);
+		
+		List <String> vars = getNonTTVaraibles(modeChain.get(0).automaton);
 		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		
 		// parallel lists for every mode in the mode chain
 		int chainLen = modeChain.size();
 		List<Integer> boxIntersectsCount = new ArrayList<Integer>(chainLen);
-		List<LinkedHashMap <String, ExpressionInterval>> averageFlowList = 
-				new ArrayList<LinkedHashMap <String, ExpressionInterval>>(chainLen);
 		
 		for (int i = 0; i < chainLen; ++i)
 		{
@@ -284,89 +342,70 @@ public class HybridizeMTRawPass extends TransformationPass
 			boxIntersectsCount.add(boxIntersects.size());
 			
 			LinkedHashMap <String, ExpressionInterval> avgFlow = getAverageFlow(boxIntersects);
-			avgFlow = linearApprox(avgFlow);
-			averageFlowList.add(avgFlow);
+			OptimizationParams op = new OptimizationParams();
 			
-			Hyst.logDebug("Processing " + modeChain.get(i).name + ", intersecting modes: " + boxIntersects);
+			HashMap<String, Interval> bounds = toVariableBounds(box, vars);
+			op.newDynamics = AffineOptimize.affineApprox(avgFlow, bounds);
+			params.add(op);
+			
+			Hyst.logDebug("Processing " + modeChain.get(i).name + ", avgDynamics = " + avgFlow);
 			
 			for (int imIndex = 0; imIndex < boxIntersects.size(); ++imIndex)
 			{
 				AutomatonMode mode = boxIntersects.get(imIndex);
-				OptimizationParams op = new OptimizationParams();
+				OptimizationModeParams modeParams = new OptimizationModeParams();
+				op.origModes.add(modeParams);
 				
-				op.bounds = invIntersection(mode, box);
-				op.toOptimize = new LinkedHashMap <String, ExpressionInterval>();
-				
-				for (Entry<String, ExpressionInterval> entry : avgFlow.entrySet())
-				{
-					String var = entry.getKey();
-					
-					Expression dif = new Operation(Operator.SUBTRACT, 
-							mode.flowDynamics.get(var).asExpression(),
-							entry.getValue().asExpression());
-					
-					op.toOptimize.put(var, new ExpressionInterval(dif));
-				}
-				
-				Hyst.logDebug("Mode " + mode.name + ", optimizing: " + op.toOptimize);
-				
-				params.add(op);
+				modeParams.bounds = invIntersection(mode, box);
+				modeParams.origDynamics = removeTTFlow(mode.flowDynamics);
 			}
 		}
 		
-		AffineOptimize.createAffineDynamics(optimizationType, params);
-		int curMode = 0;
+		AffineOptimize.optimizeDynamics(optimizationType, params);
 		
 		for (int i = 0; i < chainLen; ++i)
 		{
 			AutomatonMode chainMode = modeChain.get(i);
-			int numIntersectingModes = boxIntersectsCount.get(i);
-			LinkedHashMap <String, ExpressionInterval> avgFlow = averageFlowList.get(i);
-			chainMode.flowDynamics = avgFlow;
-
-			// accumulate results into avgFlow
-			for (ExpressionInterval ei : avgFlow.values())
-				ei.setInterval(null);
+			OptimizationParams op = params.get(i);
 			
-			Hyst.logDebug("Processing optimization result for " + chainMode.name);
+			chainMode.flowDynamics = op.result;
 			
-			for (int j = 0; j < numIntersectingModes; ++j)
-			{
-				OptimizationParams op = params.get(curMode++);
-				
-				for (Entry<String, ExpressionInterval> entry : op.result.entrySet())
-				{
-					String var = entry.getKey();
-					ExpressionInterval ei = entry.getValue();
-					Interval optI = null;
-					
-					if (ei.getExpression() instanceof Constant)
-					{
-						Constant c = (Constant)ei.getExpression();
-						optI = new Interval(c.getVal());
-					}
-					else
-						optI = entry.getValue().getInterval();
-					
-					Hyst.logDebug("Optimized " + var + " with range " + optI);
-					
-					if (avgFlow.get(var).getInterval() == null)
-						avgFlow.get(var).setInterval(optI);
-					else
-					{
-						if (avgFlow.get(var).getInterval().min > optI.min)
-							avgFlow.get(var).getInterval().min = optI.min;
-						
-						if (avgFlow.get(var).getInterval().max < optI.max)
-							avgFlow.get(var).getInterval().max = optI.max;
-					}
-				}
-			}
-			
-			Hyst.logDebug("Final Flow for " + chainMode.name + " was " + avgFlow);
+			Hyst.logDebug("Final Flow for " + chainMode.name + " was " + chainMode.flowDynamics);
 		}
 	}
 	
+	private static LinkedHashMap<String, ExpressionInterval> removeTTFlow(
+			LinkedHashMap<String, ExpressionInterval> flowDynamics)
+	{
+		LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
+		
+		rv.putAll(flowDynamics);
+		rv.remove(TT_VARIABLE);
+		
+		return rv;
+	}
+
+	private static HashMap<String, Interval> toVariableBounds(
+			HyperRectangle box, List<String> vars)
+	{
+		HashMap<String, Interval> rv = new HashMap<String, Interval>();
+		int i = 0;
+		
+		for (String var : vars)
+			rv.put(var, box.dims[i++]);
+		
+		return rv;
+	}
+	
+	private static List <String> getNonTTVaraibles(Component c)
+	{
+		List <String> vars = new ArrayList <String>();
+		vars.addAll(c.variables);
+		vars.remove(TT_VARIABLE);
+		
+		return vars;
+	}
+
 	/**
 	 * Get the intersection (as a hashmap of var->intervals) of a mode's invariant and a box
 	 * @param am the mode
@@ -376,7 +415,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	private static HashMap<String, Interval> invIntersection(AutomatonMode am, HyperRectangle box)
 	{
 		HashMap<String, Interval> rv = new HashMap<String, Interval>();
-		List <String> vars = am.automaton.variables;
+		List <String> vars = getNonTTVaraibles(am.automaton);
 		
 		HyperRectangle invBox = expressionToBox(am.invariant, vars);
 		HyperRectangle inter = HyperRectangle.intersection(invBox, box);
@@ -392,7 +431,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			List<AutomatonMode> modeList)
 	{
 		LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
-		List <String> vars = modeList.get(0).automaton.variables;
+		List <String> vars = getNonTTVaraibles(modeList.get(0).automaton);
 		
 		Hyst.logDebug("getting avg dynamics of modes: " + modeList);
 		
@@ -464,8 +503,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			Interval range = ranges.get(v);
 			
 			if (range == null)
-				throw new AutomatonExportException("Error converting mode invariant to box (cannot"
-						+ " extract range for variable '" + v + "': " + inv.toDefaultString());
+				range = new Interval(-Double.MAX_VALUE, Double.MAX_VALUE);
 			
 			rv.dims[i++] = range;
 		}
@@ -476,11 +514,16 @@ public class HybridizeMTRawPass extends TransformationPass
 	private static List<AutomatonMode> getIntersectingModes(Collection<AutomatonMode> oldModes, 
 			HyperRectangle box)
 	{
+		assert oldModes.size() > 0;
+		
 		ArrayList<AutomatonMode> rv = new ArrayList<AutomatonMode>();
+		
+		// remove time-triggered variable
+		List <String> vars = getNonTTVaraibles(oldModes.iterator().next().automaton);
 		
 		for (AutomatonMode am : oldModes)
 		{
-			HyperRectangle modeBox = expressionToBox(am.invariant, am.automaton.variables);
+			HyperRectangle modeBox = expressionToBox(am.invariant, vars);
 			
 			if (HyperRectangle.intersection(modeBox, box) != null)
 				rv.add(am);
@@ -632,8 +675,9 @@ public class HybridizeMTRawPass extends TransformationPass
 	private Expression makePiInvariant(HyperPoint p, double[] gradient)
 	{
 		double value = dotProduct(gradient, p);
+		List <String> vars = getNonTTVaraibles(ha);
 		
-		return PseudoInvariantPass.makeExpressionFromLinearInequality(ha.variables, gradient, Operator.LESSEQUAL, value);
+		return PseudoInvariantPass.makeExpressionFromLinearInequality(vars, gradient, Operator.LESSEQUAL, value);
 	}
 	
 	/**
@@ -645,8 +689,9 @@ public class HybridizeMTRawPass extends TransformationPass
 	private Expression makePiGuard(HyperPoint p, double[] gradient)
 	{
 		double value = dotProduct(gradient, p);
+		List <String> vars = getNonTTVaraibles(ha);
 		
-		return PseudoInvariantPass.makeExpressionFromLinearInequality(ha.variables, gradient, Operator.GREATEREQUAL, value);
+		return PseudoInvariantPass.makeExpressionFromLinearInequality(vars, gradient, Operator.GREATEREQUAL, value);
 	}
 	
 	/**
@@ -830,11 +875,27 @@ public class HybridizeMTRawPass extends TransformationPass
 	
 	public static class TimeSplittingElement extends SplittingElement
 	{
+		public TimeSplittingElement(double d)
+		{
+			time = d;
+		}
+
 		double time;
 	}
 	
 	public static class SpaceSplittingElement extends SplittingElement
 	{
+		public SpaceSplittingElement() 
+		{
+			
+		}
+		
+		public SpaceSplittingElement(HyperPoint pt, double[] grad)
+		{
+			this.pt = pt;
+			this.gradient = grad;
+		}
+		
 		HyperPoint pt;
 		double[] gradient;
 	}

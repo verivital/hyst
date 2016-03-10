@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
+import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -22,12 +24,42 @@ public class AffineOptimize
 {	
 	public static class OptimizationParams
 	{
-		// set these two as input (original dynamics, bounds)
-		public LinkedHashMap<String, ExpressionInterval> toOptimize = new LinkedHashMap<String, ExpressionInterval>(); 
-		public HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+		// set these two as input (newdynamics, descriptions of modes)
+		public LinkedHashMap<String, ExpressionInterval> newDynamics = new LinkedHashMap<String, ExpressionInterval>(); 
+		public ArrayList<OptimizationModeParams> origModes = new ArrayList<OptimizationModeParams>();
 		
 		// this is set as output
 		public LinkedHashMap<String, ExpressionInterval> result = new LinkedHashMap<String, ExpressionInterval>();
+		
+		public String toString()
+		{
+			StringBuilder sb = new StringBuilder(); 
+			sb.append("[OptimizationParams\n");
+			sb.append("newDynamics = " + newDynamics + "\n");
+			sb.append("origModes = " + origModes + "\n");
+			sb.append("result = " + result + "\n");
+			sb.append("]");
+			
+			return sb.toString();
+		}
+	}
+	
+	public static class OptimizationModeParams
+	{
+		// mode original dynamics and interval bounds for each variable
+		public LinkedHashMap<String, ExpressionInterval> origDynamics = new LinkedHashMap<String, ExpressionInterval>(); 
+		public HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+		
+		public String toString()
+		{
+			StringBuilder sb = new StringBuilder(); 
+			sb.append("[OptimizationModeParams\n");
+			sb.append("origDynamics = " + origDynamics + "\n");
+			sb.append("bounds = " + bounds + "\n");
+			sb.append("]");
+			
+			return sb.toString();
+		}
 	}
 	
 	/**
@@ -51,7 +83,7 @@ public class AffineOptimize
 		
 		createOptimizationParams(params, expList, boundsList);
 		
-		Hyst.logDebug("Created optimization params; expList=" + expList); 
+		Hyst.logDebug("Created optimization params; expList=" + expList + "; boundsList = " + boundsList); 
 		
 		List<Interval> optimizationResult;
 		
@@ -74,7 +106,7 @@ public class AffineOptimize
 			}
 			catch (NumberFormatException e)
 			{
-				throw new AutomatonExportException("malformed interval optimization param", e);
+				throw new AutomatonExportException("invalid interval optimization param", e);
 			}
 		}
 		else
@@ -91,41 +123,76 @@ public class AffineOptimize
 	 */
 	private static void createOptimizationResult(List<OptimizationParams> params, List<Interval> result)
 	{
-		int curParam = 0;
-		int curVar = 0;
-		
 		ArrayList <String> orderedVariables = new ArrayList <String>(); // same ordering as the flow hashmap		
-		orderedVariables.addAll(params.get(0).toOptimize.keySet());
-		int NUM_VARS = orderedVariables.size();
+		orderedVariables.addAll(params.get(0).newDynamics.keySet());
 		
-		for (Interval inter : result)
+		int resultIndex = 0;
+		
+		for (OptimizationParams op : params)
 		{
-			String var = orderedVariables.get(curVar);
-			OptimizationParams op = params.get(curParam);
-			Expression linearized = op.linearized.get(var);
-			
-			// make the min interval 0, so that we get something like: x + y + 4 + [0, 0.1]
-			double val = inter.min;
-			linearized = new Operation(Operator.ADD, linearized, new Constant(val));
-			linearized = PythonUtil.pythonSimplifyExpression(linearized);
-			
-			inter.min -= val;
-			inter.max -= val;
-			
-			// if the interval is zero, don't include it as an interval
-			double TOL = 0; //1e-9;
-			
-			if (Math.abs(inter.max) <= TOL)
-				op.result.put(var, new ExpressionInterval(linearized));
-			else
-				op.result.put(var, new ExpressionInterval(linearized, inter));
-			
-			// increment
-			if (++curVar == NUM_VARS)
+			for (OptimizationModeParams modeParams : op.origModes)
 			{
-				curVar = 0;
-				++curParam;
+				for (Entry<String, ExpressionInterval> entry : modeParams.origDynamics.entrySet())
+				{
+					Interval inter = result.get(resultIndex++);
+					String var = entry.getKey();
+					Expression newDynamics = op.newDynamics.get(var).asExpression();
+					ExpressionInterval curEi = op.result.get(var);
+					
+					if (curEi == null)
+						op.result.put(var, new ExpressionInterval(newDynamics, inter));
+					else
+						curEi.setInterval(Interval.union(inter, curEi.getInterval()));
+				}
 			}
+			
+			for (String v : orderedVariables)
+			{
+				double TOL = 1e-9;
+				ExpressionInterval ei = op.result.get(v);
+				Interval i = ei.getInterval();
+				
+				if (i.min > -TOL && i.max < TOL)
+				{
+					// clear interval
+					ei.setInterval(null);
+				}
+				else if (i.width() < TOL)
+				{
+					// shift it and clear interval
+					double subVal = i.min;
+					
+					Expression e = ei.getExpression();
+					Expression newE = null;
+					
+					if (subVal > 0)
+						newE = new Operation(Operator.ADD, e, new Constant(subVal));
+					else
+						newE = new Operation(Operator.SUBTRACT, e, new Constant(-subVal));
+					
+					ei.setExpression(newE);
+					ei.setInterval(null);
+				}
+				else if (!ei.getInterval().contains(0))
+				{
+					// shift it
+					double subVal = i.min;
+					
+					i.min -= subVal;
+					i.max -= subVal;
+					
+					Expression e = ei.getExpression();
+					Expression newE = null;
+					
+					if (subVal > 0)
+						newE = new Operation(Operator.ADD, e, new Constant(subVal));
+					else
+						newE = new Operation(Operator.SUBTRACT, e, new Constant(-subVal));
+						
+					ei.setExpression(newE);
+				}
+			}
+			
 		}
 	}
 
@@ -141,13 +208,22 @@ public class AffineOptimize
 	{
 		for (OptimizationParams op : params)
 		{
-			LinkedHashMap<String, ExpressionInterval> toOptimize = op.toOptimize;
-			HashMap<String, Interval> bounds = op.bounds;
-			
-			for (ExpressionInterval ei : toOptimize.values())
+			for (OptimizationModeParams modeParams : op.origModes)
 			{
-				expList.add(ei.asExpression());
-				boundsList.add(bounds);
+				HashMap<String, Interval> bounds = modeParams.bounds;
+				
+				for (Entry<String, ExpressionInterval> entry : modeParams.origDynamics.entrySet())
+				{
+					String var = entry.getKey();
+					Expression oldE = entry.getValue().asExpression();
+					Expression newE = op.newDynamics.get(var).asExpression();
+					
+					// toOptimize is origDynamics - newDynamics
+					Expression toOptimize = new Operation(Operator.SUBTRACT, oldE, newE);
+					
+					expList.add(toOptimize);
+					boundsList.add(bounds);
+				}
 			}
 		}
 	}
@@ -162,6 +238,7 @@ public class AffineOptimize
 			LinkedHashMap<String, ExpressionInterval> nonlinear,
 			HashMap<String, Interval> bounds)
 	{
+		double TOL = 1e-9;
 		LinkedHashMap<String, ExpressionInterval> rv = new LinkedHashMap<String, ExpressionInterval>();
 		int numVars = nonlinear.size();
 		double[][] jac = AutomatonUtil.estimateJacobian(nonlinear, bounds);
@@ -171,9 +248,9 @@ public class AffineOptimize
 		for (int derVar = 0; derVar < numVars; ++derVar)
 		{
 			String var = orderedVariables.get(derVar);
-			Expression derivativeExp = nonlinear.get(var).asExpression();
 			
 			// linear estimate is: JAC[derVar][0] * var0 + JAC[derVar][1] * var1 + ...
+			Expression nonlinearE = nonlinear.get(var).asExpression();
 			Expression linearized = null;
 			
 			for (int partialVar = 0; partialVar < numVars; ++partialVar)
@@ -194,6 +271,19 @@ public class AffineOptimize
 			// if jacobian was zero for all directions
 			if (linearized == null)
 				linearized = new Constant(0);
+			
+			// the offset constant is computed by computing f_lin(center)
+			// and adding a constant to make it equal to f_nonlin(center)
+			HyperPoint center = AutomatonUtil.boundsCenter(bounds, orderedVariables);
+			double linVal = AutomatonUtil.evaluateExpression(linearized, center, orderedVariables);
+			double nonlinVal = AutomatonUtil.evaluateExpression(nonlinearE, center, orderedVariables);
+			
+			double offset = nonlinVal - linVal;
+			
+			if (offset < -TOL)
+				linearized = new Operation(Operator.SUBTRACT, linearized, new Constant(-offset));
+			else if (offset > TOL)
+				linearized = new Operation(Operator.ADD, linearized, new Constant(offset));
 			
 			rv.put(var, new ExpressionInterval(linearized));
 		}

@@ -11,6 +11,14 @@ def _opt_fun((x, y)):
     'test function to optimize for scipy'
     return (1 - x * x) * y - x
 
+def _func0((x)):
+    'another test function'
+    return x ** 2 - (0.536 * x - 0.07182)
+
+def _func1((x)):
+    'another test function'
+    return x ** 2 - (0.619 * x - 0.09579025)
+
 class TestIntervalOptimize(unittest.TestCase):
     'Unit tests for pysim utils'
 
@@ -23,9 +31,29 @@ class TestIntervalOptimize(unittest.TestCase):
         result = scipy_optimize.opt_multi([(fun, lim)])[0]
 
         expected = [-1, 1]
-
         self.assertAlmostEquals(result[0], expected[0])
         self.assertAlmostEquals(result[1], expected[1])
+
+    def test_scipy_internal(self):
+        'test the internal optimization in scipy'
+
+        result = scipy_optimize.opt(_func0, [(0.2, 0.336)])
+
+        expected = [0, 0.00462]
+        self.assertAlmostEquals(result[0], expected[0], places=4)
+        self.assertAlmostEquals(result[1], expected[1], places=4)
+
+
+    def test_scipy2(self):
+        'test scipy optimization on a more complex function'
+
+        result = scipy_optimize.opt_multi([(_func0, [(0.2, 0.336),]), (_func1, [(0.236, 0.383),]),])
+
+        expected = [[0, 0.00462], [0, 0.0054]]
+
+        for i in xrange(2):
+            self.assertAlmostEquals(result[i][0], expected[i][0], places=4)
+            self.assertAlmostEquals(result[i][1], expected[i][1], places=4)
 
     def test_eval_eq(self):
         'test simple evaluation'

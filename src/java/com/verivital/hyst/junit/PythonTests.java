@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,11 +17,12 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationModeParams;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
+import com.verivital.hyst.util.AutomatonUtil;
 
 /**
  * All these tests require python, so if it fails to load, they will be skipped
@@ -42,6 +42,19 @@ public class PythonTests
 	{
     	PythonBridge.setBlockPython(block);
     }
+    
+    @Test
+    public void testAffineApprox()
+    {
+    	// this function tests that the produced affine approximation of (2 + 1)/2 is exactly 1.5
+    	LinkedHashMap<String, ExpressionInterval> flow = new LinkedHashMap<String, ExpressionInterval>();
+    	flow.put("x", new ExpressionInterval("(2 + 1)/2"));
+    	HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+    	bounds.put("x", new Interval(0, 1));
+    	
+    	Expression e = AffineOptimize.affineApprox(flow, bounds).get("x").asExpression();
+    	Assert.assertNull(AutomatonUtil.areExpressionsEqual("1.5", e));
+    }
 	
 	@Test
 	public void testAffineHybridized()
@@ -57,21 +70,27 @@ public class PythonTests
 		bounds.put("x", new Interval(1, 2));
 		bounds.put("y", new Interval(2, 3));
 		
+		LinkedHashMap<String, ExpressionInterval> avg = AffineOptimize.affineApprox(dy, bounds);
+		
 		// linear estimate is 
 		// y' == 7.5*x + 5.5*y
 		// interval for y should be [10.5, 12]
 		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		OptimizationParams op = new OptimizationParams();
-		op.toOptimize = dy;
-		op.bounds = bounds;
+		op.newDynamics = avg;
+		OptimizationModeParams modeParams = new OptimizationModeParams(); 
+		op.origModes.add(modeParams);
+		
+		modeParams.origDynamics = dy;
+		modeParams.bounds = bounds;
 		params.add(op);
 		
-		AffineOptimize.createAffineDynamics("basinhopping", params);
+		AffineOptimize.optimizeDynamics("basinhopping", params);
 		ExpressionInterval yEi = params.get(0).result.get("y");
 		
-		// the interval is offset to start at 0
-		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y - 12 + [0, 1.5]", yEi.toDefaultString());
+		Assert.assertNull(AutomatonUtil.areExpressionIntervalsEqual(
+				"7.5 * x + 5.5 * y - 12", 0, 1.5, yEi));
 	}
 
 	@Test
