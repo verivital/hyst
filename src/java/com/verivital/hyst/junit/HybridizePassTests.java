@@ -644,8 +644,6 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		Hyst.debugMode = true;
-		
 		Expression e1 = FormulaParser.parseValue("x ^ 2 - (0.536 * x - 0.07182)");
 		Expression e2 = FormulaParser.parseValue("x ^ 2 - (0.619 * x - 0.09579025)");
 		
@@ -684,6 +682,8 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
+		workingHere("working on this test, the failure is in standard form conversion." +
+				"write tests for it (maybe do validation BEFORE the conversion starts as well)");
 		Hyst.debugMode = true;
 
 		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1

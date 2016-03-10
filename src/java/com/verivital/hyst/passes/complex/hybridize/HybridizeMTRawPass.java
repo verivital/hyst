@@ -536,11 +536,13 @@ public class HybridizeMTRawPass extends TransformationPass
 	{
 		AutomatonMode firstMode = modeChain.get(0);
 		HyperRectangle firstBox = modeChainInvariants.get(0);
+		ArrayList <AutomatonTransition> originalTransitions = new ArrayList <AutomatonTransition>();
+		originalTransitions.addAll(ha.transitions);
 		
 		if (triggerMode == null)
 		{
 			// redirect outgoing transitions from _init to firstMode
-			for (AutomatonTransition at : ha.transitions)
+			for (AutomatonTransition at : originalTransitions)
 			{
 				if (at.from == initMode)
 					at.to = firstMode;
@@ -553,7 +555,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			// there was a trigger mode. We should consider all INCOMING transitions and
 			// redirect them to firstMode.
 			
-			for (AutomatonTransition at : ha.transitions)
+			for (AutomatonTransition at : originalTransitions)
 			{
 				if (at.to.name == triggerMode)
 					at.to = firstMode;
