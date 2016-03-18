@@ -275,7 +275,6 @@ public class ConfigurationMaker
 	private static void insertIntoLocMap(Expression e, Component root, LinkedHashMap<String, Expression> map, 
 			String desc)
 	{
-		
 		List <SymbolicState> startStates = SymbolicState.extractSymbolicStates(e, desc);
 		
 		for (SymbolicState ss : startStates)

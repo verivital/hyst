@@ -70,6 +70,9 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
 			Preconditions.convertDisjunctiveGuards(c);
 		
+		if (!skip[PreconditionsFlag.NO_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()])
+			Preconditions.convertDisjunctiveInitForbidden(c);
+		
 		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
 			Preconditions.convertBasicOperators(c);
 		
@@ -150,6 +153,39 @@ public class Preconditions
 	private static void convertDisjunctiveGuards(Configuration c)
 	{
 		new SplitDisjunctionGuardsPass().runVanillaPass(c, SplitDisjunctionGuardsPass.PRINT_PARAM);
+	}
+	
+	/**
+	 * Checks if a model has initital / forbidden states with a disjunction (or) in the expression. 
+	 * If so, it will convert it to 'standard' form.
+	 * @param c the configuration to check and modify
+	 */
+	private static void convertDisjunctiveInitForbidden(Configuration c)
+	{
+		byte initClassification = 0;
+		byte forbiddenClassification = 0;
+		
+		for (Expression e : c.init.values())
+			initClassification |= AutomatonUtil.classifyExpressionOps(e);
+		
+		for (Expression e : c.forbidden.values())
+			forbiddenClassification |= AutomatonUtil.classifyExpressionOps(e);
+		
+		if ((initClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
+		{
+			// init has an 'or', convert to standard form
+			// this is not supported (yet)
+			throw new PreconditionsFailedException("Initial states contain a disjunction, "
+					+ "but printer doesn't support these.");
+		}
+		
+		if ((forbiddenClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
+		{
+			// forbidden has an 'or', convert to standard form
+			// this is not supported (yet)
+			throw new PreconditionsFailedException("Forbidden states contain a disjunction, "
+					+ "but printer doesn't support these.");
+		}
 	}
 
 	/**
@@ -351,7 +387,8 @@ public class Preconditions
 	 */
 	private static void convertBasicOperators(Configuration config)
 	{
-		final byte SUPPORTED = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR | AutomatonUtil.OPS_BOOLEAN;
+		final byte SUPPORTED = AutomatonUtil.OPS_LINEAR | AutomatonUtil.OPS_NONLINEAR 
+				| AutomatonUtil.OPS_BOOLEAN | AutomatonUtil.OPS_DISJUNCTION;
 		
 		for (Entry<String, Expression> entry : config.init.entrySet())
 		{
