@@ -139,7 +139,7 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
             print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
               ' at state ' + str(solver.y) + ': ' + transition_names
 
-            events.append(("Multiple Transitions", solver.y, "red"))
+            events.append(SimulationEvent("Multiple Transitions", solver.y, "red"))
 
         t = active_transitions[0]
         events.append(SimulationEvent(str(t), solver.y, "grey"))
@@ -235,11 +235,12 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
     return rv
 
-def simulate_multi(q_list, end_time, max_jumps=500, solver_name='vode'):
+def simulate_multi(q_list, end_time, max_jumps=500, solver_name='vode', print_log=False):
     '''
     Simulate the hybrid automaton from multiple initial points
     q_list - a list of symbolic states: (AutomatonMode, point), where point is [x_0, ..., x_n]
     end_time - the total desired simulation time (discrete events may reduce the actual time)
+    print_log - should a log of states be printed to stdout?
 
     Returns a list of dicts with keys {'traces', 'events'} where:
     'traces': list of ModeSim objects
@@ -247,8 +248,13 @@ def simulate_multi(q_list, end_time, max_jumps=500, solver_name='vode'):
     '''
     rv = []
 
-    for q in q_list:
-        rv.append(simulate_one(q, end_time, max_jumps, solver_name))
+    for q_index in xrange(len(q_list)):
+        q = q_list[q_index]
+
+        if print_log:
+            print "Simulation {}/{} starting in mode '{}': {}".format(q_index+1, len(q_list), q[0].name, q[1])
+        
+        rv.append(simulate_one(q, end_time, max_jumps, solver_name=solver_name, print_log=print_log))
 
     return rv
 
@@ -296,7 +302,7 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     return (mode, point)
 
 def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, 
-                    reraise_errors=False, max_step=None):
+                    reraise_errors=False, max_step=None, print_log=False):
     '''
     Simulate the hybrid automaton from a single initial point 
     q - a symbolic state: (AutomatonMode, point), where point is [x_0, ..., x_n]
@@ -356,6 +362,9 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                 points = [state]
                 times = [jump_time]
                 traces.append(ModeSim(mode.name, points, times))
+
+                if print_log:
+                    print "{}: Jump to mode '{}' and state: {}".format(jump_time, mode.name, str(state))
                 
                 jumps_left -= 1
 
@@ -371,6 +380,10 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                 times.append(solver.t)
 
         last_state = points[-1]
+
+        if print_log:
+            print "{}: Last State: {}".format(end_time, str(last_state))
+
         events.append(SimulationEvent("End", last_state))   
     except SimulationException as e:
         events.append(SimulationEvent(str(e), solver.y, "red"))
@@ -453,7 +466,7 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
         if len(new_handles) < 10:
             plt.legend(new_handles, new_labels, loc='best')
         else:
-            print "warning: skipping legend (too many modes)"
+            print "Warning: skipping legend (too many modes)"
 
     if draw_func is not None:
         draw_func()

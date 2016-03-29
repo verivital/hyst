@@ -346,7 +346,9 @@ public class PySimPrinter extends ToolPrinter
 		
 		printNewline();
 		printLine("draw_events = len(result) == 1");
-		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events)");
+		printLine("shouldShow = False");
+		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
+				+ "show = shouldShow)");
 	}
 
 	private String getTimeParam()
