@@ -451,7 +451,7 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
                 new_handles.append(handle)
         
         if len(new_handles) < 10:
-            plt.legend(new_handles, new_labels)
+            plt.legend(new_handles, new_labels, loc='best')
         else:
             print "warning: skipping legend (too many modes)"
 
