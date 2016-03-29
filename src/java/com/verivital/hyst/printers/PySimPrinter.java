@@ -262,8 +262,8 @@ public class PySimPrinter extends ToolPrinter
 			}
 			catch (AutomatonExportException exception)
 			{
-				throw new AutomatonExportException("Error printing initial states in mode " + modeName,
-						exception);
+				throw new AutomatonExportException("Error printing initial states in mode " + modeName 
+						+ ":" + exception.getLocalizedMessage(), exception);
 			}
 			
 			appendIndentedLine(rv, "rv.append((ha.modes['" + modeName + "'], r))");

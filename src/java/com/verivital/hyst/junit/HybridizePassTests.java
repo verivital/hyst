@@ -682,7 +682,7 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		workingHere("working on this test, the failure is in standard form conversion." +
+		System.out.println(":working on this test, the failure is in standard form conversion." +
 				"write tests for it (maybe do validation BEFORE the conversion starts as well)");
 		Hyst.debugMode = true;
 
