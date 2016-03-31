@@ -313,7 +313,7 @@ public class FlattenAutomatonPass extends TransformationPass
 					rv.put(key, value);
 				else if (rvValue != null && value != null && !rvValue.equals(value))
 					throw new AutomatonExportException("Conflict merging expressions for '" + key + "': '" 
-							+ value + "' and '" + rvValue + "'");
+							+ value.toDefaultString() + "' and '" + rvValue.toDefaultString() + "'");
 			}
 		}
 		
