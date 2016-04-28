@@ -14,14 +14,11 @@ import com.verivital.hyst.geometry.HyperPoint;
  * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of {@link HyperPoint}s
  * (such as {@code HyperPoint[]}, {@code List<HyperPoint>}, etc.).
  *
- * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>. If found, it will stop.</p>
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUM)</tt>. If found, it will stop.</p>
  * 
  * All the HyperPoints must be the same dimensionality. Each Hyperpoint is a 
- * comma-separated (no spaces) list of numbers, surrounded by parenthesis. 
- * for example: (-3,4,15)
- * 
- * The parenthesis are necessary because -3 would be interpreted as an argument on it's own (since it
- * starts with a dash).
+ * comma-separated (no spaces) list of numbers 
+ * for example: -3,4,15
  *
  * @author Stanley Bak
  */
@@ -52,21 +49,12 @@ public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint>
 		{
 			String param = params.getParameter(counter);
 
-            if(param.startsWith("-"))
+			// negative numbers should be okay, but we should break if it's a flag
+			if(param.startsWith("-") && (param.length() < 2 || !Character.isDigit(param.charAt(1))))
 				break;
 
             for (String pointStr : param.split(" ")) 
             {
-            	if (!pointStr.startsWith("(") || !pointStr.endsWith(")"))
-            	{
-            		// deprecated: we don't have proper locale support in Hyst
-            		throw new CmdLineException(owner, "Argument should start and end with parenthesis: '" 
-            				+ pointStr + "'");
-            	}
-            	
-            	// trim parenthesis
-            	pointStr = pointStr.substring(1, pointStr.length() - 1);
-            	
             	String[] dims = pointStr.split(",");
             	
             	if (numDims == -1)

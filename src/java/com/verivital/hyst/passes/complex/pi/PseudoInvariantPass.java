@@ -68,7 +68,7 @@ public class PseudoInvariantPass extends TransformationPass
 	{
 		String s = super.getParamHelp();
 		s += "\nwhere POINT and DIR are each comma-separated (no spaces) lists of numbers, "
-				+ "surrounded by parenthesis, like (1,-2,3)";
+				+ "surrounded by parenthesis, like 1,-2,3";
 		
 		return s;
 	}
@@ -116,15 +116,15 @@ public class PseudoInvariantPass extends TransformationPass
 		for (String m : modes)
 			rv.append(" " + m);
 		
-		rv.append(" -points");
+		rv.append(" -points ");
 		
 		for (HyperPoint p : points)
-			rv.append(" (" + StringOperations.join("),(", p.dims) + ")");
+			rv.append(StringOperations.join(",", p.dims));
 		
-		rv.append(" -dirs");
+		rv.append(" -dirs ");
 		
 		for (HyperPoint p : dirs)
-			rv.append(" (" + StringOperations.join("),(", p.dims) + ")");
+			rv.append(StringOperations.join(",", p.dims));
 		
 		return rv.toString();
 	}

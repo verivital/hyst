@@ -12,7 +12,7 @@ import org.kohsuke.args4j.spi.Setter;
  * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of {@link Doubles}s
  * (such as {@code Double[]}, {@code List<Double>}, etc.).
  *
- * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>. If found, it will stop.</p>
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUMBER)</tt>. If found, it will stop.</p>
  *
  * @author Stanley Bak
  */
@@ -42,21 +42,19 @@ public class DoubleArrayOptionHandler extends OptionHandler<Double>
 		{
 			String param = params.getParameter(counter);
 
-            if(param.startsWith("-"))
+			// negative numbers should be okay, but we should break if it's a flag
+            if(param.startsWith("-") && (param.length() < 2 || !Character.isDigit(param.charAt(1))))
 				break;
 
-            for (String p : param.split(" ")) 
-            {
-            	try
-            	{
-            		setter.addValue(Double.parseDouble(p));
-            	}
-            	catch (NumberFormatException e)
-            	{
-            		// deprecated: we don't have proper locale support in Hyst
-            		throw new CmdLineException(owner, "Error parsing argument as number: '" + p + "'");
-            	}
-            }
+        	try
+        	{
+        		setter.addValue(Double.parseDouble(param));
+        	}
+        	catch (NumberFormatException e)
+        	{
+        		// deprecated: we don't have proper locale support in Hyst
+        		throw new CmdLineException(owner, "Error parsing argument as number: '" + param + "'");
+        	}
 		}
 
         return counter;
