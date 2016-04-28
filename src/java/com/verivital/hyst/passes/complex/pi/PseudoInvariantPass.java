@@ -1,6 +1,7 @@
 package com.verivital.hyst.passes.complex.pi;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
@@ -42,7 +43,7 @@ import com.verivital.hyst.util.StringOperations;
  */
 public class PseudoInvariantPass extends TransformationPass
 {
-	@Option(name="-modes", required=true, handler=StringArrayOptionHandler.class,usage="mode names", 
+	@Option(name="-modes", required=false, handler=StringArrayOptionHandler.class,usage="mode names", 
 			metaVar="MODE1 MODE2 ...")
 	private List <String> modes;
 
@@ -81,11 +82,22 @@ public class PseudoInvariantPass extends TransformationPass
 	
 	private void checkParams()
 	{
+		if (modes == null)
+		{
+			if (ha.modes.size() == 1)
+			{
+				modes = new ArrayList <String>();
+				modes.add(ha.modes.values().iterator().next().name);
+			}
+			else
+				throw new AutomatonExportException("Multi-mode automaton requires the mode name in params.");
+		}
+			
 		int len = modes.size();
-		
+			
 		if (len == 0)
 			throw new AutomatonExportException("Expected at least one mode in params.");
-		
+
 		if (points.size() != len)
 			throw new AutomatonExportException("Expected " + len + " points in params, got " + points.size());
 		else if (dirs.size() != len)
