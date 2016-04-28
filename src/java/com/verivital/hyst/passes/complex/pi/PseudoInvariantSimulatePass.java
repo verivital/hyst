@@ -106,7 +106,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		s.append(PySimPrinter.automatonToString(automaton));
 		
 		String point = "[" + StringOperations.join(",", start.hp.dims) + "]";
-		String timesStr = "(" + StringOperations.join(",", times.toArray(new Double[0])) +")";
+		String timesStr = "[" + StringOperations.join(",", times.toArray(new Double[0])) +"]";
 		
 		s.append("print simulate_times(define_ha(), '" + start.modeName + "', " 
 				+ point + ", " + timesStr + ")");
