@@ -14,6 +14,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -256,20 +257,20 @@ public class PrintersTest {
 		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
 		
 		FlowPrinter.convertInitialStatesToUrgent(c);
-
+		
 		BaseComponent ha = (BaseComponent) c.root;
-		AutomatonMode init = ha.modes.get("_init");
+		AutomatonMode init = ha.modes.get(ConvertToStandardForm.INIT_MODE_NAME);
+		
+		Assert.assertNotNull(init);
+		
 		boolean found = false;
 
 		for (AutomatonTransition at : ha.transitions) {
 			if (at.from == init && at.to.name.equals("stopped")) {
 				found = true;
 
-				ExpressionInterval eiX = at.reset.get("x");
-				ExpressionInterval eiT = at.reset.get("t");
-
-				Assert.assertTrue("reset sets x to 5", eiX.getInterval().isPoint() && eiX.getInterval().min == 5);
-				Assert.assertTrue("reset sets t to 6", eiT.getInterval().isPoint() && eiT.getInterval().min == 6);
+				Assert.assertTrue("reset sets x to 5", at.guard.toDefaultString().contains("x = 5"));
+				Assert.assertTrue("reset sets t to 6", at.guard.toDefaultString().contains("t = 6"));
 			}
 		}
 

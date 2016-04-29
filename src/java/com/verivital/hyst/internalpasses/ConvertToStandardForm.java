@@ -1,6 +1,7 @@
 package com.verivital.hyst.internalpasses;
 
 
+import java.util.ArrayList;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.grammar.formula.Constant;
@@ -79,10 +80,12 @@ public class ConvertToStandardForm
 		init.flowDynamics = null;
 		init.urgent = true;
 		init.invariant = Constant.TRUE;
+		ArrayList <Expression> initExpressions = new ArrayList<Expression>();
 		
 		for (Entry<String, Expression> e : config.init.entrySet())
 		{
 			Expression initCondition = e.getValue();
+			initExpressions.add(initCondition);
 			AutomatonMode m = ha.modes.get(e.getKey());
 			AutomatonTransition at = ha.createTransition(init, m);
 			
