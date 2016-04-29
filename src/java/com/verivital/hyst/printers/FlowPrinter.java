@@ -25,7 +25,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
@@ -567,11 +566,34 @@ public class FlowPrinter extends ToolPrinter
 		if (!areIntervalInitialStates(config))
 			convertInitialStatesToUrgent(config);
 		
+		checkBoundedInitialStates(config);
+		
 		AutomatonUtil.convertUrgentTransitions(ha, config);
 		
 		printDocument(originalFilename);
 	}
 	
+	private static void checkBoundedInitialStates(Configuration c)
+	{
+		// there must be bounds on every variable in the initial state for Flow* to work
+		for (Entry<String, Expression> e : c.init.entrySet())
+		{
+			Expression exp = e.getValue();
+			String mode = e.getKey();
+			
+			Collection <String> allVars = AutomatonUtil.getVariablesInExpression(exp);
+		
+			for (String v : c.root.variables)
+			{
+				if (!allVars.contains(v))
+					throw new AutomatonExportException("Flow* requires bounds be defined for all "
+							+ "variables in initial states. Variable '" + v + "' was not bounded in"
+									+ " initial mode '" + mode + "' with expression: " + 
+										exp.toDefaultString());
+			}
+		}
+	}
+
 	/**
 	 * Does the following expression give a interval range for every variable?
 	 * @param ex the expression to check
