@@ -40,12 +40,43 @@ public class RangeExtractor
 		try
 		{
 			Map<String, Double> constantMap = getConstants(expression);
-			getVariableRangesRecursive(expression, ranges, null, constantMap);
+			getVariableRangesRecursive(expression, ranges, null, constantMap, false);
 		}
 		catch (AutomatonExportException e)
 		{
 			throw new AutomatonExportException("Error while parsing expression: " + 
 					expression.toDefaultString(), e);
+		}
+	}
+	
+	/**
+	 * Get ranges for variables in a logical expression, ignores unsupported
+	 * expressions
+	 * @param expression the expression to parse
+	 * @param ranges where to store the ranges for the variables we encounter
+	 * @throws EmptyRangeException if expression is Constant.FALSE or otherwise unsatisfiable for any variable in 'variables'
+	 * @throws ConstantMismatchException if there are conflicting assignments to constants
+	 */
+	public static void getWeakVariableRanges(Expression expression, Map <String, Interval> ranges) 
+			throws EmptyRangeException, ConstantMismatchException
+	{
+		if (expression == null)
+			throw new NullPointerException("null expression passed into getVariableRanges()");
+			
+		try
+		{
+			Map<String, Double> constantMap = getConstants(expression);
+			getVariableRangesRecursive(expression, ranges, null, constantMap, true);
+		}
+		catch (AutomatonExportException e)
+		{
+			throw new AutomatonExportException("Error while parsing expression: " + 
+					expression.toDefaultString(), e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException("Unsupported expression during weak"
+					+ "range extraction (should never happen): " + expression.toDefaultString(), e);
 		}
 	}
 	
@@ -148,7 +179,7 @@ public class RangeExtractor
 		{
 			Map<String, Double> constantMap = getConstants(expression);
 			
-			getVariableRangesRecursive(expression, ranges, equalVars, constantMap);
+			getVariableRangesRecursive(expression, ranges, equalVars, constantMap, false);
 			
 			if (ranges.size() > 0)
 				rv = mergeAllRanges(ranges.values());
@@ -231,12 +262,13 @@ public class RangeExtractor
 	 * @param ranges the place to store them
 	 * @param vars a set of variables we are interested in. if null then get all variables
 	 * @param constantMap a map of variableName -> value for all constants in the original expression
+	 * @param ignoreUnsupported should we ignore unsupported expressions, or raise an exception?
 	 * @throws EmptyRangeException if expression is Constant.FALSE or otherwise unsatisfiable for the selected variables
 	 * @throws UnsupportedConditionException if the expression contains non-interval operations on the desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression, 
 			Map <String, Interval> ranges, Collection <String> vars, 
-			Map<String, Double> constantMap) throws EmptyRangeException, UnsupportedConditionException
+			Map<String, Double> constantMap, boolean ignoreUnsupported) throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();
 		
@@ -251,8 +283,8 @@ public class RangeExtractor
 				TreeMap <String, Interval> left = new TreeMap <String, Interval>();
 				TreeMap <String, Interval> right = new TreeMap <String, Interval>();
 				
-				getVariableRangesRecursive(leftExp, ranges, vars, constantMap);
-				getVariableRangesRecursive(rightExp, ranges, vars, constantMap);
+				getVariableRangesRecursive(leftExp, ranges, vars, constantMap, ignoreUnsupported);
+				getVariableRangesRecursive(rightExp, ranges, vars, constantMap, ignoreUnsupported);
 					
 				ranges = mergeTreeRanges(left,right);
 			}
@@ -314,14 +346,22 @@ public class RangeExtractor
 							if (op == Operator.EQUAL)
 								shouldSkip = true;
 							else
-								throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
-									"side should be variable, the other side a constant): " + expression.toDefaultString());
+							{
+								if (ignoreUnsupported)
+									shouldSkip = true;
+								else
+									throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
+										"side should be variable, the other side a constant): " + expression.toDefaultString());
+							}
 						}
 					}
 				}
 				else
 				{
-					throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
+					if (ignoreUnsupported)
+						shouldSkip = true;
+					else
+						throw new UnsupportedConditionException("Unsupported condition for range extraction (one " +
 							"side should be variable, the other side a constant): " + expression.toDefaultString());
 				}
 				
@@ -361,9 +401,12 @@ public class RangeExtractor
 						
 						i.max = val;
 					}
-					else 
-						throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
+					else
+					{
+						if (!ignoreUnsupported)
+							throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
 									+ expression.toDefaultString());
+					}
 					
 					if (i.max < i.min)
 						throw new EmptyRangeException("range for " + varName + " is unsatisfiable");
@@ -389,9 +432,11 @@ public class RangeExtractor
 		else if (expression == Constant.FALSE) // if any variable is false, the range for all is empty
 			throw new EmptyRangeException("expression contains FALSE");
 		else if (expression != Constant.TRUE && expressionContainsVariables(expression, vars))
-			throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
+		{
+			if (!ignoreUnsupported)
+				throw new UnsupportedConditionException("Unsupported expression during range extraction: " 
 					+ expression.toDefaultString());
-		
+		}
 	}
 	
 	/**

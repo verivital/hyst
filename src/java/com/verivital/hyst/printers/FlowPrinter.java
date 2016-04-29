@@ -6,10 +6,10 @@ package com.verivital.hyst.printers;
 
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -391,24 +391,7 @@ public class FlowPrinter extends ToolPrinter
 	
 	private void printFlowRangeConditions(Expression ex, boolean isAssignment)
 	{
-		TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
-		
-		try
-		{
-			RangeExtractor.getVariableRanges(ex, ranges);
-		} 
-		catch (EmptyRangeException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} 
-		catch (ConstantMismatchException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		catch (UnsupportedConditionException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} 
+		HashMap<String, Interval> ranges = getExpressionVariableRanges(ex); 
 		
 		for (Entry<String, Interval> e : ranges.entrySet())
 		{
@@ -435,6 +418,56 @@ public class FlowPrinter extends ToolPrinter
 				}
 			}
 		}
+	}
+
+	private static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
+	{
+		HashMap <String, Interval> ranges = new HashMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		
+		return ranges;
+	}
+	
+	/**
+	 * Gets the weak ranges for the given expression. Only interval ranges are
+	 * extracted... other ranges are ignored.
+	 * @param ex the input expression
+	 * @return
+	 */
+	private static Map<String, Interval> getExpressionWeakVariableRanges(Expression ex)
+	{
+		HashMap <String, Interval> ranges = new HashMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getWeakVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		
+		return ranges;
 	}
 
 	private void printJumps()
@@ -605,7 +638,7 @@ public class FlowPrinter extends ToolPrinter
 		
 		try
 		{
-			TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
+			HashMap <String, Interval> ranges = new HashMap <String, Interval>();
 			RangeExtractor.getVariableRanges(ex, ranges);
 		} 
 		catch (EmptyRangeException e)
@@ -651,7 +684,52 @@ public class FlowPrinter extends ToolPrinter
 	 */
 	public static void convertInitialStatesToUrgent(Configuration c)
 	{
+		Map <String, Interval> weakVarBounds = new HashMap <String, Interval>();
+		
+		// get weak bounds for each variable over all the initial states
+		for (Entry<String, Expression> e : c.init.entrySet())
+		{
+			Map <String, Interval> bounds = getExpressionWeakVariableRanges(e.getValue());
+			
+			for (Entry<String, Interval> boundsEntry : bounds.entrySet())
+			{
+				String var = boundsEntry.getKey();
+				Interval i = boundsEntry.getValue();
+				
+				// merge i into the existing interval bounds
+				Interval cur = weakVarBounds.get(var);
+				
+				if (cur == null)
+					weakVarBounds.put(var, i);
+				else
+					weakVarBounds.put(var, Interval.union(cur, i));
+			}
+		}
+		
 		ConvertToStandardForm.convertInit(c);
+		
+		// apply weak bounds for each variable to initial state
+		Expression init = c.init.values().iterator().next();
+		
+		for (Entry<String, Interval> e : weakVarBounds.entrySet())
+		{
+			String v = e.getKey();
+			Interval i = e.getValue();
+			
+			if (i.min != -Double.MAX_VALUE)
+			{
+				Operation cond = new Operation(i.min, Operator.LESSEQUAL, v); 
+				init = Expression.and(init, cond);
+			}
+			
+			if (i.max != Double.MAX_VALUE)
+			{
+				Operation cond = new Operation(v, Operator.LESSEQUAL, i.max); 
+				init = Expression.and(init, cond);
+			}
+		}
+		
+		c.init.put(ConvertToStandardForm.INIT_MODE_NAME, init);
 		
 		c.validate();
 	}

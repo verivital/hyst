@@ -21,7 +21,6 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.FlowPrinter;
