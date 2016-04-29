@@ -44,11 +44,11 @@ public class HyperPointArrayOptionHandler extends OptionHandler<HyperPoint>
 	{
 		int counter = 0;
 		int numDims = -1;
-				
+		
 		for (; counter < params.size(); counter++) 
 		{
 			String param = params.getParameter(counter);
-
+			
 			// negative numbers should be okay, but we should break if it's a flag
 			if(param.startsWith("-") && (param.length() < 2 || !Character.isDigit(param.charAt(1))))
 				break;

@@ -36,15 +36,15 @@ import com.verivital.hyst.util.StringOperations;
  * -points POINT1 POINT2 ...
  * -dirs DIR1 DIR2 ...
  * 
- * where PT and DIR are comma-separated lists of doubles, surrounded by parenthesis, like (1,-2,3)
+ * where PT and DIR are comma-separated lists of doubles, like 1,-2,3
  * 
  * @author Stanley Bak (October 2014)
  *
  */
 public class PseudoInvariantPass extends TransformationPass
 {
-	@Option(name="-modes", required=false, handler=StringArrayOptionHandler.class,usage="mode names", 
-			metaVar="MODE1 MODE2 ...")
+	@Option(name="-modes", handler=StringArrayOptionHandler.class,
+			usage="mode names (optional)", metaVar="MODE1 MODE2 ...")
 	private List <String> modes;
 
 	@Option(name="-points", required=true, handler=HyperPointArrayOptionHandler.class,
@@ -52,7 +52,7 @@ public class PseudoInvariantPass extends TransformationPass
 	private List <HyperPoint> points;
 	
 	@Option(name="-dirs", required=true, handler=HyperPointArrayOptionHandler.class,
-			usage="directions (corresponding to each point) for each pseudo-invariant hyperplane", 
+			usage="directions from each point in the guard-enabling direction", 
 			metaVar="DIR1 DIR2 ...")
 	private List <HyperPoint> dirs;
 	
@@ -68,8 +68,7 @@ public class PseudoInvariantPass extends TransformationPass
 	public String getParamHelp()
 	{
 		String s = super.getParamHelp();
-		s += "\nwhere POINT and DIR are each comma-separated (no spaces) lists of numbers, "
-				+ "surrounded by parenthesis, like 1,-2,3";
+		s += "\nwhere POINT# and DIR# are each comma-separated (no spaces) lists of numbers, like 1,-2,3";
 		
 		return s;
 	}
@@ -114,7 +113,7 @@ public class PseudoInvariantPass extends TransformationPass
 	
 	/**
 	 * Make the param string for calling this programatically
-	 * @param modes 
+	 * @param modes (may be null for single-mode automata)
 	 * @param points
 	 * @param dirs
 	 * @return a string you can call runPass() with
@@ -123,20 +122,23 @@ public class PseudoInvariantPass extends TransformationPass
 	{
 		StringBuilder rv = new StringBuilder();
 		
-		rv.append("-modes");
+		if (modes != null)
+		{
+			rv.append("-modes ");
+			
+			for (String m : modes)
+				rv.append(m + " ");
+		}
 		
-		for (String m : modes)
-			rv.append(" " + m);
-		
-		rv.append(" -points ");
+		rv.append("-points");
 		
 		for (HyperPoint p : points)
-			rv.append(StringOperations.join(",", p.dims));
+			rv.append(" " + StringOperations.join(",", p.dims));
 		
-		rv.append(" -dirs ");
+		rv.append(" -dirs");
 		
 		for (HyperPoint p : dirs)
-			rv.append(StringOperations.join(",", p.dims));
+			rv.append(" " + StringOperations.join(",", p.dims));
 		
 		return rv.toString();
 	}
@@ -154,7 +156,7 @@ public class PseudoInvariantPass extends TransformationPass
 		{
 			AutomatonMode am = ha.modes.get(modes.get(i));
 			HyperPoint point = points.get(i);
-			HyperPoint dir = points.get(i);
+			HyperPoint dir = dirs.get(i);
 			
 			createPseudoInvariant(am, point, dir);
 		}

@@ -18,6 +18,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -563,74 +564,72 @@ public class FlowPrinter extends ToolPrinter
 		if (ha.modes.containsKey("start"))
 			throw new AutomatonExportException("mode named 'start' is not allowed in Flow* printer");
 		
-		if (config.init.size() > 1)
-		{
-			Hyst.log("Multiple initial modes detected (not supported by Flow*). Converting to single urgent one.");
-			convertInitialModes(config);
-		}
+		if (!areIntervalInitialStates(config))
+			convertInitialStatesToUrgent(config);
 		
 		AutomatonUtil.convertUrgentTransitions(ha, config);
 		
 		printDocument(originalFilename);
 	}
-
+	
 	/**
-	 * Use urgent modes to convert a configuration with multiple initial modes to one with a single initial mode
-	 * @param c the configuration to convert
+	 * Does the following expression give a interval range for every variable?
+	 * @param ex the expression to check
+	 * @return true iff the expression imposes interval ranges
 	 */
-	public static void convertInitialModes(Configuration c)
+	private static boolean isIntervalRangeCondition(Expression ex)
 	{
-		final String INIT_NAME = "_init";
-		BaseComponent ha = (BaseComponent)c.root;
-		Collection <String> constants = ha.constants.keySet();
+		boolean rv = true;
 		
-		AutomatonMode init = ha.createMode(INIT_NAME);
-		init.invariant = Constant.TRUE;
-		init.urgent = true;
-		init.flowDynamics = null;
-		
-		for (Entry<String, Expression> e : c.init.entrySet())
+		try
 		{
-			String modeName = e.getKey();
-			AutomatonTransition at = ha.createTransition(init, ha.modes.get(modeName)); 
-			at.guard = Constant.TRUE;
-			
-			Expression resetExp = removeConstants(e.getValue(), constants);
-			
-			TreeMap <String, Interval> ranges = new TreeMap <String, Interval>(); 
-			try
+			TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
+			RangeExtractor.getVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			rv = false;
+		} 
+		catch (ConstantMismatchException e)
+		{
+			rv = false;
+		}
+		catch (UnsupportedConditionException e)
+		{
+			rv = false;
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Test if each initial mode can be defined just using intervals over the variables
+	 * @param c the configuration
+	 * @return true iff using intervals is enough
+	 */
+	private static boolean areIntervalInitialStates(Configuration config)
+	{
+		boolean rv = true;
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		for (Entry<String, Expression> e : config.init.entrySet())
+		{
+			if (!isIntervalRangeCondition(removeConstants(e.getValue(), ha.constants.keySet())))
 			{
-				RangeExtractor.getVariableRanges(e.getValue(), ranges);
-			} 
-			catch (EmptyRangeException e1)
-			{
-				throw new AutomatonExportException("Empty range in initial mode: " + modeName, e1);
-			}
-			catch (ConstantMismatchException e2)
-			{
-				throw new AutomatonExportException("Constant mismatch in initial mode: " + modeName, e2);
-			}
-			catch (UnsupportedConditionException e2)
-			{
-				throw new AutomatonExportException("Non-box initial mode: " + modeName, e2);
-			} 
-			
-			Collection <String> vars = AutomatonUtil.getVariablesInExpression(resetExp);
-			
-			for (String var : vars)
-			{
-				Interval i = ranges.get(var);
-				
-				if (i == null)
-					throw new AutomatonExportException("Variable " + var + " not defined in initial mode " + modeName);
-				
-				at.reset.put(var, new ExpressionInterval(new Constant(0), i));
+				rv = false;
+				break;
 			}
 		}
 		
-		Expression firstReachableState = c.init.values().iterator().next();
-		c.init.clear();
-		c.init.put(INIT_NAME, firstReachableState);
+		return rv;
+	}
+
+	/**
+	 * Make a single urgent initial mode, with guards for each expression defining the old initial states.
+	 */
+	public static void convertInitialStatesToUrgent(Configuration c)
+	{
+		ConvertToStandardForm.convertInit(c);
 		
 		c.validate();
 	}

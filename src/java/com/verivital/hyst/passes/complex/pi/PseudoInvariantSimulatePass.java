@@ -71,15 +71,14 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 		{
 			AutomatonMode mode = ha.modes.get(ss.modeName);
 			double[] gradient = AutomatonUtil.getGradientAtPoint(mode, ss.hp);
-			double[] invariantDir = negate(gradient);
 			
 			modes.add(mode.name);
 			points.add(new HyperPoint(ss.hp));
-			dirs.add(new HyperPoint(invariantDir));
+			dirs.add(new HyperPoint(gradient));
 		}
 		
 		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs);
-		Hyst.log("Calling transitional pseudo-invariant pass with params: " + paramString);
+		Hyst.log("Calling hyperplane pseudo-invariant pass with params: " + paramString);
 				
 		// run the traditional pseudo-invariants pass
 		new PseudoInvariantPass().runTransformationPass(config, paramString);
@@ -129,16 +128,6 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			
 			rv.add(new SymbolicStatePoint(mode, pt));
 		}
-		
-		return rv;
-	}
-
-	private double[] negate(double[] input)
-	{
-		double[] rv = new double[input.length];
-		
-		for (int i = 0; i < input.length; ++i)
-			rv[i] = -input[i];
 		
 		return rv;
 	}

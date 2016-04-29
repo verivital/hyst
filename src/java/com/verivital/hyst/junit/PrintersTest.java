@@ -255,7 +255,7 @@ public class PrintersTest {
 		// add a second initial mode
 		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
 		
-		FlowPrinter.convertInitialModes(c);
+		FlowPrinter.convertInitialStatesToUrgent(c);
 
 		BaseComponent ha = (BaseComponent) c.root;
 		AutomatonMode init = ha.modes.get("_init");
