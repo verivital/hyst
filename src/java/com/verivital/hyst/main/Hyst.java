@@ -3,6 +3,8 @@ package com.verivital.hyst.main;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -185,7 +187,7 @@ public class Hyst
 		Expression.expressionPrinter = null; // this should be assigned by the pass / printer as needed
 
 		long startMs = System.currentTimeMillis();
-		ToolPrinter printer = printers[printerIndex];
+		ToolPrinter printer = newToolPrinterInstance(printers[printerIndex]);
 
 		try
 		{
@@ -389,8 +391,9 @@ public class Hyst
 					else
 					{
 						String passParam = args[++i];
-
-						requestedPasses.add(new RequestedTransformationPass(tp, passParam));
+						
+						TransformationPass instance = newTransformationPassInstance(tp);
+						requestedPasses.add(new RequestedTransformationPass(instance, passParam));
 					}
 
 					processedArg = true;
@@ -554,6 +557,78 @@ public class Hyst
 			System.exit(ExitCode.SUCCESS.ordinal());
 
 		return rv;
+	}
+
+	private static TransformationPass newTransformationPassInstance(TransformationPass tp)
+	{
+		// create a new instance of the transformation pass to give it fresh state
+		Class<? extends TransformationPass> cl = tp.getClass();
+		Constructor<? extends TransformationPass> ctor;
+		TransformationPass instance = null;
+		
+		try
+		{
+			ctor = cl.getConstructor();
+			instance = ctor.newInstance();
+		}
+		catch (NoSuchMethodException e)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e);
+		}
+		catch (InstantiationException e2)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e2);
+		}
+		catch (IllegalArgumentException e3)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e3);
+		}
+		catch (IllegalAccessException e4)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e4);
+		}
+		catch (InvocationTargetException e5)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e5);
+		}
+		
+		return instance;
+	}
+	
+	private static ToolPrinter newToolPrinterInstance(ToolPrinter tp)
+	{
+		// create a new instance of the transformation pass to give it fresh state
+		Class<? extends ToolPrinter> cl = tp.getClass();
+		Constructor<? extends ToolPrinter> ctor;
+		ToolPrinter instance = null;
+		
+		try
+		{
+			ctor = cl.getConstructor();
+			instance = ctor.newInstance();
+		}
+		catch (NoSuchMethodException e)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e);
+		}
+		catch (InstantiationException e2)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e2);
+		}
+		catch (IllegalArgumentException e3)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e3);
+		}
+		catch (IllegalAccessException e4)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e4);
+		}
+		catch (InvocationTargetException e5)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e5);
+		}
+		
+		return instance;
 	}
 
 	/**
