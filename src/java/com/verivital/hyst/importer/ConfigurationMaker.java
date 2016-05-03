@@ -62,7 +62,7 @@ public class ConfigurationMaker
 		rv.settings.spaceExConfig = doc.getConfig();
 		
 		rv.validate();
-		
+
 		return rv;
 	}
 

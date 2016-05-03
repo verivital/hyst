@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="controli">
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x" type="real" local="true" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="close" x="307.0" y="160.0" width="214.0" height="100.0">
+      <flow>x' == 0 &amp;&amp;
+y' == 0</flow>
+    </location>
+  </component>
+  <component id="sys1">
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <bind component="controli" as="inst" x="511.0" y="100.0" width="104.0" height="86.0">
+      <map key="y">y</map>
+    </bind>
+  </component>
+</sspaceex>
+
