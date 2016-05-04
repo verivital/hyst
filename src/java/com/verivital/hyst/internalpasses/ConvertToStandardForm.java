@@ -26,8 +26,9 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
  */
 public class ConvertToStandardForm
 {
-	public static String INIT_MODE_NAME = "_init";
-	public static String ERROR_MODE_NAME = "_error";
+	// package visibility. For external access use ConvertToStandardForm.getInitMode() and getErrorMode()
+	static String INIT_MODE_NAME = "_init";
+	static String ERROR_MODE_NAME = "_error";
 	
 	public static void run(Configuration config)
 	{

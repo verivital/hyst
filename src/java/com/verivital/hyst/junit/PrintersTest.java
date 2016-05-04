@@ -259,7 +259,7 @@ public class PrintersTest {
 		FlowPrinter.convertInitialStatesToUrgent(c);
 		
 		BaseComponent ha = (BaseComponent) c.root;
-		AutomatonMode init = ha.modes.get(ConvertToStandardForm.INIT_MODE_NAME);
+		AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
 		
 		Assert.assertNotNull(init);
 		

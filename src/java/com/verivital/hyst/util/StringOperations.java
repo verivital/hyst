@@ -1,7 +1,11 @@
 package com.verivital.hyst.util;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
+import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.printers.ToolPrinter;
 
 /**
@@ -55,5 +59,47 @@ public class StringOperations
 			strings[i] = ToolPrinter.doubleToString(list[i]);
 		
 		return join(sep, strings);
+	}
+	
+	public static String makeDefaultEiMapString(Map<String, ExpressionInterval> l)
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		boolean first = true;
+		
+		for (Entry<String, ExpressionInterval> e : l.entrySet())
+		{
+			if (first)
+				first = false;
+			else
+				sb.append(", ");
+			
+			sb.append(e.getKey() + ": " + e.getValue().toDefaultString());
+		}
+		
+		sb.append("]");
+		
+		return sb.toString();
+	}
+	
+	public static String makeDefaultExpressionListString(List<Expression> l)
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		boolean first = true;
+		
+		for (Expression e : l)
+		{
+			if (first)
+				first = false;
+			else
+				sb.append(", ");
+			
+			sb.append(e.toDefaultString());
+		}
+		
+		sb.append("]");
+		
+		return sb.toString();
 	}
 }

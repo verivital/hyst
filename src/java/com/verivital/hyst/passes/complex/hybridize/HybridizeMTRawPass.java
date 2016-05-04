@@ -26,6 +26,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.basic.RemoveDiscreteUnreachablePass;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationModeParams;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
@@ -34,6 +35,7 @@ import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
+import com.verivital.hyst.util.StringOperations;
 
 /**
  * This is the hybridize mixed-triggered pass from the HSCC 2016 paper,
@@ -112,7 +114,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	
 	// O or optimization
 	@Option(name="-O", aliases = {"-opt"},
-			usage="the optimization method, one of {basinhopping, interval}", metaVar="METHOD")
+			usage="the optimization method, one of {basinhopping, interval, interval#, "
+					+ "where # is the max error, like 0.1}", metaVar="METHOD")
 	String opt = "basinhopping";
 	
 	@Option(name="-T", aliases = {"-triggermode"},
@@ -214,8 +217,10 @@ public class HybridizeMTRawPass extends TransformationPass
 	protected void runPass()
 	{
 		ha = (BaseComponent)config.root;
+		
 		checkParams();
 		ConvertToStandardForm.run(config);
+		
 		errorMode = ConvertToStandardForm.getErrorMode(ha);
 		initMode = ConvertToStandardForm.getInitMode(ha);
 		
@@ -227,7 +232,9 @@ public class HybridizeMTRawPass extends TransformationPass
 		
 		redirectStart();
 		
-		ConvertFromStandardForm.run(config);
+		new RemoveDiscreteUnreachablePass().runVanillaPass(config, "");
+		
+		ConvertFromStandardForm.convertInit(config);
 	}
 	
 	/**
@@ -238,12 +245,24 @@ public class HybridizeMTRawPass extends TransformationPass
 		Expression previousGuard = null;
 		AutomatonMode previousMode = null;
 		
-		
 		for (int i = 0; i < domains.size(); ++i)
 		{
 			HyperRectangle domain = domains.get(i);
 			
-			AutomatonMode curMode = makeModeInChain(domain);
+			String type = "final";
+			
+			if (i < splitElements.size() && splitElements.get(i) instanceof TimeSplittingElement)
+				type = "time_trig";
+			else if (i < splitElements.size() && splitElements.get(i) instanceof SpaceSplittingElement)
+				type = "space_trig";
+			
+			AutomatonMode curMode = makeModeInChain(domain, type);
+			
+			// add default tt flow
+			System.out.println(". adding default _tt flow in mode " + curMode.name);
+			curMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(0));
+			
+			System.out.println(". mode is now: " + curMode);
 			
 			// add a transition based on previousGuard
 			if (previousGuard != null)
@@ -275,9 +294,18 @@ public class HybridizeMTRawPass extends TransformationPass
 		}
 		
 		if (previousGuard != null)
+		{
+			// previousMode is the last mode in the chain
 			redirectEnd(previousMode, previousGuard);
+		}
 	}
 	
+	/**
+	 * Add the time-trigger reset condition for all incoming states. This also sets the time
+	 * derivative in the mode.
+	 * @param am the mode
+	 * @param val the dwell time in the mode (0 = space-triggered)
+	 */
 	private void addTimeResetToIncomingTransitions(AutomatonMode am, double val)
 	{
 		for (AutomatonTransition at : ha.transitions)
@@ -285,6 +313,11 @@ public class HybridizeMTRawPass extends TransformationPass
 			if (at.to == am)
 				at.reset.put(TT_VARIABLE, new ExpressionInterval(val));
 		}
+		
+		System.out.println("adding time-triggered reset (" + val + ") for mode " + am.name);
+		
+		if (val > 0)
+			am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(1));
 	}
 
 	private List <AutomatonMode> getNonChainModes()
@@ -348,7 +381,8 @@ public class HybridizeMTRawPass extends TransformationPass
 			op.newDynamics = AffineOptimize.affineApprox(avgFlow, bounds);
 			params.add(op);
 			
-			Hyst.logDebug("Processing " + modeChain.get(i).name + ", avgDynamics = " + avgFlow);
+			Hyst.logDebug("Processing " + modeChain.get(i).name + ", avgDynamics = " + 
+								StringOperations.makeDefaultEiMapString(avgFlow));
 			
 			for (int imIndex = 0; imIndex < boxIntersects.size(); ++imIndex)
 			{
@@ -368,9 +402,10 @@ public class HybridizeMTRawPass extends TransformationPass
 			AutomatonMode chainMode = modeChain.get(i);
 			OptimizationParams op = params.get(i);
 			
-			chainMode.flowDynamics = op.result;
+			chainMode.flowDynamics.putAll(op.result);
 			
-			Hyst.logDebug("Final Flow for " + chainMode.name + " was " + chainMode.flowDynamics);
+			Hyst.logDebug("Final Flow for " + chainMode.name + " was " + 
+						StringOperations.makeDefaultEiMapString(chainMode.flowDynamics));
 		}
 	}
 	
@@ -460,7 +495,7 @@ public class HybridizeMTRawPass extends TransformationPass
 					cur, new Constant(numExpressions))));
 		}
 		
-		Hyst.logDebug("computed avg dynamics: " + rv);
+		Hyst.logDebug("computed avg dynamics: " + StringOperations.makeDefaultEiMapString(rv));
 		
 		return rv;
 	}
@@ -545,9 +580,10 @@ public class HybridizeMTRawPass extends TransformationPass
 			for (AutomatonTransition at : originalTransitions)
 			{
 				if (at.from == initMode)
+				{
 					at.to = firstMode;
-				
-				addErrorTransitionsAtGuard(at.from, at.guard, firstBox);
+					addErrorTransitionsAtGuard(at.from, at.guard, firstBox);
+				}
 			}
 		}
 		else
@@ -558,9 +594,11 @@ public class HybridizeMTRawPass extends TransformationPass
 			for (AutomatonTransition at : originalTransitions)
 			{
 				if (at.to.name == triggerMode)
+				{
 					at.to = firstMode;
 				
-				addErrorTransitionsAtGuard(at.from, at.guard, firstBox);
+					addErrorTransitionsAtGuard(at.from, at.guard, firstBox);
+				}
 			}
 		}
 	}
@@ -718,11 +756,12 @@ public class HybridizeMTRawPass extends TransformationPass
 	/**
 	 * Create a mode in the currently-constructed chain.
 	 * @param domain the domain to use as the invariant
+	 * @param typeName the type of mode, "final", "time_trig", or "space_trig"
 	 * @return the constructed mode
 	 */
-	private AutomatonMode makeModeInChain(HyperRectangle domain)
+	private AutomatonMode makeModeInChain(HyperRectangle domain, String typeName)
 	{
-		AutomatonMode am = ha.createMode(nextModeName());
+		AutomatonMode am = ha.createMode(nextModeName(typeName));
 		
 		// store mode and rectangle for optimization
 		modeChain.add(am);
@@ -786,15 +825,19 @@ public class HybridizeMTRawPass extends TransformationPass
 		}
 	}
 	
-	private String nextModeName()
+	private String nextModeName(String typeName)
 	{
-		final String BASE = "_hybridized";
 		++chainModeCount;
 		String name = null;
 		
 		while (true)
 		{
-			name = BASE + chainModeCount;
+			String base = "";
+			
+			if (triggerMode != null)
+				base = "_" + triggerMode;
+			
+			name = base + "_" + chainModeCount + "_" + typeName;
 			
 			if (!ha.modes.containsKey(name))
 				break;

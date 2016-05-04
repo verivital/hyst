@@ -645,7 +645,8 @@ public class FlowPrinter extends ToolPrinter
 			}
 		}
 		
-		config.init.put(ConvertToStandardForm.INIT_MODE_NAME, init);
+		AutomatonMode initMode = ConvertToStandardForm.getInitMode((BaseComponent)config.root);
+		config.init.put(initMode.name, init);
 	}
 	
 	/**

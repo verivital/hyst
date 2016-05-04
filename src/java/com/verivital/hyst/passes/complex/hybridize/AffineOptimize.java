@@ -19,6 +19,7 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.StringOperations;
 
 public class AffineOptimize
 {	
@@ -83,7 +84,8 @@ public class AffineOptimize
 		
 		createOptimizationParams(params, expList, boundsList);
 		
-		Hyst.logDebug("Created optimization params; expList=" + expList + "; boundsList = " + boundsList); 
+		Hyst.logDebug("Created optimization params; expList=" + 
+				StringOperations.makeDefaultExpressionListString(expList) + "; boundsList = " + boundsList); 
 		
 		List<Interval> optimizationResult;
 		

@@ -71,7 +71,7 @@ public class HybridizePassTests
 		}
 	}
 	/**
-	 * make a sample base configuration with a single mode, with x' == 1, and y'
+	 * make a sample base configuration with a single mode named "on", with x' == 1, and y'
 	 * == 1
 	 * 
 	 * @return the constructed Configuration
@@ -429,6 +429,9 @@ public class HybridizePassTests
 		String params = "step=1,maxtime=10,epsilon=0.01,simtype=star,picount=1";
 
 		HybridizeMixedTriggeredPass htt = new HybridizeMixedTriggeredPass();
+		
+		
+		
 		htt.testFuncs = new HybridizeMixedTriggeredPass.TestFunctions()
 		{
 			@Override
@@ -682,10 +685,6 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 		
-		System.out.println(":working on this test, the failure is in standard form conversion." +
-				"write tests for it (maybe do validation BEFORE the conversion starts as well)");
-		Hyst.debugMode = true;
-
 		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
 		c.settings.plotVariableNames[0] = c.settings.plotVariableNames[1] = "x"; 
 		BaseComponent ha = (BaseComponent)c.root;
@@ -709,10 +708,11 @@ public class HybridizePassTests
 		
 		new HybridizeMTRawPass().runTransformationPass(c, params);
 		
+		System.out.println("WORKING HERE!!! just did a bugfix... here there's an error mode so 3 is expected");
 		Assert.assertEquals(ha.modes.size(), 2);
 		
-		AutomatonMode mode1 = ha.modes.get("_hybridized0");
-		AutomatonMode mode2 = ha.modes.get("_hybridized1");
+		AutomatonMode mode1 = ha.modes.get("_0_time_trig");
+		AutomatonMode mode2 = ha.modes.get("_1_time_trig");
 		
 		Assert.assertNotNull(mode1);
 		Assert.assertNotNull(mode2);

@@ -143,12 +143,16 @@ public class ContinuizationPass extends TransformationPass
 		BaseComponent ha = (BaseComponent)config.root;
 		AutomatonMode approxMode = null; // mode of the continuous approximation
 		
+		AutomatonMode initMode = ConvertToStandardForm.getInitMode(ha);
+		AutomatonMode errorMode = ConvertToStandardForm.getErrorMode(ha);
+		
 		for (AutomatonMode m : ha.modes.values())
 		{
-			if (!m.name.equals(ConvertToStandardForm.INIT_MODE_NAME) && 
-					!m.name.equals(ConvertToStandardForm.ERROR_MODE_NAME))
+			if (m != initMode && m != errorMode)
+			{
 				approxMode = ha.modes.values().iterator().next();
 				break;
+			}
 		}
 		
 		if (approxMode == null)
@@ -655,8 +659,8 @@ public class ContinuizationPass extends TransformationPass
 		BaseComponent ha = (BaseComponent)config.root;
 		ha.variables.add(timeVar);
 		
-		AutomatonMode init = ha.modes.get(ConvertToStandardForm.INIT_MODE_NAME);
-		AutomatonMode error = ha.modes.get(ConvertToStandardForm.ERROR_MODE_NAME);
+		AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
+		AutomatonMode error = ConvertToStandardForm.getErrorMode(ha);
 		
 		approxMode.flowDynamics.put(timeVar, new ExpressionInterval(1));
 		

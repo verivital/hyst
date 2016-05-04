@@ -27,46 +27,15 @@ import com.verivital.hyst.ir.base.BaseComponent;
  */
 public class ConvertFromStandardForm
 {
-	public static String INIT_MODE_NAME = ConvertToStandardForm.INIT_MODE_NAME;
-	public static String ERROR_MODE_NAME = ConvertToStandardForm.ERROR_MODE_NAME;
+	// package visibility. For external access use ConvertToStandardForm.getInitMode() and getErrorMode()
+	static String INIT_MODE_NAME = ConvertToStandardForm.INIT_MODE_NAME;
+	static String ERROR_MODE_NAME = ConvertToStandardForm.ERROR_MODE_NAME;
 	
 	public static void run(Configuration config)
 	{
-		BaseComponent ha = (BaseComponent)config.root;
+		convertInit(config);
 		
-		if (config.init.size() != 1 || !config.init.containsKey(INIT_MODE_NAME))
-			throw new AutomatonExportException("Malformed Input Standard Form Automaton; expected"
-					+ " single initial mode named " + INIT_MODE_NAME);
-		else
-		{
-			// sanity checks
-			AutomatonMode init = ha.modes.get(INIT_MODE_NAME);
-			
-			if (!config.init.get(INIT_MODE_NAME).equals(Constant.TRUE))
-				throw new AutomatonExportException("Malformed Input Standard Form Automaton. " +
-						INIT_MODE_NAME + "'s expression must be Constant.True");
-			
-			if (!init.urgent)
-				throw new AutomatonExportException("Malformed Input Standard Form Automaton. " +
-						INIT_MODE_NAME + " must be urgent.");
-			
-			convertInit(config, ha);
-		}
-		
-		if (config.forbidden.size() != 1 || !config.forbidden.containsKey(ERROR_MODE_NAME))
-			throw new AutomatonExportException("Malformed Input Standard Form Automaton; expected"
-					+ " single forbidden mode named " + ERROR_MODE_NAME);
-		else
-		{
-			// sanity checks
-			if (!config.forbidden.get(ERROR_MODE_NAME).equals(Constant.TRUE))
-				throw new AutomatonExportException("Malformed Existing Standard Form Automaton. " +
-						ERROR_MODE_NAME + "'s expression must be Constant.True");
-			
-			convertForbidden(config, ha);
-		}
-		
-		config.validate();
+		convertForbidden(config);
 	}
 
 	/**
@@ -74,9 +43,25 @@ public class ConvertFromStandardForm
 	 * @param config
 	 * @param ha
 	 */
-	private static void convertInit(Configuration config, BaseComponent ha)
+	public static void convertInit(Configuration config)
 	{
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		if (config.init.size() != 1 || !config.init.containsKey(INIT_MODE_NAME))
+			throw new AutomatonExportException("Malformed Input Standard Form Automaton; expected"
+					+ " single initial mode named " + INIT_MODE_NAME);
+		
+		// sanity checks
 		AutomatonMode init = ha.modes.get(INIT_MODE_NAME);
+		
+		if (!config.init.get(INIT_MODE_NAME).equals(Constant.TRUE))
+			throw new AutomatonExportException("Malformed Input Standard Form Automaton. " +
+					INIT_MODE_NAME + "'s expression must be Constant.True");
+		
+		if (!init.urgent)
+			throw new AutomatonExportException("Malformed Input Standard Form Automaton. " +
+					INIT_MODE_NAME + " must be urgent.");
+		
 		List <AutomatonTransition> toRemove = new ArrayList<AutomatonTransition>();
 		config.init.clear();
 		
@@ -100,6 +85,8 @@ public class ConvertFromStandardForm
 		
 		ha.transitions.removeAll(toRemove);
 		ha.modes.remove(INIT_MODE_NAME);
+		
+		config.validate();
 	}
 
 	/**
@@ -107,8 +94,23 @@ public class ConvertFromStandardForm
 	 * @param config
 	 * @param ha
 	 */
-	private static void convertForbidden(Configuration config, BaseComponent ha)
+	private static void convertForbidden(Configuration config)
 	{
+		if (config.forbidden.size() != 1 || !config.forbidden.containsKey(ERROR_MODE_NAME))
+			throw new AutomatonExportException("Malformed Input Standard Form Automaton; expected"
+					+ " single forbidden mode named " + ERROR_MODE_NAME);
+		
+		// sanity checks
+		if (!config.forbidden.get(ERROR_MODE_NAME).equals(Constant.TRUE))
+			throw new AutomatonExportException("Malformed Existing Standard Form Automaton. " +
+					ERROR_MODE_NAME + "'s expression must be Constant.True");
+		
+		// check if there is a transition from init -> error (in which case conversion is not possible)
+		if (config.init.containsKey(ERROR_MODE_NAME))
+			throw new AutomatonExportException("Automaton contains has error as an initial"
+					+ " state, which cannot be converted from standard form.");
+		
+		BaseComponent ha = (BaseComponent)config.root;
 		AutomatonMode error = ha.modes.get(ERROR_MODE_NAME);
 		List <AutomatonTransition> toRemove = new ArrayList<AutomatonTransition>();
 		config.forbidden.clear();
@@ -133,5 +135,7 @@ public class ConvertFromStandardForm
 		
 		ha.transitions.removeAll(toRemove);
 		ha.modes.remove(ERROR_MODE_NAME);
+		
+		config.validate();
 	}
 }
