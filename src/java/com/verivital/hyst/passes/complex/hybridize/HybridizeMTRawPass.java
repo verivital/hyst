@@ -779,8 +779,12 @@ public class HybridizeMTRawPass extends TransformationPass
 		
 		// dynamics are set during optimization
 		
-		// set invariant
-		am.invariant = ttGreaterThanZero;
+		// set invariant (probably not the best way to check if it's a time-triggered transition)
+		if (typeName.equals("time_trig"))
+			am.invariant = ttGreaterThanZero;
+		else
+			am.invariant = Constant.TRUE;
+		
 		addRectangleInvariant(am, domain);
 		
         // add transitions to error mode during the computation in this box

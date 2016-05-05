@@ -430,8 +430,6 @@ public class HybridizePassTests
 
 		HybridizeMixedTriggeredPass htt = new HybridizeMixedTriggeredPass();
 		
-		
-		
 		htt.testFuncs = new HybridizeMixedTriggeredPass.TestFunctions()
 		{
 			@Override
@@ -691,6 +689,8 @@ public class HybridizePassTests
 		AutomatonMode am = ha.modes.values().iterator().next();
 		
 		ha.variables.remove("y");
+		c.init.put("on", FormulaParser.parseInitialForbidden(".24 <= x <= .26"));
+		
 		am.flowDynamics.remove("y");
 		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
 		
@@ -740,6 +740,8 @@ public class HybridizePassTests
 		Expression initTT = c.init.get(mode1.name);
 		
 		Assert.assertTrue("initial state has _tt := 0.5", initTT.toDefaultString().contains("_tt = 0.5"));
+		Assert.assertTrue("initial state has .24 <= x <= .26", 
+				initTT.toDefaultString().contains("0.24 <= x & x <= 0.26"));
 		
 		for (AutomatonTransition t : ha.transitions)
 		{
@@ -758,7 +760,7 @@ public class HybridizePassTests
 		Expression inv2 = mode2.invariant;
 		
 		Assert.assertEquals("_tt >= 0 & x >= 0.2 & x <= 0.336", inv1.toDefaultString());
-		Assert.assertEquals("_tt >= 0 & x >= 0.236 & x <= 0.383", inv2.toDefaultString());
+		Assert.assertEquals("x >= 0.236 & x <= 0.383", inv2.toDefaultString());
 	}
 	
 	/**
@@ -782,10 +784,10 @@ public class HybridizePassTests
 		am.flowDynamics.remove("y");
 		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
 		
+		c.init.put("on", FormulaParser.parseInitialForbidden(".24 <= x <= .26"));
+		
 		c.validate();
 		
-		System.out.println(".c = " + c + "\n\n");
-
 		List<SplittingElement> splitElements = new ArrayList<SplittingElement>();
 		List<HyperRectangle> domains = new ArrayList<HyperRectangle>();
 		
@@ -797,8 +799,6 @@ public class HybridizePassTests
 		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, null, null);
 		
 		new HybridizeMTRawPass().runTransformationPass(c, params);
-		
-		System.out.println(".after pass c = " + c + "\n\n");
 		
 		Assert.assertEquals(ha.modes.size(), 3);
 		
@@ -819,6 +819,8 @@ public class HybridizePassTests
 		Expression initTT = c.init.get(mode1.name);
 		
 		Assert.assertTrue("initial state has _tt := 0.0", initTT.toDefaultString().contains("_tt = 0"));
+		Assert.assertTrue("initial state has .24 <= x <= .26", 
+				initTT.toDefaultString().contains("0.24 <= x & x <= 0.26"));
 		
 		for (AutomatonTransition t : ha.transitions)
 		{

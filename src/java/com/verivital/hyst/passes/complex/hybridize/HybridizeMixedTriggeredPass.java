@@ -38,12 +38,11 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
- * This is the mixed-triggered hybridization pass. Its implementation matches with the HSCC paper, 
- * and it the parameters were already constructed (for example using a simulation).
+ * This is the simulation-based mixed-triggered hybridization pass. 
+ * Its implementation matches with the HSCC paper. It uses simulation to derive the hybridization
+ * parameters. After which, it calls the HybridizeMTRawPass to actually do the hybridization.
  * 
- * The required parameters of the pass are two lists:
- * E_1 E_2 ... E_{n-1} - list of splitting elements, each one is either a time (float) or a point (comma-separated floats)
- * D_1 D_2 ... D_n - list of domains, each one is a rectangle: x_min,x_max;y_min,ymax; ... ;z_min,zmax
+ * The parameters of the pass are:
  * 
  * @author Stanley Bak
  *
