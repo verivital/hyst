@@ -259,10 +259,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			AutomatonMode curMode = makeModeInChain(domain, type);
 			
 			// add default tt flow
-			System.out.println(". adding default _tt flow in mode " + curMode.name);
 			curMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(0));
-			
-			System.out.println(". mode is now: " + curMode);
 			
 			// add a transition based on previousGuard
 			if (previousGuard != null)
@@ -281,6 +278,9 @@ public class HybridizeMTRawPass extends TransformationPass
 					TimeSplittingElement tse = (TimeSplittingElement)e; 
 					previousGuard = makeTimeTriggeredGuard(curMode);
 					addTimeResetToIncomingTransitions(curMode, tse.time);
+					
+					// also update the flow
+					curMode.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(-1));
 				}
 				else
 				{
@@ -301,8 +301,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 	
 	/**
-	 * Add the time-trigger reset condition for all incoming states. This also sets the time
-	 * derivative in the mode.
+	 * Add the time-trigger reset condition for all incoming states. 
 	 * @param am the mode
 	 * @param val the dwell time in the mode (0 = space-triggered)
 	 */
@@ -313,11 +312,6 @@ public class HybridizeMTRawPass extends TransformationPass
 			if (at.to == am)
 				at.reset.put(TT_VARIABLE, new ExpressionInterval(val));
 		}
-		
-		System.out.println("adding time-triggered reset (" + val + ") for mode " + am.name);
-		
-		if (val > 0)
-			am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(1));
 	}
 
 	private List <AutomatonMode> getNonChainModes()
@@ -583,6 +577,22 @@ public class HybridizeMTRawPass extends TransformationPass
 				{
 					at.to = firstMode;
 					addErrorTransitionsAtGuard(at.from, at.guard, firstBox);
+					
+					// add the initial reset
+					SplittingElement e = splitElements.get(0);
+					
+					if (e instanceof TimeSplittingElement) 
+					{
+						TimeSplittingElement tse = (TimeSplittingElement)e;
+						Operation op = new Operation(TT_VARIABLE, Operator.EQUAL, tse.time);
+						at.guard = Expression.and(at.guard, op);
+					}
+					else
+					{
+						// space triggered
+						Operation op = new Operation(TT_VARIABLE, Operator.EQUAL, 0);
+						at.guard = Expression.and(at.guard, op);
+					}
 				}
 			}
 		}
@@ -686,7 +696,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(new Constant(-1)));
 		
 		// transition condition for next state
-		return new Operation(Operator.EQUAL, TT_VARIABLE, 0);
+		return new Operation(Operator.LESSEQUAL, TT_VARIABLE, 0);
 	}
 	
 	/**
@@ -902,14 +912,6 @@ public class HybridizeMTRawPass extends TransformationPass
 		{
 			if (am.flowDynamics != null)
 				am.flowDynamics.put(TT_VARIABLE, new ExpressionInterval(0));
-		}
-		
-		// initialize tt to zero
-		for (AutomatonTransition at : ha.transitions)
-		{
-			if (at.from == initMode)
-				at.guard = Expression.and(at.guard, new Operation(Operator.EQUAL, 
-						new Variable(TT_VARIABLE), new Constant(0)));
 		}
 	}
 	

@@ -1371,4 +1371,25 @@ public class ModelParserTest
 		Assert.assertTrue(loc1.contains("t >= 5"));
 		Assert.assertEquals(loc3, "t <= 5");
 	}
+	
+	@Test
+	public void testHierarchyWithRenamingErrorDetection()
+	{
+		String cfgPath = UNIT_BASEDIR + "bugfix_local_var_missing/local_var.cfg";
+		String xmlPath = UNIT_BASEDIR + "bugfix_local_var_missing/local_var.xml";
+		
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		
+		try
+		{
+			flatten(doc);
+			Assert.fail("No exception raised but initial states contain unknown variable");
+		}
+		catch (AutomatonValidationException e)
+		{
+			// make sure there's a friendly error message
+			Assert.assertTrue(e.getLocalizedMessage().contains("Did you mean 'inst.x'?"));
+		}
+
+	}
 }

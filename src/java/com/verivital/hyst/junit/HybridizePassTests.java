@@ -29,8 +29,8 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SpaceSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.TimeSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
@@ -680,7 +680,7 @@ public class HybridizePassTests
 	 * x'_2 = .619*x – 0.0958+ [0, 0.0055]
 	 */
 	@Test
-	public void testHybridMixedTriggeredRawPass()
+	public void testHybridMixedTriggeredRawPassTimeTrig()
 	{
 		if (!PythonBridge.hasPython())
 			return;
@@ -708,37 +708,135 @@ public class HybridizePassTests
 		
 		new HybridizeMTRawPass().runTransformationPass(c, params);
 		
-		System.out.println("WORKING HERE!!! just did a bugfix... here there's an error mode so 3 is expected");
-		Assert.assertEquals(ha.modes.size(), 2);
+		Assert.assertEquals(ha.modes.size(), 3);
 		
-		AutomatonMode mode1 = ha.modes.get("_0_time_trig");
-		AutomatonMode mode2 = ha.modes.get("_1_time_trig");
+		AutomatonMode mode1 = ha.modes.get("_1_time_trig");
+		AutomatonMode mode2 = ha.modes.get("_2_final");
 		
 		Assert.assertNotNull(mode1);
 		Assert.assertNotNull(mode2);
 		
 		ExpressionInterval flow1 = mode1.flowDynamics.get("x");
 		ExpressionInterval tt_flow1 = mode1.flowDynamics.get("_tt");
-		Expression inv1 = mode1.invariant;
 		ExpressionInterval flow2 = mode2.flowDynamics.get("x");
-		Expression inv2 = mode2.invariant;
 		
-		ExpressionInterval desired1 = new ExpressionInterval(".536*x – 0.0718", 
+		ExpressionInterval desired1 = new ExpressionInterval(".536*x - 0.0718", 
 				new Interval(0, 0.0046));
-		ExpressionInterval desired2 = new ExpressionInterval(".619*x – 0.0958", 
+		ExpressionInterval desired2 = new ExpressionInterval(".619*x - 0.0958", 
 				new Interval(0, 0.0055));
 		
 		AutomatonUtil.areExpressionIntervalsEqual("-1", 0, 0, tt_flow1);
 		AutomatonUtil.areExpressionIntervalsEqual(desired1, flow1);
 		AutomatonUtil.areExpressionIntervalsEqual(desired2, flow2);
 		
-		Assert.assertEquals(1, ha.transitions.size());
-		AutomatonTransition at = ha.transitions.get(0);
+		// 2 to error modes per each of the 3 modes
+		// 2 to error modes at time-trigger
+		// 1 from mode1 to mode2
+		Assert.assertEquals(7, ha.transitions.size());
 		
-		Assert.fail("check that _tt < 0.5");
-		Assert.assertEquals(at.guard.toDefaultString(), "_tt > 0");
+		AutomatonTransition at = null;
 		
-		Assert.fail("check that inv1 has _tt >= 0 && x \\in [0.2, 0.336]");
-		Assert.fail("check that inv2 has x \\in [0.236, 0.383]");
+		// initial _tt := 0.5
+		Expression initTT = c.init.get(mode1.name);
+		
+		Assert.assertTrue("initial state has _tt := 0.5", initTT.toDefaultString().contains("_tt = 0.5"));
+		
+		for (AutomatonTransition t : ha.transitions)
+		{
+			if (t.from == mode1 && t.to == mode2)
+			{
+				at = t;
+				break;
+			}
+		}
+		
+		Assert.assertNotNull(at);
+		
+		Assert.assertEquals(at.guard.toDefaultString(), "_tt <= 0");
+		
+		Expression inv1 = mode1.invariant;
+		Expression inv2 = mode2.invariant;
+		
+		Assert.assertEquals("_tt >= 0 & x >= 0.2 & x <= 0.336", inv1.toDefaultString());
+		Assert.assertEquals("_tt >= 0 & x >= 0.236 & x <= 0.383", inv2.toDefaultString());
+	}
+	
+	/**
+	 * Test the raw hybridization (space-triggered) pass. This uses the quadradic example
+	 * from the soundness argument ppt.
+	 * x' == x^2, x(0) = [.24, .26]
+	 * space-triggered split at x = 0.3
+	 */
+	@Test
+	public void testHybridMixedTriggeredRawPassSpaceTrig()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Configuration c = makeSampleBaseConfiguration(); // x' == 1, y' == 1
+		c.settings.plotVariableNames[0] = c.settings.plotVariableNames[1] = "x"; 
+		BaseComponent ha = (BaseComponent)c.root;
+		AutomatonMode am = ha.modes.values().iterator().next();
+		
+		ha.variables.remove("y");
+		am.flowDynamics.remove("y");
+		am.flowDynamics.put("x", new ExpressionInterval("x^2"));
+		
+		c.validate();
+		
+		System.out.println(".c = " + c + "\n\n");
+
+		List<SplittingElement> splitElements = new ArrayList<SplittingElement>();
+		List<HyperRectangle> domains = new ArrayList<HyperRectangle>();
+		
+		splitElements.add(new SpaceSplittingElement(new HyperPoint(0.3), new double[]{1.0}));
+		
+		domains.add(new HyperRectangle(new Interval(0.2, 0.3)));
+		domains.add(new HyperRectangle(new Interval(0.3, 0.5)));
+		
+		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, null, null);
+		
+		new HybridizeMTRawPass().runTransformationPass(c, params);
+		
+		System.out.println(".after pass c = " + c + "\n\n");
+		
+		Assert.assertEquals(ha.modes.size(), 3);
+		
+		AutomatonMode mode1 = ha.modes.get("_1_space_trig");
+		AutomatonMode mode2 = ha.modes.get("_2_final");
+		
+		Assert.assertNotNull(mode1);
+		Assert.assertNotNull(mode2);
+		
+		// 2 to error modes per each of the 3 modes
+		// 2 to error modes at time-trigger
+		// 1 from mode1 to mode2
+		Assert.assertEquals(7, ha.transitions.size());
+		
+		AutomatonTransition at = null;
+		
+		// initial _tt := 0.0
+		Expression initTT = c.init.get(mode1.name);
+		
+		Assert.assertTrue("initial state has _tt := 0.0", initTT.toDefaultString().contains("_tt = 0"));
+		
+		for (AutomatonTransition t : ha.transitions)
+		{
+			if (t.from == mode1 && t.to == mode2)
+			{
+				at = t;
+				break;
+			}
+		}
+		
+		Assert.assertNotNull(at);
+		
+		Assert.assertEquals(at.guard.toDefaultString(), "1 * x >= 0.3");
+		
+		Expression inv1 = mode1.invariant;
+		Expression inv2 = mode2.invariant;
+		
+		Assert.assertEquals("x >= 0.2 & x <= 0.3 & 1 * x <= 0.3", inv1.toDefaultString());
+		Assert.assertEquals("x >= 0.3 & x <= 0.5", inv2.toDefaultString());
 	}
 }
