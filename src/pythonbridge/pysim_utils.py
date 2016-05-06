@@ -126,7 +126,34 @@ def simulate_times(ha, mode_name, point, times, max_jumps=500, solver='vode'):
 
     return rv
 
+def simulate_set_time(ha, mode_names, points, time, max_jumps=500, solver='vode'):
+    '''simulates a hybrid automaton from a given set of modes/points, getting the state at a fixed final time
+    returns a semi-colon separated string of mode_name, point_dim_0, point_dim_1, ... , point_dim_n
+    '''
+    rv = ""
 
+    assert len(mode_names) == len(points)
+
+    for i in xrange(len(points)):
+        point = points[i]
+        mode_name = mode_names[i]
+
+        q = (ha.modes[mode_name], point)
+
+        # simulate from q for time
+        q = simulate_one_time(q, time, max_jumps, solver)
+
+        entry = q[0].name
+
+        for d in q[1]:
+            entry += "," + str(d)
+
+        if len(rv) > 0:
+            rv += ";"
+
+        rv += entry
+
+    return rv
 
 
 

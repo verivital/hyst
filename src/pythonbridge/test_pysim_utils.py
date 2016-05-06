@@ -9,9 +9,13 @@ def define_ha():
     '''make a test hybrid automaton and return it'''
     ha = HybridAutomaton()
 
-    heater_off_controller_off = ha.new_mode('on')
-    heater_off_controller_off.inv = lambda _: True
-    heater_off_controller_off.der = lambda _, state: [1, 2.0 * state[0]]
+    m1 = ha.new_mode('on')
+    m1.inv = lambda _: True
+    m1.der = lambda _, state: [1, 2.0 * state[0]]
+
+    m2 = ha.new_mode('off')
+    m2.inv = lambda _: True
+    m2.der = lambda _, state: [-1.0, -2.0]
 
     return ha
 
@@ -32,6 +36,33 @@ class TestPySimUtils(unittest.TestCase):
         # t' == 1, y' == 2t
         res = util.simulate_der_range(ha, 1, 'on', [0.0, 0.0], [(0, 2), (1, 3)])
         self.assertEqual(res, "0.0,4.0;2.0,6.0")
+
+    def test_simulate_set_time(self):
+        'test for simulating a set of states for a fixed time'
+
+        time = 2
+        ha = define_ha()
+
+        mode_names = ['on', 'on', 'off']
+        points = [(0, 0), (1, 1.5), (1, 2)]
+
+        res = util.simulate_set_time(ha, mode_names, points, time)
+        part1, part2, part3 = res.split(';')
+        mode1, x1, y1 = part1.split(',')
+        mode2, x2, y2 = part2.split(',')
+        mode3, x3, y3 = part3.split(',')
+ 
+        self.assertEqual(mode1, "on")
+        self.assertAlmostEqual(float(x1), 2.0, places=3)
+        self.assertAlmostEqual(float(y1), 4.0, places=3)
+
+        self.assertEqual(mode2, "on")
+        self.assertAlmostEqual(float(x2), 3.0, places=3)
+        self.assertAlmostEqual(float(y2), 9.5, places=3)
+
+        self.assertEqual(mode3, "off")
+        self.assertAlmostEqual(float(x3), -1.0, places=3)
+        self.assertAlmostEqual(float(y3), -2.0, places=3)
 
 if __name__ == '__main__':
     unittest.main()

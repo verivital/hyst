@@ -153,6 +153,9 @@ public class HybridizeMTRawPass extends TransformationPass
 		if (triggerMode != null)
 			rv.append("-triggermode " + triggerMode + " ");
 		
+		if (splitElements.size() == 0)
+			throw new AutomatonExportException("No split elements were given");
+		
 		rv.append("-splitelements ");
 		
 		for (SplittingElement se : splitElements)
@@ -235,6 +238,8 @@ public class HybridizeMTRawPass extends TransformationPass
 		new RemoveDiscreteUnreachablePass().runVanillaPass(config, "");
 		
 		ConvertFromStandardForm.convertInit(config);
+		
+		config.settings.spaceExConfig.timeTriggered = true;
 	}
 	
 	/**
@@ -924,7 +929,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		
 	}
 	
-	public static class TimeSplittingElement extends SplittingElement
+	static class TimeSplittingElement extends SplittingElement
 	{
 		public TimeSplittingElement(double d)
 		{
@@ -934,7 +939,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		double time;
 	}
 	
-	public static class SpaceSplittingElement extends SplittingElement
+	static class SpaceSplittingElement extends SplittingElement
 	{
 		public SpaceSplittingElement() 
 		{
