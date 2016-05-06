@@ -64,6 +64,27 @@ class TestPySimUtils(unittest.TestCase):
         self.assertAlmostEqual(float(x3), -1.0, places=3)
         self.assertAlmostEqual(float(y3), -2.0, places=3)
 
+    def test_sim_traj_time(self):
+        'test for simulating points and getting back trajectories'
+
+        time = 2
+        ha = define_ha()
+
+        res_list = util.simulate_multi_trajectory_time(ha, ['on', 'on'], [(0, 0), (0, 0)], time, min_steps=20)
+
+        self.assertTrue(len(res_list.split('|')) == 2)
+
+        for traj in res_list.split('|'):
+            self.assertGreater(len(traj), 19)
+
+            for ss in traj.split(';'):
+                mode, x, y = ss.split(',')
+
+                self.assertEquals(mode, 'on')
+
+                # solution is y = x^2
+                self.assertAlmostEqual(float(x) * float(x), float(y), places=2)
+
 if __name__ == '__main__':
     unittest.main()
 

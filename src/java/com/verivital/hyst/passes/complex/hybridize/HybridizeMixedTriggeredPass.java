@@ -1,6 +1,7 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -112,7 +113,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     
     public interface TestFunctions
     {
-    	public void piSimPointsReached(List <HyperPoint> simPoints);
+    	public void piSimPointsReached(List <SymbolicStatePoint> simPoints);
     	
     	public void initialSimPoints(List <HyperPoint> simPoints);
 
@@ -173,9 +174,18 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     	ha = (BaseComponent)config.root;
     	makeParams();
     	
+    	long start = System.currentTimeMillis();
         simulateAndConstruct();
         
+        long middle = System.currentTimeMillis();
+        long simMills = middle - start;
+        Hyst.log("Simulate Time: " + simMills + "ms");
+        
         String params = HybridizeMTRawPass.makeParamString(splitElements, domains, opt, null);
+        
+        long end = System.currentTimeMillis();
+        long optimizeMills = end - middle;
+        Hyst.log("Optimize and Construct Time: " + optimizeMills + "ms");
         
         new HybridizeMTRawPass().runVanillaPass(config, params);
     }
@@ -355,7 +365,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				
 				System.out.println(". TODO, add advanceSimulationToPseudoInvariant()");
 				
-				/*if (advanceSimulationToPseudoInvariant(startBox, simPoints))
+				if (advanceSimulationToPseudoInvariant(startBox, simPoints))
 				{
 					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
 					//stepSpaceTrigger(startBox);
@@ -363,7 +373,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 					continue;
 				}
 				else
-					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);*/
+					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);
 			}
     		
 			// didn't do a pi-step, instead do a time-triggered step
@@ -372,28 +382,38 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 	}
 	
-	/*private HyperPoint getPiPoint(HyperRectangle startBox, HyperPoint centerStart)
+	/**
+	 * A space triggered-transition (pseudo-invariant) is being constructed. Advance the center point
+	 * until all the corners of the start box are all one side. This can fail if the
+	 * trajectory never meets this condition (piMaxTime is exceeded)
+	 * @param startBox the start box
+	 * @param centerTrajectory the center point
+	 * @return the discovered pi point, or null if failed
+	 */
+	private SymbolicStatePoint getPiPoint(HyperRectangle startBox, 
+			ArrayList<SymbolicStatePoint> centerTrajectory)
 	{
 		// the first point of simPoints is the center point we should simulate
-		HyperPoint p = centerStart;
-		HyperPoint rv = null;
+		SymbolicStatePoint rv = null;
 		
-		// simulate up to piMaxTime, looking for a state where all the corners of startBox are on one side of p
-		for (double t = 0; t < piMaxTime; t += simTimeMicroStep)
+		// simulate up to piMaxTime, looking for a state where all the corners of startBox 
+		// are on one side of p
+		for (SymbolicStatePoint p : centerTrajectory)
 		{
-			microStep(p);
+			HyperPoint hp = p.hp;
+			AutomatonMode am = ha.modes.get(p.modeName);
 			
-			if (testHyperPlane(p, startBox, flowDynamics, varNames))
+			if (testHyperPlane(hp, startBox, am))
 			{
-				Hyst.log("Found pi point: " + p + " with gradient " + Arrays.toString(gradient(p)));
+				Hyst.log("Found pi point: " + p + " with gradient " + Arrays.toString(gradient(hp, am)));
 				rv = p;
 				break;
 			}
 		}
 		
 		return rv;
-	}*/
-	
+	}
+
 	/**
 	 * Advance the simulated points for a pseudo-invariant step. This can fail if if the center point's simulation cannot go to a point
 	 * where the constructed auxiliary hyperplane would be entirely in front of the startBox (within time piMaxTime), or if some of the simulated points never reach
@@ -402,66 +422,69 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 * @param startBox the incoming set of states
 	 * @return true if succeeded (and simPoints is advanced in place), false otherwise (simPoints is unmodified)
 	 */
-	/*private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox, ArrayList<SymbolicStatePoint> simPoints)
+	private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox, 
+			ArrayList<SymbolicStatePoint> simPoints)
 	{
+		// first, get the trajectories for all the simPoints up piMaxtime
+		ArrayList<ArrayList<SymbolicStatePoint>> trajectories = 
+				simMultiGetTrajectory(config, simPoints, piMaxTime);
+		
 		boolean rv = false;
-		HyperPoint piPoint = getPiPoint(startBox, simPoints.get(0).hp);
+		SymbolicStatePoint piPoint = getPiPoint(startBox, trajectories.get(0));
 		
 		if (piPoint != null)
 		{
-			ArrayList<HyperPoint> newSimPoints = new ArrayList <HyperPoint>();
+			ArrayList<SymbolicStatePoint> newSimPoints = new ArrayList <SymbolicStatePoint>();
 			newSimPoints.add(piPoint);
 			
 			double piGradient[] = gradient(piPoint);
-			double piVal = dotProduct(piGradient, piPoint);
+			double piVal = dotProduct(piGradient, piPoint.hp);
 			boolean quitEarly = false;
 			
 			// advance every simulation until it exceeds piVal
 			for (int i = 1; i < simPoints.size(); ++i)
 			{
-				HyperPoint p = simPoints.get(i).copy();
-				double prevVal = dotProduct(piGradient, p);
-				HyperPoint prevPoint = p.copy();
+				double prevVal = dotProduct(piGradient, simPoints.get(i).hp);
 				
 				if (prevVal > piVal)
 					throw new AutomatonExportException("While constructing PI, initial sim-point was on incorrect side of pi hyperplane (shouldn't occur)");
+
+				// when we cross, we will interpolate between the straddling simulation points
+				SymbolicStatePoint prevPoint = simPoints.get(i);
 				
 				// simulate up to 2*piMaxTime
-				
-				for (double t = 0; ; t += simTimeMicroStep)
+				for (SymbolicStatePoint p : trajectories.get(i))
 				{
-					if (t >= 2*piMaxTime)
-					{
-						Hyst.log("Simpoint " + p + " didn't cross hyperplane defined at " + piPoint + " with gradient " + Arrays.toString(piGradient) 
-								+ " within 2*piMaxTime = " + (2*piMaxTime));
-						quitEarly = true;
-						break;
-					}
-						
-					microStep(p);
-					
 					// check if p crossed the hyperplane
-					double val = dotProduct(piGradient, p);
+					double val = dotProduct(piGradient, p.hp);
 					
 					if (val >= piVal)
 					{
+						// if prevPoint and p are in different mode, probably a reset was used
+						// this is a BAD case of pseudo-invariants, so we're better off failing
+						if (!p.modeName.equals(prevPoint.modeName))
+							throw new AutomatonExportException("When detecting crossing of "
+									+ "space-triggered boundary, different modes detected (was a "
+									+ "reset used? This would be a BAD case for space-triggered"
+									+ "contruction.");
+						
 						// it crossed! take the fraction
 						double difVal = val - prevVal; // for example 3.0 difference in val between steps
 						double fracVal = piVal - prevVal; // for example 1.0 difference between piVal and previous step
 						double frac = fracVal / difVal; // should be 1/3
 						
 						// now the point we want is prevPoint + 1/3 * (curPoint - prevPoint)
-						HyperPoint vector = HyperPoint.subtract(p, prevPoint);
+						HyperPoint vector = HyperPoint.subtract(p.hp, prevPoint.hp);
 						HyperPoint fracVector = HyperPoint.multiply(vector, frac);
-						HyperPoint newPoint = HyperPoint.add(prevPoint, fracVector);
+						HyperPoint newPoint = HyperPoint.add(prevPoint.hp, fracVector);
 						
-						newSimPoints.add(newPoint);
+						newSimPoints.add(new SymbolicStatePoint(p.modeName, newPoint));
 						
 						break;
 					}
 					
 					prevVal = val;
-					prevPoint = p.copy();
+					prevPoint = p;
 				}
 				
 				if (quitEarly)
@@ -474,7 +497,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				rv = true;
 			}
 			else
-				Hyst.log("Pseudo-invariant construction failed because some simpoints didn't cross the hyperplane within 2*piMaxTime");
+				Hyst.log("Pseudo-invariant construction failed because some simpoints didn't cross the hyperplane within piMaxTime");
 		}
 		else
 			Hyst.log("Pseudo-invariant construction failed because simulating center point didn't created valid PI within piMaxTime");
@@ -486,7 +509,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 		
 		return rv;
-	}*/
+	}
 	
 	/**
 	 * create one time-triggered mode. This advances the simulation points in the passed-in array,
@@ -564,6 +587,14 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 		
 		return rv;
+	}
+	
+	private double[] gradient(SymbolicStatePoint ssp)
+	{
+		HyperPoint hp = ssp.hp;
+		AutomatonMode am = ha.modes.get(ssp.modeName);
+		
+		return gradient(hp, am);
 	}
 	
 	private static double[] gradient(HyperPoint hp, AutomatonMode am)
@@ -750,5 +781,56 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		rv.append("]");
 		
 		return rv.toString();
+	}
+	
+	/**
+	 * Simulate from multiple points, returning the trajectories
+	 * @param config the automaton
+	 * @param startPoints the points where each simulation starts
+	 * @param time the desired simulation time
+	 * @return the resultant trajectories (each trajectory is a list of points)
+	 */
+	public static ArrayList<ArrayList <SymbolicStatePoint>> simMultiGetTrajectory(Configuration config, 
+			ArrayList<SymbolicStatePoint> startPoints, double time)
+	{
+		PythonBridge pb = PythonBridge.getInstance();
+		pb.send("from pythonbridge.pysim_utils import simulate_multi_trajectory_time");
+		
+		StringBuilder s = new StringBuilder();
+		s.append(PySimPrinter.automatonToString(config));
+		
+		String modes = makeModeString(startPoints);
+		String points = makePointsString(startPoints);
+		
+		s.append("print simulate_multi_trajectory_time(define_ha(), " + modes + ", " 
+				+ points + ", " + time + ")");
+		
+		String result = pb.send(s.toString());
+		
+		// parse result into SymbolicState objects
+		// result is semi-colon separated lists, first is the mode name, rest is the point 
+		ArrayList <ArrayList <SymbolicStatePoint>> rv = new ArrayList <ArrayList<SymbolicStatePoint>>();
+		
+		for (String traj : result.split("\\|"))
+		{
+			ArrayList <SymbolicStatePoint> trajStates = new ArrayList <SymbolicStatePoint>();
+			
+			for (String part : traj.split(";"))
+			{
+				String[] comma_parts = part.split(",");
+				
+				String mode = comma_parts[0]; // first one is the mode
+				HyperPoint pt = new HyperPoint(comma_parts.length - 1);
+				
+				for (int i = 1; i < comma_parts.length; ++i)
+					pt.dims[i-1] = Double.parseDouble(comma_parts[i]);
+				
+				trajStates.add(new SymbolicStatePoint(mode, pt));
+			}
+			
+			rv.add(trajStates);
+		}
+		
+		return rv;
 	}
 }

@@ -404,6 +404,8 @@ public class HybridizePassTests
 	@Test
 	public void testMixedTriggeredHybridizeWithPi()
 	{
+		Assert.fail("Working here, I just completed the implementation of hybridizedMixedTriggeredPass,"
+				+ " now to adjust the tests and make sure we pass!");
 		if (!PythonBridge.hasPython())
 			return;
 
@@ -433,14 +435,14 @@ public class HybridizePassTests
 		htt.testFuncs = new HybridizeMixedTriggeredPass.TestFunctions()
 		{
 			@Override
-			public void piSimPointsReached(List<HyperPoint> simPoints)
+			public void piSimPointsReached(List<SymbolicStatePoint> simPoints)
 			{
 				Assert.assertEquals("3 sim points after construction", 3,
 						simPoints.size());
 
-				for (HyperPoint sp : simPoints)
+				for (SymbolicStatePoint sp : simPoints)
 					Assert.assertEquals("simpoint is near x == 1.05",
-							simPoints.get(0).dims[0], sp.dims[0], 1e-4);
+							simPoints.get(0).hp.dims[0], sp.hp.dims[0], 1e-4);
 			}
 
 			@Override
@@ -665,8 +667,9 @@ public class HybridizePassTests
 		
 		List<Interval> optimizationResult = PythonUtil.scipyOptimize(expList, boundsList);
 		
-		System.out.println(optimizationResult);
-		System.out.println(".TODO complete this test (HybridizePassTests.sciPyOptimize()");
+		Interval.COMPARE_TOL = 1e-3;
+		Assert.assertEquals(new Interval(0, 0.0046), optimizationResult.get(0));
+		Assert.assertEquals(new Interval(0, 0.0055), optimizationResult.get(1));
 	}
 	
 	/**
@@ -869,5 +872,36 @@ public class HybridizePassTests
 		Assert.assertEquals("on", res.get(1).modeName);
 		Assert.assertEquals(3, res.get(1).hp.dims[0], 1e-4);
 		Assert.assertEquals(9.5, res.get(1).hp.dims[1], 1e-4);
+	}
+	
+	@Test
+	public void testMultiSimTrajectoryTime()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Configuration c = AutomatonUtil.makeDebugConfiguration(new String[][]
+				{{"x", "1"}, {"y", "2*x"}});
+		
+		// test trajectory computation
+		ArrayList <SymbolicStatePoint> startList = new ArrayList <SymbolicStatePoint>();
+		startList.add(new SymbolicStatePoint("on", new HyperPoint(0,0)));
+		startList.add(new SymbolicStatePoint("on", new HyperPoint(1,3.14)));
+		
+		ArrayList<ArrayList<SymbolicStatePoint>> result = 
+				HybridizeMixedTriggeredPass.simMultiGetTrajectory(c, startList, 2.0);
+		
+		for (SymbolicStatePoint ssp : result.get(0))
+		{
+			Assert.assertEquals("on", ssp.modeName);
+			Assert.assertEquals(ssp.hp.dims[0] * ssp.hp.dims[0], ssp.hp.dims[1], 1e-4);
+		}
+		
+		// check first and last of second point
+		ArrayList <SymbolicStatePoint> list = result.get(1);
+		Assert.assertEquals(list.get(0).hp.dims[0], 1, 1e-4);
+		Assert.assertEquals(list.get(0).hp.dims[1], 3.14, 1e-4);
+		
+		Assert.assertEquals(list.get(list.size() - 1).hp.dims[0], 3, 1e-4);
 	}
 }

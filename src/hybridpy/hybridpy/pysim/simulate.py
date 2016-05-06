@@ -235,7 +235,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
     return rv
 
-def simulate_multi(q_list, end_time, max_jumps=500, solver_name='vode', print_log=False):
+def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='vode', print_log=False):
     '''
     Simulate the hybrid automaton from multiple initial points
     q_list - a list of symbolic states: (AutomatonMode, point), where point is [x_0, ..., x_n]
@@ -254,7 +254,7 @@ def simulate_multi(q_list, end_time, max_jumps=500, solver_name='vode', print_lo
         if print_log:
             print "Simulation {}/{} starting in mode '{}': {}".format(q_index+1, len(q_list), q[0].name, q[1])
         
-        rv.append(simulate_one(q, end_time, max_jumps, solver_name=solver_name, print_log=print_log))
+        rv.append(simulate_one(q, end_time, max_jumps, solver_name=solver_name, max_step=max_step, print_log=print_log))
 
     return rv
 
@@ -511,14 +511,4 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
 
         for event in events:
             loc_index = _annotate(event, dim_x, dim_y, loc_index)
-        
-    
-
-
-
-
-
-
-
-
 

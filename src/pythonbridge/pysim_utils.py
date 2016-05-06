@@ -5,6 +5,7 @@ Stanley Bak (Feb 2016)
 
 from hybridpy.pysim.simulate import simulate_one_time
 from hybridpy.pysim.simulate import simulate_one
+from hybridpy.pysim.simulate import simulate_multi
 
 def simulate_with_times(q, all_times, max_jumps=500, solver='vode'):
     '''
@@ -130,33 +131,52 @@ def simulate_set_time(ha, mode_names, points, time, max_jumps=500, solver='vode'
     '''simulates a hybrid automaton from a given set of modes/points, getting the state at a fixed final time
     returns a semi-colon separated string of mode_name, point_dim_0, point_dim_1, ... , point_dim_n
     '''
-    rv = ""
+
+    trajectories = simulate_multi_trajectory_time(ha, mode_names, points, time, max_jumps=max_jumps, solver=solver)
+    last_states = []
+
+    for traj in trajectories.split('|'):
+        last_state = traj.split(';')[-1]
+        last_states.append(last_state)
+
+    return ';'.join(last_states)
+
+def simulate_multi_trajectory_time(ha, mode_names, points, time, min_steps=100, max_jumps=500, solver='vode'):
+    '''simulates a hybrid automaton from a list of modes/points to a maximum time, with a minimum number
+    of intermediate steps (which determines a max step size).
+    returns the trajectories, separated by '|', where each
+    trajectory is a semi-colon separated list of mode_name,point_dim_0,point_dim_1, ... , point_dim_m
+    '''
 
     assert len(mode_names) == len(points)
 
-    for i in xrange(len(points)):
+    max_step = float(time) / float(min_steps)
+    
+    q_list = []
+
+    for i in xrange(len(mode_names)):
+        mode = mode_names[i]
         point = points[i]
-        mode_name = mode_names[i]
 
-        q = (ha.modes[mode_name], point)
+        q_list.append((ha.modes[mode], point))
 
-        # simulate from q for time
-        q = simulate_one_time(q, time, max_jumps, solver)
+    res_list = simulate_multi(q_list, time, max_jumps=max_jumps, max_step=max_step, solver_name=solver)
 
-        entry = q[0].name
+    rv_list = []
 
-        for d in q[1]:
-            entry += "," + str(d)
+    for res in res_list:
+        traj = []
+        
+        for mode_sim in res['traces']:
+            mode = mode_sim.mode_name
+            points = mode_sim.points
+        
+            for point in points:
+                point_dims = [str(d) for d in point]
+                point_str = ",".join(point_dims)
+                traj.append(mode + "," + point_str)
 
-        if len(rv) > 0:
-            rv += ";"
+        
+        rv_list.append(';'.join(traj))
 
-        rv += entry
-
-    return rv
-
-
-
-
-
-
+    return '|'.join(rv_list)
