@@ -20,6 +20,7 @@ import org.junit.runners.Parameterized.Parameters;
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
+import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -124,7 +125,6 @@ public class HybridizePassTests
 
 		String params = "step=0.5,maxtime=1.0,epsilon=0.05,simtype=center";
 
-		
 		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 
 		Assert.assertEquals("5 modes (2 + 3 error)", 5, ha.modes.size());
@@ -664,6 +664,9 @@ public class HybridizePassTests
 		boundsList.add(list2);
 		
 		List<Interval> optimizationResult = PythonUtil.scipyOptimize(expList, boundsList);
+		
+		System.out.println(optimizationResult);
+		System.out.println(".TODO complete this test (HybridizePassTests.sciPyOptimize()");
 	}
 	
 	/**
@@ -840,5 +843,31 @@ public class HybridizePassTests
 		
 		Assert.assertEquals("x >= 0.2 & x <= 0.3 & 1 * x <= 0.3", inv1.toDefaultString());
 		Assert.assertEquals("x >= 0.3 & x <= 0.5", inv2.toDefaultString());
+	}
+	
+	@Test
+	public void testSimAllPoints()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Configuration c = AutomatonUtil.makeDebugConfiguration(new String[][]
+				{{"x", "1"}, {"y", "2*x"}});
+		
+		ArrayList<SymbolicStatePoint> simPoints = new ArrayList<SymbolicStatePoint>();
+		
+		simPoints.add(new SymbolicStatePoint("on", new HyperPoint(0,0)));
+		simPoints.add(new SymbolicStatePoint("on", new HyperPoint(1,1.5)));
+		
+		// test fixed-time simulation of multiple points
+		ArrayList<SymbolicStatePoint> res = HybridizeMixedTriggeredPass.simAllPoints(c, simPoints, 2.0);
+		
+		Assert.assertEquals("on", res.get(0).modeName);
+		Assert.assertEquals(2, res.get(0).hp.dims[0], 1e-4);
+		Assert.assertEquals(4, res.get(0).hp.dims[1], 1e-4);
+		
+		Assert.assertEquals("on", res.get(1).modeName);
+		Assert.assertEquals(3, res.get(1).hp.dims[0], 1e-4);
+		Assert.assertEquals(9.5, res.get(1).hp.dims[1], 1e-4);
 	}
 }

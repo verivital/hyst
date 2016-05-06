@@ -1,7 +1,6 @@
 package com.verivital.hyst.passes.complex.hybridize;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -28,7 +27,6 @@ import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.RangeExtractor;
-import com.verivital.hyst.util.StringOperations;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
@@ -355,14 +353,17 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				piNextTime += piStepTime;
 				HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
 				
-				if (advanceSimulationToPseudoInvariant(startBox, simPoints))
+				System.out.println(". TODO, add advanceSimulationToPseudoInvariant()");
+				
+				/*if (advanceSimulationToPseudoInvariant(startBox, simPoints))
 				{
 					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
-					stepSpaceTrigger(startBox);
+					//stepSpaceTrigger(startBox);
+					System.out.println(". TODO, add stepSpaceTrigger()");
 					continue;
 				}
 				else
-					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);
+					Hyst.log("Skipping pseudo-invariant step at sim-time: " + elapsed);*/
 			}
     		
 			// didn't do a pi-step, instead do a time-triggered step
@@ -371,7 +372,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 	}
 	
-	private HyperPoint getPiPoint(HyperRectangle startBox, HyperPoint centerStart)
+	/*private HyperPoint getPiPoint(HyperRectangle startBox, HyperPoint centerStart)
 	{
 		// the first point of simPoints is the center point we should simulate
 		HyperPoint p = centerStart;
@@ -391,7 +392,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 		
 		return rv;
-	}
+	}*/
 	
 	/**
 	 * Advance the simulated points for a pseudo-invariant step. This can fail if if the center point's simulation cannot go to a point
@@ -401,7 +402,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 * @param startBox the incoming set of states
 	 * @return true if succeeded (and simPoints is advanced in place), false otherwise (simPoints is unmodified)
 	 */
-	private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox, ArrayList<SymbolicStatePoint> simPoints)
+	/*private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox, ArrayList<SymbolicStatePoint> simPoints)
 	{
 		boolean rv = false;
 		HyperPoint piPoint = getPiPoint(startBox, simPoints.get(0).hp);
@@ -427,7 +428,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				
 				// simulate up to 2*piMaxTime
 				
-				for (double t = 0; /* break in loop */; t += simTimeMicroStep)
+				for (double t = 0; ; t += simTimeMicroStep)
 				{
 					if (t >= 2*piMaxTime)
 					{
@@ -485,7 +486,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 		
 		return rv;
-	}
+	}*/
 	
 	/**
 	 * create one time-triggered mode. This advances the simulation points in the passed-in array,
@@ -498,7 +499,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		HyperRectangle simBox = boundingBox(points(simPoints));
 		HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
 		
-		simAllPoints(simPoints, timeStep);
+		simPoints = simAllPoints(config, simPoints, timeStep);
 		
 		// a time-triggered transition should occur here
 		HyperRectangle endBox = HyperRectangle.bloatAdditive(boundingBox(points(simPoints)), epsilon);
@@ -565,7 +566,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		return rv;
 	}
 	
-	private double[] gradient(HyperPoint hp, AutomatonMode am)
+	private static double[] gradient(HyperPoint hp, AutomatonMode am)
 	{
 		double[] rv = new double[am.automaton.variables.size()];
 		
@@ -600,32 +601,32 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 	
 	/**
-	 * Do an in-place simulation of the passed-in point list
+	 * Do a simulation of the passed-in point list
 	 * @param c the configuration
 	 * @param simPoints the list of points
 	 * @param time the time to run the simulation
+	 * @return the resultant points
 	 */
-	public static void simAllPoints(Configuration c, ArrayList<SymbolicStatePoint> simPoints, 
-			double time)
+	public static ArrayList <SymbolicStatePoint> simAllPoints(Configuration config, 
+			ArrayList<SymbolicStatePoint> simPoints, double time)
 	{
 		for (SymbolicStatePoint ssp : simPoints)
 		{
-			if (ssp.hp.dims.length != c.root.variables.size())
-				throw new AutomatonExportException("start point had " + start.hp.dims.length + 
-					" dimensions; expected " + automaton.root.variables.size());
+			if (ssp.hp.dims.length != config.root.variables.size())
+				throw new AutomatonExportException("start point had " + ssp.hp.dims.length + 
+					" dimensions; expected " + config.root.variables.size());
 		}
 		
 		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("from pythonbridge.pysim_utils import simulate_times");
+		pb.send("from pythonbridge.pysim_utils import simulate_set_time");
 		
 		StringBuilder s = new StringBuilder();
-		s.append(PySimPrinter.automatonToString(automaton));
+		s.append(PySimPrinter.automatonToString(config));
 		
-		String point = "[" + StringOperations.join(",", start.hp.dims) + "]";
-		String timesStr = "[" + StringOperations.join(",", times.toArray(new Double[0])) +"]";
+		String points = makePointsString(simPoints);
+		String modes = makeModeString(simPoints);
 		
-		s.append("print simulate_times(define_ha(), '" + start.modeName + "', " 
-				+ point + ", " + timesStr + ")");
+		s.append("print simulate_set_time(define_ha(), " + modes + ", " + points + ", " + time + ")");
 		
 		String result = pb.send(s.toString());
 		
@@ -647,5 +648,107 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 		
 		return rv;
+	}
+
+	private static String makeModeString(ArrayList<SymbolicStatePoint> simPoints)
+	{
+		StringBuilder rv = new StringBuilder();
+		rv.append("[");
+		boolean first = true;
+		
+		for (SymbolicStatePoint s : simPoints)
+		{
+			if (first)
+				first = false;
+			else
+				rv.append(",");
+			
+			rv.append("'" + s.modeName  + "'");
+		}
+		
+		rv.append("]");
+		
+		return rv.toString();
+	}
+
+	private static String makePointsString(
+			ArrayList<SymbolicStatePoint> simPoints)
+	{
+		StringBuilder rv = new StringBuilder();
+		rv.append("[");
+		boolean first = true;
+		
+		for (SymbolicStatePoint s : simPoints)
+		{
+			if (first)
+				first = false;
+			else
+				rv.append(",");
+			
+			rv.append(makeHpString(s.hp));
+		}
+		
+		rv.append("]");
+		return rv.toString();
+	}
+	
+	/**
+	 * Test if all the points of box are on one side of a hyperplane derived from the given simulation point
+	 * @param simPoint the simulation point
+	 * @param box the box to test against
+	 * @return true if the box point are all behind the hyperplane
+	 */
+	public static boolean testHyperPlane(HyperPoint simPoint, HyperRectangle box, 
+			AutomatonMode am) 
+	{
+		List <String> varNames = am.automaton.variables;
+		
+		if (simPoint.dims.length != box.dims.length)
+			throw new RuntimeException("simpoint numdims must be same as box numdims");
+		
+		if (am.flowDynamics.size() != varNames.size())
+			throw new RuntimeException("varnames size must be same as dynamics size");
+		
+		if (simPoint.dims.length != varNames.size())
+			throw new RuntimeException("simpoint numdims must be same varNames size");
+		
+		double[] gradient = gradient(simPoint, am);
+		double val = dotProduct(gradient, simPoint);
+		
+		double maxVal = 0;
+		
+		for (int d = 0; d < gradient.length; ++d)
+		{
+			double factor = gradient[d];
+			
+			if (factor < 0)
+				maxVal += box.dims[d].min * factor;
+			else
+				maxVal += box.dims[d].max * factor;
+		}
+
+		return val > maxVal;
+	}
+
+
+	private static String makeHpString(HyperPoint hp)
+	{
+		StringBuilder rv = new StringBuilder();
+		rv.append("[");
+		boolean first = true;
+		
+		for (double d : hp.dims)
+		{
+			if (first)
+				first = false;
+			else
+				rv.append(",");
+			
+			rv.append(d);
+		}
+		
+		rv.append("]");
+		
+		return rv.toString();
 	}
 }

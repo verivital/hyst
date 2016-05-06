@@ -929,7 +929,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		
 	}
 	
-	static class TimeSplittingElement extends SplittingElement
+	public static class TimeSplittingElement extends SplittingElement
 	{
 		public TimeSplittingElement(double d)
 		{
@@ -939,7 +939,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		double time;
 	}
 	
-	static class SpaceSplittingElement extends SplittingElement
+	public static class SpaceSplittingElement extends SplittingElement
 	{
 		public SpaceSplittingElement() 
 		{
