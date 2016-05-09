@@ -899,7 +899,16 @@ public class HybridizeMTRawPass extends TransformationPass
 						+ numDims + " dimensions: " + hr);
 		}
 		
-		if (triggerMode != null && ha.modes.get(triggerMode) == null)
+		if (triggerMode == null)
+		{
+			if (ha.modes.size() != 1)
+				throw new AutomatonExportException("Trigger Mode not specified in multi-mode"
+						+ " automaton");
+			
+			triggerMode = ha.modes.keySet().iterator().next();
+		}
+		
+		if (ha.modes.get(triggerMode) == null)
 			throw new AutomatonExportException("trigger mode '" + triggerMode + "' not found"
 					+ " in automaton");
 	}

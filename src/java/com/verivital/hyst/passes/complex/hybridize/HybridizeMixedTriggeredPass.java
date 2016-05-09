@@ -21,6 +21,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SpaceSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.TimeSplittingElement;
 import com.verivital.hyst.printers.PySimPrinter;
@@ -141,6 +142,22 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			throw new PreconditionsFailedException("Python (and required libraries) needed to run Hybridize Mixed Triggered pass.");
 	}
     
+    public static String makeParamString(double T, String simType, double delta_tt,
+    		int n_pi, double delta_pi, double epsilon, String optType)
+    {
+    	StringBuilder s = new StringBuilder();
+    	
+    	s.append("-T " + T);
+    	s.append(" -S " + simType);
+    	s.append(" -delta_tt " + delta_tt);
+    	s.append(" -n_pi " + n_pi);
+    	s.append(" -delta_pi " + delta_pi);
+    	s.append(" -epsilon " + epsilon);
+    	s.append(" -opt " + optType);
+    	
+    	return s.toString();
+    }
+    
     private void makeParams()
     {
     	if (simTypeString.equals("center"))
@@ -179,13 +196,13 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
         
         long middle = System.currentTimeMillis();
         long simMills = middle - start;
-        Hyst.log("Simulate Time: " + simMills + "ms");
+        Hyst.log("Simulate Runtime: " + simMills + "ms");
         
         String params = HybridizeMTRawPass.makeParamString(splitElements, domains, opt, null);
         
         long end = System.currentTimeMillis();
         long optimizeMills = end - middle;
-        Hyst.log("Optimize and Construct Time: " + optimizeMills + "ms");
+        Hyst.log("Optimize and Construct Runtime: " + optimizeMills + "ms");
         
         new HybridizeMTRawPass().runVanillaPass(config, params);
     }
@@ -363,13 +380,10 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				piNextTime += piStepTime;
 				HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
 				
-				System.out.println(". TODO, add advanceSimulationToPseudoInvariant()");
-				
 				if (advanceSimulationToPseudoInvariant(startBox, simPoints))
 				{
 					Hyst.log("Doing pseudo-invariant step at sim-time: " + elapsed);
-					//stepSpaceTrigger(startBox);
-					System.out.println(". TODO, add stepSpaceTrigger()");
+					stepSpaceTrigger(startBox, simPoints);
 					continue;
 				}
 				else
@@ -382,6 +396,30 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		}
 	}
 	
+	/**
+	 * Add a space-triggered mode using an auxiliary hyperplane (pseudo-invariant). There is no guarantee of time elapsing in
+	 * the constructed mode. This should be called after the simPoints have already advanced onto the plane. The first simPoint is the
+	 * one used to construct the hyperplane.
+	 * @param startBox the bloated box surrounding the simPoints before they were advanced (the incoming set)
+	 * @param simPoints the (already-advanced) simulation points. First is center point
+	 */
+	private void stepSpaceTrigger(HyperRectangle startBox, 
+			ArrayList<SymbolicStatePoint> simPoints)
+	{		
+		HyperRectangle endBox = HyperRectangle.bloatAdditive(boundingBox(points(simPoints)), epsilon);
+		HyperRectangle invariantBox = HyperRectangle.union(startBox, endBox);
+		
+		Hyst.logDebug("making space-triggered mode, startBox was " + startBox + "; "
+				+ "endbox was " + endBox);
+		
+		domains.add(invariantBox);
+		
+		SymbolicStatePoint piPoint = simPoints.get(0);
+		double[] piGradient = gradient(piPoint);
+		
+		splitElements.add(new SpaceSplittingElement(piPoint.hp, piGradient));
+	}
+
 	/**
 	 * A space triggered-transition (pseudo-invariant) is being constructed. Advance the center point
 	 * until all the corners of the start box are all one side. This can fail if the
@@ -493,7 +531,8 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			
 			if (newSimPoints.size() == simPoints.size()) // every simulation point intersected with the pi-hyperplane
 			{
-				simPoints = newSimPoints;
+				simPoints.clear();
+				simPoints.addAll(newSimPoints);
 				rv = true;
 			}
 			else
@@ -522,7 +561,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 		HyperRectangle simBox = boundingBox(points(simPoints));
 		HyperRectangle startBox = HyperRectangle.bloatAdditive(simBox, epsilon);
 		
-		simPoints = simAllPoints(config, simPoints, timeStep);
+		ArrayList<SymbolicStatePoint> newSimPoints = simAllPoints(config, simPoints, timeStep);
+		simPoints.clear();
+		simPoints.addAll(newSimPoints);
 		
 		// a time-triggered transition should occur here
 		HyperRectangle endBox = HyperRectangle.bloatAdditive(boundingBox(points(simPoints)), epsilon);

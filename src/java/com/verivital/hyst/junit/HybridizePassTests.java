@@ -30,6 +30,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SpaceSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
@@ -404,8 +405,6 @@ public class HybridizePassTests
 	@Test
 	public void testMixedTriggeredHybridizeWithPi()
 	{
-		Assert.fail("Working here, I just completed the implementation of hybridizedMixedTriggeredPass,"
-				+ " now to adjust the tests and make sure we pass!");
 		if (!PythonBridge.hasPython())
 			return;
 
@@ -427,8 +426,10 @@ public class HybridizePassTests
 		c.settings.plotVariableNames[1] = "x";
 		c.init.put("on", FormulaParser.parseGuard("x >= 0 & x <= 1"));
 		c.validate();
-
-		String params = "step=1,maxtime=10,epsilon=0.01,simtype=star,picount=1";
+		
+		double pi_max_time = 5.0;
+		String params = HybridizeMixedTriggeredPass.makeParamString(10,"star",
+				1, 1, pi_max_time, 0.01, "basinhopping");
 
 		HybridizeMixedTriggeredPass htt = new HybridizeMixedTriggeredPass();
 		
@@ -458,13 +459,13 @@ public class HybridizePassTests
 				Assert.assertTrue("pi should succeed", rv);
 			}
 		};
-
+		
 		htt.runTransformationPass(c, params);
-
-		final String FIRST_MODE = "_m_0";
-		final String SECOND_MODE = "_m_1";
+		
+		final String FIRST_MODE = "_on_1_space_trig";
+		final String SECOND_MODE = "_on_2_time_trig";
 		final String TT_VAR = "_tt";
-
+		
 		AutomatonMode m0 = ha.modes.get(FIRST_MODE);
 		Assert.assertNotEquals("first mode exists'", null, m0);
 
@@ -484,9 +485,14 @@ public class HybridizePassTests
 			{
 				++numTransitions;
 
-				if (at.to == m1 && at.guard.toDefaultString()
-						.contains("1 * x >= 1.050000"))
-					foundGuard = true;
+				if (at.to == m1)
+				{
+					// 5.0 max time / 100 steps = 0.05 granularity
+					if (at.guard.toDefaultString().contains("1 * x >= 1.0500"))
+						foundGuard = true;
+					else
+						Assert.fail("incorrect PI guard: " + at.guard.toDefaultString());
+				}
 			}
 		}
 
@@ -498,7 +504,7 @@ public class HybridizePassTests
 				m0.invariant.toDefaultString().contains("1 * x <= 1.0500"));
 
 		Assert.assertTrue("second mode's invariant starts at 1.04",
-				m1.invariant.toDefaultString().contains("x >= 1.040000"));
+				m1.invariant.toDefaultString().contains("x >= 1.0400"));
 	}
 
 	@Test

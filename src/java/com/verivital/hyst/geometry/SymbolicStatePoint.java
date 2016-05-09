@@ -12,4 +12,10 @@ public class SymbolicStatePoint
 	
 	public String modeName;
 	public HyperPoint hp;
+	
+	public String toString()
+	{
+		return "[SSP: " + modeName + " - " + hp + "]";
+	}
+	
 }
