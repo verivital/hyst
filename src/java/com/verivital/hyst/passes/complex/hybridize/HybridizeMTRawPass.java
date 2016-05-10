@@ -298,7 +298,7 @@ public class HybridizeMTRawPass extends TransformationPass
 			previousMode = curMode;
 		}
 		
-		if (previousGuard != null)
+		if (previousGuard != null && triggerMode != null)
 		{
 			// previousMode is the last mode in the chain
 			redirectEnd(previousMode, previousGuard);
@@ -382,6 +382,23 @@ public class HybridizeMTRawPass extends TransformationPass
 			
 			Hyst.logDebug("Processing " + modeChain.get(i).name + ", avgDynamics = " + 
 								StringOperations.makeDefaultEiMapString(avgFlow));
+			
+			// update the invariant if they're all equal
+			Expression invariant = boxIntersects.get(0).invariant;
+			
+			for (int m = 1; m < boxIntersects.size(); ++m)
+			{
+				if (!boxIntersects.get(m).invariant.toDefaultString().equals(
+						invariant.toDefaultString()))
+				{
+					// invariant SHOULD be disjunction of all modes, but we'll be pessimistic
+					invariant = Constant.TRUE;
+					break;
+				}
+			}
+			
+			if (invariant != Constant.TRUE)
+				modeChain.get(i).invariant = Expression.and(invariant, modeChain.get(i).invariant);
 			
 			for (int imIndex = 0; imIndex < boxIntersects.size(); ++imIndex)
 			{
@@ -783,7 +800,7 @@ public class HybridizeMTRawPass extends TransformationPass
 		modeChainInvariants.add(domain);
 		
 		// dynamics are set during optimization
-		
+	
 		// set invariant (probably not the best way to check if it's a time-triggered transition)
 		if (typeName.equals("time_trig"))
 			am.invariant = ttGreaterThanZero;
@@ -899,16 +916,7 @@ public class HybridizeMTRawPass extends TransformationPass
 						+ numDims + " dimensions: " + hr);
 		}
 		
-		if (triggerMode == null)
-		{
-			if (ha.modes.size() != 1)
-				throw new AutomatonExportException("Trigger Mode not specified in multi-mode"
-						+ " automaton");
-			
-			triggerMode = ha.modes.keySet().iterator().next();
-		}
-		
-		if (ha.modes.get(triggerMode) == null)
+		if (triggerMode != null && ha.modes.get(triggerMode) == null)
 			throw new AutomatonExportException("trigger mode '" + triggerMode + "' not found"
 					+ " in automaton");
 	}
