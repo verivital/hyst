@@ -1,7 +1,9 @@
 package com.verivital.hyst.ir;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.network.NetworkComponent;
@@ -52,8 +54,11 @@ public class Configuration
 		if (!Configuration.DO_VALIDATION)
 			return;
 		
-		validateMap(init, "init", false);
-		validateMap(forbidden, "forbidden", true);
+		Collection <String> validVarNames = root.getAllVariables();
+		validVarNames.addAll(root.getAllConstants().keySet());
+		
+		validateMap(init, "init", validVarNames, false);
+		validateMap(forbidden, "forbidden", validVarNames, true);
 		
 		// validate the children
 		if (settings == null)
@@ -102,25 +107,63 @@ public class Configuration
 		root.validate();
 	}
 
-	private void validateMap(LinkedHashMap<String, Expression> map, String name, boolean allowEmpty)
+	private void validateMap(LinkedHashMap<String, Expression> map, String name,
+			Collection <String> validVarNames, boolean allowEmpty)
 	{
 		if (map == null)
 			throw new AutomatonValidationException("map was null");
 		
 		if (map.size() == 0 && !allowEmpty)
-			throw new AutomatonValidationException(name + " was was empty (size 0)");
-			
+			throw new AutomatonValidationException(name + " states were empty (size 0)");
+		
 		for (Entry<String, Expression> e : map.entrySet())
 		{
 			String modeName = e.getKey();
 			
 			if (!AutomatonUtil.modeExistsInComponent(modeName, root))
 			{
-				throw new AutomatonValidationException(name + " contains mode " + modeName + ", which is not in the automaton");
+				throw new AutomatonValidationException(name + " states contain mode " + modeName + ", which is not in the automaton");
+			}
+
+			// check that every variable in the expression exists
+			Set <String> vars = AutomatonUtil.getVariablesInExpression(e.getValue());
+			
+			for (String var : vars)
+			{
+				if (!validVarNames.contains(var))
+				{
+					String bestGuess = getBestVariableGuess(var, validVarNames);
+					
+					throw new AutomatonValidationException(name + " states use variable '" + 
+							var + "', which is not in the automaton. " + bestGuess);
+				}
 			}
 		}
+		
 	}
-	
+
+	/**
+	 * Get a string describing the best guess for a missing variable
+	 * @param var the missing variable
+	 * @param validVarNames the valid variable names
+	 * @return a string (may be empty) describing the best guess, for the error message
+	 */
+	private String getBestVariableGuess(String var,	Collection<String> validVarNames)
+	{
+		String rv = "";
+		
+		for (String v : validVarNames)
+		{
+			if (v.endsWith(var))
+			{
+				rv = "Did you mean '" + v + "'?";
+				break;
+			}
+		}
+		
+		return rv;
+	}
+
 	@Override
 	public String toString()
 	{

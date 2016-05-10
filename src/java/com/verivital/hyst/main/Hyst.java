@@ -38,7 +38,6 @@ import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
-import com.verivital.hyst.printers.SMTPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -87,7 +86,6 @@ public class Hyst
 			new HyCompPrinter(),
 			new PythonQBMCPrinter(),
 			new SpaceExPrinter(),
-			new SMTPrinter(),
 			new SimulinkStateflowPrinter(),
 	};
 
