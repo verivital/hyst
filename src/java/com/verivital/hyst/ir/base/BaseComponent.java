@@ -116,25 +116,6 @@ public class BaseComponent extends Component
 		
 		return rv;
 	}
-	
-        /**
-	 * Create transition with given guard as strings
-	 * @param from
-         * @param to
-	 * @param guard
-	 * @return
-	 */
-        public AutomatonTransition createTransition(AutomatonMode from, AutomatonMode to, String guard)
-	{
-		AutomatonTransition rv = new AutomatonTransition(this, from, to);
-		
-		if (this != from.automaton || this != to.automaton)
-			throw new AutomatonValidationException("created transition between different Hybrid Automata");
-				
-		rv.guard = FormulaParser.parseGuard(guard);               
-                transitions.add(rv);              
-		return rv;
-	}
         
 	/**
 	 * Check if the guarantees expected of this class are met. This is run prior to any

@@ -1,0 +1,9 @@
+The continuization pass soundly over-approximates a fast, periodically-actuated system by a continuous one with added noise to account for the mismatch between models.
+
+=== PAPER ===
+
+"Periodically-Scheduled Controller Analysis using Hybrid Systems Reachability and Continuization", S. Bak, T. Johnson, 36th IEEE Real-Time Systems Symposium (RTSS 2015), 22.5% conference acceptance rate (16.7% CPS track acceptance rate)
+
+=== OTHER ===
+
+matlab_simple.png is a matlab plot of the discretely actuated system, which clearly shows it's stable from both endpoints of the initial range.

@@ -85,6 +85,29 @@ class TestPySimUtils(unittest.TestCase):
                 # solution is y = x^2
                 self.assertAlmostEqual(float(x) * float(x), float(y), places=2)
 
+    def test_sim_der_range2(self):
+        'test for continuization simulation with urgent mode'
+
+        def define_ha_test():
+            '''make the hybrid automaton and return it'''
+            # Variable ordering: [x, v, a, t]
+            ha = HybridAutomaton()
+            on = ha.new_mode('on')
+            on.inv = lambda state: True
+            on.der = lambda _, state: [state[1], state[2], -10 * state[1] - 3 * state[2], 1]
+            init = ha.new_mode('init')
+            init.inv = lambda state: True
+            t = ha.new_transition(init, on)
+            t.guard = lambda state: True
+            t.reset = lambda state: [None, None, 10 * (1 - state[0]) + 3 * -state[1], None]
+            return ha
+
+        # actually we just want to make sure we don't get an exception here
+        res = util.simulate_der_range(define_ha_test(), 2, 'init', [0, 0.05, 0, 0], [(0.0, 1.5), (1.5, 5.0)])
+
+        if res.find(";") == -1:
+            self.fail("unexpected result")
+
 if __name__ == '__main__':
     unittest.main()
 

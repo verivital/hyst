@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="helicopter">
+    <note>Sets the derivatives of x and y. The velocities are set by the controller</note>
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="xvel" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="xaccel" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="flying" x="403.0" y="131.0" width="166.0" height="132.0">
+      <flow>x' == xvel &amp;&amp;
+xvel' == xaccel</flow>
+    </location>
+  </component>
+  <component id="controller">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="xvel" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="clock" type="real" local="true" d1="1" d2="1" dynamics="any" />
+    <param name="xaccel" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="PERIOD" type="real" local="false" d1="1" d2="1" dynamics="const" />
+    <location id="1" name="running" x="586.0" y="282.0" width="390.0" height="130.0">
+      <note>xvel' == P_GAIN * (SETPOINT_X - x) + D_GAIN * -xvel &amp;&amp;
+yvel' == P_GAIN * (SETPOINT_Y - y) + D_GAIN * -yvel</note>
+      <invariant>clock &lt;= PERIOD</invariant>
+      <flow>xaccel' == 0 &amp;&amp; clock' == 1</flow>
+    </location>
+    <location id="2" name="initial" x="116.0" y="284.0" width="118.0" height="110.0">
+      <flow>false</flow>
+    </location>
+    <transition source="1" target="1">
+      <note>xvel := P_GAIN * (SETPOINT_X - x) + D_GAIN * -xvel &amp;&amp;
+yvel := P_GAIN * (SETPOINT_Y - y) + D_GAIN * -yvel</note>
+      <guard>clock &gt;= PERIOD</guard>
+      <assignment>clock := 0 &amp;&amp;
+xaccel := 10 * (1 - x) + 3 * -xvel</assignment>
+      <labelposition x="-174.0" y="-118.0" width="352.0" height="116.0" />
+      <middlepoint x="-3.0" y="-126.0" />
+    </transition>
+    <transition source="2" target="1">
+      <assignment>xaccel := 10 * (1 - x) + 3 * -xvel &amp;
+clock := 0</assignment>
+      <labelposition x="-178.0" y="-9.0" width="220.0" height="64.0" />
+    </transition>
+  </component>
+  <component id="timer">
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="ticking" x="210.0" y="110.0">
+      <invariant>t &lt;= 4.99</invariant>
+      <flow>t' == 1</flow>
+    </location>
+  </component>
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="v" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="a" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="PERIOD" type="real" local="false" d1="1" d2="1" dynamics="const" controlled="true" />
+    <bind component="helicopter" as="helicopter_1" x="446.0" y="14.0">
+      <map key="x">x</map>
+      <map key="xvel">v</map>
+      <map key="xaccel">a</map>
+    </bind>
+    <bind component="controller" as="controller_1" x="439.0" y="231.0">
+      <map key="x">x</map>
+      <map key="xvel">v</map>
+      <map key="xaccel">a</map>
+      <map key="PERIOD">PERIOD</map>
+    </bind>
+    <bind component="timer" as="timer_1" x="355.0" y="468.0">
+      <map key="t">t</map>
+    </bind>
+  </component>
+</sspaceex>
+

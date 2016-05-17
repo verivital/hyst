@@ -1,0 +1,16 @@
+The pseudo-invariant pass inserts auxilary hyperplanes in order to reduce wrapping effect and improve the speed / accuracy of flowpipe construction.
+
+=== Releated Publications ===
+
+Reducing the Wrapping Effect in Flowpipe Construction using Pseudo-Invariants (Work-in-Progress)", S. Bak, Fourth Workshop on Design, Modeling and Evaluation of Cyber Physical Systems (CyPhy 2014)
+
+"High-level Hybrid Systems Analysis with Hypy", S. Bak, S. Bogomolov, C. Schiling, Applied Verification for Continuous and Hybrid Systems (ARCH 2016)
+
+=== Other Information ===
+
+Neuron Model from: R. FitzHugh. "Impulses and physiological states in theoretical models of nerve membrane." Biophysical J, 1961.
+
+Found in: T. Dang and R. Testylier, "Reachability analysis for polynomial dynamical systems using the Bernstein expansion." 
+Reliable Computing Journal, 2012
+
+The reach time is 50 instead of 100 because there's really no interesting behavior after it starts cycling.

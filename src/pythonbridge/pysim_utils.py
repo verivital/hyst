@@ -69,10 +69,16 @@ def simulate_der_range(ha, der_var_index, mode_name, point, time_ranges, max_jum
     for mode_sim in state_list:
         mode = ha.modes[mode_sim.mode_name]
 
+        # skip urgent modes as derivatives are in transit
+        if mode.der is None:
+            continue
+
         for i in xrange(len(mode_sim.times)):
             time = mode_sim.times[i]
             pt = mode_sim.points[i]
-            der_val = mode.der(time, pt)[der_var_index]
+        
+            der_vector = mode.der(time, pt)
+            der_val = der_vector[der_var_index]
 
             for r_index in xrange(len(ranges)):
                 time_range = time_ranges[r_index]

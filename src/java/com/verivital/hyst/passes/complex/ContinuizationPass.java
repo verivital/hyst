@@ -30,11 +30,17 @@ import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
+import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.StringOperations;
 
 public class ContinuizationPass extends TransformationPass
 {
+	public ContinuizationPass()
+	{
+		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
+	}
+	
 	private static class DomainValues
 	{
 		double startTime;
@@ -121,6 +127,32 @@ public class ContinuizationPass extends TransformationPass
 		return header;
 	}
 	
+	/**
+	 * Is the given automaton a two-mode, one urgent initialization? This also
+	 * populates the class variables related to the urgent mode
+ 	 * @param c the configuration
+	 * @return true iff it's a valid urgent initialization for the pass
+	 */
+	private boolean isUrgentInit(Configuration c)
+	{
+		boolean rv = false;
+		BaseComponent ha = ((BaseComponent)c.root);
+		
+		if (ha.modes.size() == 2 && c.init.size() == 1 && ha.transitions.size() == 1)
+		{
+			AutomatonTransition at = ha.transitions.get(0);
+			AutomatonMode init = ha.modes.get(c.init.keySet().iterator().next());
+			AutomatonMode other = at.to;
+			
+			if (init.urgent == true && at.from == init && init != other)
+			{
+				rv = true;
+			}
+		}
+		
+		return rv;
+	}
+	
 	@Override
 	protected void checkPreconditons(Configuration c, String name)
 	{
@@ -128,11 +160,9 @@ public class ContinuizationPass extends TransformationPass
 		BaseComponent ha = ((BaseComponent)c.root);
 		
 		// make sure it's a continuous approximation (single mode)
-		if (ha.modes.size() != 1)
-			throw new PreconditionsFailedException("Automaton must be a continuous approximation (single-mode).");
-		
-		if (ha.transitions.size() != 0)
-			throw new PreconditionsFailedException("Automaton must be a continuous approximation (no transitions).");
+		if (!isUrgentInit(c) && (ha.modes.size() != 1 || ha.transitions.size() != 0))
+			throw new PreconditionsFailedException("Automaton must be a continuous approximation "
+					+ "(single mode or single urgent transition) for " + name + ".");
 	}
 	
 	@Override
@@ -169,7 +199,6 @@ public class ContinuizationPass extends TransformationPass
 		
 		// estimate ranges based on simulation, stored in domains.ranges
 		estimateRanges();
-		
 		
 		if (timeVarName != null)
 			createModesWithTimeConditions(ha, approxMode);
@@ -670,7 +699,7 @@ public class ContinuizationPass extends TransformationPass
 		// initial transition
 		for (AutomatonTransition at : ha.transitions)
 		{
-			if (at.from == init && at.to == approxMode)
+			if (at.from == init)
 				at.guard = Expression.and(at.guard, 
 						new Operation(Operator.EQUAL, new Variable(timeVar), new Constant(0)));
 		}

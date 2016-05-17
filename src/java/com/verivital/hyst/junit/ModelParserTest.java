@@ -1390,6 +1390,32 @@ public class ModelParserTest
 			// make sure there's a friendly error message
 			Assert.assertTrue(e.getLocalizedMessage().contains("Did you mean 'inst.x'?"));
 		}
+	}
+	
+	@Test
+	public void testBadInitComponent()
+	{
+		// model contains an init(X)=Y expression where component X is not an
+		// instance in the model
+		
+		String cfgPath = UNIT_BASEDIR + "bad_init_comp/bad_init_comp.cfg";
+		String xmlPath = UNIT_BASEDIR + "bad_init_comp/bad_init_comp.xml";
 
+		try
+		{
+			SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+			Map<String, Component> componentTemplates = TemplateImporter
+					.createComponentTemplates(doc);
+			Configuration config = com.verivital.hyst.importer.ConfigurationMaker
+					.fromSpaceEx(doc, componentTemplates);
+			
+			System.out.println("\n\n" + config);
+			
+			Assert.fail("no exception raised");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
 	}
 }

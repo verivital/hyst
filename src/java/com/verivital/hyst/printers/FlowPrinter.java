@@ -380,7 +380,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			byte classification = AutomatonUtil.classifyExpressionOps(e);
 			
-			if ((classification | AutomatonUtil.OPS_NONLINEAR) != 0)
+			if ((classification & AutomatonUtil.OPS_NONLINEAR) != 0)
 			{
 				rv = true;
 				break;

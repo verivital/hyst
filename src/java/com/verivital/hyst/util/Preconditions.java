@@ -359,9 +359,10 @@ public class Preconditions
 
 	/**
 	 * Check that there are no urgent dynamics (instant mode changes)
-	 * @param c
+	 * @param c the Component to check
+	 * @throws PreconditionsFailedException if urgent dynamics were found
 	 */
-	private static void noUrgentDynamics(Component c)
+	public static void noUrgentDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
