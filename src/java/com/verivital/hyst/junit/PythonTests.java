@@ -290,11 +290,8 @@ public class PythonTests
 		List<HashMap <String, Interval>> ranges = Arrays.asList(range1, range2);
 		List <Interval> kodList = KodiakUtil.kodiakOptimize(eList, ranges);
 		
-		if (kodList == null) // kodaik doesn't exist
-		{
-			System.out.println("kodiak process not found");
+		if (kodList == null) // kodiak doesn't exist
 			return;
-		}
 		
 		double TOL = 0.1;
 		List <Interval> intList = PythonUtil.intervalOptimizeBounded(eList, ranges, TOL);
