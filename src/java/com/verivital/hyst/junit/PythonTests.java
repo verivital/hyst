@@ -23,6 +23,7 @@ import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationPa
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.KodiakUtil;
 
 /**
  * All these tests require python, so if it fails to load, they will be skipped
@@ -267,5 +268,45 @@ public class PythonTests
 		result = PythonUtil.pythonSimplifyExpression(e);
 		
 		Assert.assertEquals("python simplification incorrect", str, result.toDefaultString());
+	}
+	
+	@Test
+	public void testBoundedIntervalVersusKodiak()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Expression e = FormulaParser.parseValue("(1 - x * x) * y - x - (-7.2 * x + -1.03 * y + 8.97)");
+		List <Expression> eList = Arrays.asList(e, e);
+		
+		HashMap <String, Interval> range1 = new HashMap <String, Interval>();
+		range1.put("x", new Interval(0, 2));
+		range1.put("y", new Interval(1, 2.2));
+		
+		HashMap <String, Interval> range2 = new HashMap <String, Interval>();
+		range2.put("x", new Interval(0.6, 0.8));
+		range2.put("y", new Interval(1.8, 2.1));
+		
+		List<HashMap <String, Interval>> ranges = Arrays.asList(range1, range2);
+		List <Interval> kodList = KodiakUtil.kodiakOptimize(eList, ranges);
+		
+		if (kodList == null) // kodaik doesn't exist
+		{
+			System.out.println("kodiak process not found");
+			return;
+		}
+		
+		double TOL = 0.1;
+		List <Interval> intList = PythonUtil.intervalOptimizeBounded(eList, ranges, TOL);
+
+		for (int i = 0; i < kodList.size(); ++i)
+		{
+			Interval kod = kodList.get(i);
+			Interval bb = intList.get(i);
+			
+			Interval.COMPARE_TOL = TOL;
+			
+			Assert.assertEquals("Result for optimiziation " + i +" wasn't equal", kod, bb);
+		}
 	}
 }

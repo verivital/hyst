@@ -22,6 +22,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.matlab.MatlabBridge;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
@@ -29,6 +30,7 @@ import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -472,7 +474,32 @@ public class PrintersTest {
 		String out = printer.outputString.toString();
 		
 		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+	
+	@Test
+	public void testPrintHybridized()
+	{
+		if (!PythonBridge.hasPython())
+			return;
 		
-		//System.out.println(out);
+		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		SpaceExDocument doc = SpaceExImporter.importModels(path
+				+ "vanderpol_althoff.cfg", path + "vanderpol_althoff.xml");
+		Configuration c = ModelParserTest.flatten(doc);
+		
+		// -T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon 0.05 -noerror
+		String params = HybridizeMixedTriggeredPass.makeParamString(0.15, "starcorners", 
+				0.05, 31, 1, 0.05, "basinhopping", true);
+
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
+		
+		// try printing to spaceex
+		ToolPrinter printer = new SpaceExPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }

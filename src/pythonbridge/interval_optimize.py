@@ -65,7 +65,7 @@ def eval_eqs(e_list, subs_list):
 
     return eval_eqs_bounded(e_list, subs_list)
 
-def eval_eqs_bounded(e_list, subs_list, bound=None, use_basin_hopping=False):
+def eval_eqs_bounded(e_list, subs_list, bound=None, use_basinhopping=False, use_corners=True):
     """returns the interval evaluation of a list of sympy equations,
     over a set of domains, passed in as a list of substitutions
     each element of subList is a
@@ -83,7 +83,7 @@ def eval_eqs_bounded(e_list, subs_list, bound=None, use_basin_hopping=False):
         e = e_list[i]
         subs = subs_list[i]
 
-        param_list.append((e, subs, bound, use_basin_hopping))
+        param_list.append((e, subs, bound, use_basinhopping, use_corners))
 
     p = Pool()
     rv = p.map(_optimize_single, param_list)
@@ -92,7 +92,7 @@ def eval_eqs_bounded(e_list, subs_list, bound=None, use_basin_hopping=False):
     return rv
 
 def _eval_at_middle(e, subs):
-    '''evaluate an expression in the middle of an interval range'''
+    '''evaluate an expression in the corners of an interval range'''
 
     new_subs = {}
 
@@ -100,6 +100,35 @@ def _eval_at_middle(e, subs):
         new_subs[var] = (i[0] + i[1]) / 2.0
 
     return _eval_eq_direct(e, new_subs)
+
+def _eval_at_corners(e, subs):
+    '''evaluate an expression in the middle of an interval range'''
+    rv = None
+
+    max_iterator = 1
+
+    for _ in xrange(len(subs)):
+        max_iterator *= 2
+
+    for i in xrange(max_iterator):
+        new_subs = {}
+
+        for var, item in subs.items():
+            new_subs[var] = item[i % 2]
+            i /= 2
+
+        val = _eval_eq_direct(e, new_subs)
+
+        if rv is None:
+            rv = val
+
+        if val.a < rv.a:
+            rv = interval(val.a, rv.b)
+        
+        if val.b > rv.b:
+            rv = interval(rv.a, val.b)
+
+    return rv
 
 def _basinhopping(e, subs):
     '''use scipy basinhopping to get an underestimate
@@ -130,10 +159,13 @@ def _basinhopping(e, subs):
 def _optimize_single(opt_params):
     '''mapped function for optimization of a single function in a single domain
     
-    opt_params is a tuple (expression, subs, bound, use_basin_hopping)
+    opt_params is a tuple (expression, subs, bound, use_basinhopping, use_corners)
     returns the interval
     '''
-    (e, subs, bound, use_basin_hopping) = opt_params
+
+    (e, subs, bound, use_basinhopping, use_corners) = opt_params
+    assert not (use_basinhopping and use_corners)
+
     rv = None
     e = _simplify_eq(e)
 
@@ -142,12 +174,14 @@ def _optimize_single(opt_params):
     else:
         under_approx = None
 
-        if use_basin_hopping:
+        if use_corners:
+            under_approx = _eval_at_corners(e, subs)
+        elif use_basinhopping:
             under_approx = _basinhopping(e, subs)
         else:
             under_approx = _eval_at_middle(e, subs)
 
-        # under_approx should be an array of size 1, since it gets updated
+        # under_approx param should be an array of size 1, since it gets updated
         rv = _eval_eq_bounded(e, subs, bound, [under_approx])
 
     # convert rv from interval to tuple (for pickling)
@@ -233,12 +267,19 @@ def _eval_eq_direct(e, subs=None):
             f = entry[1] # function to call
 
             if isinstance(e, t):
-                rv = f(_eval_eq_direct(e.args[0], subs))
+                inner_arg = _eval_eq_direct(e.args[0], subs) 
+                rv = f(inner_arg)
                 break
 
+    {}'interval_optimize.py: TODO: Change this to use direct function evaluations, ratehr than working with interval()'
+    'on the other hand, just use kodiak, there's an ubuntu x86 binary available'
 
     if rv == None:
         raise RuntimeError("Type '" + str(type(e)) + "' is not yet implemented for interval evaluation. " + \
                             "Subexpression was '" + str(e) + "'.")
 
     return rv
+
+
+
+

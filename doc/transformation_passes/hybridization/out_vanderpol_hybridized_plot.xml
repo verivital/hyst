@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" math="SpaceEx" version="0.2">
+  <component id="vanderpol_althoff_sys">
+    <note>Created by Hyst v1.2
+Hybrid Automaton in SpaceEx
+Converted from file: vanderpol_althoff.xml
+Command Line arguments: vanderpol_althoff.xml -debug -hybridizemt "-T 0.1 -S starcorners -delta_tt 0.05 -n_pi 1 -delta_pi 1 -epsilon 0.06 -opt interval0.01" -o out_vanderpol_hybridized_plot.xml -spaceex</note>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="x" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="y" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="_tt" type="real"/>
+    <param controlled="false" d1="1" d2="1" dynamics="any" local="false" name="_y_interval" type="real"/>
+    <location id="1" name="_error">
+      <invariant>true &amp;
+ _y_interval == 0</invariant>
+      <flow>x' == 0 &amp;
+ y' == 0 + _y_interval &amp;
+ _tt' == 0</flow>
+    </location>
+    <location id="2" name="_1_space_trig">
+      <invariant>x &gt;= 1.19 &amp;
+ x &lt;= 1.66180775795408 &amp;
+ y &gt;= 2.0346199584971205 &amp;
+ y &lt;= 2.38 &amp;
+ 2.14717243966 * x + -4.095571019203355 * y &lt;= -5.5987319024338085 &amp;
+ _y_interval &lt;= 0.03980007549173781 &amp;
+ _y_interval &gt;= -0.25215375859036104</invariant>
+      <flow>x' == 1.0000000000000013 * y &amp;
+ y' == -7.294823723030501 * x + -1.03320187208177 * y + 8.975813564145888 + _y_interval &amp;
+ _tt' == 0</flow>
+    </location>
+    <location id="3" name="_2_time_trig">
+      <invariant>_tt &gt;= 0 &amp;
+ x &gt;= 1.3278405109856004 &amp;
+ x &lt;= 1.76564715891 &amp;
+ y &gt;= 1.85543002773 &amp;
+ y &lt;= 2.2667959099154915 &amp;
+ _y_interval &lt;= 0.06454899199590436 &amp;
+ _y_interval &gt;= -0.25787372733627745</invariant>
+      <flow>x' == 1.0000000000000004 * y &amp;
+ y' == -7.37602755531508 * x + -1.3924164909490293 * y + 9.862081312640896 + _y_interval &amp;
+ _tt' == -1</flow>
+    </location>
+    <location id="4" name="_3_time_trig">
+      <invariant>_tt &gt;= 0 &amp;
+ x &gt;= 1.42819282518 &amp;
+ x &lt;= 1.85599962603 &amp;
+ y &gt;= 1.60954137866 &amp;
+ y &lt;= 2.00381656081 &amp;
+ _y_interval &lt;= 0.07000379692756731 &amp;
+ _y_interval &gt;= -0.2340998375846075</invariant>
+      <flow>x' == 1 * y &amp;
+ y' == -6.933481434163548 * x + -1.6964800141461887 * y + 9.743347467737308 + _y_interval &amp;
+ _tt' == -1</flow>
+    </location>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>x &lt;= 1.19</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>x &gt;= 1.66180775795408</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>y &lt;= 2.0346199584971205</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>y &gt;= 2.38</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>x &lt;= 1.3278405109856004</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>x &gt;= 1.76564715891</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>y &lt;= 1.85543002773</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>y &gt;= 2.2667959099154915</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="3" timedriven="false">
+      <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085</guard>
+      <assignment>_tt' == 0.05</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085 &amp;
+ x &lt;= 1.3278405109856004</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085 &amp;
+ x &gt;= 1.76564715891</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085 &amp;
+ y &lt;= 1.85543002773</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="2" target="1" timedriven="false">
+      <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085 &amp;
+ y &gt;= 2.2667959099154915</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="4" target="1" timedriven="false">
+      <guard>x &lt;= 1.42819282518</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="4" target="1" timedriven="false">
+      <guard>x &gt;= 1.85599962603</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="4" target="1" timedriven="false">
+      <guard>y &lt;= 1.60954137866</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="4" target="1" timedriven="false">
+      <guard>y &gt;= 2.00381656081</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="4" timedriven="false">
+      <guard>_tt &lt;= 0</guard>
+      <assignment>_tt' == 0.05</assignment>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>_tt &lt;= 0 &amp;
+ x &lt;= 1.42819282518</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>_tt &lt;= 0 &amp;
+ x &gt;= 1.85599962603</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>_tt &lt;= 0 &amp;
+ y &lt;= 1.60954137866</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+    <transition asap="false" bezier="false" source="3" target="1" timedriven="false">
+      <guard>_tt &lt;= 0 &amp;
+ y &gt;= 2.00381656081</guard>
+      <labelposition/>
+      <middlepoint/>
+    </transition>
+  </component>
+  <component id="vanderpol_althoff_net">
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="x" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="y" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="_tt" type="real"/>
+    <param controlled="true" d1="1" d2="1" dynamics="any" local="false" name="_y_interval" type="real"/>
+    <bind as="vanderpol_althoff" component="vanderpol_althoff_sys">
+      <map key="x">x</map>
+      <map key="y">y</map>
+      <map key="_tt">_tt</map>
+      <map key="_y_interval">_y_interval</map>
+    </bind>
+  </component>
+</sspaceex>
+

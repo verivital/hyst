@@ -25,12 +25,12 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SpaceSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
@@ -40,6 +40,8 @@ import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.RangeExtractor;
+
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 @RunWith(Parameterized.class)
 public class HybridizePassTests
@@ -125,7 +127,7 @@ public class HybridizePassTests
 		c.validate();
 
 		String params = HybridizeMixedTriggeredPass.makeParamString(1.0, "center", 
-				0.5, 0, 0, 0.05, "basinhopping");
+				0.5, 0, 0, 0.05, "basinhopping", false);
 
 		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 
@@ -180,7 +182,7 @@ public class HybridizePassTests
 		c.validate();
 
 		String params = HybridizeMixedTriggeredPass.makeParamString(0.02, "star", 0.01, 
-				0, 0, 0.01, "basinhopping");
+				0, 0, 0.01, "basinhopping", false);
 
 		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
 		
@@ -320,7 +322,7 @@ public class HybridizePassTests
 		
 		double pi_max_time = 5.0;
 		String params = HybridizeMixedTriggeredPass.makeParamString(10,"star",
-				1, 1, pi_max_time, 0.01, "basinhopping");
+				1, 1, pi_max_time, 0.01, "basinhopping", false);
 
 		HybridizeMixedTriggeredPass htt = new HybridizeMixedTriggeredPass();
 		
@@ -607,7 +609,8 @@ public class HybridizePassTests
 		domains.add(new HyperRectangle(new Interval(0.2, 0.336)));
 		domains.add(new HyperRectangle(new Interval(0.236, 0.383)));
 		
-		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, null, null);
+		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, 
+				null, null, false);
 		
 		new HybridizeMTRawPass().runTransformationPass(c, params);
 		
@@ -700,7 +703,8 @@ public class HybridizePassTests
 		domains.add(new HyperRectangle(new Interval(0.2, 0.3)));
 		domains.add(new HyperRectangle(new Interval(0.3, 0.5)));
 		
-		String params = HybridizeMTRawPass.makeParamString(splitElements, domains, null, null);
+		String params = HybridizeMTRawPass.makeParamString(
+				splitElements, domains, null, null, false);
 		
 		new HybridizeMTRawPass().runTransformationPass(c, params);
 		
@@ -801,5 +805,25 @@ public class HybridizePassTests
 		Assert.assertEquals(list.get(0).hp.dims[1], 3.14, 1e-4);
 		
 		Assert.assertEquals(list.get(list.size() - 1).hp.dims[0], 3, 1e-4);
+	}
+	
+	@Test
+	public void testNoErrorModesPrint()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		SpaceExDocument doc = SpaceExImporter.importModels(path
+				+ "vanderpol_althoff.cfg", path + "vanderpol_althoff.xml");
+		Configuration c = ModelParserTest.flatten(doc);
+		
+		// -T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon 0.05 -noerror
+		String params = HybridizeMixedTriggeredPass.makeParamString(0.15, "starcorners", 
+				0.05, 31, 1, 0.05, "basinhopping", true);
+
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
+
+		Assert.assertEquals("0 forbidden modes", 0, c.forbidden.size());
 	}
 }

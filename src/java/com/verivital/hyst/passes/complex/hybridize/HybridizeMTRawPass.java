@@ -122,6 +122,11 @@ public class HybridizeMTRawPass extends TransformationPass
 			usage="the name of the mode which triggers entering the MTH-chain", metaVar="NAME")
 	String triggerMode = null;
 	
+	// no error
+	@Option(name="-noerror",
+			usage="do not insert the forbidden DCEM mode (useful for plotting)")
+	boolean noError = false;
+	
 	private BaseComponent ha;
 	private static final String TT_VARIABLE = "_tt";
 	private int ttVarIndex = -1;
@@ -143,7 +148,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	 * @return
 	 */
 	public static String makeParamString(List<SplittingElement> splitElements,
-			List<HyperRectangle> domains, String opt, String triggerMode)
+			List<HyperRectangle> domains, String opt, String triggerMode, boolean noError)
 	{
 		StringBuffer rv = new StringBuffer();
 		
@@ -191,6 +196,9 @@ public class HybridizeMTRawPass extends TransformationPass
 			
 			rv.append(") ");
 		}
+		
+		if (noError)
+			rv.append(" -noerror");
 		
 		return rv.toString().trim();
 	}
@@ -240,6 +248,31 @@ public class HybridizeMTRawPass extends TransformationPass
 		ConvertFromStandardForm.convertInit(config);
 		
 		config.settings.spaceExConfig.timeTriggered = true;
+		
+		if (noError)
+			removeErrorModes();
+	}
+	
+	private void removeErrorModes()
+	{
+		errorMode = ConvertToStandardForm.getErrorMode(ha);
+		
+		ha.modes.remove(errorMode.name);
+		
+		ArrayList <AutomatonTransition> toRemove = new ArrayList <AutomatonTransition>();
+		
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.to == errorMode)
+				toRemove.add(at);
+		}
+		
+		ha.transitions.removeAll(toRemove);
+			
+		config.forbidden.remove(errorMode.name);
+		config.init.remove(errorMode.name);
+		
+		config.validate();
 	}
 	
 	/**

@@ -49,6 +49,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 @RunWith(Parameterized.class)
 public class ModelParserTest
 {
+	public static String UNIT_BASEDIR = "tests/unit/models/";
+	
 	@Parameters
 	public static Collection<Object[]> data()
 	{
@@ -81,8 +83,6 @@ public class ModelParserTest
 
 		return config;
 	}
-
-	private String UNIT_BASEDIR = "tests/unit/models/";
 
 	/**
 	 * Model has a 'const' value which is actually an interval in the initial

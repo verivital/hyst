@@ -156,12 +156,12 @@
 		</javac>
 	</target>
 	
-	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar" description="Make the .class files and .jar file">
+	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar,run_jar_test" description="Make the .class files and .jar file">
 	</target>
 	
 	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
 	
-	<target name ="run_jar_test" depends="build-config,build,copyjar" description="Test running the .jar">
+	<target name ="run_jar_test" depends="build-config,copyjar" description="Test running the .jar">
 		<exec dir="${lib.path}" executable="java" failonerror="true" outputproperty="devnull">
 			<arg line="-jar ${jar.path} -help" />
 		</exec>

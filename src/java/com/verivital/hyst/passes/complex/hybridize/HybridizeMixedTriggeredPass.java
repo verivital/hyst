@@ -89,6 +89,11 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 					+ "where # is the max error, like 0.1}", metaVar="METHOD")
 	String opt = "basinhopping";
 	
+	// no error
+	@Option(name="-noerror",
+			usage="do not insert the forbidden DCEM mode (useful for plotting)")
+	boolean noError = false;
+	
 	// derived params
 	SimulationType simType = SimulationType.CENTER;
 	int randCount = -1; // for SimulationType.RAND
@@ -143,7 +148,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
     
     public static String makeParamString(double T, String simType, double delta_tt,
-    		int n_pi, double delta_pi, double epsilon, String optType)
+    		int n_pi, double delta_pi, double epsilon, String optType, boolean noError)
     {
     	StringBuilder s = new StringBuilder();
     	
@@ -154,6 +159,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
     	s.append(" -delta_pi " + delta_pi);
     	s.append(" -epsilon " + epsilon);
     	s.append(" -opt " + optType);
+    	
+    	if (noError)
+    		s.append(" -noerror");
     	
     	return s.toString();
     }
@@ -198,7 +206,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
         long simMills = middle - start;
         Hyst.log("Simulate Runtime: " + simMills + "ms");
         
-        String params = HybridizeMTRawPass.makeParamString(splitElements, domains, opt, null);
+        String params = HybridizeMTRawPass.makeParamString(splitElements, domains, opt, null, noError);
         
         long end = System.currentTimeMillis();
         long optimizeMills = end - middle;

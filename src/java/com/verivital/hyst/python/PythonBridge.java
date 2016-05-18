@@ -238,7 +238,7 @@ public class PythonBridge
 				process.getInputStream().close();
 				process.getOutputStream().close();
 		        process.getErrorStream().close();
-			} 
+			}
 			catch (IOException e) {}
 	        
 			process.destroy();
