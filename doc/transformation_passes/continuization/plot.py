@@ -1,5 +1,6 @@
 '''Script for running continuization for the double integrator example'''
 
+# make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
 
 def main():

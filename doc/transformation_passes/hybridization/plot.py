@@ -4,7 +4,7 @@ Stanley Bak (05-2016)
 
 import time
 
-# make sure hybridpy is on your PYTHONPATH: /home/sbak/repositories/hyst/src/hybridpy
+# make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
 
 def main():
@@ -14,14 +14,14 @@ def main():
 
     simtype = 'starcorners'
     step = '0.05'
-    maxtime = '0.1' # 5.5
-    bloat = '0.06' # 0.05 
-    picount = '1' # '31'
+    maxtime = '5.5' # 5.5
+    bloat = '0.05' # 0.05 
+    picount = '31' # '31'
     pimaxtime = '1'
-    opt = "interval0.01" # basinhopping
+    opt = "basinhopping" # use 'kodiak' for a verified one
 
     # skip error modes so spaceex produces a plot, disable to do DCEM check
-    skip_error_modes = False
+    skip_error_modes = True
     
     hyst_params = ['-hybridizemt', \
             '-T ' + maxtime + 

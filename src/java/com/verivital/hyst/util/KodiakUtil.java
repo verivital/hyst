@@ -41,6 +41,47 @@ public class KodiakUtil
 			List<HashMap<String, Interval>> boundsList)
 	{
 		List<Interval> rv = null;
+		
+		// This splits problems into 30 optimizations each to get around 
+		// kodiac's long-input bug
+		List<Expression> subExps = new ArrayList<Expression>();
+		List<HashMap<String, Interval>> subBounds = new ArrayList<HashMap<String, Interval>>();
+		
+		final int OPT_PER_CALL = 30;
+		int index = 0;
+		
+		while (index < exps.size())
+		{
+			subExps.add(exps.get(index));
+			subBounds.add(boundsList.get(index));
+			
+			++index;
+			
+			if (index == exps.size() || index % OPT_PER_CALL == 0)
+			{
+				List<Interval> result = kodiakOptimizeSingle(subExps, subBounds);
+				
+				if (result == null) // kodiak executable not found
+					break;
+				
+				if (rv == null)
+					rv = result;
+				else
+					rv.addAll(result);
+				
+				// run opt and add to rv
+				subExps.clear();
+				subBounds.clear();
+			}
+		}
+		
+		return rv;
+	}
+	
+	private static List<Interval> kodiakOptimizeSingle(List <Expression> exps,
+			List<HashMap<String, Interval>> boundsList)
+	{
+		List<Interval> rv = null;
 		Process p = null;
 		
 		try
@@ -52,8 +93,14 @@ public class KodiakUtil
 			{
 				BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream()));
 				
-				rv = parseOutput(stdout);
-				closeProcess(p);
+				try
+				{
+					rv = parseOutput(stdout);
+				}
+				finally
+				{
+					closeProcess(p);
+				}
 			}
 		}
 		catch (IOException e)
@@ -62,11 +109,12 @@ public class KodiakUtil
 		}
 		
 		if (rv != null && rv.size() != exps.size())
-			throw new AutomatonExportException("output size (" + rv.size() 
+			throw new AutomatonExportException("kodiak output size (" + rv.size() 
 				+ ") didn't match input size (" + exps.size() + ")");
 		
 		return rv;
 	}
+	
 	
 	private static List<Interval> parseOutput(BufferedReader stdout) throws IOException
 	{
@@ -75,6 +123,9 @@ public class KodiakUtil
 		for (String line = stdout.readLine(); line != null; line = stdout.readLine())
 		{
 			// outclosure: [-0.24862617, 0.029801058]
+			
+			if (line.contains("Error"))
+				throw new AutomatonExportException("Error while running Kodiak: " + line);
 			
 			String prefix = "outclosure: [";
 			if (line.startsWith(prefix))
@@ -96,6 +147,7 @@ public class KodiakUtil
 			List<HashMap<String, Interval>> boundsList) throws IOException
 	{
 		File f = File.createTempFile("hyst_kodiak", ".kdk");
+		//File f = new File("/home/stan/Desktop/temp/kodiak/hyst_kodiak.kdk");
 		
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f.getAbsolutePath()));
 		

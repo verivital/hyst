@@ -929,7 +929,8 @@ public class HybridizeMTRawPass extends TransformationPass
 		if (domains.size() == 0)
 			throw new AutomatonExportException("expected at least one domain");
 		
-		if (!opt.equals("basinhopping") && !opt.startsWith("interval"))
+		if (!opt.equals("basinhopping") && !opt.equals("kodiak") &&
+				!opt.startsWith("interval"))
 			throw new AutomatonExportException("unknown optimization method: " + opt);
 
 		int numDims = config.root.variables.size();
