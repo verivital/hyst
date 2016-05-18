@@ -259,6 +259,13 @@ Currently, Python 2.7 needs to be installed, as well as the following packages:
 
 The python executable will be looked for on the paths given in the environment variable HYST_PYTHON_PATH, as well as PATH. It will look for binaries named python2.7 and python.
 
+
+*******************************************************************************
+Kodiak for Optimization (by Stanley Bak)
+*******************************************************************************
+
+For validated optimization tasks in Hyst, kodiak is an option. Kodiak is a NASA tool which uses interval branch and bound and Bernstein expansions to come up with upper and lower bounds on a nonlinear function, given interval bounds. To use this, the kodiak executable must be on your PATH or KODIAK_PATH environment variable.
+
 *******************************************************************************
 Running the Regression Tests and hypy (by Stanley Bak)
 *******************************************************************************
@@ -365,65 +372,7 @@ Once the tool-specific script is written and you added your tool to hypy.py, you
 Model Transformation Passes:
 *******************************************************************************
 
-* Hybridization (by Pradyot Prakash)
-
-taylor2pradyot: can we call it from Hyst.jar or what? Can you please add a full call for an example that is executable (see above, for example, e.g., such as java -jar Hyst.jar ../../examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh )
-
-DEPENDENCIES: scipy
-
-INSTALLATION:
-
-Windows:
-
-0)
-
-It may or may not be necessary to install MinGW, I gave up, it's possible the below C++ compiler is the only dependency, as I did get it to finish building, but it apparently did not properly install the package as calling the hybridize pass still failed.
-
-Scipy is a pain to install via pip. But if you want to try, here are some ideas. Alternative is just to install YET ANOTHER Python runtime on Windows (but then would have to get this properly set up on the PATH to make this work with Hyst, since there's not a way to specify which Python install to use in Hyst [as far as I know]).
-
-http://stackoverflow.com/questions/12628164/trouble-installing-scipy-on-windows
-
-Have to have MingGW etc. with a GNU compiler to use pip, alternative is to find some binary distribution, but the Python community (and scipy community) are hugely fragmented, so there doesn't seem to be a great version to use, unfortunately.
-
-After installing MingGW, have to add the C:\MinGW\bin directory (or wherever installed) to the Windows path.
-
-1) Download and install this (Visual C++ Compiler for Python 2.7):  http://aka.ms/vcpython27
-2) pip install scipy
-
-Linux:
-
-To install via pip, must have fortan compiler and other dependencies installed, see here for overview: http://stackoverflow.com/questions/2213551/installing-scipy-with-pip
-
-1) 
-sudo apt-get install python-pip python-dev build-essential
-
-2)
-sudo pip install numpy
-sudo apt-get install libatlas-base-dev gfortran
-sudo pip install scipy
-
-3) 
-sudo pip install matplotlib   OR  sudo apt-get install python-matplotlib
-sudo pip install -U scikit-learn
-sudo pip install pandas
-
-You can call the HybridizePass.java as follows:
-
--hybridize <variable corresponding to first dimension>,..<variable corresponding to nth dimension>,<lower bound for the first dimension>,<upper bound for the same dimension>,....,<lower bound for the last dimension>,<upper bound for the last dimension>,<number of partitions along the first dimension>,...,<number of partitions along the last dimension>,<'a' if you want a affine system/'l' if you want a piecewise constant system>
-
-For eg,
-Consider the van der pol system.
-It has two variables x and y.
-
-Suppose we want to consider the interval [-1,2] along the x-axis and [3,4] along y-axis and want 2 partitions along x axis and 3 along y axis, then you should call
--hybridize x,y,-1,2,3,4,2,3,a
-
-You can also call
--hybridize y,x,3,4,-1,2,3,2,a
-
-The last argument 'a' means that you want a final system with affine dynamics in each of the modes. It can also be 'l' if you want a Linear Hybrid Automata with piecewise constant dynamics.
-
-
+Demonstrations for certain, more complicated, model transformation passes, as well as hypy scripts to recreate results, are provided in the doc/transformation_passes directory. There are READMEs inside each sub-directory which provide additional information about the specific pass being demonstrated.
 
 *****************************************
 ADDITIONAL PRINTER DOCUMENTATION
