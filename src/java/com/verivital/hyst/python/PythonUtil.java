@@ -420,7 +420,7 @@ public class PythonUtil
 		if (maxError > 0)
 			errorStr = "" + maxError;
 		
-		s.append(errorStr + ",True)");
+		s.append(errorStr + ")");
 
 		pb.send("from pythonbridge.interval_optimize import *");
 		String result = pb.send(s.toString());

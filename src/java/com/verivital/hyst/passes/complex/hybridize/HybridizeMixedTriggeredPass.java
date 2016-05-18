@@ -85,7 +85,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	
 	// O or optimization
 	@Option(name="-O", aliases = {"-opt"},
-			usage="the optimization method, one of {basinhopping, interval, interval#, "
+			usage="the optimization method, one of {basinhopping, kodiak, interval, interval#, "
 					+ "where # is the max error, like 0.1}", metaVar="METHOD")
 	String opt = "basinhopping";
 	

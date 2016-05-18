@@ -81,8 +81,6 @@ public class KodiakUtil
 			{
 				line = line.substring(prefix.length(), line.length() - 1);
 				
-				System.out.println(". substring'd line = '" + line + "'");
-				
 				String[] parts = line.split(",");
 				double min = Double.parseDouble(parts[0]);
 				double max = Double.parseDouble(parts[1]);
@@ -97,9 +95,7 @@ public class KodiakUtil
 	private static String makeInputFile(List<Expression> exps, 
 			List<HashMap<String, Interval>> boundsList) throws IOException
 	{
-		//File f = File.createTempFile("hyst_kodiak", ".kdk");
-		File f = new File("/home/stan/Desktop/temp/kodiak/hyst_test.kdk");
-		System.out.println(". todo, change hardcoded kodiak path");
+		File f = File.createTempFile("hyst_kodiak", ".kdk");
 		
 		BufferedWriter bw = new BufferedWriter(new FileWriter(f.getAbsolutePath()));
 		
@@ -154,6 +150,7 @@ public class KodiakUtil
 		if (loc != null)
 		{
 			ProcessBuilder pb = new ProcessBuilder(loc, inputFilename);
+			pb.directory(new File(System.getProperty("java.io.tmpdir")));
 			
 			try
 			{

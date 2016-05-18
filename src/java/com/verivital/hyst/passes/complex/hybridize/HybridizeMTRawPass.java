@@ -114,7 +114,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	
 	// O or optimization
 	@Option(name="-O", aliases = {"-opt"},
-			usage="the optimization method, one of {basinhopping, interval, interval#, "
+			usage="the optimization method, one of {basinhopping, kodiak, interval, interval#, "
 					+ "where # is the max error, like 0.1}", metaVar="METHOD")
 	String opt = "basinhopping";
 	
@@ -375,7 +375,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	 * flow dynamics for each mode in the chain.
 	 * 
 	 * @param optimizationType the optimization engine to use, one of 
-	 * "basinhopping", "interval", "intervalXX"
+	 * "basinhopping", "kodiak", "interval", "intervalXX"
 	 * @param oldModes The list of all modes in the original automaton
 	 * @param modeChain the list of modes in the chain
 	 * @param rects the box invariant sets corresponding to each mode in the chain

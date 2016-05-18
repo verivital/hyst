@@ -92,8 +92,8 @@ class TestIntervalOptimize(unittest.TestCase):
         # real answer = [0, 2]
 
         res1 = opt.eval_eqs([eq1], [range1])[0]
-        res2 = opt.eval_eqs_bounded([eq1], [range1], 0.5, False)[0]
-        res3 = opt.eval_eqs_bounded([eq1], [range1], 0.01, True)[0]
+        res2 = opt.eval_eqs_bounded([eq1], [range1], 0.5)[0]
+        res3 = opt.eval_eqs_bounded([eq1], [range1], 0.01, use_basinhopping=True, use_corners=False)[0]
 
         # bottom bound converges to 0
         self.assertTrue(res1[0] < res2[0])
@@ -115,7 +115,8 @@ class TestIntervalOptimize(unittest.TestCase):
         y = symbols('y')
         x = symbols('x')
 
-        res = opt.eval_eqs_bounded([2 * x + y - x], [{'y':(-0.2, -0.1), 'x':(0.0, 1.0),}], None, True)
+        res = opt.eval_eqs_bounded([2 * x + y - x], [{'y':(-0.2, -0.1), 'x':(0.0, 1.0),}], None, 
+            use_basinhopping=True, use_corners=False)
 
         self.assertTrue(len(res) == 1)
 

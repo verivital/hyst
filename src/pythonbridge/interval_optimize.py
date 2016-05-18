@@ -271,9 +271,6 @@ def _eval_eq_direct(e, subs=None):
                 rv = f(inner_arg)
                 break
 
-    {}'interval_optimize.py: TODO: Change this to use direct function evaluations, ratehr than working with interval()'
-    'on the other hand, just use kodiak, there's an ubuntu x86 binary available'
-
     if rv == None:
         raise RuntimeError("Type '" + str(type(e)) + "' is not yet implemented for interval evaluation. " + \
                             "Subexpression was '" + str(e) + "'.")

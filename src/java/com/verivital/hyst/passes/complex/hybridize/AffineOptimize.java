@@ -19,6 +19,7 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.KodiakUtil;
 import com.verivital.hyst.util.StringOperations;
 
 public class AffineOptimize
@@ -67,7 +68,7 @@ public class AffineOptimize
 	 * Perform an optimization in order to find out the differences in dynamics, for example,
 	 * between a nonlinear derivative and its linear approximation.
 	 * 
-	 * @param optimizationType one of {"basinhopping", "interval", "intervalXXX" where XXX is a 
+	 * @param optimizationType one of {"basinhopping", "kodiak", "interval", "intervalXXX" where XXX is a 
 	 * real number describing the maximum overapproximation error
 	 * @param params [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
@@ -91,6 +92,8 @@ public class AffineOptimize
 		
 		if (optimizationType.equals("basinhopping"))
 			optimizationResult = PythonUtil.scipyOptimize(expList, boundsList);
+		else if (optimizationType.equals("kodiak"))
+			optimizationResult = KodiakUtil.kodiakOptimize(expList, boundsList);
 		else if (optimizationType.equals("interval"))
 			optimizationResult = PythonUtil.intervalOptimize(expList, boundsList);
 		else if (optimizationType.startsWith("interval"))
