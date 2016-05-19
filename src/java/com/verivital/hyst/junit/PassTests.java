@@ -149,7 +149,7 @@ public class PassTests {
 		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
 
 		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		String OrderReductionPassParam = "3";
+		String OrderReductionPassParam = "-reducedOrder 3";
 
 		new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
 		BaseComponent ha = (BaseComponent) c.root;
