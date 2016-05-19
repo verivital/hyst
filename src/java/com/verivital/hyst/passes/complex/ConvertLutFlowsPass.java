@@ -29,6 +29,7 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
@@ -83,6 +84,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		// urgent modes are supported
 		preconditions.skip(PreconditionsFlag.NO_URGENT);
+		
+		simplifyMode = PythonBridge.hasPython() ? SIMPLIFY_PYTHON : SIMPLIFY_INTERNAL;
 	}
 	
 	private void convertLuts(Component c)
