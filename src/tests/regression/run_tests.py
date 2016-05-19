@@ -35,7 +35,15 @@ def set_pythonpath():
     os.environ['PYTHONPATH'] = pre_pythonpath + hypy_path
 
     sys.path.append(hypy_path)
+    
+def set_hyst_bin():
+    'sets hyst_bin if it is not set'
+    
+    if os.environ.get('HYST_BIN') is None:
+        print "HYST_BIN environment variable was NOT set, trying relative path to Hyst.jar"
+        os.environ['HYST_BIN'] = get_script_path() + '/../../Hyst.jar'
 
+set_hyst_bin()
 set_pythonpath()
 
 import hybridpy.hypy as hypy
@@ -103,7 +111,7 @@ def run_single((index, total, path, tool, quit_flag)):
     e.set_output_image(base + '.png')
     e.set_save_model_path(base + hypy.TOOLS[tool_name].default_ext())
 
-    code = e.run(SHOULD_RUN_TOOLS)
+    code = e.run(run_tool=SHOULD_RUN_TOOLS)
 
     if code in hypy.get_error_run_codes():
         message = "Test failed for " + index_str + " model " + model + " with " + tool_name + ": " + str(code)
