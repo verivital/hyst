@@ -23,7 +23,15 @@ def get_hypy_path():
 
     return os.path.realpath(rv)
 
-sys.path.append(get_hypy_path())
+pre_pythonpath = ""
+
+if os.environ.get('PYTHONPATH') is not None:
+    pre_pythonpath = os.environ['PYTHONPATH'] + ":"
+
+hypy_path = get_hypy_path()
+os.environ['PYTHONPATH'] = pre_pythonpath + hypy_path
+
+sys.path.append(hypy_path)
 import hybridpy.hypy as hypy
 
 # timeout for running the tools
