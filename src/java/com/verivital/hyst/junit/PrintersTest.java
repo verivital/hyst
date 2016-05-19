@@ -1,11 +1,16 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -46,10 +51,22 @@ import matlabcontrol.MatlabInvocationException;
  * @author Stanley Bak
  *
  */
+@RunWith(Parameterized.class)
 public class PrintersTest {
 	@Before
 	public void setUpClass() {
 		Expression.expressionPrinter = null;
+	}
+	
+	@Parameters
+	public static Collection<Object[]> data()
+	{
+		return Arrays.asList(new Object[][] { { false }, { true } });
+	}
+
+	public PrintersTest(boolean block)
+	{
+		PythonBridge.setBlockPython(block);
 	}
 
 	private String UNIT_BASEDIR = "tests/unit/models/";
@@ -500,6 +517,27 @@ public class PrintersTest {
 		
 		String out = printer.outputString.toString();
 		
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+	
+	@Test
+	public void testPrintLutModelWithoutPython()
+	{
+		String cfgPath = UNIT_BASEDIR + "lut_table/lut_table.cfg";
+		String xmlPath = UNIT_BASEDIR + "lut_table/lut_table.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker
+				.fromSpaceEx(doc, componentTemplates);
+		
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+
 		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }

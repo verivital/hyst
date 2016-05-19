@@ -1406,10 +1406,8 @@ public class ModelParserTest
 			SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
 			Map<String, Component> componentTemplates = TemplateImporter
 					.createComponentTemplates(doc);
-			Configuration config = com.verivital.hyst.importer.ConfigurationMaker
+			com.verivital.hyst.importer.ConfigurationMaker
 					.fromSpaceEx(doc, componentTemplates);
-			
-			System.out.println("\n\n" + config);
 			
 			Assert.fail("no exception raised");
 		}
