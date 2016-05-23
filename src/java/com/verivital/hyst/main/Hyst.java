@@ -3,6 +3,8 @@ package com.verivital.hyst.main;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,22 +29,24 @@ import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.basic.TimeScalePass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
+import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
-import com.verivital.hyst.passes.complex.PseudoInvariantPass;
-import com.verivital.hyst.passes.complex.PseudoInvariantSimulatePass;
-import com.verivital.hyst.passes.complex.RegularizePass;
-import com.verivital.hyst.passes.complex.hybridize.HybridizeGridPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
+import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.StringOperations;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -62,7 +66,7 @@ public class Hyst
 	public static boolean debugMode = false; // flag used to toggle debug printing with Main.logDebug()
 	private static String toolParamsString = null; // tool parameter string set using -toolparams or -tp
 
-	public static boolean silentUsage = false; // should usage printing be omitted (for unit testing)
+	public static boolean IS_UNIT_TEST = false; // should usage printing be omitted (for unit testing)
 	private static HystFrame guiFrame = null; // set if gui mode is being used
 
 	public final static String FLAG_HELP = "-help";
@@ -76,6 +80,7 @@ public class Hyst
 	public final static String FLAG_DEBUG_SHORT = "-d";
 	public final static String FLAG_NOVALIDATE = "-novalidate";
 	public final static String FLAG_OUTPUT = "-o";
+	public final static String FLAG_TESTPYTHON = "-testpython";
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
@@ -87,6 +92,7 @@ public class Hyst
 			new PythonQBMCPrinter(),
 			new SpaceExPrinter(),
 			new SimulinkStateflowPrinter(),
+			new PySimPrinter(),
 	};
 
 	// passes that are run only if the user selects them
@@ -101,12 +107,11 @@ public class Hyst
 			new SplitDisjunctionGuardsPass(),
 			new RemoveSimpleUnsatInvariantsPass(),
 			new ShortenModeNamesPass(),
-			new RegularizePass(),
 			new ContinuizationPass(),
-			new HybridizeGridPass(),
 			new HybridizeMixedTriggeredPass(),
 			new FlattenAutomatonPass(),
 			new OrderReductionPass(),
+			new ConvertLutFlowsPass(),
 	};
 
 	// passes that the user has selected
@@ -121,7 +126,8 @@ public class Hyst
 		ARG_PARSE_ERROR,
 		INTERNAL_ERROR,
 		GUI_QUIT,
-		EXPORT_AUTOMATON_EXCEPTION
+		EXPORT_AUTOMATON_EXCEPTION,
+		NOPYTHON // exit if -checkpython fails
 	};
 
 	public static void main(String[] args)
@@ -181,7 +187,7 @@ public class Hyst
 		Expression.expressionPrinter = null; // this should be assigned by the pass / printer as needed
 
 		long startMs = System.currentTimeMillis();
-		ToolPrinter printer = printers[printerIndex];
+		ToolPrinter printer = newToolPrinterInstance(printers[printerIndex]);
 
 		try
 		{
@@ -267,7 +273,7 @@ public class Hyst
 
 	private static void runPrinter(ToolPrinter printer, Configuration config)
 	{
-		String originalFilename = joinStrings(xmlFilenames, " ");
+		String originalFilename = StringOperations.join(" ", xmlFilenames.toArray(new String[]{}));
 
 		if (outputFilename != null)
 			printer.setOutputFile(outputFilename);
@@ -311,21 +317,6 @@ public class Hyst
 		catch (Exception e) {}
 	}
 
-	public static String joinStrings(ArrayList<String> list, String sep)
-	{
-		String rv = null;
-
-		for (String s : list)
-		{
-			if (rv == null)
-				rv = s;
-			else
-				rv += sep + s;
-		}
-
-		return rv;
-	}
-
 	public static String makeSingleArgument(String[] ar)
 	{
 		String rv = "";
@@ -354,6 +345,7 @@ public class Hyst
 	 */
 	private static boolean parseArgs(String[] args)
 	{
+		boolean testPython = false;
 		boolean rv = true;
 		boolean quitAfterUsage = false;
 
@@ -399,8 +391,9 @@ public class Hyst
 					else
 					{
 						String passParam = args[++i];
-
-						requestedPasses.add(new RequestedTransformationPass(tp, passParam));
+						
+						TransformationPass instance = newTransformationPassInstance(tp);
+						requestedPasses.add(new RequestedTransformationPass(instance, passParam));
 					}
 
 					processedArg = true;
@@ -410,10 +403,13 @@ public class Hyst
 			if (processedArg)
 				continue;
 
-			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || arg.endsWith(FLAG_GUI))
+			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || 
+					arg.equals(FLAG_GUI))
 				quitAfterUsage = true; // ignore
 			else if (arg.equals(FLAG_VERBOSE) || arg.equals(FLAG_VERBOSE_SHORT))
 				verboseMode = true;
+			else if (arg.equals(FLAG_TESTPYTHON))
+				testPython = true;
 			else if (arg.equals(FLAG_DEBUG) || arg.equals(FLAG_DEBUG_SHORT))
 			{
 				verboseMode = true;
@@ -471,10 +467,25 @@ public class Hyst
 				rv = false;
 			}
 		}
+		
+		if (testPython)
+		{
+			if (PythonBridge.hasPython())
+			{
+				System.out.println("Python and required packages successfully detected.");
+				System.exit(ExitCode.SUCCESS.ordinal());
+			}
+			else
+			{
+				System.out.println("Python and all required packages NOT detected."); 
+				System.out.println(PythonBridge.getInstanceErrorString); 
+				System.exit(ExitCode.NOPYTHON.ordinal());
+			}
+		}
 
 		if (!rv || xmlFilenames.size() == 0 || cfgFilename == null || printerIndex < 0 || printerIndex >= printers.length)
 		{
-			if (silentUsage)
+			if (IS_UNIT_TEST)
 				return false;
 
 			// show usage
@@ -546,6 +557,78 @@ public class Hyst
 			System.exit(ExitCode.SUCCESS.ordinal());
 
 		return rv;
+	}
+
+	private static TransformationPass newTransformationPassInstance(TransformationPass tp)
+	{
+		// create a new instance of the transformation pass to give it fresh state
+		Class<? extends TransformationPass> cl = tp.getClass();
+		Constructor<? extends TransformationPass> ctor;
+		TransformationPass instance = null;
+		
+		try
+		{
+			ctor = cl.getConstructor();
+			instance = ctor.newInstance();
+		}
+		catch (NoSuchMethodException e)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e);
+		}
+		catch (InstantiationException e2)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e2);
+		}
+		catch (IllegalArgumentException e3)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e3);
+		}
+		catch (IllegalAccessException e4)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e4);
+		}
+		catch (InvocationTargetException e5)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e5);
+		}
+		
+		return instance;
+	}
+	
+	private static ToolPrinter newToolPrinterInstance(ToolPrinter tp)
+	{
+		// create a new instance of the transformation pass to give it fresh state
+		Class<? extends ToolPrinter> cl = tp.getClass();
+		Constructor<? extends ToolPrinter> ctor;
+		ToolPrinter instance = null;
+		
+		try
+		{
+			ctor = cl.getConstructor();
+			instance = ctor.newInstance();
+		}
+		catch (NoSuchMethodException e)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e);
+		}
+		catch (InstantiationException e2)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e2);
+		}
+		catch (IllegalArgumentException e3)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e3);
+		}
+		catch (IllegalAccessException e4)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e4);
+		}
+		catch (InvocationTargetException e5)
+		{
+			throw new AutomatonExportException("Error instantiating TransformationPass", e5);
+		}
+		
+		return instance;
 	}
 
 	/**

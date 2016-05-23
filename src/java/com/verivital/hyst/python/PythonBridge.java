@@ -32,9 +32,13 @@ import com.verivital.hyst.util.FileOperations;
 public class PythonBridge
 {
 	private static PythonBridge instance = null;
-	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy"};
+	private static final String[] REQUIRED_PACKAGES = {"sympy", "scipy", "matplotlib", "math"};
 	
+	// if hasPython() gives false, this gets set 
+	public static String getInstanceErrorString = "No Error"; 
 	private static final int DEFAULT_TIMEOUT = 10000; // 10 seconds
+	public static final int NO_TIMEOUT = -1;
+	
 	private int timeoutMs;
 	private Process process = null;
 	private BufferedReader stdout = null;
@@ -72,22 +76,27 @@ public class PythonBridge
 				try
 				{
 					getInstance();
+					getInstanceErrorString = "No Error";
 				}
 				catch (AutomatonExportException e)
 				{
+					getInstanceErrorString = e.getLocalizedMessage();
 					pythonStatus = Status.FALSE;
 				}
 			}
 			
 			rv = pythonStatus == Status.TRUE;
 		}
+		else
+			getInstanceErrorString = "Python Programatically Blocked";
 		
 		return rv;
 	}
 	
 	public static PythonBridge getInstance()
 	{
-		return getInstance(DEFAULT_TIMEOUT);
+		int timeout = instance == null ? DEFAULT_TIMEOUT : instance.timeoutMs;
+		return getInstance(timeout);
 	}
 	
 	public static PythonBridge getInstance(int timeoutMs)
@@ -109,7 +118,7 @@ public class PythonBridge
 	}
 	
 	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * Sets the timeout in milliseconds, use NO_TIMEOUT for no timeout
 	 * @param timeoutMs
 	 */
 	public PythonBridge(int timeoutMs)
@@ -135,11 +144,12 @@ public class PythonBridge
 	}
 	
 	/**
-	 * Sets the timeout in milliseconds, use -1 for no timeout
+	 * Sets the timeout in milliseconds, use NO_TIMEOUT for no timeout
 	 * @param timeoutMs
 	 */
 	public void setTimeout(int timeoutMs)
 	{
+		log("setTimeout(" + timeoutMs + ") called");
 		this.timeoutMs = timeoutMs;
 	}
 	
@@ -171,6 +181,17 @@ public class PythonBridge
 			{
 				error("Python import failed on required package '" + pack + "'");
 			}
+		}
+		
+		// test hypy
+		try
+		{
+			send("import hybridpy.hypy as hypy");
+		}
+		catch (AutomatonExportException e)
+		{
+			error("Python import failed on required package 'hybridpy.hypy'. "
+					+ "Is Hyst's hybridpy directory on your PYTHONPATH?");
 		}
 	}
 	
@@ -217,7 +238,7 @@ public class PythonBridge
 				process.getInputStream().close();
 				process.getOutputStream().close();
 		        process.getErrorStream().close();
-			} 
+			}
 			catch (IOException e) {}
 	        
 			process.destroy();
@@ -239,7 +260,7 @@ public class PythonBridge
 		if (process != null)
 			error("openProcess called but process is already open.");
 			
-		String processNames[] = {"python2.7", "python"};
+		String processNames[] = {"python2.7", "python", "python2.7.exe", "python.exe"};
 		final String ENV_VAR = "HYST_PYTHON_PATH";
 		String loc = null;
 		
@@ -470,7 +491,7 @@ public class PythonBridge
 	        
 	        // if anything was printed to stderr, it's an error
 	        if (sbStderr.length() > 0)
-	        	error("Python produced output on stderr:\n" + sbStderr.toString() + 
+	        	error("Python produced output on stderr:\n'" + sbStderr.toString() + "'" +
 	        			(sbStdout.length() > 0 ? "\n\nstdout was:\n" + sbStdout.toString() : ""));
 	        
 	        rv = sbStdout.toString();
@@ -561,6 +582,18 @@ public class PythonBridge
 	 */
 	public String send(String s)
 	{
+		if (s.contains("\n"))
+		{
+			// multiline command: get rid of newline within functions
+			// if there are one or more new lines, followed by a line that starts with a space,
+			// then eliminate the newline
+			s = s.replaceAll("\\n\\n+ ", "\n ");
+			s = s.replaceAll("\\n\\n+\\t", "\n\t");
+			
+			// multiline command: hide prompt until the end
+			s = "sys.ps1 = ''\n" + s + "\nsys.ps1='>>> '";
+		}
+		
 		return send(s, false);
 	}
 	
@@ -599,13 +632,5 @@ public class PythonBridge
 		result = sendAndWait(s);
 		
 		return result;
-	}
-	
-	public void importPythonBridgeModule(String module)
-	{
-		String result = send("from pythonbridge import " + module);
-		
-		if (result.length() != 0)
-			error("import file created output on stdout: '" + result + "'");
 	}
 }

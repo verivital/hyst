@@ -1,6 +1,7 @@
 package com.verivital.hyst.ir.base;
 
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
@@ -33,8 +34,8 @@ public class AutomatonMode
 	public String name;
 	public final BaseComponent automaton;
 	public Expression invariant;
-	public LinkedHashMap <String, ExpressionInterval> flowDynamics;
 	public boolean urgent = false;
+	public LinkedHashMap <String, ExpressionInterval> flowDynamics;
 	
 	/**
 	 * The correct way to create a new automaton mode is using HybridAutomaton.createMode(name), which will 
@@ -159,21 +160,24 @@ public class AutomatonMode
 		AutomatonMode rv = copy(automaton, newName);
 		
 		// also copy the transitions
+		ArrayList <AutomatonTransition> fromCopy = new ArrayList <AutomatonTransition>();
+		ArrayList <AutomatonTransition> toCopy = new ArrayList <AutomatonTransition>();
+		
 		for (AutomatonTransition at : automaton.transitions)
 		{
 			if (at.from == this && at.to == this)
 				throw new AutomatonExportException("Can't clone automaton mode with self-loop since meaning is unclear.");
 			else if (at.from == this)
-			{
-				AutomatonTransition newAt = at.copy(automaton);
-				newAt.from = rv;
-			}
+				fromCopy.add(at);
 			else if (at.to == this)
-			{
-				AutomatonTransition newAt = at.copy(automaton);
-				newAt.to = rv;
-			}
+				toCopy.add(at);
 		}
+		
+		for (AutomatonTransition at : fromCopy)
+			at.copy(automaton).from = rv;
+		
+		for (AutomatonTransition at : toCopy)
+			at.copy(automaton).to = rv;
 		
 		return rv;
 	}

@@ -1,6 +1,7 @@
 package com.verivital.hyst.geometry;
-import java.text.NumberFormat;
 import java.util.ArrayList;
+
+import com.verivital.hyst.util.StringOperations;
 
 
 public class HyperPoint implements Comparable <HyperPoint>
@@ -37,29 +38,7 @@ public class HyperPoint implements Comparable <HyperPoint>
 	@Override
 	public String toString()
 	{
-		String s =  "[HyperPoint (";
-		boolean isFirst = true;
-		
-		NumberFormat nf = NumberFormat.getInstance();
-		
-		for (int x = 0; x < dims.length; ++x)
-		{
-			// print comma
-			if (!isFirst)
-				s += ", ";
-			
-			isFirst = false;
-			
-			// print dimension value
-			if (prettyPrint)
-				s += nf.format(dims[x]);
-			else
-				s += dims[x];
-		}
-		
-		s += ")]";
-		
-		return s;
+		return "(" + StringOperations.join(", ", dims) + ")";
 	}
 
 	@Override 

@@ -8,6 +8,9 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertHavocFlows;
+import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -17,11 +20,9 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
-import com.verivital.hyst.passes.basic.ConvertIntervalConstantsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
-import com.verivital.hyst.passes.flatten.ConvertHavocFlowsPass;
-import com.verivital.hyst.passes.flatten.FlattenAutomatonPass;
+import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 
 /**
  * This class contains the checks that should be done before running a printer or pass. For example, some may explicitly
@@ -67,15 +68,6 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()])
 			Preconditions.convertIntervalConstants(c);
 		
-		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
-			Preconditions.convertDisjunctiveGuards(c);
-		
-		if (!skip[PreconditionsFlag.NO_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()])
-			Preconditions.convertDisjunctiveInitForbidden(c);
-		
-		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
-			Preconditions.convertBasicOperators(c);
-		
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
 			Preconditions.convertToFlat(c);
@@ -84,8 +76,19 @@ public class Preconditions
 				Preconditions.convertAllFlowAssigned(c);
 		}
 		
-		// conversions should be done before checks
+		// this should be done AFTER flattening
+		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()])
+			Preconditions.convertDisjunctiveInitForbidden(c);
 		
+		// this should be done AFTER converting init_forbidden
+		if (!skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_GUARDS.ordinal()])
+			Preconditions.convertDisjunctiveGuards(c);
+		
+		// this should be done after disjunctions are converted
+		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
+			Preconditions.convertBasicOperators(c);
+		
+		// conversions should be done before checks
 		
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
@@ -141,7 +144,7 @@ public class Preconditions
 		if (convert)
 		{
 			Hyst.log("Converting Havoc Flows");
-			new ConvertHavocFlowsPass().runTransformationPass(c, null);
+			ConvertHavocFlows.run(c);
 		}
 	}
 
@@ -152,7 +155,7 @@ public class Preconditions
 	 */
 	private static void convertDisjunctiveGuards(Configuration c)
 	{
-		new SplitDisjunctionGuardsPass().runVanillaPass(c, SplitDisjunctionGuardsPass.PRINT_PARAM);
+		SplitDisjunctionGuardsPass.split(c.root);
 	}
 	
 	/**
@@ -174,17 +177,23 @@ public class Preconditions
 		if ((initClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
 		{
 			// init has an 'or', convert to standard form
-			// this is not supported (yet)
-			throw new PreconditionsFailedException("Initial states contain a disjunction, "
-					+ "but printer doesn't support these.");
+			
+			if (c.root instanceof BaseComponent)
+				ConvertToStandardForm.convertInit(c);
+			else
+				throw new PreconditionsFailedException("init states has unsupported disjunction; "
+						+ "automatic convertion requires flat automaton.");
 		}
 		
 		if ((forbiddenClassification & AutomatonUtil.OPS_DISJUNCTION) != 0)
 		{
 			// forbidden has an 'or', convert to standard form
-			// this is not supported (yet)
-			throw new PreconditionsFailedException("Forbidden states contain a disjunction, "
-					+ "but printer doesn't support these.");
+			
+			if (c.root instanceof BaseComponent)
+				ConvertToStandardForm.convertForbidden(c);
+			else
+				throw new PreconditionsFailedException("forbidden states has unsupported disjunction; "
+						+ "automatic convertion requires flat automaton.");
 		}
 	}
 
@@ -224,7 +233,7 @@ public class Preconditions
 			Hyst.log("Preconditions check detected interval-valued constants. ");
 			Hyst.log("Running conversion pass to make them variables, as required by the preconditions.");
 			
-			new ConvertIntervalConstantsPass().runVanillaPass(c, null);
+			ConvertIntervalConstants.run(c);
 		}
 	}
 
@@ -350,9 +359,10 @@ public class Preconditions
 
 	/**
 	 * Check that there are no urgent dynamics (instant mode changes)
-	 * @param c
+	 * @param c the Component to check
+	 * @throws PreconditionsFailedException if urgent dynamics were found
 	 */
-	private static void noUrgentDynamics(Component c)
+	public static void noUrgentDynamics(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -415,7 +425,7 @@ public class Preconditions
 			Hyst.log("Preconditions check detected look-up-tables in dynamics. ");
 			Hyst.log("Running conversion pass to split them, as required by the preconditions.");
 		
-			new ConvertLutFlowsPass().runTransformationPass(config, null);
+			new ConvertLutFlowsPass().runTransformationPass(config, "");
 		}
 	}
 	

@@ -18,6 +18,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.RenameParams;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -25,7 +26,6 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
-import com.verivital.hyst.passes.basic.RenameParamPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
 
@@ -47,7 +47,7 @@ public class DReachPrinter extends ToolPrinter
 	private TreeMap<String,Integer> modeNamesToIds = new TreeMap<String, Integer>();
 	
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "//";
 	}
@@ -69,7 +69,9 @@ public class DReachPrinter extends ToolPrinter
 	
 	private void renameVariables()
 	{
-		String param = "t:clock:time:clock_time";
+		TreeMap <String, String> mapping = new TreeMap <String, String>();
+		mapping.put("t", "clock");
+		mapping.put("time", "clock_time");
 		
 		// also rename all variables that start with an underscore
 		Collection <String> names = ha.getAllNames();
@@ -79,11 +81,11 @@ public class DReachPrinter extends ToolPrinter
 			if (name.startsWith("_"))
 			{
 				String newName = AutomatonUtil.freshName("v" + name, names);
-				param += ":" + name + ":" + newName;
+				mapping.put(name, newName);
 			}
 		}
 		
-		new RenameParamPass().runTransformationPass(config, param);
+		RenameParams.run(config, mapping);
 	}
 
 	/**

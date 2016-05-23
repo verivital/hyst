@@ -1,8 +1,5 @@
 package com.verivital.hyst.ir.base;
 
-import java.util.ArrayList;
-
-import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -11,7 +8,6 @@ import com.verivital.hyst.grammar.formula.ExpressionPrinter;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.simulation.RungeKutta;
 
 /**
  * An ExpressionInterval an expression plus an Interval. It is used, for example, to specify
@@ -227,30 +223,5 @@ public class ExpressionInterval
 	public String toDefaultString()
 	{
 		return toString(DefaultExpressionPrinter.instance);
-	}
-
-	/**
-	 * Evaluate the value of this expression interval at a point
-	 * @param hp the point where to evaluate
-	 * @param variables the ordering of variables within hp
-	 * @return an interval evaluation of this expression interval
-	 */
-	public Interval evaluate(HyperPoint hp, ArrayList<String> variables)
-	{
-		// evaluate ei
-		double val = RungeKutta.evaluateExpression(e, hp, variables);
-		
-		if (Double.isInfinite(val) || Double.isNaN(val))
-			throw new AutomatonExportException("ExpressionInterval.evaluate() yielded NaN or infinity");
-		
-		Interval valInterval = new Interval(val);
-		
-		if (i != null)
-		{
-			valInterval.min += i.min;
-			valInterval.max += i.max;
-		}
-		
-		return valInterval;
 	}
 }

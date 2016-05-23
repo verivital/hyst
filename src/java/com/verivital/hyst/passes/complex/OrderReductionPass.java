@@ -2,7 +2,7 @@ package com.verivital.hyst.passes.complex;
 
 import java.util.Map.Entry;
 
-import matlabcontrol.MatlabProxy;
+import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -14,13 +14,17 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.util.Classification;
 
+import matlabcontrol.MatlabProxy;
+
 /**
  * Perform order reduction
  * 
  * @author Taylor Johnson (October 2015)
  *
  */
-public class OrderReductionPass extends TransformationPass {
+public class OrderReductionPass extends TransformationPass 
+{
+	@Option(name="-reducedOrder",required=true,usage="reduced order dimensionality", metaVar="NUM")
 	private int reducedOrder;
 
 	@Override
@@ -29,20 +33,15 @@ public class OrderReductionPass extends TransformationPass {
 	}
 
 	@Override
-	public String getParamHelp() {
-		return "[<reduced order dimensionality>]";
-	}
-
-	@Override
 	public String getCommandLineFlag() {
 		return "-order_reduction";
 	}
 
 	@Override
-	protected void runPass(String params) {
+	protected void runPass() {
+		Hyst.log("Using order reduction params reducedOrder = " + reducedOrder);
+		
 		BaseComponent ha = (BaseComponent) config.root;
-
-		processParams(ha, params);
 
 		Classification cf = new Classification();
 		cf.ha = ha;
@@ -178,27 +177,4 @@ public class OrderReductionPass extends TransformationPass {
 
 		// todo: remove variables from other places (init, resets, etc.)
 	}
-
-	private void processParams(BaseComponent ha, String params) {
-		if (params.trim().length() == 0) {
-			params = Integer.toString(ha.variables.size()); // use original
-															// automaton
-															// dimensionality n
-			// TODO: use n - 1, assuming n >= 2?
-		}
-
-		String[] parts = params.split(";");
-
-		if (parts.length != 1)
-			throw new AutomatonExportException("Expected 1 pass params separated by ';', instead received: " + params);
-
-		try {
-			reducedOrder = Integer.parseInt(parts[0]);
-		} catch (NumberFormatException e) {
-			throw new AutomatonExportException("Error parsing number: " + e, e);
-		}
-
-		Hyst.log("Using order reduction params reducedOrder = " + reducedOrder);
-	}
-
 }

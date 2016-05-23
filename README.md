@@ -246,84 +246,133 @@ Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> sel
 To run the .class files directly, rather than from the .jar, you also need this jar on your classpath (option -cp to java).
 
 *******************************************************************************
-HYPY (by Stanley Bak)
+Python Interface and Hypy (by Stanley Bak)
 *******************************************************************************
 
-DEPENDENCIES:
+Hyst has an optional interface with python, which may be required for some transformation passes. To test if python and the required packages are detected correctly, use the -testpython flag from the command line. If python is not setup correctly, you can add the -debug flag to get terminal output to get more insight into the problem.
+
+Currently, Python 2.7 needs to be installed, as well as the following packages:
 
 * sympy: https://github.com/sympy/sympy/releases
 
-pip install sympy
+* scipy: http://www.scipy.org/install.html
 
-For plotting:
+The python executable will be looked for on the paths given in the environment variable HYST_PYTHON_PATH, as well as PATH. It will look for binaries named python2.7 and python.
 
-* matplotlib: http://matplotlib.org/
-
-pip install matplotlib
 
 *******************************************************************************
-MODEL TRANSFORMATION PASSES:
+Kodiak for Optimization (by Stanley Bak)
 *******************************************************************************
 
-* Hybridization (by Pradyot Prakash)
+For validated optimization tasks in Hyst, kodiak is an option. Kodiak is a NASA tool which uses interval branch and bound and Bernstein expansions to come up with upper and lower bounds on a nonlinear function, given interval bounds. To use this, the kodiak executable must be on your PATH or KODIAK_PATH environment variable.
 
-taylor2pradyot: can we call it from Hyst.jar or what? Can you please add a full call for an example that is executable (see above, for example, e.g., such as java -jar Hyst.jar ../../examples/heaterLygeros/heaterLygeros.xml -dreach -o heaterLygeros.drh )
+*******************************************************************************
+Running the Regression Tests and hypy (by Stanley Bak)
+*******************************************************************************
 
-DEPENDENCIES: scipy
+The regression tests make use of hypy, which is a python library for running reachability tools and producing plots. 
 
-INSTALLATION:
+#### Description
 
-Windows:
+Hypy can be used to run Hyst (including its transformation passes), as well as various reachability and simulation tools, and then interpret their output. This can then be looped in a python script, enabling high-level hybrid systems analysis which involves running tools multiple times.
 
-0)
+#### Setup
 
-It may or may not be necessary to install MinGW, I gave up, it's possible the below C++ compiler is the only dependency, as I did get it to finish building, but it apparently did not properly install the package as calling the hybridize pass still failed.
+For easy usage, point your PYTHONPATH environment variable to this directory. To setup hypy to run the tools, you'll need to define environment variables to the appropriate binaries. At a minimum (for conversion), you must set HYST_BIN to point to the Hyst jar file. On Ubuntu, in your ~/.profile file you can do something like:
 
-Scipy is a pain to install via pip. But if you want to try, here are some ideas. Alternative is just to install YET ANOTHER Python runtime on Windows (but then would have to get this properly set up on the PATH to make this work with Hyst, since there's not a way to specify which Python install to use in Hyst [as far as I know]).
+# tool environment variables
+TOOL_DIR="/home/stan/tools"
+HYST_DIR="/home/stan/repositories/hyst"
 
-http://stackoverflow.com/questions/12628164/trouble-installing-scipy-on-windows
+export FLOWSTAR_BIN="$TOOL_DIR/flowstar-1.2.3/flowstar"
+export SPACEEX_BIN="$TOOL_DIR/spaceex/spaceex"
+export DREACH_BIN="$TOOL_DIR/dreach/dReal-2.15.01-linux/bin/dReach"
+export HYCREATE_BIN="$TOOL_DIR/tools/HyCreate2.8/HyCreate2.8.jar"
 
-Have to have MingGW etc. with a GNU compiler to use pip, alternative is to find some binary distribution, but the Python community (and scipy community) are hugely fragmented, so there doesn't seem to be a great version to use, unfortunately.
+export HYST_BIN="$HYST_DIR/src/Hyst.jar"
+export PYTHONPATH="${PYTHONPATH}:$HYST_DIR/src/hybridpy"
 
-After installing MingGW, have to add the C:\MinGW\bin directory (or wherever installed) to the Windows path.
+#### Pysim
 
-1) Download and install this (Visual C++ Compiler for Python 2.7):  http://aka.ms/vcpython27
-2) pip install scipy
+Pysim is a simple simulation library for a hybrid automata. It is written in python, and can be run using hypy.
 
-Linux:
+pysim dependencies:
 
-To install via pip, must have fortan compiler and other dependencies installed, see here for overview: http://stackoverflow.com/questions/2213551/installing-scipy-with-pip
+* scipy: http://www.scipy.org/install.html
 
-1) 
-sudo apt-get install python-pip python-dev build-essential
+* matplotlib:  http://matplotlib.org/users/installing.html
 
-2)
-sudo pip install numpy
-sudo apt-get install libatlas-base-dev gfortran
-sudo pip install scipy
+#### Example
 
-3) 
-sudo pip install matplotlib   OR  sudo apt-get install python-matplotlib
-sudo pip install -U scikit-learn
-sudo pip install pandas
-
-You can call the HybridizePass.java as follows:
-
--hybridize <variable corresponding to first dimension>,..<variable corresponding to nth dimension>,<lower bound for the first dimension>,<upper bound for the same dimension>,....,<lower bound for the last dimension>,<upper bound for the last dimension>,<number of partitions along the first dimension>,...,<number of partitions along the last dimension>,<'a' if you want a affine system/'l' if you want a piecewise constant system>
-
-For eg,
-Consider the van der pol system.
-It has two variables x and y.
-
-Suppose we want to consider the interval [-1,2] along the x-axis and [3,4] along y-axis and want 2 partitions along x axis and 3 along y axis, then you should call
--hybridize x,y,-1,2,3,4,2,3,a
-
-You can also call
--hybridize y,x,3,4,-1,2,3,2,a
-
-The last argument 'a' means that you want a final system with affine dynamics in each of the modes. It can also be 'l' if you want a Linear Hybrid Automata with piecewise constant dynamics.
+A simple hypy script to test if it's working (you may need to adjust your path to the model file) is:
 
 
+'''
+Test hypy on the toy model (path may need to be adjusted)
+'''
+
+# assumes hybridpy is on your PYTHONPATH
+import hybridpy.hypy as hypy
+
+def main():
+    '''run the toy model and produce a plot'''
+    
+    model = "/home/stan/repositories/hyst/examples/toy/toy.xml"
+    out_image = "toy_output.png"
+    tool = "pysim" # pysim is the built-in simulator; try flowstar or spaceex
+
+    e = hypy.Engine()
+    e.set_model(model) # sets input model path
+    e.set_tool(tool) # sets tool name to use
+    #e.set_print_terminal_output(True) # print output to terminal? 
+    #e.set_save_model_path(converted_model_path) # save converted model?
+    e.set_output_image(out_image) # sets output image path
+    #e.set_tool_params(["-tp", "jumps=2"]) # sets parameters for hyst conversion
+
+    code = e.run()
+
+    if code != hypy.RUN_CODES.SUCCESS:
+        print "engine.run() returned error: " + str(code)
+        exit(1)
+        
+    print "Completed successfully"
+
+if __name__ == "__main__":
+    main()
+
+
+*******************************************************************************
+Adding Tools to Hypy:
+*******************************************************************************
+
+When you run hypy, it will (1) convert using Hyst and (2) run the desired tool. If that fails, you are better off doing these two steps independently, first just running hyst and producing a model file, then take the model file and running it directly in the tool (one of these two will fail and you can investigate further).
+
+The implementation of hypy is in hyst/src/hybridpy. Each supported tool in hypy has a tool-specific script which provides a common interface to each tool. This tool-specific script is implemented in the tool_*.py file, and it inherits from the HybridTool object (defined in hybrid_tool.ph). You need to write custom functions (override the abstract ones in HybridTool) that (1) run the tool, (2) produce an image at the desired path, and (3) read the output into a python object (optional). Such files already exists for flow*, spaceex, hycreate, and dreach (but that one doesn't produce an image since dreach makes that difficult). For example, you can find the tool-specific file for flowstar in hyst/src/hybridpy/hybridpy/tool_flowstar.py . After you write the tool-specific file, you need to modify hypy.py to add the appropriate import statement for your tool-specific script and add the tool object to the list of known tools near the top of the fily:
+
+
+# tools for which models can be generated
+TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
+         'spaceex':SpaceExTool(), 'dreach':DReachTool()}
+
+
+Each tool-specific file should be directly runnable from the command line rather than through hypy. If run directly, no hyst conversion is done. This is enabled by adding the following at the bottom of a tool-specific script (for Flow*, for example):
+
+if __name__ == "__main__":
+    tool_main(FlowstarTool())
+
+the tool_main is a generic method (defined in hybrid_tool.py), which will call the appropriate methods in the passing-in HybridTool object. If you need extra parameters from the command line, see how it is done in tool_spaceex.py.
+
+Once the tool-specific script is written and you added your tool to hypy.py, you should test by running hypy from a terminal. You should try:
+
+(1) the direct run approach: python /path/to/tool_<toolname>.py <input model> <(optional) output image png path>
+
+(2) the conversion and run approach: python /path/to/hybridpy.py <tool name> <input .xml model> <output image png path>
+
+*******************************************************************************
+Model Transformation Passes:
+*******************************************************************************
+
+Demonstrations for certain, more complicated, model transformation passes, as well as hypy scripts to recreate results, are provided in the doc/transformation_passes directory. There are READMEs inside each sub-directory which provide additional information about the specific pass being demonstrated.
 
 *****************************************
 ADDITIONAL PRINTER DOCUMENTATION

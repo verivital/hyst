@@ -15,6 +15,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
  */
 public class Interval
 {
+	public static double COMPARE_TOL = 1e-10;
 	public static final Interval NONDETERMINISTIC_ASSIGNMENT_INTERVAL = 
 			new Interval(Integer.MIN_VALUE, Integer.MAX_VALUE);
 	public double min = 0, max = 0;
@@ -495,9 +496,7 @@ public class Interval
 	@Override
 	public boolean equals(Object o)
 	{
-		double TOL = 1e-10;
-		
-		return equals(o, TOL);
+		return equals(o, COMPARE_TOL);
 	}
 	
 	/**

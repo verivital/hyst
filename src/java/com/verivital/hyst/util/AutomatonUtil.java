@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -36,7 +37,6 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.simulation.RungeKutta;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
@@ -611,7 +611,12 @@ public abstract class AutomatonUtil
 				if (rv.length() > 0)
 					rv += ", ";
 					
-				rv += e.getKey() + ": " + e.getValue().toString(DefaultExpressionPrinter.instance);
+				String valueString = "<null>";
+				
+				if (e.getValue() != null)
+					valueString = e.getValue().toString(DefaultExpressionPrinter.instance);
+				
+				rv += e.getKey() + ": " + valueString;
 			}
 		}
 		
@@ -690,8 +695,8 @@ public abstract class AutomatonUtil
 				left.dims[x] -= sampleOffset;
 				right.dims[x] += sampleOffset;
 
-				double leftVal = RungeKutta.evaluateExpression(derFunc, left, variables);
-				double rightVal = RungeKutta.evaluateExpression(derFunc, right, variables);
+				double leftVal = AutomatonUtil.evaluateExpression(derFunc, left, variables);
+				double rightVal = AutomatonUtil.evaluateExpression(derFunc, right, variables);
 
 				rv[y][x] = (rightVal - leftVal) / (2 * sampleOffset);
 			}
@@ -706,7 +711,7 @@ public abstract class AutomatonUtil
 	 * @param variables the variable, in the order we want
 	 * @return a HyperPoint at the center
 	 */
-	private static HyperPoint boundsCenter(HashMap<String, Interval> bounds, ArrayList<String> variables)
+	public static HyperPoint boundsCenter(HashMap<String, Interval> bounds, ArrayList<String> variables)
 	{
 		HyperPoint rv = new HyperPoint(bounds.size());
 		int dim = 0;
@@ -840,6 +845,86 @@ public abstract class AutomatonUtil
 	}
 	
 	/**
+	 * Create a twp-mode configuration with modes named "mode1" and "mode2", for unit testing
+	 * @param dynamics1 a list of variable names, dynamics and possibly initial states for each variable,
+	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 * @param inv the invariant string of the first mode
+	 * @param guard the guard string to go from the first mode to the second
+	 * @param dynamics2 a list of variable names and dynamics for the second mode
+	 * 
+	 * @return the constructed configuration
+	 */
+	public static Configuration makeDebugConfiguration(String[][] dynamics1, String inv, String guard, 
+			String[][] dynamics2) 
+	{
+		final int VAR_INDEX = 0;
+		final int FLOW_INDEX = 1;
+		final int INIT_INDEX = 2;
+		final String MODE1_NAME = "mode1";
+		final String MODE2_NAME = "mode2";
+		
+		BaseComponent ha = new BaseComponent();
+		AutomatonMode mode1 = ha.createMode(MODE1_NAME);
+		AutomatonMode mode2 = ha.createMode(MODE2_NAME);
+		StringBuilder initStringBuilder = new StringBuilder();
+		
+		if (dynamics1.length != dynamics2.length)
+			throw new AutomatonExportException("Expected dynamics1 and dynamics2 of same length");
+		
+		for (int i = 0; i < dynamics1.length; ++i)
+		{
+			if (dynamics1[i].length < 2 || dynamics1[i].length > 3)
+				throw new AutomatonExportException("expected 2 or 3 values in passed-in array dynamics1 (varname, flow, init)");
+			
+			if (dynamics2[i].length != 2)
+				throw new AutomatonExportException("expected 2 values in passed-in array dynamics2 (varname, flow)");
+			
+			String var = dynamics1[i][VAR_INDEX];
+			String flow = var + "' == " + dynamics1[i][FLOW_INDEX];
+			
+			ha.variables.add(var);
+			
+			if (!dynamics2[i][VAR_INDEX].equals(var))
+				throw new AutomatonExportException("expected same variable ordering in both dynamics arrays");
+			
+			String initVal = dynamics1[i].length == 3 ? dynamics1[i][INIT_INDEX] : "0";
+			String initStr = var + " == " + initVal;
+					
+			if (initStringBuilder.length() > 0)
+				initStringBuilder.append(" & " + initStr);
+			else
+				initStringBuilder.append(initStr);
+			
+			Expression flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			mode1.flowDynamics.put(var, new ExpressionInterval(flowExp));
+			
+			// now do mode 2
+			var = dynamics2[i][VAR_INDEX];
+			flow = var + "' == " + dynamics2[i][FLOW_INDEX];
+			
+			flowExp = FormulaParser.parseFlow(flow).asOperation().getRight();
+			mode2.flowDynamics.put(var, new ExpressionInterval(flowExp));
+		}
+		
+		// add invariant
+		mode1.invariant = FormulaParser.parseInvariant(inv);
+		mode2.invariant = Constant.TRUE;
+		
+		// add transition / guard
+		AutomatonTransition at = ha.createTransition(mode1, mode2);
+		at.guard = FormulaParser.parseGuard(guard);
+		
+		Configuration c = new Configuration(ha);
+
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1) : ha.variables.get(0); 
+		c.init.put(MODE1_NAME, FormulaParser.parseInitialForbidden(initStringBuilder.toString()));
+			
+		c.validate();
+		return c;
+	}
+	
+	/**
 	 * Create a single-mode configuration with a mode named "on", for unit testing
 	 * @param dynamics a list of variable names, dynamics and possibly initial states for each variable,
 	 * for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
@@ -885,6 +970,20 @@ public abstract class AutomatonUtil
 			
 		c.validate();
 		return c;
+	}
+	
+	/**
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they are, or 
+	 * a counter-example description string if they are not. Uses a tolerance of 1e-9.
+	 * @param expected the expected expression
+	 * @param actual the actual expression
+	 */
+	public static String areExpressionsEqual(String expected, Expression actual)
+	{
+		double TOL = 1e-9;
+		Expression e = FormulaParser.parseValue(expected);
+		
+		return areExpressionsEqual(e, actual, TOL);
 	}
 	
 	/**
@@ -963,8 +1062,8 @@ public abstract class AutomatonUtil
 		// compare a and b at the constructed sample points
 		for (HyperPoint hp : samples)
 		{
-			double expectedVal = RungeKutta.evaluateExpression(expected, hp, varList);
-			double actualVal = RungeKutta.evaluateExpression(actual, hp, varList);
+			double expectedVal = AutomatonUtil.evaluateExpression(expected, hp, varList);
+			double actualVal = AutomatonUtil.evaluateExpression(actual, hp, varList);
 			
 			if (Math.abs(expectedVal - actualVal) > tol)
 			{
@@ -1055,5 +1154,162 @@ public abstract class AutomatonUtil
 			throw new AutomatonExportException("Unsupported Expression type in derivativeOf: " + e.toDefaultString());
 		
 		return rv;
+	}
+	
+	/**
+	 * Get the gradient vector within a mode. This uses the 'average' dynamics if there's nondeterminism.
+	 * @param am the mode
+	 * @param pt the point where to, in the automaton's variable ordering
+	 * @return the gradient vector (with the automaton's variable ordering)
+	 */
+	public static double[] getGradientAtPoint(AutomatonMode am, HyperPoint pt)
+	{
+		List <String> vars = am.automaton.variables;
+		Map <String, Expression> flowDynamics = centerDynamics(am.flowDynamics);
+		
+		double[] rv = new double[pt.dims.length];
+		
+		for (int dim = 0; dim < pt.dims.length; ++dim)
+		{
+			String varName = vars.get(dim);
+			Expression e = flowDynamics.get(varName);
+			
+			double d = evaluateExpression(e, pt, vars);
+		
+			rv[dim] = d;
+		}
+		
+		return rv;
+	}
+	
+	public static double evaluateExpression(Expression e, HyperPoint pt, List <String> variableNames)
+	{
+		// create value map
+		TreeMap<String, Expression> valMap = new TreeMap<String, Expression>();
+		
+		for (int i = 0; i < pt.dims.length; ++i)
+			valMap.put(variableNames.get(i), new Constant(pt.dims[i]));
+		
+		ValueSubstituter vs = new ValueSubstituter(valMap);
+		
+		Expression substituted = vs.substitute(e);
+		
+		Expression result = SimplifyExpressionsPass.simplifyExpression(substituted);
+		
+		double rv = 0;
+		
+		if (result instanceof Constant)
+			rv = ((Constant)result).getVal();
+		else
+			throw new AutomatonExportException("Could not simplify flow expression completely while simulating: " + e);
+		
+		return rv;
+	}
+	
+	public static Map<String, Expression> centerDynamics(Map<String, ExpressionInterval> flowDynamics)
+	{
+		LinkedHashMap<String, Expression> rv = new LinkedHashMap<String, Expression>();
+		
+		for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
+		{
+			ExpressionInterval ei = e.getValue();
+			double mid = 0;
+			Interval i = ei.getInterval();
+			
+			if (i != null)
+				mid = i.middle();
+			
+			Expression eMid = new Operation(Operator.ADD, ei.getExpression(), new Constant(mid)); 
+			rv.put(e.getKey(), eMid);
+		}
+		
+		return rv;
+	}
+
+	/** Process a reset on a point, and return the new point
+	 * 
+	 * @param pt the incoming point
+	 * @param variableNames the list of variables, in order
+	 * @param reset the reset map
+	 * @return the outgoing point
+	 */
+	public static HyperPoint processReset(HyperPoint pt, ArrayList <String> variableNames, 
+			LinkedHashMap<String, ExpressionInterval> reset)
+	{
+		HyperPoint rv = new HyperPoint(pt);
+		
+		for (int i = 0; i < variableNames.size(); ++i)
+		{
+			String v = variableNames.get(i);
+			ExpressionInterval resetAssignment = reset.get(v);
+			
+			if (resetAssignment == null)
+				rv.dims[i] = pt.dims[i];
+			else
+				rv.dims[i] = assignFromExpression(v, pt, variableNames, resetAssignment);
+		}
+		
+		return rv;
+	}
+	
+	private static double assignFromExpression(String v, HyperPoint p, ArrayList<String> variableNames, 
+			ExpressionInterval resetAssignment)
+	{
+		HyperPoint hp = new HyperPoint(p);
+		
+		double d = AutomatonUtil.evaluateExpression(resetAssignment.getExpression(), hp, variableNames);
+		
+		Interval i = resetAssignment.getInterval();
+		
+		if (i != null)
+			d += i.middle();
+		
+		return d;
+	}
+
+	public static String areExpressionIntervalsEqual(String desiredExpressionString, 
+			double desiredMin, double desiredMax, ExpressionInterval actual)
+	{
+		Expression e = FormulaParser.parseValue(desiredExpressionString);
+		
+		return areExpressionIntervalsEqual(new ExpressionInterval(e, new Interval(desiredMin, desiredMax)), actual);
+	}
+
+	public static String areExpressionIntervalsEqual(ExpressionInterval desired, ExpressionInterval actual)
+	{
+		Expression desiredE = desired.getExpression();
+		Interval desiredI = desired.getInterval();
+		
+		if (desiredI == null)
+			desiredI = new Interval(0,0);
+		
+		Expression desiredMin = new Operation(Operator.ADD, desiredE, new Constant(desiredI.min));
+		Expression desiredMax = new Operation(Operator.ADD, desiredE, new Constant(desiredI.max));
+		
+		Expression actualE = actual.getExpression();
+		Interval actualI = actual.getInterval();
+		
+		if (actualI == null)
+			actualI = new Interval(0,0);
+		
+		Expression actualMin = new Operation(Operator.ADD, actualE, new Constant(actualI.min));
+		Expression actualMax = new Operation(Operator.ADD, actualE, new Constant(actualI.max));
+		
+		String res = areExpressionsEqual(desiredMin, actualMin);
+		
+		if (res != null)
+			res = "\nDesired: '" + desired.toDefaultString() 
+				+ "'\nActual: '" + actual.toDefaultString() + "'\nMin differs:\n" + res;
+		else
+		{
+			res = areExpressionsEqual(desiredMax, actualMax);
+			
+			if (res != null)
+
+				res = "\nDesired: '" + desired.toDefaultString() 
+					+ "'\nActual: '" + actual.toDefaultString() + "'\nMax differs:\n" + res;
+		}
+		
+		return res;
 	}
 }

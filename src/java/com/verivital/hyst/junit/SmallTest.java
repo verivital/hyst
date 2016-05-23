@@ -26,8 +26,6 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass.IntervalTerm;
-import com.verivital.hyst.passes.complex.PseudoInvariantPass;
-import com.verivital.hyst.passes.complex.PseudoInvariantPass.PseudoInvariantParams;
 import com.verivital.hyst.printers.DReachPrinter.DReachExpressionPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -684,44 +682,6 @@ public class SmallTest
 	}
 	
 	@Test
-	public void testPseudoInvariantCondition1()
-	{
-		// pseudo invariant at (1.5,1.5) in direction <1,0> should be 1.0 * x + 0.0 * y >= 1.5
-		double[] point = {1.5, 1.5};
-		double[] dir = {1.0, 0};
-		String expectedResult = "1 * x >= 1.5";
-		
-		PseudoInvariantPass pi = new PseudoInvariantPass();
-		pi.vars = new ArrayList<String>(2);
-		pi.vars.add("x");
-		pi.vars.add("y");
-		PseudoInvariantParams pip = pi.new PseudoInvariantParams(point, dir);
-		
-		if (!DefaultExpressionPrinter.instance.print(pip.inv).equals(expectedResult))
-			Assert.fail("created pseudo-invariant was " + pip.inv + " instead of the expected " + expectedResult);
-	}
-	
-	@Test
-	public void testPseudoInvariantCondition2()
-	{
-		// pseudo invariant at (0, 0) in direction <0,1> should be 0.0 * x + 1.0 * y >= 0.0
-		double[] point = {0, 0};
-		double[] dir = {0, 1};
-		String expectedResult = "1 * y >= 0";
-		
-		PseudoInvariantPass pi = new PseudoInvariantPass();
-		pi.vars = new ArrayList<String>(2);
-		pi.vars.add("x");
-		pi.vars.add("y");
-		PseudoInvariantParams pip = pi.new PseudoInvariantParams(point, dir);
-		
-		String got = DefaultExpressionPrinter.instance.print(pip.inv);
-		
-		if (!got.equals(expectedResult))
-			Assert.fail("created pseudo-invariant was " + got + " instead of the expected " + expectedResult);
-	}
-	
-	@Test
 	public void testStateflowExpressionPrinterOne() {
 		SimulinkStateflowPrinter spprinter = new SimulinkStateflowPrinter();
 		SimulinkStateflowPrinter.SimulinkStateflowExpressionPrinter exp_printer = spprinter.new SimulinkStateflowExpressionPrinter(0);
@@ -800,7 +760,7 @@ public class SmallTest
 	{
 		String[] args = {"-help"};
 		
-		Hyst.silentUsage = true;
+		Hyst.IS_UNIT_TEST = true;
 		Hyst.convert(args);
 	}
 	
@@ -846,15 +806,25 @@ public class SmallTest
 	}
 	
 	@Test
-	public void testSimpleInvariantFlowPrinter()
+	public void testFlowExpressionPrinter()
 	{
-		Expression e= FormulaParser.parseInvariant("0 <= t");
+		Expression.expressionPrinter = new FlowPrinter.FlowstarExpressionPrinter();
+		Expression e1 = FormulaParser.parseInvariant("t <= 5");
+		Expression e2 = FormulaParser.parseInvariant("5 <= t");
+		Expression e3 = FormulaParser.parseInvariant("5 < t");
 		
-		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
-		String s = FlowPrinter.getFlowConditionExpression(e);
+		Assert.assertEquals(e1.toString(), "t <= 5");
+		Assert.assertEquals(e2.toString(), "5 - (t) <= 0");
 		
-		if (!s.contains("<="))
-			Assert.fail("flow condition expression didn't convert operator <= correctly: " + s);
+		try
+		{
+			e3.toString();
+			Assert.fail("Exception was not raised on strict inequality for flowstar");
+		}
+		catch (AutomatonExportException e)
+		{
+			// expected
+		}
 	}
 	
 	@Test

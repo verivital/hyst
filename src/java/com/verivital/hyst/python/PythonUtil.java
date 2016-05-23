@@ -3,6 +3,7 @@ package com.verivital.hyst.python;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +17,6 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
@@ -30,59 +30,6 @@ public class PythonUtil
 {
 	public static PythonEvaluatePrinter pyEvaluatePrinter = new PythonEvaluatePrinter();
 	public static PythonSympyPrinter pySympyPrinter = new PythonSympyPrinter();
-
-	/**
-	 * Optimize a function in a hyper-rectangle using interval arithmetic.
-	 *
-	 *  In performance tests, using a fairly simple expression (2*x + y - x) with bounds x in [0, 1], y in [-0.2, -0.1],
-	 *  I measured 20 calls a second. In native python this is about 100 times a second. If more performance is needed, and
-	 *  you're evaluating the same equations with many different bounds, use the intervalOptimizeMulti function instead.
-	 *
-	 * @param exp the expression to minimize and maximize
-	 * @param bounds the interval bounds for each variable used in the expression
-	 * @return an interval bounds on exp
-	 */
-	public static Interval intervalOptimize(Expression exp, Map<String, Interval> bounds)
-	{
-		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
-		
-		StringBuilder s = new StringBuilder();
-		s.append(makeExpressionVariableSymbols(exp));
-		
-		s.append("print eval_eq(");
-		s.append(pyEvaluatePrinter.print(exp));
-		s.append(",");
-		s.append(toPythonIntervalMap(bounds));
-		s.append(")");
-
-		pb.send("from pythonbridge.interval_optimize import *");
-		String result = pb.send(s.toString());
-
-		return parseIntervalResult(result);
-	}
-
-	/**
-	 * Optimize a function in a hyper-rectangle using scipy.optimize.basinhopping
-	 *
-	 *  In performance tests, using a fairly simple expression (2*x + y - x) with bounds x in [0, 1], y in [-0.2, -0.1],
-	 *  I measured 55 calls a second. In native python this is also about 55 times a second, so I didn't write a multi version
-	 *  of this function.
-	 *
-	 * @param exp the expression to minimize and maximize
-	 * @param bounds the interval bounds for each variable used in the expression
-	 * @return an interval bounds on exp (the result)
-	 */
-	public static Interval scipyOptimize(Expression exp, HashMap<String, Interval> bounds)
-	{
-		ArrayList <Expression> exps = new ArrayList <Expression>(1);
-		ArrayList <HashMap<String, Interval>> b = new ArrayList <HashMap<String, Interval>>(1);
-		
-		exps.add(exp);
-		b.add(bounds);
-		
-		return scipyOptimize(exps, b).get(0);
-	}
 	
 	/**
 	 * Optimize a function in a hyper-rectangle using scipy.optimize.basinhopping
@@ -101,8 +48,6 @@ public class PythonUtil
 		
 		if (size != boundsList.size())
 			throw new AutomatonExportException("expression list and bounds list should be same size");
-		
-		pb.send("import math");
 		
 		// python needs explicit functions (not lambdas) for Pool.map
 		String FUNC_PREFIX = "_func";
@@ -191,6 +136,18 @@ public class PythonUtil
 		StringBuilder s = new StringBuilder();
 		Collection <String> variables = AutomatonUtil.getVariablesInExpression(exp);
 		
+		appendSymbolsDeclaration(s, variables);
+
+		return s.toString();
+	}
+
+	/**
+	 * Append to the string buffer the python sympy symbols declaration
+	 * @param s
+	 * @param variables
+	 */
+	private static void appendSymbolsDeclaration(StringBuilder s, Collection<String> variables)
+	{
 		if (variables.size() > 0)
 		{
 			String prefix = "";
@@ -208,8 +165,6 @@ public class PythonUtil
 	
 			s.append("');");
 		}
-
-		return s.toString();
 	}
 
 	/**
@@ -218,7 +173,7 @@ public class PythonUtil
 	 * @param bounds the bounds for all the variables
 	 * @return the constructed string
 	 */
-	public static String toPythonIntervalList(Map<String, Interval> bounds)
+	private static String toPythonIntervalList(Map<String, Interval> bounds)
 	{
 		StringBuilder s = new StringBuilder();
 		s.append("[");
@@ -237,7 +192,7 @@ public class PythonUtil
 	 * @param bounds the bounds for all the variables
 	 * @return the constructed string
 	 */
-	public static String toPythonIntervalMap(Map<String, Interval> bounds)
+	private static String toPythonIntervalMap(Map<String, Interval> bounds)
 	{
 		StringBuilder s = new StringBuilder();
 		s.append("{");
@@ -247,7 +202,7 @@ public class PythonUtil
 			String varName = e.getKey();
 			Interval i = e.getValue();
 
-			s.append("'" + varName + "':interval(" + i.min + ", " + i.max + "),");
+			s.append("'" + varName + "':(" + i.min + ", " + i.max + "),");
 		}
 
 		s.append("}");
@@ -299,33 +254,6 @@ public class PythonUtil
 		return rv;
 	}
 
-	private static Interval parseIntervalResult(String str)
-	{
-		if (!str.startsWith("[") || !str.endsWith("]"))
-			throw new AutomatonExportException("Malformed interval, doesn't start/end with [ and ]: " + str);
-
-		String trimmed = str.substring(1, str.length() - 1);
-		String[] parts = trimmed.split(",");
-
-		if (parts.length != 2)
-			throw new AutomatonExportException("Malformed interval, expected two parts:" + str);
-
-		double min = 0;
-		double max = 0;
-
-		try
-		{
-			min = Double.parseDouble(parts[0]);
-			max = Double.parseDouble(parts[1]);
-		}
-		catch (NumberFormatException e)
-		{
-			throw new AutomatonExportException("Malformed result, expected similar to [0, 1], got: " + str, e);
-		}
-
-		return new Interval(min, max);
-	}
-
 	/**
 	 * Optimize a function in a hyper-rectangle using interval arithmetic over multiple domains.
 	 *
@@ -342,55 +270,10 @@ public class PythonUtil
 	 * @param boundsList a list of interval bounds for each variable used in the expression
 	 * @return a list of resultant interval bounds
 	 */
-	public static List<Interval> intervalOptimizeMulti(Expression exp,
-			List<Map<String, Interval>> boundsList)
+	public static List<Interval> intervalOptimize(List <Expression> exps,
+			List<HashMap<String, Interval>> boundsList)
 	{
-		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
-		
-		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
-
-		StringBuilder s = new StringBuilder();
-		s.append(makeExpressionVariableSymbols(exp));
-
-		s.append("[str(v) for v in eval_eq_multi(");
-		s.append(pyEvaluatePrinter.print(exp));
-		s.append(",[");
-
-		for (Map<String, Interval> bounds : boundsList)
-		{
-			s.append(toPythonIntervalMap(bounds));
-			s.append(",");
-		}
-
-		s.append("])]");
-
-		pb.send("from pythonbridge.interval_optimize import *");
-		String result = pb.send(s.toString());
-
-		if (!result.startsWith("[") || !result.endsWith("]"))
-			throw new AutomatonExportException("Malformed result, doesn't start/end with [ and ]: " + result);
-
-		result = result.substring(1, result.length() - 1);
-
-		int curIndex = 0;
-
-		// reconstruct the intervals
-		for (int i = 0; i < boundsList.size(); ++i)
-		{
-			int first = result.indexOf("'", curIndex);
-			int second = result.indexOf("'", first+1);
-
-			if (first == -1 || second == -1)
-				throw new AutomatonExportException("Malformed result, not enough intervals returned: " + result);
-
-			String part = result.substring(first+1, second);
-			rv.add(parseIntervalResult(part));
-
-			curIndex = second + 1;
-		}
-
-		return rv;
+		return intervalOptimizeBounded(exps, boundsList, 0);
 	}
 	
 	/**
@@ -418,7 +301,7 @@ public class PythonUtil
 	 * @param tol the tolerance (how close to zero should we chop), for example 1e-8
 	 * @return the chopped expression (not simplified!)
 	 */
-	public static Expression chop(Expression e, double tol)
+	private static Expression chop(Expression e, double tol)
 	{
 		Expression rv = e;
 		
@@ -486,29 +369,43 @@ public class PythonUtil
 	}
 
 	/**
-	 * Optimize a function in a hyper-rectangle using interval arithmetic over multiple domains. This
-	 * uses smaller domains to get a better result, using a user specified maximum domain width.
+	 * Optimize a function in a hyper-rectangle using interval arithmetic over possibly multiple domains. 
+	 * This uses smaller domains to have a guaranteed overapproximation error.
 	 *
 	 * @param pb the PythonBridge interface to use
-	 * @param exp the expression to minimize and maximize
-	 * @param boundsList a list of interval bounds for each variable used in the expression
-	 * @param maxSize the maximum width of a domain, in any dimension
+	 * @param expList the expression list to minimize and maximize
+	 * @param boundsList a list of interval bounds for each variable in each expression
+	 * @param maxError the maximum error, use 0 or negative if you don't want an error bound
 	 * @return a list of resultant interval bounds
 	 */
-	public static List<Interval> intervalOptimizeMulti_bb(Expression exp,
-			List<Map<String, Interval>> boundsList, double maxSize)
+	public static List<Interval> intervalOptimizeBounded(List <Expression> expList,
+			List<HashMap<String, Interval>> boundsList, double maxError)
 	{
-		PythonBridge pb = PythonBridge.getInstance();
-		pb.send("import math");
+		if (expList.size() != boundsList.size())
+			throw new AutomatonExportException("number of expression(" + expList.size() 
+			+ ") and number of bounds (" + boundsList.size() + ") must match.");
 		
-		ArrayList <Interval> rv = new ArrayList <Interval>(boundsList.size());
+		PythonBridge pb = PythonBridge.getInstance();
 
 		StringBuilder s = new StringBuilder();
-		s.append(makeExpressionVariableSymbols(exp));
-
-		s.append("[str(v) for v in eval_eq_multi_branch_bound(");
-		s.append(pyEvaluatePrinter.print(exp));
-		s.append(",[");
+		
+		HashSet <String> allVariables = new HashSet<String>();
+		
+		for (Expression e : expList)
+			allVariables.addAll(AutomatonUtil.getVariablesInExpression(e));
+		
+		// x,y = sympy.symbols('x y')
+		appendSymbolsDeclaration(s, allVariables);
+		
+		s.append("eval_eqs_bounded([");
+		
+		for (Expression e : expList)
+		{
+			s.append(pyEvaluatePrinter.print(e));
+			s.append(",");
+		}
+		
+		s.append("],[");
 
 		for (Map<String, Interval> bounds : boundsList)
 		{
@@ -516,36 +413,21 @@ public class PythonUtil
 			s.append(",");
 		}
 
-		s.append("]," + maxSize + ")]");
+		s.append("],");
+		
+		String errorStr = "None";
+		
+		if (maxError > 0)
+			errorStr = "" + maxError;
+		
+		s.append(errorStr + ")");
 
 		pb.send("from pythonbridge.interval_optimize import *");
 		String result = pb.send(s.toString());
 
-		if (!result.startsWith("[") || !result.endsWith("]"))
-			throw new AutomatonExportException("Malformed result, doesn't start/end with [ and ]: " + result);
-
-		result = result.substring(1, result.length() - 1);
-
-		int curIndex = 0;
-
-		// reconstruct the intervals
-		for (int i = 0; i < boundsList.size(); ++i)
-		{
-			int first = result.indexOf("'", curIndex);
-			int second = result.indexOf("'", first+1);
-
-			if (first == -1 || second == -1)
-				throw new AutomatonExportException("Malformed result, not enough intervals returned: " + result);
-
-			String part = result.substring(first+1, second);
-			rv.add(parseIntervalResult(part));
-
-			curIndex = second + 1;
-		}
-
-		return rv;
+		return parseIntervalListResult(result);
 	}
-
+	
 	/**
 	 * Used for printing expressions that can be evaluated in Python (like math.sin(10))
 	 * @author Stanley Bak

@@ -29,19 +29,45 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.util.StringOperations;
 
 
 /**
- * A model transformation pass which re-scales time
+ * A model transformation pass which converts look-up tables
  * 
  * @author Stanley Bak (October 2014)
  *
  */
 public class ConvertLutFlowsPass extends TransformationPass
 {
+	public static int MAX_CONVERSIONS = 1000;
+	
+	@Override
+	public String getCommandLineFlag()
+	{
+		return "-convertluts";
+	}
+
+	@Override
+	public String getName()
+	{
+		return "Convert Look-Up-Tables Pass";
+	};
+	
+	@Override
+	protected void runPass()
+	{
+		if (!(config.root instanceof BaseComponent))
+			throw new AutomatonExportException("Only BaseComponents are supported until the IR is updated to support" + 
+					"checking if a mode is initial (github issue #10).");
+		
+		convertLuts(config.root);
+	}
+	
 	public static int SIMPLIFY_PYTHON = 0;
 	public static int SIMPLIFY_INTERNAL = 1;
 	public static int SIMPLIFY_NONE = 2;
@@ -58,16 +84,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		// urgent modes are supported
 		preconditions.skip(PreconditionsFlag.NO_URGENT);
-	}
-
-	@Override
-	protected void runPass(String params)
-	{
-		if (!(config.root instanceof BaseComponent))
-			throw new AutomatonExportException("Only BaseComponents are supported until the IR is updated to support" + 
-					"checking if a mode is initial (github issue #10).");
 		
-		convertLuts(config.root);
+		simplifyMode = PythonBridge.hasPython() ? SIMPLIFY_PYTHON : SIMPLIFY_INTERNAL;
 	}
 	
 	private void convertLuts(Component c)
@@ -92,7 +110,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 	{
 		// The automaton is modified in place, so we separate the process of iterating the modes and finding lut dynamics
 		// and the process of conversion (which modifies ha)
-		int MAX_CONVERSIONS = 1000;
 		int numConversions = 0;
 		
 		while (true)
@@ -180,21 +197,6 @@ public class ConvertLutFlowsPass extends TransformationPass
 		fixOutgoingTransitions(am, newModes);
 		
 		makeOriginalModeUrgent(am, newModes);
-	}
-	
-	private String join(int[] list, String sep)
-	{
-		StringBuilder rv = new StringBuilder();
-		
-		for (int i : list)
-		{
-			if (rv.length() != 0)
-				rv.append(sep);
-			
-			rv.append(i);
-		}
-		
-		return rv.toString();
 	}
 
 	/**
@@ -288,7 +290,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 				continue;
 			
 			// shouldn't skip, construct mode
-			AutomatonMode am = ha.createMode(original.name + "_" + join(indexList, "_"));
+			AutomatonMode am = ha.createMode(original.name + "_" + StringOperations.join("_", indexList));
 			
 			rv.add(am);
 		}
@@ -314,7 +316,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 			if (shouldSkip(indexList, lut.table))
 				continue;
 
-			String name = original.name + "_" + join(indexList, "_");
+			String name = original.name + "_" + StringOperations.join("_", indexList);
 			AutomatonMode am = ha.modes.get(name);
 			am.invariant = original.invariant.copy(); 
 			
@@ -345,7 +347,9 @@ public class ConvertLutFlowsPass extends TransformationPass
 			// must be done before creating transitions, since inputs may use variableWithLut
 			Expression replaceLutExpression = nLinearInterpolation(lut, indexList, rangeList);
 			ExpressionInterval originalExpInt = original.flowDynamics.get(variableWithLut);
+			
 			Expression newFlow = replaceLutSubexpression(originalExpInt.getExpression(), lut, replaceLutExpression);
+			
 			Interval newI = originalExpInt.getInterval() == null ? null : originalExpInt.getInterval().copy(); 
 			am.flowDynamics.put(variableWithLut, new ExpressionInterval(newFlow, newI));
 			
@@ -370,7 +374,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 					Expression guard = new Operation(inputExpr, Operator.LESSEQUAL, leftBreakpoint);
 					int[] leftIndexList = Arrays.copyOf(indexList, indexList.length);
 					--leftIndexList[varIndex];
-					String leftName = original.name + "_" + join(leftIndexList, "_");
+					String leftName = original.name + "_" + StringOperations.join("_", leftIndexList);
 					AutomatonMode leftMode = ha.modes.get(leftName);
 					
 					if (leftMode == null)
@@ -396,7 +400,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 					Expression guard = new Operation(inputExpr, Operator.GREATEREQUAL, rightBreakpoint);
 					int[] rightIndexList = Arrays.copyOf(indexList, indexList.length);
 					++rightIndexList[varIndex];
-					String rightName = original.name + "_" + join(rightIndexList, "_");
+					String rightName = original.name + "_" + StringOperations.join("_", rightIndexList);
 					AutomatonMode rightMode = ha.modes.get(rightName);
 					
 					if (rightMode == null)
@@ -439,7 +443,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 		
 		if (expression == lut)
 			rv = replaceLutExpression;
-		else if (rv instanceof Operation)
+		else if (expression instanceof Operation)
 		{
 			Operation o = expression.asOperation();
 			Operation newO = new Operation(o.op);
@@ -564,5 +568,5 @@ public class ConvertLutFlowsPass extends TransformationPass
 			else
 				accumulator = new Operation(Operator.ADD, term, accumulator);
 		}
-	};
+	}
 }

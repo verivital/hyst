@@ -108,6 +108,16 @@ public class AutomatonTransition
 		if (to == null)
 			throw new AutomatonValidationException("to was null");
 		
+		if (parent.modes.get(from.name) == null)
+			throw new AutomatonValidationException("mode '" + from.name + "' in"
+					+ " transition '" + from.name + "'->'" + to.name + 
+					"' does not exist in parent");
+		
+		if (parent.modes.get(to.name) == null)
+			throw new AutomatonValidationException("mode '" + to.name + "' in"
+					+ " transition '" + from.name + "'->'" + to.name + 
+					"' does not exist in parent");
+		
 		if (guard == null)
 			throw new AutomatonValidationException("guard was null");
 		

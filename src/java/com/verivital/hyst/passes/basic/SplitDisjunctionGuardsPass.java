@@ -29,18 +29,30 @@ import com.verivital.hyst.passes.TransformationPass;
  */
 public class SplitDisjunctionGuardsPass extends TransformationPass
 {
-	private boolean print = false;
-	public static final String PRINT_PARAM = "print";
-
 	@Override
-	protected void runPass(String params)
+	public String getCommandLineFlag()
 	{
-		print = params.equals(PRINT_PARAM);
-		
-		splitRecrusive(config.root);
+		return "-pass_split_disjunctions";
+	}
+	
+	@Override
+	public String getName()
+	{
+		return "Split Guards with Disjunctions";
+	}
+	
+	@Override
+	protected void runPass()
+	{
+		split(config.root);
+	}
+	
+	public static void split(Component root)
+	{
+		splitRecursive(root);
 	}
 
-	private void splitRecrusive(Component c)
+	private static void splitRecursive(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
@@ -54,8 +66,7 @@ public class SplitDisjunctionGuardsPass extends TransformationPass
 				
 				if (conditions.size() > 1)
 				{
-					if (print)
-						Hyst.log("Splitting disjunctive guard '" + t.guard.toDefaultString() + "' in automaton " + ha.instanceName);
+					Hyst.log("Splitting disjunctive guard '" + t.guard.toDefaultString() + "' in automaton " + ha.instanceName);
 					
 					// remove the old one
 					ha.transitions.remove(t);
@@ -75,7 +86,7 @@ public class SplitDisjunctionGuardsPass extends TransformationPass
 			NetworkComponent nc = (NetworkComponent)c;
 			
 			for (ComponentInstance ci : nc.children.values())
-				splitRecrusive(ci.child);
+				splitRecursive(ci.child);
 		}
 	}
 
@@ -84,7 +95,7 @@ public class SplitDisjunctionGuardsPass extends TransformationPass
 	 * @param reset
 	 * @return
 	 */
-	private Collection<Expression> splitExpression(Expression e)
+	private static Collection<Expression> splitExpression(Expression e)
 	{
 		Collection<Expression> rv = new LinkedList <Expression>();
 		
@@ -100,26 +111,5 @@ public class SplitDisjunctionGuardsPass extends TransformationPass
 			rv.add(e);
 		
 		return rv;
-	}
-
-	@Override
-	public String getCommandLineFlag()
-	{
-		return "-pass_split_disjunctions (" + PRINT_PARAM + ")";
-	}
-	
-	/**
-	 * Get the help text for the parameter (if any). Can be null if parameter is ignored
-	 * @return the parameter help
-	 */
-	public String getParamHelp()
-	{
-		return "if the param '" + PRINT_PARAM + "' is given, any disjunctions that are split will be printed.";
-	}
-	
-	@Override
-	public String getName()
-	{
-		return "Split Guards with Disjunctions";
 	}
 }

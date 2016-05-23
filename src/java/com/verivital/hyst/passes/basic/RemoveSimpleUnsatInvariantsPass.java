@@ -26,7 +26,7 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 public class RemoveSimpleUnsatInvariantsPass extends TransformationPass
 {
 	@Override
-	protected void runPass(String params)
+	protected void runPass()
 	{
 		BaseComponent ha = (BaseComponent)config.root;
 		ArrayList <AutomatonMode> toRemove = new ArrayList <AutomatonMode>();

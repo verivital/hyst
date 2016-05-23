@@ -47,7 +47,7 @@ public class ConfigurationMaker
 		
 		Component c = instantiateComponentFromTemplate(rootName, null, templates);		
 		Configuration rv = new Configuration(c);
-		SymbolicState.setComponent(doc.getComponent(rootName), doc);
+		SymbolicStateExpression.setComponent(doc.getComponent(rootName), doc);
 		
 		// import settings and such
 		Expression init = doc.getInitialStateConditions();
@@ -275,9 +275,9 @@ public class ConfigurationMaker
 	private static void insertIntoLocMap(Expression e, Component root, LinkedHashMap<String, Expression> map, 
 			String desc)
 	{
-		List <SymbolicState> startStates = SymbolicState.extractSymbolicStates(e, desc);
+		List <SymbolicStateExpression> startStates = SymbolicStateExpression.extractSymbolicStates(e, desc);
 		
-		for (SymbolicState ss : startStates)
+		for (SymbolicStateExpression ss : startStates)
 			ss.exportStates(map);
 		
 		// validate modes

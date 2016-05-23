@@ -1,11 +1,16 @@
 package com.verivital.hyst.junit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -14,6 +19,7 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -21,12 +27,15 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.matlab.MatlabBridge;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -42,10 +51,22 @@ import matlabcontrol.MatlabInvocationException;
  * @author Stanley Bak
  *
  */
+@RunWith(Parameterized.class)
 public class PrintersTest {
 	@Before
 	public void setUpClass() {
 		Expression.expressionPrinter = null;
+	}
+	
+	@Parameters
+	public static Collection<Object[]> data()
+	{
+		return Arrays.asList(new Object[][] { { false }, { true } });
+	}
+
+	public PrintersTest(boolean block)
+	{
+		PythonBridge.setBlockPython(block);
 	}
 
 	private String UNIT_BASEDIR = "tests/unit/models/";
@@ -254,21 +275,21 @@ public class PrintersTest {
 		// add a second initial mode
 		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
 		
-		FlowPrinter.convertInitialModes(c);
-
+		FlowPrinter.convertInitialStatesToUrgent(c);
+		
 		BaseComponent ha = (BaseComponent) c.root;
-		AutomatonMode init = ha.modes.get("_init");
+		AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
+		
+		Assert.assertNotNull(init);
+		
 		boolean found = false;
 
 		for (AutomatonTransition at : ha.transitions) {
 			if (at.from == init && at.to.name.equals("stopped")) {
 				found = true;
 
-				ExpressionInterval eiX = at.reset.get("x");
-				ExpressionInterval eiT = at.reset.get("t");
-
-				Assert.assertTrue("reset sets x to 5", eiX.getInterval().isPoint() && eiX.getInterval().min == 5);
-				Assert.assertTrue("reset sets t to 6", eiT.getInterval().isPoint() && eiT.getInterval().min == 6);
+				Assert.assertTrue("reset sets x to 5", at.guard.toDefaultString().contains("x = 5"));
+				Assert.assertTrue("reset sets t to 6", at.guard.toDefaultString().contains("t = 6"));
 			}
 		}
 
@@ -290,6 +311,22 @@ public class PrintersTest {
 		am.flowDynamics.put("x", ei);
 
 		runAllPrintersOnConfiguration(c);
+	}
+	
+	/**
+	 * The preconditions should split a disjunctive condition directly
+	 */
+	@Test
+	public void testDisjunctiveGuardSpaceEx() 
+	{
+		Configuration c = makeSampleConfiguration();
+
+		BaseComponent ha = (BaseComponent) c.root;
+		ha.transitions.get(0).guard = FormulaParser.parseGuard("t >= 5 | x >= 7");
+
+		ToolPrinter tp = new SpaceExPrinter();
+		tp.setOutputNone();
+		tp.print(c, "", "model.xml");
 	}
 
 	/**
@@ -403,9 +440,104 @@ public class PrintersTest {
 	}
 	
 	@Test
+	public void testDisjunctionFlowstarPrint()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.cfg";
+		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "fakeinput.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+		
+		Assert.assertTrue("standard form _error mode exists", out.contains("_error"));
+		Assert.assertFalse("standard form _init mode doesn't exist", out.contains("_init"));
+	}
+	
+	@Test
 	public void testPrintDisjunction() 
 	{
 		// may need to add precondition to convert to standard form
 		runAllPrintersOnModel("disjunction_forbidden"); 
+	}
+	
+	@Test
+	public void testPysimPrint()
+	{
+		// test model with input and output variables
+		String cfgPath = UNIT_BASEDIR + "controller_heater/controller_heater.cfg";
+		String xmlPath = UNIT_BASEDIR + "controller_heater/controller_heater.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+		
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+	
+	@Test
+	public void testPrintHybridized()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		SpaceExDocument doc = SpaceExImporter.importModels(path
+				+ "vanderpol_althoff.cfg", path + "vanderpol_althoff.xml");
+		Configuration c = ModelParserTest.flatten(doc);
+		
+		// -T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon 0.05 -noerror
+		String params = HybridizeMixedTriggeredPass.makeParamString(0.15, "starcorners", 
+				0.05, 31, 1, 0.05, "basinhopping", true);
+
+		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
+		
+		// try printing to spaceex
+		ToolPrinter printer = new SpaceExPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+		
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+	
+	@Test
+	public void testPrintLutModelWithoutPython()
+	{
+		String cfgPath = UNIT_BASEDIR + "lut_table/lut_table.cfg";
+		String xmlPath = UNIT_BASEDIR + "lut_table/lut_table.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(doc);
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker
+				.fromSpaceEx(doc, componentTemplates);
+		
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }

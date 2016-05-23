@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -19,9 +18,12 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize;
+import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationModeParams;
 import com.verivital.hyst.passes.complex.hybridize.AffineOptimize.OptimizationParams;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
+import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.KodiakUtil;
 
 /**
  * All these tests require python, so if it fails to load, they will be skipped
@@ -41,6 +43,19 @@ public class PythonTests
 	{
     	PythonBridge.setBlockPython(block);
     }
+    
+    @Test
+    public void testAffineApprox()
+    {
+    	// this function tests that the produced affine approximation of (2 + 1)/2 is exactly 1.5
+    	LinkedHashMap<String, ExpressionInterval> flow = new LinkedHashMap<String, ExpressionInterval>();
+    	flow.put("x", new ExpressionInterval("(2 + 1)/2"));
+    	HashMap<String, Interval> bounds = new HashMap<String, Interval>();
+    	bounds.put("x", new Interval(0, 1));
+    	
+    	Expression e = AffineOptimize.affineApprox(flow, bounds).get("x").asExpression();
+    	Assert.assertNull(AutomatonUtil.areExpressionsEqual("1.5", e));
+    }
 	
 	@Test
 	public void testAffineHybridized()
@@ -56,21 +71,27 @@ public class PythonTests
 		bounds.put("x", new Interval(1, 2));
 		bounds.put("y", new Interval(2, 3));
 		
+		LinkedHashMap<String, ExpressionInterval> avg = AffineOptimize.affineApprox(dy, bounds);
+		
 		// linear estimate is 
 		// y' == 7.5*x + 5.5*y
 		// interval for y should be [10.5, 12]
 		
 		List<OptimizationParams> params = new ArrayList<OptimizationParams>();
 		OptimizationParams op = new OptimizationParams();
-		op.original = dy;
-		op.bounds = bounds;
+		op.newDynamics = avg;
+		OptimizationModeParams modeParams = new OptimizationModeParams(); 
+		op.origModes.add(modeParams);
+		
+		modeParams.origDynamics = dy;
+		modeParams.bounds = bounds;
 		params.add(op);
 		
-		AffineOptimize.createAffineDynamics(params);
+		AffineOptimize.optimizeDynamics("basinhopping", params);
 		ExpressionInterval yEi = params.get(0).result.get("y");
 		
-		// the interval is offset to start at 0
-		Assert.assertEquals("hybridized dynamics are correct", "7.5 * x + 5.5 * y - 12 + [0, 1.5]", yEi.toDefaultString());
+		Assert.assertNull(AutomatonUtil.areExpressionIntervalsEqual(
+				"7.5 * x + 5.5 * y - 12", 0, 1.5, yEi));
 	}
 
 	@Test
@@ -80,15 +101,15 @@ public class PythonTests
 			return;
 		
 		Expression e = FormulaParser.parseFlow("var' == x^2 - 2*x").asOperation().getRight();
-		double maxWidth = 0.1;
+		List <Expression> eList = Arrays.asList(e);
 		
-		Map <String, Interval> range1 = new HashMap <String, Interval>();
+		HashMap <String, Interval> range1 = new HashMap <String, Interval>();
 		range1.put("x", new Interval(0, 2));
 		
-		ArrayList<Map <String, Interval>> ranges = new ArrayList<Map <String, Interval>>(2); 
+		ArrayList<HashMap <String, Interval>> ranges = new ArrayList<HashMap <String, Interval>>(1); 
 		ranges.add(range1);
 		
-		Interval rv = PythonUtil.intervalOptimizeMulti_bb(e, ranges, maxWidth).get(0);
+		Interval rv = PythonUtil.intervalOptimizeBounded(eList, ranges, 0.1).get(0);
 
 		if (rv.max > 0 || rv.min < -1.1)
 			Assert.fail("bounds was too pessimistic (not inside [-1.1,0]): " + rv);
@@ -101,12 +122,14 @@ public class PythonTests
 			return;
 		
 		Expression e = FormulaParser.parseFlow("var' == 2*x + y - x").asOperation().children.get(1);
+		List <Expression> eList = Arrays.asList(e);
 		
-		Map <String, Interval> ranges = new HashMap <String, Interval>();
+		HashMap <String, Interval> ranges = new HashMap <String, Interval>();
 		ranges.put("x", new Interval(0, 1));
 		ranges.put("y", new Interval(-0.2, -0.1));
+		List <HashMap <String, Interval>> rList = Arrays.asList(ranges);
 		
-		Interval rv = PythonUtil.intervalOptimize(e, ranges);
+		Interval rv = PythonUtil.intervalOptimize(eList, rList).get(0);
 		
 		final double EPSILON = 1e-9;
 		
@@ -121,20 +144,21 @@ public class PythonTests
 			return;
 		
 		Expression e = FormulaParser.parseFlow("var' == 2*x + y - x").asOperation().children.get(1);
+		List <Expression> eList = Arrays.asList(e, e);
 		
-		Map <String, Interval> range1 = new HashMap <String, Interval>();
+		HashMap <String, Interval> range1 = new HashMap <String, Interval>();
 		range1.put("x", new Interval(0, 1));
 		range1.put("y", new Interval(-0.2, -0.1));
 		
-		Map <String, Interval> range2 = new HashMap <String, Interval>();
+		HashMap <String, Interval> range2 = new HashMap <String, Interval>();
 		range2.put("x", new Interval(1, 2.5));
 		range2.put("y", new Interval(-1.2, -1.1));
 		
-		ArrayList<Map <String, Interval>> ranges = new ArrayList<Map <String, Interval>>(2); 
+		ArrayList<HashMap <String, Interval>> ranges = new ArrayList<HashMap <String, Interval>>(2); 
 		ranges.add(range1);
 		ranges.add(range2);
 		
-		List<Interval> rv = PythonUtil.intervalOptimizeMulti(e, ranges);
+		List<Interval> rv = PythonUtil.intervalOptimize(eList, ranges);
 		
 		final double EPSILON = 1e-9;
 		
@@ -156,11 +180,14 @@ public class PythonTests
 		
 		// (1-x*x)*y-x has critical points at (1, 0.5) and (-1, -0.5)
 		Expression e = FormulaParser.parseValue("(1-x*x)*y-x");
+		List <Expression> eList = Arrays.asList(e);
 		HashMap<String, Interval> bounds = new HashMap<String, Interval>();
 		bounds.put("x", new Interval(-1.1, -0.9));
 		bounds.put("y", new Interval(0.49, 0.51));
 		
-		Interval sciPi = PythonUtil.scipyOptimize(e, bounds);
+		List <HashMap<String, Interval>> bList = Arrays.asList(bounds);
+		
+		Interval sciPi = PythonUtil.scipyOptimize(eList, bList).get(0);
 		
 		Assert.assertTrue("optimization included 1.0", sciPi.contains(1.0));
 	}
@@ -241,5 +268,42 @@ public class PythonTests
 		result = PythonUtil.pythonSimplifyExpression(e);
 		
 		Assert.assertEquals("python simplification incorrect", str, result.toDefaultString());
+	}
+	
+	@Test
+	public void testBoundedIntervalVersusKodiak()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+		
+		Expression e = FormulaParser.parseValue("(1 - x * x) * y - x - (-7.2 * x + -1.03 * y + 8.97)");
+		List <Expression> eList = Arrays.asList(e, e);
+		
+		HashMap <String, Interval> range1 = new HashMap <String, Interval>();
+		range1.put("x", new Interval(0, 2));
+		range1.put("y", new Interval(1, 2.2));
+		
+		HashMap <String, Interval> range2 = new HashMap <String, Interval>();
+		range2.put("x", new Interval(0.6, 0.8));
+		range2.put("y", new Interval(1.8, 2.1));
+		
+		List<HashMap <String, Interval>> ranges = Arrays.asList(range1, range2);
+		List <Interval> kodList = KodiakUtil.kodiakOptimize(eList, ranges);
+		
+		if (kodList == null) // kodiak doesn't exist
+			return;
+		
+		double TOL = 0.1;
+		List <Interval> intList = PythonUtil.intervalOptimizeBounded(eList, ranges, TOL);
+
+		for (int i = 0; i < kodList.size(); ++i)
+		{
+			Interval kod = kodList.get(i);
+			Interval bb = intList.get(i);
+			
+			Interval.COMPARE_TOL = TOL;
+			
+			Assert.assertEquals("Result for optimiziation " + i +" wasn't equal", kod, bb);
+		}
 	}
 }

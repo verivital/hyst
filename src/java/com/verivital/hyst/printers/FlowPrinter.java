@@ -5,11 +5,12 @@ package com.verivital.hyst.printers;
 
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -18,13 +19,13 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
@@ -54,7 +55,7 @@ public class FlowPrinter extends ToolPrinter
 	}
 	
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "#";
 	}
@@ -114,15 +115,7 @@ public class FlowPrinter extends ToolPrinter
 			printLine("{");
 			
 			for (Entry<String, Expression> e : config.forbidden.entrySet())
-			{
-				String expString = "";
-				Expression exp = e.getValue();
-				
-				if (exp != null)
-					expString = getFlowConditionExpression(exp);
-				
-				printLine(e.getKey() + " {" + expString + "}");
-			}
+				printLine(e.getKey() + " {" + e.getValue() + "}");
 			
 			printLine("}");
 		}
@@ -364,8 +357,8 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!inv.equals(Constant.TRUE))
 			{
-				printCommentblock("Original invariant: " + inv);
-				printLine(getFlowConditionExpression(inv));
+				printCommentBlock("Original invariant: " + inv.toDefaultString());
+				printLine(inv.toString());
 			}
 
 			printLine("}"); // end invariant
@@ -387,7 +380,7 @@ public class FlowPrinter extends ToolPrinter
 			
 			byte classification = AutomatonUtil.classifyExpressionOps(e);
 			
-			if ((classification | AutomatonUtil.OPS_NONLINEAR) != 0)
+			if ((classification & AutomatonUtil.OPS_NONLINEAR) != 0)
 			{
 				rv = true;
 				break;
@@ -396,98 +389,10 @@ public class FlowPrinter extends ToolPrinter
 		
 		return rv;
 	}
-
-	public static String getFlowConditionExpression(Expression e)
-	{
-		String rv = null;
-		
-		try
-		{
-			rv = getFlowConditionExpressionRec(e);
-		}
-		catch (AutomatonExportException ex)
-		{
-			throw new AutomatonExportException("Error with expression:" + e , ex);
-		}
-		
-		return rv;
-	}
-
-	private static String getFlowConditionExpressionRec(Expression e)
-	{
-		String rv = "";
-		// replace && with '   ' and then print as normal
-		
-		if (e instanceof Operation)
-		{
-			Operation o = (Operation)e;
-			
-			if (o.op == Operator.AND)
-			{
-				rv += getFlowConditionExpressionRec(o.getLeft());
-				rv += "   ";
-				rv += getFlowConditionExpressionRec(o.getRight());
-			}
-			else if (o.op == Operator.EQUAL)
-			{
-				rv += getFlowConditionExpressionRec(o.getLeft());
-				rv += " = ";
-				rv += getFlowConditionExpressionRec(o.getRight());
-			}
-			else if (o.op == Operator.OR)
-			{
-				throw new AutomatonExportException("Flow* printer doesn't support OR operator. " +
-						"Consider using a Hyst pass to eliminate disjunctions)");
-			}
-			else if (Operator.isComparison(o.op))
-			{
-				Operator op = o.op;
-				
-				// Flow doesn't like < or >... needs <= or >=
-				if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || op.equals(Operator.NOTEQUAL))
-					throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
-
-				// make sure it's of the form p ~ c
-				if (o.children.size() == 2 && o.getRight() instanceof Constant)
-					rv = e.toString();
-				else
-				{
-					// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
-					
-					rv += getFlowConditionExpression(o.getLeft());
-					rv += " - (" + getFlowConditionExpression(o.getRight());
-					rv += ") " + Expression.expressionPrinter.printOperator(op) + " 0";
-				}
-			}
-			else
-				rv = e.toString();
-		}
-		else 
-			rv = e.toString();
-		
-		return rv;
-	}
 	
 	private void printFlowRangeConditions(Expression ex, boolean isAssignment)
 	{
-		TreeMap <String, Interval> ranges = new TreeMap <String, Interval>();
-		
-		try
-		{
-			RangeExtractor.getVariableRanges(ex, ranges);
-		} 
-		catch (EmptyRangeException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} 
-		catch (ConstantMismatchException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		catch (UnsupportedConditionException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		} 
+		HashMap<String, Interval> ranges = getExpressionVariableRanges(ex); 
 		
 		for (Entry<String, Interval> e : ranges.entrySet())
 		{
@@ -514,6 +419,30 @@ public class FlowPrinter extends ToolPrinter
 				}
 			}
 		}
+	}
+
+	private static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
+	{
+		HashMap <String, Interval> ranges = new HashMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		catch (UnsupportedConditionException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		
+		return ranges;
 	}
 
 	private void printJumps()
@@ -545,8 +474,8 @@ public class FlowPrinter extends ToolPrinter
 			
 			if (!guard.equals(Constant.TRUE))
 			{
-				printCommentblock("Original guard: " + t.guard);
-				printLine(getFlowConditionExpression(guard));
+				printCommentBlock("Original guard: " + t.guard.toDefaultString());
+				printLine(guard.toString());
 			}
 			
 			printLine("}");
@@ -574,11 +503,67 @@ public class FlowPrinter extends ToolPrinter
 		printLine("}");
 	}
 	
+	public static class FlowstarExpressionPrinter extends DefaultExpressionPrinter
+	{
+		public FlowstarExpressionPrinter()
+		{
+			super();
+			
+			opNames.put(Operator.AND, " ");
+		}
+		
+		@Override
+		public String printOperator(Operator op)
+		{
+			if (op.equals(Operator.GREATER) || op.equals(Operator.LESS) || 
+					op.equals(Operator.NOTEQUAL) || op == Operator.OR)
+				throw new AutomatonExportException("Flow* printer doesn't support operator " + op.toDefaultString());
+			
+			return super.printOperator(op);
+		}
+		
+		@Override
+		protected String printTrue()
+		{
+			return " ";
+		}
+		
+		@Override
+		protected String printFalse()
+		{
+			return "1 <= 0"; // not really sure if this will work
+		}
+		
+		@Override
+		protected String printOperation(Operation o)
+		{
+			String rv = "";
+			
+			if (Operator.isComparison(o.op))
+			{
+				Operator op = o.op;
+				
+				// make sure it's of the form p ~ c
+				if (o.children.size() == 2 && o.getRight() instanceof Constant)
+					rv = super.printOperation(o);
+				else
+				{
+					// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
+					rv += o.getLeft() + " - (" + o.getRight() + ") " + printOperator(op) + " 0";
+				}
+			}
+			else
+				rv = super.printOperation(o);
+			
+			return rv;
+		}
+	}
+	
 	@Override
 	protected void printAutomaton()
 	{	
 		this.ha = (BaseComponent)config.root;
-		Expression.expressionPrinter = DefaultExpressionPrinter.instance;
+		Expression.expressionPrinter = new FlowstarExpressionPrinter();
 
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");
@@ -586,76 +571,181 @@ public class FlowPrinter extends ToolPrinter
 		if (ha.modes.containsKey("start"))
 			throw new AutomatonExportException("mode named 'start' is not allowed in Flow* printer");
 		
-		if (config.init.size() > 1)
-		{
-			Hyst.log("Multiple initial modes detected (not supported by Flow*). Converting to single urgent one.");
-			convertInitialModes(config);
-		}
+		if (!areIntervalInitialStates(config))
+			convertInitialStatesToUrgent(config);
+		
+		checkBoundedInitialStates(config);
 		
 		AutomatonUtil.convertUrgentTransitions(ha, config);
 		
 		printDocument(originalFilename);
 	}
+	
+	public static void convertInitialStatesToUrgent(Configuration config)
+	{
+		Collection <Expression> allInitExpressions = new ArrayList<Expression>();
+		
+		allInitExpressions.addAll(config.init.values());
+		
+		config.init.values();
+		
+		ConvertToStandardForm.convertInit(config);
+		
+		updateInitCondition(config, allInitExpressions);
+	}
 
 	/**
-	 * Use urgent modes to convert a configuration with multiple initial modes to one with a single initial mode
-	 * @param c the configuration to convert
+	 * Update the initial condition to be the weak union of all the other modes
+	 * @param config the config object
+	 * @param initExpressions the list of all the initial expressions in all the modes
 	 */
-	public static void convertInitialModes(Configuration c)
+	private static void updateInitCondition(Configuration config,
+			Collection<Expression> initExpressions)
 	{
-		final String INIT_NAME = "_init";
-		BaseComponent ha = (BaseComponent)c.root;
-		Collection <String> constants = ha.constants.keySet();
+		Map <String, Interval> weakVarBounds = new HashMap <String, Interval>();
 		
-		AutomatonMode init = ha.createMode(INIT_NAME);
-		init.invariant = Constant.TRUE;
-		init.urgent = true;
-		init.flowDynamics = null;
-		
-		for (Entry<String, Expression> e : c.init.entrySet())
+		// get weak bounds for each variable over all the initial states
+		for (Expression e : initExpressions)
 		{
-			String modeName = e.getKey();
-			AutomatonTransition at = ha.createTransition(init, ha.modes.get(modeName)); 
-			at.guard = Constant.TRUE;
+			Map <String, Interval> bounds = getExpressionWeakVariableRanges(e);
 			
-			Expression resetExp = removeConstants(e.getValue(), constants);
-			
-			TreeMap <String, Interval> ranges = new TreeMap <String, Interval>(); 
-			try
+			for (Entry<String, Interval> boundsEntry : bounds.entrySet())
 			{
-				RangeExtractor.getVariableRanges(e.getValue(), ranges);
-			} 
-			catch (EmptyRangeException e1)
-			{
-				throw new AutomatonExportException("Empty range in initial mode: " + modeName, e1);
-			}
-			catch (ConstantMismatchException e2)
-			{
-				throw new AutomatonExportException("Constant mismatch in initial mode: " + modeName, e2);
-			}
-			catch (UnsupportedConditionException e2)
-			{
-				throw new AutomatonExportException("Non-box initial mode: " + modeName, e2);
-			} 
-			
-			Collection <String> vars = AutomatonUtil.getVariablesInExpression(resetExp);
-			
-			for (String var : vars)
-			{
-				Interval i = ranges.get(var);
+				String var = boundsEntry.getKey();
+				Interval i = boundsEntry.getValue();
 				
-				if (i == null)
-					throw new AutomatonExportException("Variable " + var + " not defined in initial mode " + modeName);
+				// merge i into the existing interval bounds
+				Interval cur = weakVarBounds.get(var);
 				
-				at.reset.put(var, new ExpressionInterval(new Constant(0), i));
+				if (cur == null)
+					weakVarBounds.put(var, i);
+				else
+					weakVarBounds.put(var, Interval.union(cur, i));
 			}
 		}
 		
-		Expression firstReachableState = c.init.values().iterator().next();
-		c.init.clear();
-		c.init.put(INIT_NAME, firstReachableState);
+		// apply weak bounds for each variable to initial state
+		Expression init = config.init.values().iterator().next();
 		
-		c.validate();
+		for (Entry<String, Interval> e : weakVarBounds.entrySet())
+		{
+			String v = e.getKey();
+			Interval i = e.getValue();
+			
+			if (i.min != -Double.MAX_VALUE)
+			{
+				Operation cond = new Operation(i.min, Operator.LESSEQUAL, v); 
+				init = Expression.and(init, cond);
+			}
+			
+			if (i.max != Double.MAX_VALUE)
+			{
+				Operation cond = new Operation(v, Operator.LESSEQUAL, i.max); 
+				init = Expression.and(init, cond);
+			}
+		}
+		
+		AutomatonMode initMode = ConvertToStandardForm.getInitMode((BaseComponent)config.root);
+		config.init.put(initMode.name, init);
+	}
+	
+	/**
+	 * Gets the weak ranges for the given expression. Only interval ranges are
+	 * extracted... other ranges are ignored.
+	 * @param ex the input expression
+	 * @return
+	 */
+	private static Map<String, Interval> getExpressionWeakVariableRanges(Expression ex)
+	{
+		HashMap <String, Interval> ranges = new HashMap <String, Interval>();
+		
+		try
+		{
+			RangeExtractor.getWeakVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		} 
+		catch (ConstantMismatchException e)
+		{
+			throw new AutomatonExportException(e.getLocalizedMessage(), e);
+		}
+		
+		return ranges;
+	}
+	
+	private static void checkBoundedInitialStates(Configuration c)
+	{
+		// there must be bounds on every variable in the initial state for Flow* to work
+		for (Entry<String, Expression> e : c.init.entrySet())
+		{
+			Expression exp = e.getValue();
+			String mode = e.getKey();
+			
+			Collection <String> allVars = AutomatonUtil.getVariablesInExpression(exp);
+		
+			for (String v : c.root.variables)
+			{
+				if (!allVars.contains(v))
+					throw new AutomatonExportException("Flow* requires bounds be defined for all "
+							+ "variables in initial states. Variable '" + v + "' was not bounded in"
+									+ " initial mode '" + mode + "' with expression: " + 
+										exp.toDefaultString());
+			}
+		}
+	}
+
+	/**
+	 * Does the following expression give a interval range for every variable?
+	 * @param ex the expression to check
+	 * @return true iff the expression imposes interval ranges
+	 */
+	private static boolean isIntervalRangeCondition(Expression ex)
+	{
+		boolean rv = true;
+		
+		try
+		{
+			HashMap <String, Interval> ranges = new HashMap <String, Interval>();
+			RangeExtractor.getVariableRanges(ex, ranges);
+		} 
+		catch (EmptyRangeException e)
+		{
+			rv = false;
+		} 
+		catch (ConstantMismatchException e)
+		{
+			rv = false;
+		}
+		catch (UnsupportedConditionException e)
+		{
+			rv = false;
+		}
+		
+		return rv;
+	}
+	
+	/**
+	 * Test if each initial mode can be defined just using intervals over the variables
+	 * @param c the configuration
+	 * @return true iff using intervals is enough
+	 */
+	private static boolean areIntervalInitialStates(Configuration config)
+	{
+		boolean rv = true;
+		BaseComponent ha = (BaseComponent)config.root;
+		
+		for (Entry<String, Expression> e : config.init.entrySet())
+		{
+			if (!isIntervalRangeCondition(removeConstants(e.getValue(), ha.constants.keySet())))
+			{
+				rv = false;
+				break;
+			}
+		}
+		
+		return rv;
 	}
 
 	@Override

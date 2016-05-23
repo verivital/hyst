@@ -67,7 +67,7 @@ public class SpaceExPrinter extends ToolPrinter
 		preconditions.skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED.ordinal()] = true;
-		preconditions.skip[PreconditionsFlag.NO_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()] = true;
+		preconditions.skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()] = true;
 	}
 	
     /**
@@ -556,7 +556,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		// config file comments are // and /* */, while xml comments are <!-- -->
 		return getCommentCharacterStart() + getCommentCharacterEnd();
@@ -578,7 +578,7 @@ public class SpaceExPrinter extends ToolPrinter
 	 * Comment a block of text using start and end comment markings
 	 */
 	@Override
-	protected void printCommentblock(String comment) 
+	protected void printCommentBlock(String comment) 
 	{
 		printLine(this.getCommentCharacterStart() + " " + 
 				comment.replace("\n", "\n" + this.indentation + " ") + "\n" + this.getCommentCharacterEnd());

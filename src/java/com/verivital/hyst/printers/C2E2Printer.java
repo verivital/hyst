@@ -17,6 +17,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.internalpasses.RenameParams;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -24,7 +25,6 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
-import com.verivital.hyst.passes.basic.RenameParamPass;
 
 
 /**
@@ -46,7 +46,7 @@ public class C2E2Printer extends ToolPrinter
 	private TreeMap<String,Integer> modeNamesToIds = new TreeMap<String, Integer>();
 	
 	@Override
-	protected String getCommentCharacter()
+	protected String getCommentPrefix()
 	{
 		return "# ";
 	}
@@ -57,7 +57,11 @@ public class C2E2Printer extends ToolPrinter
 	 */
 	protected void printDocument(String originalFilename) 
 	{
-		new RenameParamPass().runTransformationPass(config, "t:clock:time:clock_time");
+		TreeMap <String, String> mapping = new TreeMap <String, String>();
+		mapping.put("t", "clock");
+		mapping.put("time", "clock_time");
+		
+		RenameParams.run(config, mapping);
 
 		this.printCommentHeader();
 		

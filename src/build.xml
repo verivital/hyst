@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Hyst Project" default="build" basedir=".">
 	
-    <property name="main.package"          value="exporter"/>
-    <property name="parser.package"        value="${main.package}/parser"/>
-	<property name="main.src.dir"          value="src/java/com/verivital/hyst"/>
+	<property name="hypy.src.dir"          value="hybridpy/hybridpy"/>
+	<property name="pythonbridge.src.dir"  value="pythonbridge"/>
     <property name="grammar.src.dir"       value="java/com/verivital/hyst/grammar/antlr"/> 
     <property name="grammar.file"          value="${grammar.src.dir}/HystExpression.g4"/>
 	<property name="release.path"          value="release"/>
@@ -103,7 +102,6 @@
         	<arg value="-visitor"/>
         	<arg value="-no-listener"/>
         	<arg value="-package"/>
-            <!--<arg value="${main.src.dir}/${parser.package}"/>-->
         	<arg value="com.verivital.hyst.grammar.antlr"/>
         	<!-- Stan: commented this out because it would generate the files in a subdirectory of the grammar file,
         	although it did compile it correctly somehow.-->
@@ -127,8 +125,9 @@
 		<pathelement location="bin"/>
 	</path>
 	
-	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" description="Create a jar for the Hyst project">
-		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}">
+	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" 
+			description="Create a jar for the Hyst project">
+		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}" whenmanifestonly="fail">
 			<zipgroupfileset dir="${lib.path}" includes="${runtimejarnames.path}"/>
 			<zipgroupfileset dir="${z3.path}" includes="**/*.jar"/>
 			<manifest>
@@ -157,12 +156,12 @@
 		</javac>
 	</target>
 	
-	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar" description="Make the .class files and .jar file">
+	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar,run_jar_test" description="Make the .class files and .jar file">
 	</target>
 	
 	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
 	
-	<target name ="run_jar_test" depends="build-config,build,copyjar" description="Test running the .jar">
+	<target name ="run_jar_test" depends="build-config,copyjar" description="Test running the .jar">
 		<exec dir="${lib.path}" executable="java" failonerror="true" outputproperty="devnull">
 			<arg line="-jar ${jar.path} -help" />
 		</exec>
@@ -192,9 +191,45 @@
 		    <arg line="run_tests.py" />
 		</exec>
 	</target>
+
+	<!-- run the python tests -->
+	<target name ="python_run_test" depends="check_python" if="pythonDetected" description="Run Python Tests">
+		<echo message="Python detected, running python unit tests." />
+		
+		<!-- hypy with unit test discovery with the default settings (looks in test_*.py files) -->
+		<exec dir="${hypy.src.dir}" executable="python" failonerror="true">
+		    <arg line="-m unittest discover" />
+		</exec>
+		
+		<!-- pythonbridge with unit test discovery with the default settings -->
+		<exec dir="${pythonbridge.src.dir}" executable="python" failonerror="true">
+		    <arg line="-m unittest discover" />
+		</exec>
+		
+	</target>
+	
+	<target name ="python_test" depends="check_python,python_run_test,python_message">
+	</target>
+	
+	<target name ="python_message" depends="check_python" unless="pythonDetected" description="Run Python Tests">
+		<echo message="Note: Python not detected using Hyst's -check_python flag; skipping python tests." />
+	</target>
+	
+	<!-- check if python exists (sets property pythonDetected) -->
+	<target name ="check_python" depends="build-config,build" description="Check if Python Exists">
+		
+		<exec dir="${lib.path}" executable="java" resultproperty="javaExitCode">
+			<arg line="-jar ${jar.path} -testpython" />
+		</exec>
+		
+	 	<condition property="pythonDetected" value="true">
+	         <!-- set this property, only if isWindows set -->
+	         <equals arg1="${javaExitCode}" arg2="0" />
+	    </condition>
+	</target>
 	
 	<!-- run all tests (unit and regression) -->
-	<target name ="test" depends="run_jar_test,unit_test,regression_test" description="Run the Unit and Regression Tests">
+	<target name ="test" depends="run_jar_test,unit_test,regression_test,python_test" description="Run the Unit and Regression Tests">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

@@ -1,0 +1,10 @@
+The mixed-triggered hybridization pass soundly over-approximates nonlinear system with a piecewise linear one. This is done using mostly time-triggered transitions, based on a simluation of the system.
+
+=== PAPER ===
+
+"Scalable Static Hybridization Methods for Analysis of Nonlinear Systems", S. Bak, S. Bogomolov, T. Henzinger, T. Johnson, P. Prakash, 19th International Conference on Hybrid Systems: Computation and Control (HSCC 2016), 49% acceptance rate, Best Repeatability Evaluation Package Award
+
+=== OTHER ===
+
+streamplot.pdf is a streamplot showing the dynamics of the system
+
