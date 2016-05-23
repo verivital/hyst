@@ -554,4 +554,3 @@ Themostat system has two locations and one variable
 heater_production(k,2,1)
 E.g if we want to generate 100 examples of thermostat system:
 heater_production(100,2,1)
-
