@@ -191,17 +191,28 @@ public class Hyst
 
 		try
 		{
-			// 1. import the SpaceExDocument
-			SpaceExDocument spaceExDoc = SpaceExImporter.importModels(cfgFilename,
-					xmlFilenames.toArray(new String[xmlFilenames.size()]));
-
-			// 2. convert the SpaceEx data structures to template automata
-			Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(spaceExDoc);
-
-			// 3. run any component template passes here (future)
-
-			// 4. instantiate the component templates into a networked configuration
-			Configuration config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
+			Configuration config = null;
+			if (!useModelGeneration)
+			{
+				// 1. import the SpaceExDocument
+				SpaceExDocument spaceExDoc = SpaceExImporter.importModels(cfgFilename,
+						xmlFilenames.toArray(new String[xmlFilenames.size()]));
+	
+				// 2. convert the SpaceEx data structures to template automata
+				Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(spaceExDoc);
+	
+				// 3. run any component template passes here (future)
+	
+				// 4. instantiate the component templates into a networked configuration
+				config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
+			}
+			else
+			{
+				ModelGenerator gen = newModelGeneratorInstance(generators[generatorIndex]);
+				
+				config = gen.generate(modelGenerationParam);
+				
+			}
 
 			// 5. run passes
 			runPasses(config);
