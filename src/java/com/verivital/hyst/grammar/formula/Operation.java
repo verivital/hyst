@@ -92,7 +92,7 @@ public class Operation extends Expression
 	}
 	
 	/**
-	 * Create an operation of the form 'var <op> constant'
+	 * Create an operation of the form 'var -op- constant'
 	 * @param var the variable name
 	 * @param op the operator
 	 * @param c the constant value

@@ -11,6 +11,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.generators.IntegralChainGenerator;
+import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.printers.FlowPrinter;
@@ -47,6 +48,24 @@ public class GeneratorTests
 	public void testIntegralChain()
 	{
 		IntegralChainGenerator gen = new IntegralChainGenerator();
+		
+		Configuration c = gen.generate("-dims 6");
+		
+		Assert.assertEquals("six variables", 6, c.root.variables.size());
+		
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+		
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+	
+	@Test
+	public void testNav()
+	{
+		NavigationGenerator gen = new NavigationGenerator();
 		
 		Configuration c = gen.generate("-dims 6");
 		
