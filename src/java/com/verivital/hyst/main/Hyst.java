@@ -202,7 +202,7 @@ public class Hyst
 		try
 		{
 			Configuration config = null;
-			if (modelGenIndex != -1)
+			if (modelGenIndex == -1)
 			{
 				// 1. import the SpaceExDocument
 				SpaceExDocument spaceExDoc = SpaceExImporter.importModels(cfgFilename,
@@ -379,7 +379,7 @@ public class Hyst
 			for (int pi = 0; pi < printers.length; ++pi)
 			{
 				String flag = printers[pi].getCommandLineFlag();
-
+				
 				if (flag.equals(arg))
 				{
 					if (printerIndex != -1)
@@ -480,9 +480,11 @@ public class Hyst
 					{
 						ModelGenerator g = generators[index];
 						
-						if (g.getCommandLineFlag().equals(arg))
+						if (g.getCommandLineFlag().equals(genName))
+						{
 							modelGenIndex = index;
 							break;
+						}
 					}
 					
 					if (modelGenIndex == -1)
@@ -533,7 +535,8 @@ public class Hyst
 			}
 		}
 
-		if (!rv || xmlFilenames.size() == 0 || cfgFilename == null || printerIndex < 0 || printerIndex >= printers.length)
+		if (!rv || ((xmlFilenames.size() == 0 || cfgFilename == null) && modelGenIndex == -1) 
+				|| printerIndex < 0 || printerIndex >= printers.length)
 		{
 			if (IS_UNIT_TEST)
 				return false;
