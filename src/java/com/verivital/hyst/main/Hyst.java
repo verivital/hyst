@@ -15,6 +15,7 @@ import javax.swing.UIManager;
 
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
+import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -122,6 +123,7 @@ public class Hyst
 	private static final ModelGenerator[] generators = 
 	{
 		new IntegralChainGenerator(),
+		new NavigationGenerator(),
 	};
 
 	// passes that the user has selected
