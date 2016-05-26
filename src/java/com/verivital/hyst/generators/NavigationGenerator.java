@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.util.DoubleArrayOptionHandler;
 
 /**
  * Creates the NAV benchmark, from "Benchmarks for Hybrid Systems Verification", Fehnker et. al, HSCC 2004
@@ -30,9 +31,9 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 public class NavigationGenerator extends ModelGenerator 
 {
 	@Option(name="-matrix",required=true,usage="space-sepeated values of four-element matrix A, like '-1.2 0.1 0.1 -1.2'", 
-			handler=StringArrayOptionHandler.class,
+			handler=DoubleArrayOptionHandler.class,
 			metaVar="a11 a12 a21 a22")
-	private List<String> matrixString;
+	private List<Double> matrixString;
 	private double[][] matrixA = {{0,0},{0,0}};
 	
 	@Option(name="-prefix",usage="mode name prefix", metaVar="NAME")
@@ -46,7 +47,7 @@ public class NavigationGenerator extends ModelGenerator
 	private List <Integer> iListProcessed = null; // uses 9 for 'A' and 10 for 'B'
 	
 	@Option(name="-width",required=true,usage="width of the grid (# of modes)", metaVar="WIDTH")
-	private int width;
+	private int width = 1;
 	
 	private int height = -1; // derived from list size and width
 	
@@ -75,17 +76,10 @@ public class NavigationGenerator extends ModelGenerator
 		if (matrixString.size() != 4)
 			throw new AutomatonExportException("Matrix A should have exactly four elements.");
 		
-		try
-		{
-			matrixA[0][0] = Double.parseDouble(matrixString.get(0));
-			matrixA[0][1] = Double.parseDouble(matrixString.get(1));
-			matrixA[1][0] = Double.parseDouble(matrixString.get(2));
-			matrixA[1][1] = Double.parseDouble(matrixString.get(3));
-		}
-		catch (NumberFormatException e)
-		{
-			throw new AutomatonExportException("Error parsing Matrix argument as number: " + e.toString(), e);
-		}
+		matrixA[0][0] = matrixString.get(0);
+		matrixA[0][1] = matrixString.get(1);
+		matrixA[1][0] = matrixString.get(2);
+		matrixA[1][1] = matrixString.get(3);
 		
 		iListProcessed = new ArrayList<Integer>();
 		
@@ -161,7 +155,7 @@ public class NavigationGenerator extends ModelGenerator
 		ha.variables.add("x");
 		ha.variables.add("y");
 		ha.variables.add("xvel");
-		ha.variables.add("xvel");
+		ha.variables.add("yvel");
 		
 		AutomatonMode[][] modes = new AutomatonMode[height][width];
 		
@@ -170,9 +164,9 @@ public class NavigationGenerator extends ModelGenerator
 		makeTransitions(c, ha, modes);
 		
 		// initial states
-		Expression xStartExp = new Operation("x", Operator.EQUAL, xInit);
-		Expression yStartExp = new Operation("y", Operator.EQUAL, yInit);
-		c.init.put(startModeName, Expression.and(xStartExp, yStartExp));
+		Expression initExp = FormulaParser.parseInitialForbidden(
+				"x == 0 & y == 0 & -1 <= xvel <= 1 & -1 <= yvel <= 1");
+		c.init.put(startModeName, initExp);
 		
 		// assign plot variables
 		c.settings.plotVariableNames[0] = "x";
@@ -271,7 +265,7 @@ public class NavigationGenerator extends ModelGenerator
 			am.flowDynamics.put("x", new ExpressionInterval(new Constant(0)));
 			am.flowDynamics.put("y", new ExpressionInterval(new Constant(0)));
 			am.flowDynamics.put("xvel", new ExpressionInterval(new Constant(0)));
-			am.flowDynamics.put("xyvel", new ExpressionInterval(new Constant(0)));
+			am.flowDynamics.put("yvel", new ExpressionInterval(new Constant(0)));
 		}
 		else
 		{

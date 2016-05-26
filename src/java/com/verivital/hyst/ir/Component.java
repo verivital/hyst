@@ -175,7 +175,7 @@ public abstract class Component
 		for (String s : newNames)
 		{
 			if (allNames.contains(s))
-				throw new AutomatonValidationException("Repeated name in '" + componentName + "'");
+				throw new AutomatonValidationException("Repeated name '" + s + "' in component '" + componentName + "'");
 			
 			validateName(s, componentName);
 			
