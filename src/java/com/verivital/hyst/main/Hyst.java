@@ -13,6 +13,8 @@ import java.util.TreeMap;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import com.verivital.hyst.generators.IntegralChainGenerator;
+import com.verivital.hyst.generators.ModelGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -65,6 +67,8 @@ public class Hyst
 	public static boolean verboseMode = false; // flag used to toggle verbose printing with Main.log()
 	public static boolean debugMode = false; // flag used to toggle debug printing with Main.logDebug()
 	private static String toolParamsString = null; // tool parameter string set using -toolparams or -tp
+	private static int modelGenIndex = -1; // index into generators array
+	private static String modelGenParam = null; // parameter for model generator
 
 	public static boolean IS_UNIT_TEST = false; // should usage printing be omitted (for unit testing)
 	private static HystFrame guiFrame = null; // set if gui mode is being used
@@ -81,37 +85,43 @@ public class Hyst
 	public final static String FLAG_NOVALIDATE = "-novalidate";
 	public final static String FLAG_OUTPUT = "-o";
 	public final static String FLAG_TESTPYTHON = "-testpython";
+	public final static String FLAG_GENERATOR_MODEL = "-generate";
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
 	{
-			new FlowPrinter(),
-			new DReachPrinter(),
-			new HyCreate2Printer(),
-			new HyCompPrinter(),
-			new PythonQBMCPrinter(),
-			new SpaceExPrinter(),
-			new SimulinkStateflowPrinter(),
-			new PySimPrinter(),
+		new FlowPrinter(),
+		new DReachPrinter(),
+		new HyCreate2Printer(),
+		new HyCompPrinter(),
+		new PythonQBMCPrinter(),
+		new SpaceExPrinter(),
+		new SimulinkStateflowPrinter(),
+		new PySimPrinter(),
 	};
 
 	// passes that are run only if the user selects them
 	private static final TransformationPass[] availablePasses =
 	{
-			new AddIdentityResetPass(),
-			new PseudoInvariantPass(),
-			new PseudoInvariantSimulatePass(),
-			new TimeScalePass(),
-			new SubstituteConstantsPass(),
-			new SimplifyExpressionsPass(),
-			new SplitDisjunctionGuardsPass(),
-			new RemoveSimpleUnsatInvariantsPass(),
-			new ShortenModeNamesPass(),
-			new ContinuizationPass(),
-			new HybridizeMixedTriggeredPass(),
-			new FlattenAutomatonPass(),
-			new OrderReductionPass(),
-			new ConvertLutFlowsPass(),
+		new AddIdentityResetPass(),
+		new PseudoInvariantPass(),
+		new PseudoInvariantSimulatePass(),
+		new TimeScalePass(),
+		new SubstituteConstantsPass(),
+		new SimplifyExpressionsPass(),
+		new SplitDisjunctionGuardsPass(),
+		new RemoveSimpleUnsatInvariantsPass(),
+		new ShortenModeNamesPass(),
+		new ContinuizationPass(),
+		new HybridizeMixedTriggeredPass(),
+		new FlattenAutomatonPass(),
+		new OrderReductionPass(),
+		new ConvertLutFlowsPass(),
+	};
+	
+	private static final ModelGenerator[] generators = 
+	{
+		new IntegralChainGenerator(),
 	};
 
 	// passes that the user has selected
@@ -192,7 +202,7 @@ public class Hyst
 		try
 		{
 			Configuration config = null;
-			if (!useModelGeneration)
+			if (modelGenIndex != -1)
 			{
 				// 1. import the SpaceExDocument
 				SpaceExDocument spaceExDoc = SpaceExImporter.importModels(cfgFilename,
@@ -208,9 +218,9 @@ public class Hyst
 			}
 			else
 			{
-				ModelGenerator gen = newModelGeneratorInstance(generators[generatorIndex]);
+				ModelGenerator gen = generators[modelGenIndex];
 				
-				config = gen.generate(modelGenerationParam);
+				config = gen.generate(modelGenParam);
 				
 			}
 
@@ -459,6 +469,35 @@ public class Hyst
 					rv = false;
 				}
 
+			}
+			else if (arg.equals(FLAG_GENERATOR_MODEL))
+			{
+				if (i + 2 < args.length)
+				{
+					String genName = args[++i];
+					
+					for (int index = 0; index < generators.length; ++index)
+					{
+						ModelGenerator g = generators[index];
+						
+						if (g.getCommandLineFlag().equals(arg))
+							modelGenIndex = index;
+							break;
+					}
+					
+					if (modelGenIndex == -1)
+					{
+						logError("Error: Model Generator with argument '" + genName + "' was not found.");
+						rv = false;
+					}
+					
+					modelGenParam = args[++i];
+				}
+				else
+				{
+					logError("Error: " + FLAG_GENERATOR_MODEL + " argument expects <name> and <param> after.");
+					rv = false;
+				}
 			}
 			else if (arg.endsWith(".xml"))
 			{

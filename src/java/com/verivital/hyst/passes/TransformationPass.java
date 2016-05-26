@@ -99,7 +99,7 @@ public abstract class TransformationPass
 	 */
 	public String getLongHelp()
 	{
-		return "";
+		return null;
 	}
 	
 	public String getParamHelp()
