@@ -165,7 +165,7 @@ public class NavigationGenerator extends ModelGenerator
 		
 		// initial states
 		Expression initExp = FormulaParser.parseInitialForbidden(
-				"x == 0 & y == 0 & -1 <= xvel <= 1 & -1 <= yvel <= 1");
+				"x == " + xInit + " && y == " + yInit + " & -1 <= xvel <= 1 & -1 <= yvel <= 1");
 		c.init.put(startModeName, initExp);
 		
 		// assign plot variables

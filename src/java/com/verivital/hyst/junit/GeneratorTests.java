@@ -2,6 +2,7 @@ package com.verivital.hyst.junit;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map.Entry;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -72,6 +73,13 @@ public class GeneratorTests
 		Configuration c = gen.generate(param);
 		
 		Assert.assertEquals("four variables", 4, c.root.variables.size());
+		
+		Entry<String, Expression> entry = c.init.entrySet().iterator().next();
+		
+		Assert.assertEquals("mode_0_1", entry.getKey());
+		Assert.assertEquals("x = 0.5 & y = 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1", 
+				entry.getValue().toDefaultString());
+		
 		
 		ToolPrinter printer = new FlowPrinter();
 		printer.setOutputString();
