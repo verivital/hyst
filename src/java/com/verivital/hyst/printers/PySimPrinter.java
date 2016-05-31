@@ -6,6 +6,7 @@ package com.verivital.hyst.printers;
 
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -14,6 +15,7 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
+import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -38,6 +40,8 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 public class PySimPrinter extends ToolPrinter
 {
 	private static PySimExpressionPrinter pySimExpressionPrinter = new PySimExpressionPrinter();
+	private static SympyPrinter sympyPyinter = new SympyPrinter();
+	
 	private static final String COMMENT_CHAR = "#";
 	public BaseComponent ha;
 	
@@ -87,11 +91,54 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
 
 			if (!am.urgent)
+			{
 				appendIndentedLine(rv, am.name + ".der = lambda _, state: " + 
 						getMapString(am.flowDynamics, ha));
+			
+			
+				appendIndentedLine(rv, am.name + ".der_interval_list = " + 
+						getIntervalListString(am.flowDynamics, ha));
+			}
 		}
 	}
 	
+	/**
+	 * Gets the interval list string.
+	 * if x' == x+1 + [1,2] and y' == y-x + [-1, 1], this would give: '[[1,2],[-1,1]]'
+	 * @param map
+	 * @return the mapped string
+	 */
+	private static String getIntervalListString(
+			LinkedHashMap<String, ExpressionInterval> flow,
+			BaseComponent ha)
+	{
+		StringBuffer rv = new StringBuffer();
+		rv.append("[");
+		
+		for (String var : ha.variables)
+		{
+			if (rv.length() > 1)
+				rv.append(", ");
+			
+			ExpressionInterval ei = flow.get(var);
+			
+			if (ei == null)
+				rv.append("None");
+			else if (ei.getInterval() == null)
+				rv.append("[0, 0]");
+			else
+			{
+				Interval i = ei.getInterval();
+				
+				rv.append("[" + i.min + ", " + i.max + "]");
+			}
+		}
+		
+		rv.append("]");
+		
+		return rv.toString();
+	}
+
 	/**
 	 * Gets a map string. Null values get mapped to the variable name
 	 * if x' == x+1 and y' == y-x, this would give: '[x + 1,  y - x]'
@@ -129,6 +176,8 @@ public class PySimPrinter extends ToolPrinter
 	    t.reset = lambda(x): (x[0] + 1, x[1]) 
 		*/
 		
+		sympyPyinter.ha = ha;
+		
 		for (AutomatonTransition at : ha.transitions)
 		{
 			appendNewline(rv);
@@ -136,7 +185,11 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv, "t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
 			appendIndentedLine(rv, "t.reset = lambda state: " + getMapString(at.reset, ha));
+			
+			appendIndentedLine(rv, "t.guard_sympy = " + sympyPyinter.print(at.guard));
 		}
+		
+		sympyPyinter.ha = null;
 	}
 	
 	/**
@@ -193,11 +246,16 @@ public class PySimPrinter extends ToolPrinter
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HyperRectangle");
 		appendLine(rv, "from hybridpy.pysim.simulate import init_list_to_q_list");
+		appendLine(rv, "from sympy.core import symbols");
+		appendLine(rv, "from sympy import And, Or");
 		appendNewline(rv); 
 		
 		appendLine(rv, "def define_ha():");
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
+		appendNewline(rv); 
+		appendSymbols(config.root.variables, rv);
+		appendNewline(rv); 
 		appendIndentedLine(rv, "ha = HybridAutomaton()");
 		appendModes(rv, ha);
 		appendJumps(rv, ha);
@@ -331,10 +389,35 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 		printLine("ha = define_ha()");
 		printLine("init_states = define_init_states(ha)");
-		printLine("q_list = init_list_to_q_list(init_states, center=True, star=True, corners=False)");
+		printLine("q_list = init_list_to_q_list(init_states, "
+				+ "center=" + toolParams.get("center") + ", star=" + 
+				toolParams.get("star") + ", corners=" + toolParams.get("corners") + 
+				", rand=" + toolParams.get("rand") + ")");
 		printLine("result = sim.simulate_multi(q_list, max_time)");
 		printNewline();
 		printLine("return result");
+	}
+	
+	private static void appendSymbols(List <String> vars, StringBuilder text)
+	{
+		StringBuilder sb = new StringBuilder();
+		
+		for (String var : vars)
+		{
+			if (var != vars.get(0))
+				sb.append(", ");
+				
+			sb.append("sym_" + var);
+		}
+		
+		sb.append(" = symbols('");
+		
+		for (String var : vars)
+			sb.append(var + " ");
+		
+		sb.append("')");
+		
+		appendIndentedLine(text, sb.toString());
 	}
 
 	private void printPlot()
@@ -348,7 +431,7 @@ public class PySimPrinter extends ToolPrinter
 		printLine("draw_events = len(result) == 1");
 		printLine("shouldShow = False");
 		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
-				+ "show = shouldShow)");
+				+ "legend=" + toolParams.get("legend") + ", show = shouldShow)");
 	}
 
 	private String getTimeParam()
@@ -369,6 +452,70 @@ public class PySimPrinter extends ToolPrinter
 		pySimExpressionPrinter.ha = ha;
 
 		printDocument(originalFilename);
+	}
+	
+	private static class SympyPrinter extends DefaultExpressionPrinter
+	{
+		BaseComponent ha;
+		
+		public SympyPrinter()
+		{
+			this.opNames.put(Operator.EQUAL, "==");
+			this.opNames.put(Operator.AND, "and");
+			this.opNames.put(Operator.OR, "or");
+			this.opNames.put(Operator.POW, "**");
+		}
+		
+		@Override
+		protected String printOperation(Operation o)
+		{
+			String s = null;
+	
+			if (o.op == Operator.AND)
+				s = "And(" + print(o.getLeft()) + ", " + print(o.getRight()) + ")";
+			else if (o.op == Operator.OR)
+				s = "Or(" + print(o.getLeft()) + ", " + print(o.getRight()) + ")";
+			else
+				s = super.printOperation(o);
+			
+			return s;
+		}
+		
+		@Override
+		protected String printTrue()
+		{
+			return "True";
+		}
+		
+		@Override
+		protected String printFalse()
+		{
+			return "False";
+		}
+		
+		@Override
+		protected String printVariable(Variable v)
+		{
+			String rv = null;
+			
+			if (ha.variables.contains(v.name))
+				rv = "sym_" + v.name;
+			else if (ha.constants.containsKey(v.name))
+			{
+				Interval i = ha.constants.get(v.name);
+				
+				if (i.width() > 0)
+					throw new AutomatonExportException("tried to print pysim model with "
+							+ "interval constant");
+				
+				rv = printConstantValue(i.min);
+			}
+			else
+				throw new AutomatonExportException("var '" + v.name 
+						+ "' in expression was not an automaton variable or cosntant");
+			
+			return rv;
+		}
 	}
 	
 	private static class PySimExpressionPrinter extends DefaultExpressionPrinter
@@ -449,12 +596,18 @@ public class PySimPrinter extends ToolPrinter
 		return true;
 	}
 	
+	@Override
 	public Map <String, String> getDefaultParams()
 	{
 		LinkedHashMap <String, String> toolParams = new LinkedHashMap <String, String>();
 		
 		toolParams.put("time", "auto");
 		toolParams.put("step", "auto");
+		toolParams.put("legend", "True");
+		toolParams.put("center", "True");
+		toolParams.put("star", "True");
+		toolParams.put("corners", "False");
+		toolParams.put("rand", "0");
 
 		return toolParams;
 	}

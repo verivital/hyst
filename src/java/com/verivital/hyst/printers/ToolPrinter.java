@@ -92,7 +92,8 @@ public abstract class ToolPrinter
 	 * Set tool param string: needed to set tool parameters for tests
 	 * @param s
 	 */
-	public void setToolParamsString(String s) {
+	public void setToolParamsString(String s) 
+	{
 		this.toolParamsString = s;
 	}
 	
