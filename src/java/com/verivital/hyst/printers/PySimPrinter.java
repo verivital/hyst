@@ -430,8 +430,11 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 		printLine("draw_events = len(result) == 1");
 		printLine("shouldShow = False");
+		String title = toolParams.get("title");
 		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
-				+ "legend=" + toolParams.get("legend") + ", show = shouldShow)");
+				+ "legend=" + toolParams.get("legend") + ", title=" + 
+				(title == "None" ? "None" : "'" + title + "'")
+						+ ", show=shouldShow)");
 	}
 
 	private String getTimeParam()
@@ -608,6 +611,7 @@ public class PySimPrinter extends ToolPrinter
 		toolParams.put("star", "True");
 		toolParams.put("corners", "False");
 		toolParams.put("rand", "0");
+		toolParams.put("title", "Simulation");
 
 		return toolParams;
 	}

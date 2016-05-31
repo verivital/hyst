@@ -289,9 +289,16 @@ def mode_name_to_color(mode_to_color, mode_name):
             rv = first_colors[len(mode_to_color)]
         else:
             # use the hash-based approach
-            all_colors = colors.cnames.keys()
+            all_colors = []
+            all_colors += colors.cnames.keys()
+
+            # these are hard to see, remove them
+            for white in ['white', 'whitesmoke', 'floralwhite', 'antiquewhite', 'ghostwhite', 'navajowhite', 'yellow']:
+                all_colors.remove(white)
+
             index = hash(mode_name) % len(all_colors)
             rv = all_colors[index]
+            #print "rv color = " + str(rv)
 
         mode_to_color[mode_name] = rv
 
@@ -454,13 +461,17 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
     return rv
 
 def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None, 
-                          draw_events=True, axis_range=None, draw_func=None, legend=True, show=False):
+                          draw_events=True, axis_range=None, draw_func=None, legend=True, 
+                        show=False, title=None):
     '''plot mutliple simulations
     result_list - the result for simulate_multi
     '''
     num_results = len(result_list)
 
     mode_to_color = {}
+
+    if title is not None:
+        plt.title(title)
 
     if axis_range is not None:
         plt.axis(axis_range)

@@ -59,9 +59,6 @@ public class NavigationGenerator extends ModelGenerator
 	
 	String startModeName = null;
 	
-	@Option(name="-time",usage="reach time", metaVar="REAL")
-	private double time = 10.0;
-	
 	@Option(name="-noise",usage="amount of input noise [-val,val] to add to xvel and yel", metaVar="VAL")
 	private double noise = 0.0;
 	
@@ -69,9 +66,6 @@ public class NavigationGenerator extends ModelGenerator
 	{
 		if (noise < 0)
 			throw new AutomatonExportException("Noise should be nonnegative.");
-		
-		if (time <= 0)
-			throw new AutomatonExportException("Time should be positive.");
 		
 		if (matrixString.size() != 4)
 			throw new AutomatonExportException("Matrix A should have exactly four elements.");

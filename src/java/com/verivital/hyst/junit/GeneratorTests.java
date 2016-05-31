@@ -69,7 +69,7 @@ public class GeneratorTests
 		NavigationGenerator gen = new NavigationGenerator();
 		
 		String param = "-matrix -1.2 0.1 0.1 -1.2 -i_list 2 2 A 4 3 4 B 2 4 -width 3 "
-				+ "-startx 0.5 -starty 1.5 -time 3.0 -noise 0.25";
+				+ "-startx 0.5 -starty 1.5 -noise 0.25";
 		Configuration c = gen.generate(param);
 		
 		Assert.assertEquals("four variables", 4, c.root.variables.size());
