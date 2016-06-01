@@ -89,6 +89,8 @@ public class PySimPrinter extends ToolPrinter
 			
 			appendIndentedLine(rv, am.name + " = ha.new_mode('" + am.name + "')");
 			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
+			
+			appendIndentedLine(rv, am.name + ".inv_sympy = " + sympyPyinter.print(am.invariant));
 
 			if (!am.urgent)
 			{
@@ -176,8 +178,6 @@ public class PySimPrinter extends ToolPrinter
 	    t.reset = lambda(x): (x[0] + 1, x[1]) 
 		*/
 		
-		sympyPyinter.ha = ha;
-		
 		for (AutomatonTransition at : ha.transitions)
 		{
 			appendNewline(rv);
@@ -188,8 +188,6 @@ public class PySimPrinter extends ToolPrinter
 			
 			appendIndentedLine(rv, "t.guard_sympy = " + sympyPyinter.print(at.guard));
 		}
-		
-		sympyPyinter.ha = null;
 	}
 	
 	/**
@@ -236,6 +234,7 @@ public class PySimPrinter extends ToolPrinter
 				
 		Expression.expressionPrinter = pySimExpressionPrinter;
 		pySimExpressionPrinter.ha = (BaseComponent)config.root;
+		sympyPyinter.ha = (BaseComponent)config.root;
 		
 		StringBuilder rv = new StringBuilder();
 		

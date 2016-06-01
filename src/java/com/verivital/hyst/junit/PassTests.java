@@ -56,7 +56,7 @@ public class PassTests {
 		PythonBridge.setBlockPython(block);
 	}
 
-	private String UNIT_BASEDIR = "tests/unit/models/";
+	public static String UNIT_BASEDIR = "tests/unit/models/";
 
 	/**
 	 * make a sample network configuration, which is used in multiple tests
@@ -136,58 +136,4 @@ public class PassTests {
 		new SubstituteConstantsPass().runTransformationPass(config, null);
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
 	}
-
-	@Test
-	public void testOrderReductionpass() {
-		if (!MatlabBridge.hasMatlab())
-			return;
-		
-		String path = UNIT_BASEDIR + "order_reduction/";
-		System.out.println(path);
-		SpaceExDocument doc = SpaceExImporter.importModels(path + "building_full_order.cfg",
-				path + "building_full_order.xml");
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		String OrderReductionPassParam = "-reducedOrder 3";
-
-		new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
-		BaseComponent ha = (BaseComponent) c.root;
-		// check variables
-		Assert.assertEquals("[x1, x2, x3, y1, time]", ha.variables.toString());
-		String flow = "{x1=0.006132 * u1 - 0.00751 * x1 - 5.275 * x2 + 0.0009639 * x3, x2=5.275 * x1 "
-				+ "- 0.06453 * u1 - 0.8575 * x2 + 0.09063 * x3, x3=0.0009639 * x1 - 0.0006972 * u1 - 0.09063 * x2 - 0.0001258 * x3, "
-				+ "time=1}";
-		String invariant = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 && time <= stoptime";
-
-		for (Map.Entry<String, AutomatonMode> e : ha.modes.entrySet()) {
-			// Check flow and invariant
-			Assert.assertEquals(flow, e.getValue().flowDynamics.toString());
-			Assert.assertEquals(invariant, e.getValue().invariant.toString());
-		}
-	}
-
-	/*
-	@Test
-	public void testLargeModelOrderReductionpass()
-	{
-		String path = UNIT_BASEDIR + "order_reduction/";
-		System.out.println(path);
-		SpaceExDocument doc = SpaceExImporter.importModels(
-				path + "iss_full_model.cfg",
-				path + "iss_full_model.xml");
-                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-                String OrderReductionPassParam = "10";
-		try{
-                    new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
-                }
-                catch (RuntimeException e){
-                    System.out.println("The order reduction pass is failed" );
-                    throw e;
-                }       
-                        
-	}*/
-
 }

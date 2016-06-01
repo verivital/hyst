@@ -26,12 +26,10 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
-import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
@@ -40,8 +38,6 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
-import matlabcontrol.MatlabConnectionException;
-import matlabcontrol.MatlabInvocationException;
 
 /**
  * A unit test suite for testing various types of printers. While
@@ -357,41 +353,6 @@ public class PrintersTest {
 			tp.setOutputNone();
 			tp.print(c, "scenario=" + scenario, loadedFilename);
 		}
-	}
-
-	@Test
-	public void testNonSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
-		if (!MatlabBridge.hasMatlab())
-			return;
-		
-		String example_name = "../examples/vanderpol/vanderpol.xml";
-		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=0");
-		sp.printProcedure(example_name);
-		// TODO: it would be ideal to call via the standard printer, e.g.,
-		// sp.print(c, toolParamsString, originalFilename);
-	}
-
-	@Test
-	public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
-		if (!MatlabBridge.hasMatlab())
-			return;
-		
-		String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
-		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=1");
-		sp.printProcedure(example_name);
-	}
-
-	@Test
-	public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
-		if (!MatlabBridge.hasMatlab())
-			return;
-		
-		String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
-		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=0");
-		sp.printProcedure(example_name);
 	}
 
 	@Test
