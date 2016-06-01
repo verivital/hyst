@@ -86,7 +86,8 @@ public class Hyst
 	public final static String FLAG_NOVALIDATE = "-novalidate";
 	public final static String FLAG_OUTPUT = "-o";
 	public final static String FLAG_TESTPYTHON = "-testpython";
-	public final static String FLAG_GENERATOR_MODEL = "-generate";
+	public final static String FLAG_GENERATE = "-generate";
+	public final static String FLAG_GENERATE_SHORT = "-gen";
 
 	// add new tool support here
 	private static final ToolPrinter[] printers =
@@ -472,7 +473,7 @@ public class Hyst
 				}
 
 			}
-			else if (arg.equals(FLAG_GENERATOR_MODEL))
+			else if (arg.equals(FLAG_GENERATE) || arg.equals(FLAG_GENERATE_SHORT))
 			{
 				if (i + 2 < args.length)
 				{
@@ -499,7 +500,7 @@ public class Hyst
 				}
 				else
 				{
-					logError("Error: " + FLAG_GENERATOR_MODEL + " argument expects <name> and <param> after.");
+					logError("Error: " + FLAG_GENERATE + " argument expects <name> and <param> after.");
 					rv = false;
 				}
 			}
@@ -595,6 +596,22 @@ public class Hyst
 
 			System.out.println();
 			System.out.println(FLAG_TOOLPARAMS + " name1=val1:name2=val2:... Specify printer-specific parameters");
+			
+			System.out.println(FLAG_GENERATE + " [type] [generate_params] Generate a model instead of loading from a file");
+			System.out.println("\nAvailable Models:");
+			
+			for (ModelGenerator mg : generators)
+			{
+				String p = mg.getParamHelp();
+
+				if (p == null)
+					p = "[no param]";
+
+				System.out.println("\t" + mg.getCommandLineFlag() + " " + mg.getName()
+						+ " " + p);
+			}
+			
+			System.out.println();
 			System.out.println(FLAG_HELP + " show this command-line help text");
 			System.out.println(FLAG_GUI + " [filename] force gui mode with the given input model");
 			System.out.println(FLAG_VERBOSE + " Enable verbose printing");

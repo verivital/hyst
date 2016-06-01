@@ -50,7 +50,7 @@ public class GeneratorTests
 	{
 		IntegralChainGenerator gen = new IntegralChainGenerator();
 		
-		Configuration c = gen.generate("-dims 6");
+		Configuration c = gen.generate("-M 6 -N 1 -U 1");
 		
 		Assert.assertEquals("six variables", 6, c.root.variables.size());
 		

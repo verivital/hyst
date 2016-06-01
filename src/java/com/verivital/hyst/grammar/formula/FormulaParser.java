@@ -119,7 +119,7 @@ public class FormulaParser
 		{
 			String msg = e.getMessage();
 			
-			throw new AutomatonExportException("ParseNumber Error; " + msg + "; sample expected syntax: 2 * x + sin(y) ", e);
+			throw new AutomatonExportException("parseValue Error; " + msg + "; sample expected syntax: 2 * x + sin(y) ", e);
 		}
 		
 		return rv;
