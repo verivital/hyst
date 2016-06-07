@@ -16,6 +16,11 @@
 	<property name="examples_dir.path"     value="../examples"/>
 	<property name="slsf_dir.path"     value="src/matlab"/>
 	
+	<property environment="env" /> 
+  	<available file="eclipse"  
+             filepath="${env.PATH}"  
+             property="eclipse.present"/>
+	
 	<!-- based on: http://stackoverflow.com/questions/453170/using-ant-to-detect-os-and-set-property -->
 	<target name="checkos">
 	    <condition property="isWindows" value="true">
@@ -125,8 +130,17 @@
 		<pathelement location="bin"/>
 	</path>
 	
-	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" 
+	<target name="reformat-haseclipse" if="eclipse.present">
+		<echo message="Eclipse is present" />
+	</target>
+	
+	<target name="reformat-noeclipse" unless="eclipse.present">
+		<echo message="Eclipse NOT found on PATH" />
+	</target>
+	
+	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath,reformat-haseclipse,reformat-noeclipse" 
 			description="Create a jar for the Hyst project">
+		
 		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}" whenmanifestonly="fail">
 			<zipgroupfileset dir="${lib.path}" includes="${runtimejarnames.path}"/>
 			<zipgroupfileset dir="${z3.path}" includes="**/*.jar"/>
