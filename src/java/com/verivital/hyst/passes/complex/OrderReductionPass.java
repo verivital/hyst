@@ -22,25 +22,28 @@ import matlabcontrol.MatlabProxy;
  * @author Taylor Johnson (October 2015)
  *
  */
-public class OrderReductionPass extends TransformationPass 
+public class OrderReductionPass extends TransformationPass
 {
-	@Option(name="-reducedOrder",required=true,usage="reduced order dimensionality", metaVar="NUM")
+	@Option(name = "-reducedOrder", required = true, usage = "reduced order dimensionality", metaVar = "NUM")
 	private int reducedOrder;
 
 	@Override
-	public String getName() {
+	public String getName()
+	{
 		return "Order Reduction (decrease dimensionality) Pass";
 	}
 
 	@Override
-	public String getCommandLineFlag() {
+	public String getCommandLineFlag()
+	{
 		return "-order_reduction";
 	}
 
 	@Override
-	protected void runPass() {
+	protected void runPass()
+	{
 		Hyst.log("Using order reduction params reducedOrder = " + reducedOrder);
-		
+
 		BaseComponent ha = (BaseComponent) config.root;
 
 		Classification cf = new Classification();
@@ -51,13 +54,15 @@ public class OrderReductionPass extends TransformationPass
 		sp.setConfig(config);
 		// sp.setVarID(ha);
 		MatlabProxy proxy;
-		try {
+		try
+		{
 			proxy = MatlabBridge.getInstance().getProxy();
 
 			proxy.eval("[path_parent,path_current] = fileparts(pwd)");
 			proxy.eval("if strcmp(path_current, 'matlab') cd ../; end");
 			proxy.eval("[path_parent,path_current] = fileparts(pwd)");
-			proxy.eval("if ~strcmp(path_current, 'pass_order_reduction') cd ./matlab/pass_order_reduction; end");
+			proxy.eval(
+					"if ~strcmp(path_current, 'pass_order_reduction') cd ./matlab/pass_order_reduction; end");
 
 			// currently, only support for continuous linear dynamics
 			// todo: LUAN: refactor, move to stateflow printer, write a general
@@ -66,10 +71,12 @@ public class OrderReductionPass extends TransformationPass
 			// todo: test to ensure order of this vector is the same as the
 			// matrix below, could be ensured by construction if done in matrix
 			// construction function
-			for (Entry<String, AutomatonMode> e : ha.modes.entrySet()) {
+			for (Entry<String, AutomatonMode> e : ha.modes.entrySet())
+			{
 				// declare x variable
 				String variableString = "";
-				for (String v : ha.variables) {
+				for (String v : ha.variables)
+				{
 					if (cf.varID.get(v) < sp.getAMatrixSize(e.getValue()))
 						variableString = variableString + " " + v;
 				}
@@ -97,16 +104,18 @@ public class OrderReductionPass extends TransformationPass
 				String inputBound = sp.parseInitialInputBound(e.getValue());
 				proxy.eval("ib_" + e.getKey() + " = " + inputBound + ";");
 
-				proxy.eval("sys_" + e.getKey() + " = ss(" + "A_" + e.getKey() + ", " + "B_" + e.getKey() + ", " + "C_"
-						+ e.getKey() + ", " + "0)");
-				String cmd_string = "[sys_r,lb_r,ub_r,e] = find_specified_reduced_model(sys_" + e.getKey() + ",lb_"
-						+ e.getKey() + ",ub_" + e.getKey() + ",ib_" + e.getKey() + "," + reducedOrder + ")";
+				proxy.eval("sys_" + e.getKey() + " = ss(" + "A_" + e.getKey() + ", " + "B_"
+						+ e.getKey() + ", " + "C_" + e.getKey() + ", " + "0)");
+				String cmd_string = "[sys_r,lb_r,ub_r,e] = find_specified_reduced_model(sys_"
+						+ e.getKey() + ",lb_" + e.getKey() + ",ub_" + e.getKey() + ",ib_"
+						+ e.getKey() + "," + reducedOrder + ")";
 				proxy.eval(cmd_string);
 				// convert to a spaceex model
-				proxy.eval("[mA,mC,nB,flow,invariant,initialExpression] = spaceex_model_generation('" + e.getKey()
-						+ "_reduced_to_" + reducedOrder + "',sys_r,lb_r,ub_r," + "ib_" + e.getKey() + ",1,'-t')");
-				
-				
+				proxy.eval(
+						"[mA,mC,nB,flow,invariant,initialExpression] = spaceex_model_generation('"
+								+ e.getKey() + "_reduced_to_" + reducedOrder + "',sys_r,lb_r,ub_r,"
+								+ "ib_" + e.getKey() + ",1,'-t')");
+
 				String flow = (String) proxy.getVariable("flow");
 				String invariant = (String) proxy.getVariable("invariant");
 				String initialCondition = (String) proxy.getVariable("initialExpression");
@@ -116,26 +125,31 @@ public class OrderReductionPass extends TransformationPass
 				int varYSize = (int) ySize;
 				double iSize = ((double[]) proxy.getVariable("nB"))[0];
 				int inputSize = (int) iSize;
-				
+
 				// done with matlab
-				proxy.disconnect(); // important: need to disconnect when done, as next call to getInstance can create a new factory if still connected
-				
+				proxy.disconnect(); // important: need to disconnect when done,
+									// as next call to getInstance can create a
+									// new factory if still connected
+
 				// plot output versus time
 				String[] plotVars = new String[varYSize + 1];
 				plotVars[0] = "time";
 				ha.modes.clear();
 				ha.variables.clear();
 				ha.constants.clear();
-				for (int i = 1; i <= varXSize; i++) {
+				for (int i = 1; i <= varXSize; i++)
+				{
 					ha.variables.add("x" + i);
 				}
 
-				for (int j = 1; j <= varYSize; j++) {
+				for (int j = 1; j <= varYSize; j++)
+				{
 					plotVars[j] = "y" + j;
 					ha.variables.add(plotVars[j]);
 				}
 
-				for (int k = 1; k <= inputSize; k++) {
+				for (int k = 1; k <= inputSize; k++)
+				{
 					ha.constants.put("u" + k, null);
 				}
 				// add global time variable
@@ -151,7 +165,9 @@ public class OrderReductionPass extends TransformationPass
 				config.settings.plotVariableNames = plotVars;
 				config.DO_VALIDATION = false;
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e)
+		{
 			e.printStackTrace(System.err);
 			System.out.println(e.getMessage());
 		}
@@ -163,15 +179,19 @@ public class OrderReductionPass extends TransformationPass
 
 	}
 
-	private void removeVariable(BaseComponent ha, String varName) {
-		if (!ha.variables.contains(varName)) {
-			throw new AutomatonExportException("Variable " + varName + " does not exist in automaton.");
+	private void removeVariable(BaseComponent ha, String varName)
+	{
+		if (!ha.variables.contains(varName))
+		{
+			throw new AutomatonExportException(
+					"Variable " + varName + " does not exist in automaton.");
 		}
 
 		ha.variables.remove(varName);
 
 		// remove flows
-		for (AutomatonMode am : ha.modes.values()) {
+		for (AutomatonMode am : ha.modes.values())
+		{
 			am.flowDynamics.remove(varName);
 		}
 

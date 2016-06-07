@@ -6,6 +6,7 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public enum ParamType {
+public enum ParamType
+{
 	INT, REAL, LABEL;
 }

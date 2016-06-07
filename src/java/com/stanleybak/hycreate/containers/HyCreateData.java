@@ -1,39 +1,37 @@
 package com.stanleybak.hycreate.containers;
 
-
 import java.util.ArrayList;
 import java.util.TreeMap;
-
 
 public class HyCreateData
 {
 	private String automatonName = "unnamed";
 	private String dimensions = "x, y";
 	private String initialStates = "0,0;0,0";
-	
+
 	private String selectedMode = null;
-	private TreeMap <String, ModeData> modes = new TreeMap <String, ModeData>();
-	
+	private TreeMap<String, ModeData> modes = new TreeMap<String, ModeData>();
+
 	private int selectedTransition = -1;
-	private ArrayList <TransitionData> transitions = new ArrayList <TransitionData>();
+	private ArrayList<TransitionData> transitions = new ArrayList<TransitionData>();
 
 	private String versionString = "File Version 1";
-	
+
 	public static final String DEFAULT_GLOBAL = "/* define global values here */";
 	private String globalText = DEFAULT_GLOBAL;
-	
+
 	private ModelOptions options = new ModelOptions();
-	
+
 	public HyCreateData()
 	{
-		
+
 	}
-	
+
 	public HyCreateData(String versionString)
 	{
 		this.setVersionString(versionString);
 	}
-	
+
 	public String getInitialStates()
 	{
 		return initialStates;
@@ -63,7 +61,7 @@ public class HyCreateData
 	{
 		this.selectedTransition = selectedTransition;
 	}
-	
+
 	public String getAutomatonName()
 	{
 		return automatonName;
@@ -104,12 +102,12 @@ public class HyCreateData
 		this.transitions = transitions;
 	}
 
-	public void setVersionString(String versionString) 
+	public void setVersionString(String versionString)
 	{
 		this.versionString = versionString;
 	}
 
-	public String getVersionString() 
+	public String getVersionString()
 	{
 		return versionString;
 	}

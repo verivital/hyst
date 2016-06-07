@@ -34,37 +34,40 @@ import matlabcontrol.MatlabInvocationException;
  *
  */
 @RunWith(Parameterized.class)
-public class MatlabTests 
+public class MatlabTests
 {
 	public static String UNIT_BASEDIR = PassTests.UNIT_BASEDIR;
-	
+
 	@Before
-	public void setUpClass() 
+	public void setUpClass()
 	{
 		Expression.expressionPrinter = null;
 	}
 
 	@Parameters
-	public static Collection<Object[]> data() 
+	public static Collection<Object[]> data()
 	{
-		System.out.println("MatlabTests.java: WARNING: always blocking matlab until auto-detection is fixed "
-				+ "(see https://github.com/verivital/hyst/issues/32 ).");
+		System.out.println(
+				"MatlabTests.java: WARNING: always blocking matlab until auto-detection is fixed "
+						+ "(see https://github.com/verivital/hyst/issues/32 ).");
 		return Arrays.asList(new Object[][] { { true } });
-		
+
 		// original
-		//return Arrays.asList(new Object[][] { { false }, { true } });
+		// return Arrays.asList(new Object[][] { { false }, { true } });
 	}
 
-	public MatlabTests(boolean block) 
+	public MatlabTests(boolean block)
 	{
 		MatlabBridge.setBlockMatlab(block);
 	}
 
 	@Test
-	public void testNonSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
+	public void testNonSematicStateFlowConverter()
+			throws MatlabConnectionException, MatlabInvocationException
+	{
 		if (!MatlabBridge.hasMatlab())
 			return;
-		
+
 		String example_name = "../examples/vanderpol/vanderpol.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
 		sp.setToolParamsString("semantics=0");
@@ -74,10 +77,12 @@ public class MatlabTests
 	}
 
 	@Test
-	public void testSematicStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
+	public void testSematicStateFlowConverter()
+			throws MatlabConnectionException, MatlabInvocationException
+	{
 		if (!MatlabBridge.hasMatlab())
 			return;
-		
+
 		String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
 		sp.setToolParamsString("semantics=1");
@@ -85,21 +90,24 @@ public class MatlabTests
 	}
 
 	@Test
-	public void testNetworkStateFlowConverter() throws MatlabConnectionException, MatlabInvocationException {
+	public void testNetworkStateFlowConverter()
+			throws MatlabConnectionException, MatlabInvocationException
+	{
 		if (!MatlabBridge.hasMatlab())
 			return;
-		
+
 		String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
 		sp.setToolParamsString("semantics=0");
 		sp.printProcedure(example_name);
 	}
-	
+
 	@Test
-	public void testOrderReductionpass() {
+	public void testOrderReductionpass()
+	{
 		if (!MatlabBridge.hasMatlab())
 			return;
-		
+
 		String path = UNIT_BASEDIR + "order_reduction/";
 		System.out.println(path);
 		SpaceExDocument doc = SpaceExImporter.importModels(path + "building_full_order.cfg",
@@ -118,34 +126,28 @@ public class MatlabTests
 				+ "time=1}";
 		String invariant = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 && time <= stoptime";
 
-		for (Map.Entry<String, AutomatonMode> e : ha.modes.entrySet()) {
+		for (Map.Entry<String, AutomatonMode> e : ha.modes.entrySet())
+		{
 			// Check flow and invariant
 			Assert.assertEquals(flow, e.getValue().flowDynamics.toString());
 			Assert.assertEquals(invariant, e.getValue().invariant.toString());
 		}
 	}
-	
 
 	/*
-	@Test
-	public void testLargeModelOrderReductionpass()
-	{
-		String path = UNIT_BASEDIR + "order_reduction/";
-		System.out.println(path);
-		SpaceExDocument doc = SpaceExImporter.importModels(
-				path + "iss_full_model.cfg",
-				path + "iss_full_model.xml");
-                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-                String OrderReductionPassParam = "10";
-		try{
-                    new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
-                }
-                catch (RuntimeException e){
-                    System.out.println("The order reduction pass is failed" );
-                    throw e;
-                }       
-                        
-	}*/
+	 * @Test public void testLargeModelOrderReductionpass() { String path =
+	 * UNIT_BASEDIR + "order_reduction/"; System.out.println(path);
+	 * SpaceExDocument doc = SpaceExImporter.importModels( path +
+	 * "iss_full_model.cfg", path + "iss_full_model.xml"); Map <String,
+	 * Component> componentTemplates =
+	 * TemplateImporter.createComponentTemplates(doc);
+	 * 
+	 * Configuration c = ConfigurationMaker.fromSpaceEx(doc,
+	 * componentTemplates); String OrderReductionPassParam = "10"; try{ new
+	 * OrderReductionPass().runTransformationPass(c, OrderReductionPassParam); }
+	 * catch (RuntimeException e){ System.out.println(
+	 * "The order reduction pass is failed" ); throw e; }
+	 * 
+	 * }
+	 */
 }

@@ -6,13 +6,14 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import com.verivital.hyst.grammar.formula.Expression;
 
 /**
- * A Transition connects two Locations within a Component.
- * Locations are referenced by their numerical IDs.
+ * A Transition connects two Locations within a Component. Locations are
+ * referenced by their numerical IDs.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public class Transition {
+public class Transition
+{
 	private SpaceExBaseComponent mParent;
 	private int mSource, mTarget, mPriority;
 	private boolean mAsap, mTimeDriven, mBezier;
@@ -24,16 +25,19 @@ public class Transition {
 
 	/**
 	 * Creates a new Transition and adds it to the parent Component
-	 * @param parent The Component this Transition belongs to
+	 * 
+	 * @param parent
+	 *            The Component this Transition belongs to
 	 */
-	public Transition(SpaceExBaseComponent parent) {
+	public Transition(SpaceExBaseComponent parent)
+	{
 		mParent = parent;
 		parent.addTransition(this);
 	}
 
-	public Transition(SpaceExBaseComponent parent, int source, int target,
-			Expression guard, Expression assignment,
-			double w, double h) {
+	public Transition(SpaceExBaseComponent parent, int source, int target, Expression guard,
+			Expression assignment, double w, double h)
+	{
 		mParent = parent;
 		setSource(source);
 		setTarget(target);
@@ -41,146 +45,183 @@ public class Transition {
 		setAssignment(assignment);
 		setLabelPosition(new UIPosition(-(w / 2), -h));
 		setLabelDimensions(new UIDimensions(w, h));
-		
+
 		parent.addTransition(this);
 	}
-	
-	public int getSource() {
+
+	public int getSource()
+	{
 		return mSource;
 	}
-	
-	public void setSource(int source) {
+
+	public void setSource(int source)
+	{
 		mSource = source;
 	}
 
-	public int getTarget() {
+	public int getTarget()
+	{
 		return mTarget;
 	}
 
-	public void setTarget(int target) {
+	public void setTarget(int target)
+	{
 		mTarget = target;
 	}
 
-	public int getPriority() {
+	public int getPriority()
+	{
 		return mPriority;
 	}
 
-	public void setPriority(int priority) {
+	public void setPriority(int priority)
+	{
 		mPriority = priority;
 	}
 
-	public boolean isAsap() {
+	public boolean isAsap()
+	{
 		return mAsap;
 	}
 
-	public void setAsap(boolean asap) {
+	public void setAsap(boolean asap)
+	{
 		mAsap = asap;
 	}
 
-	public boolean isTimeDriven() {
+	public boolean isTimeDriven()
+	{
 		return mTimeDriven;
 	}
 
-	public void setTimeDriven(boolean timeDriven) {
+	public void setTimeDriven(boolean timeDriven)
+	{
 		mTimeDriven = timeDriven;
 	}
 
-	public boolean isBezier() {
+	public boolean isBezier()
+	{
 		return mBezier;
 	}
 
-	public void setBezier(boolean bezier) {
+	public void setBezier(boolean bezier)
+	{
 		mBezier = bezier;
 	}
 
 	/**
 	 * A Transition's Label references a LabelParam
+	 * 
 	 * @return The Label
 	 */
-	public String getLabel() {
+	public String getLabel()
+	{
 		return mLabel;
 	}
 
 	/**
 	 * A Transition's Label references a LabelParam
-	 * @param label The Label
+	 * 
+	 * @param label
+	 *            The Label
 	 */
-	public void setLabel(String label) {
+	public void setLabel(String label)
+	{
 		mLabel = label;
 	}
 
-	public String getNote() {
+	public String getNote()
+	{
 		return mNote;
 	}
 
-	public void setNote(String note) {
+	public void setNote(String note)
+	{
 		mNote = note;
 	}
 
-	public Expression getGuard() {
+	public Expression getGuard()
+	{
 		return mGuard;
 	}
 
 	/**
 	 * Set a new guard.
-	 * @param guard The Expression should be a boolean Operation
-	 * (EQUAL, LESS, GREATER, OR...)
+	 * 
+	 * @param guard
+	 *            The Expression should be a boolean Operation (EQUAL, LESS,
+	 *            GREATER, OR...)
 	 */
-	public void setGuard(Expression guard) {
+	public void setGuard(Expression guard)
+	{
 		mGuard = guard;
 	}
 
-	public Expression getAssignment() {
+	public Expression getAssignment()
+	{
 		return mAssignment;
 	}
 
 	/**
 	 * Set a new assignment.
-	 * @param assignment The Expression should be an EQUAL Operation
-	 * 		where the left term is a single variable or AND Operations
-	 * 		of such EQUAL Operations.
+	 * 
+	 * @param assignment
+	 *            The Expression should be an EQUAL Operation where the left
+	 *            term is a single variable or AND Operations of such EQUAL
+	 *            Operations.
 	 */
-	public void setAssignment(Expression assignment) {
+	public void setAssignment(Expression assignment)
+	{
 		mAssignment = assignment;
 	}
 
-	public UIPosition getLabelPosition() {
+	public UIPosition getLabelPosition()
+	{
 		return mLabelPosition;
 	}
 
-	public void setLabelPosition(UIPosition labelPosition) {
+	public void setLabelPosition(UIPosition labelPosition)
+	{
 		mLabelPosition = labelPosition;
 	}
 
-	public UIPosition getMiddlepointPosition() {
+	public UIPosition getMiddlepointPosition()
+	{
 		return mMiddlepointPosition;
 	}
 
-	public void setMiddlepointPosition(UIPosition middlepointPosition) {
+	public void setMiddlepointPosition(UIPosition middlepointPosition)
+	{
 		mMiddlepointPosition = middlepointPosition;
 	}
 
-	public UIDimensions getLabelDimensions() {
+	public UIDimensions getLabelDimensions()
+	{
 		return mLabelDimensions;
 	}
 
-	public void setLabelDimensions(UIDimensions labelDimensions) {
+	public void setLabelDimensions(UIDimensions labelDimensions)
+	{
 		mLabelDimensions = labelDimensions;
 	}
 
-	public UIWaypoints getWaypoints() {
+	public UIWaypoints getWaypoints()
+	{
 		return mWaypoints;
 	}
 
-	public void setWaypoints(UIWaypoints waypoints) {
+	public void setWaypoints(UIWaypoints waypoints)
+	{
 		mWaypoints = waypoints;
 	}
 
-	public SpaceExBaseComponent getParent() {
+	public SpaceExBaseComponent getParent()
+	{
 		return mParent;
 	}
 
-	public void setParent(SpaceExBaseComponent parent) {
+	public void setParent(SpaceExBaseComponent parent)
+	{
 		mParent = parent;
 	}
 }

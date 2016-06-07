@@ -16,6 +16,7 @@
 	<property name="examples_dir.path"     value="../examples"/>
 	<property name="slsf_dir.path"     value="src/matlab"/>
 	
+	<!-- detects if eclipse executable is on PATH environment variable -->
 	<property environment="env" /> 
   	<available file="eclipse"  
              filepath="${env.PATH}"  
@@ -131,14 +132,17 @@
 	</path>
 	
 	<target name="reformat-haseclipse" if="eclipse.present">
-		<echo message="Eclipse is present" />
+		<echo message="Eclipse is present. Performing code reformatting." />
+		<exec executable="eclipse" failonerror="true">
+			<arg line="-nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config .settings/org.eclipse.jdt.core.prefs java" />
+		</exec>
 	</target>
 	
 	<target name="reformat-noeclipse" unless="eclipse.present">
-		<echo message="Eclipse NOT found on PATH" />
+		<echo message="Eclipse NOT found on PATH. Your code will not be auto-reformatted."/>
 	</target>
 	
-	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath,reformat-haseclipse,reformat-noeclipse" 
+	<target name ="buildjar" depends="build-config,buildbin,if_windows,if_linux,classpath" 
 			description="Create a jar for the Hyst project">
 		
 		<jar jarfile="${jar.path}" includes="**" basedir="${bin.path}" whenmanifestonly="fail">
@@ -159,7 +163,7 @@
 		<delete dir="${bin.path}"/>
 	</target>
 	
-	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath" description="Make the .class files">
+	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath,reformat-haseclipse,reformat-noeclipse" description="Make the .class files">
     	<!-- <echo>Classpath: ${ant.refid:build.classpath}</echo> -->
 
 		<mkdir dir="${bin.path}"/>

@@ -11,35 +11,38 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * A ModelGenerator is an alternative input method which generates a Configuration rather
- * than loading one from files. It can take parameters, for example, if the configuration generation
- * can be take inputs like the number of dimensions.
+ * A ModelGenerator is an alternative input method which generates a
+ * Configuration rather than loading one from files. It can take parameters, for
+ * example, if the configuration generation can be take inputs like the number
+ * of dimensions.
  * 
  * The parameters are automatically parsed using args4j.
  * 
- * See IntegralChainGenerator as a simple example which implements the abstract methods.
+ * See IntegralChainGenerator as a simple example which implements the abstract
+ * methods.
  * 
  * @author Stanley Bak (May 2016)
  *
  */
-public abstract class ModelGenerator 
+public abstract class ModelGenerator
 {
 	private CmdLineParser parser = new CmdLineParser(this);
-	
+
 	/**
 	 * Get the longer version of the help text for this pass.
+	 * 
 	 * @return the help text, or null if not specified
 	 */
 	public String getLongHelp()
 	{
 		return null;
 	}
-	
+
 	public String getParamHelp()
 	{
-		ByteArrayOutputStream out = new ByteArrayOutputStream(); 
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		parser.printUsage(out);
-		
+
 		return out.toString();
 	}
 
@@ -47,24 +50,23 @@ public abstract class ModelGenerator
 	{
 		if (params == null)
 			params = "";
-		
+
 		String[] args = AutomatonUtil.extractArgs(params);
-		
+
 		try
 		{
 			parser.parseArgument(args);
 		}
 		catch (CmdLineException e)
 		{
-			String message = "Error Parsing " + getName() + ",\n Message: " +
-					e.getMessage() + "\nArguments: '" + params + "'\n" +
-					getParamHelp();
-			
+			String message = "Error Parsing " + getName() + ",\n Message: " + e.getMessage()
+					+ "\nArguments: '" + params + "'\n" + getParamHelp();
+
 			throw new AutomatonExportException(message);
 		}
-		
+
 		Configuration c = generateModel();
-		
+
 		try
 		{
 			c.validate();
@@ -72,28 +74,31 @@ public abstract class ModelGenerator
 		catch (AutomatonValidationException e)
 		{
 			throw new AutomatonExportException("Hybrid Automaton IR structure was "
-					+ "invalid after generating model using " + 
-							this.getClass().getName() + " with params '" + params + "': " + e.toString(), e);
+					+ "invalid after generating model using " + this.getClass().getName()
+					+ " with params '" + params + "': " + e.toString(), e);
 		}
-		
+
 		return c;
 	}
-	
+
 	/**
-	 * Get the flag used to run this generator on the command line. 
+	 * Get the flag used to run this generator on the command line.
+	 * 
 	 * @return a command-line flag used to run this generator
 	 */
 	public abstract String getCommandLineFlag();
-	
+
 	/**
 	 * Get the name of this model generator.
+	 * 
 	 * @return the name text
 	 */
 	public abstract String getName();
-	
+
 	/**
-	 * Run the pass on the given configuration (stored in the global config object), modifying it in place.
-	 * The command-line args are parsed before this is called
+	 * Run the pass on the given configuration (stored in the global config
+	 * object), modifying it in place. The command-line args are parsed before
+	 * this is called
 	 */
 	protected abstract Configuration generateModel();
 }

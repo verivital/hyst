@@ -41,18 +41,22 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  *
  */
 @RunWith(Parameterized.class)
-public class PassTests {
+public class PassTests
+{
 	@Before
-	public void setUpClass() {
+	public void setUpClass()
+	{
 		Expression.expressionPrinter = null;
 	}
 
 	@Parameters
-	public static Collection<Object[]> data() {
+	public static Collection<Object[]> data()
+	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
 
-	public PassTests(boolean block) {
+	public PassTests(boolean block)
+	{
 		PythonBridge.setBlockPython(block);
 	}
 
@@ -63,7 +67,8 @@ public class PassTests {
 	 * 
 	 * @return the constructed Configuration
 	 */
-	private static Configuration makeSampleNetworkConfiguration() {
+	private static Configuration makeSampleNetworkConfiguration()
+	{
 		NetworkComponent nc = new NetworkComponent();
 		nc.variables.add("x");
 		nc.variables.add("t");
@@ -83,7 +88,7 @@ public class PassTests {
 		ha.variables.add("x");
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
-		c.settings.plotVariableNames[1] = "x"; 
+		c.settings.plotVariableNames[1] = "x";
 		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t == 0"));
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
@@ -103,10 +108,9 @@ public class PassTests {
 		return c;
 	}
 
-	
-
 	@Test
-	public void testSimplifyExpressions() {
+	public void testSimplifyExpressions()
+	{
 		Configuration c = makeSampleNetworkConfiguration();
 
 		NetworkComponent nc = (NetworkComponent) c.root;
@@ -123,14 +127,16 @@ public class PassTests {
 	 * Substitute constants and then simplify expressions
 	 */
 	@Test
-	public void testSubConstantsPll() {
+	public void testSubConstantsPll()
+	{
 		String path = UNIT_BASEDIR + "pll/";
 		String spaceExFile = path + "pll_orig.xml";
 		String configFile = path + "pll_orig.cfg";
 
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(configFile, spaceExFile);
 
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(spaceExDoc);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(spaceExDoc);
 		Configuration config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
 
 		new SubstituteConstantsPass().runTransformationPass(config, null);

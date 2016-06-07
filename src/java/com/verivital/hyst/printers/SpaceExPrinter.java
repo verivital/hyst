@@ -3,8 +3,6 @@
  */
 package com.verivital.hyst.printers;
 
-
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -47,10 +45,9 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Transition;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.VariableParam;
 
-
 /**
- * Takes a hybrid automaton from the internal model format and
- * outputs a SpaceEx model. Based on Chris' Boogie printer.
+ * Takes a hybrid automaton from the internal model format and outputs a SpaceEx
+ * model. Based on Chris' Boogie printer.
  * 
  * @author Stanley Bak (8-2014)
  * @author Taylor Johnson (11-2014)
@@ -60,7 +57,7 @@ public class SpaceExPrinter extends ToolPrinter
 {
 	private String cfgFilename = null;
 	private BaseComponent ha;
-    
+
 	public SpaceExPrinter()
 	{
 		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
@@ -69,28 +66,29 @@ public class SpaceExPrinter extends ToolPrinter
 		preconditions.skip[PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN.ordinal()] = true;
 	}
-	
-    /**
+
+	/**
 	 * set baseName
 	 */
 	public void setBaseName(String name)
 	{
 		baseName = name;
 	}
-        
-        /**
+
+	/**
 	 * set basecomponent
 	 */
 	public void setBaseComponent(BaseComponent component)
 	{
 		ha = component;
 	}
-        
+
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and incremented
+	 * map from mode string names to numeric ids, starting from 1 and
+	 * incremented
 	 */
-	private TreeMap<String,Integer> modeNamesToIds = new TreeMap<String, Integer>();
-	
+	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
+
 	private void makeConfig()
 	{
 		if (outputType != OutputType.FILE)
@@ -105,21 +103,21 @@ public class SpaceExPrinter extends ToolPrinter
 				cfgFilename = outputFilename + ".cfg";
 		}
 	}
-	
+
 	/**
-	 * This method starts the actual printing!
-	 * Prepares variables etc. and calls printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls
+	 * printProcedure() to print the BPL code
 	 */
-	private void printDocument(String originalFilename) 
+	private void printDocument(String originalFilename)
 	{
 		makeConfig();
 
 		String note = this.getCommentHeader();
-		
+
 		Expression.expressionPrinter = new SpaceExExpressionPrinter();
-		
+
 		SpaceExDocument doc = null;
-		
+
 		try
 		{
 			doc = convert(ha);
@@ -128,12 +126,12 @@ public class SpaceExPrinter extends ToolPrinter
 		{
 			throw new AutomatonExportException("Error parsing number param for config: " + e, e);
 		}
-		
+
 		doc.getComponent(0).setNote(note);
 
 		SpaceExXMLPrinter spaceex_printer = new SpaceExXMLPrinter(doc);
 		printLine(spaceex_printer.stringXML());
-		
+
 		if (cfgFilename != null)
 		{
 			try
@@ -152,249 +150,271 @@ public class SpaceExPrinter extends ToolPrinter
 			// it will get printed to stdout
 			printLine("\n" + spaceex_printer.getCFGString());
 		}
-			
+
 	}
-	
+
 	/**
-	 * Convert hybrid automaton in Hyst internal representation to SpaceEx representation
+	 * Convert hybrid automaton in Hyst internal representation to SpaceEx
+	 * representation
+	 * 
 	 * @param ha
 	 * @return
 	 */
-	public SpaceExDocument convert(BaseComponent ha) throws NumberFormatException 
+	public SpaceExDocument convert(BaseComponent ha) throws NumberFormatException
 	{
 		ha.validate();
-		
-	    // iterate over this.modes, etc.
-	    SpaceExDocument sed = new SpaceExDocument();
-	    sed.setVersion("0.2");
-	    sed.setMathFormat("SpaceEx");
-	    sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
-	    //sed.setTimeHorizon(-1);
-	    sed.setMaxIterations(Integer.parseInt((getParam("iter-max", config.settings.spaceExConfig.maxIterations))));
-	    
-	    String format = getParam("output-format", config.settings.spaceExConfig.outputFormat);
-	    sed.setOutputFormat(format);
-	    
-	    String dirs = getParam("directions", config.settings.spaceExConfig.directions);
-	    sed.setDirections(dirs);
-	    
-	    String scenario = getParam("scenario", config.settings.spaceExConfig.scenario);
-	    sed.setScenario(scenario);
-	    
-	    if (!scenario.equals("phaver"))
-	    {
-	    	// convert explicit urgent flows
-	    	AutomatonUtil.convertUrgentTransitions(ha, config);
-	    }
-	    
-	    sed.setSamplingTime(Double.parseDouble(getParam("step", config.settings.spaceExConfig.samplingTime)));
-	    sed.setTimeHorizon(Double.parseDouble(getParam("time", config.settings.spaceExConfig.timeHorizon)));
-	    
-	    SpaceExBaseComponent base = new SpaceExBaseComponent(sed);
+
+		// iterate over this.modes, etc.
+		SpaceExDocument sed = new SpaceExDocument();
+		sed.setVersion("0.2");
+		sed.setMathFormat("SpaceEx");
+		sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
+		// sed.setTimeHorizon(-1);
+		sed.setMaxIterations(Integer
+				.parseInt((getParam("iter-max", config.settings.spaceExConfig.maxIterations))));
+
+		String format = getParam("output-format", config.settings.spaceExConfig.outputFormat);
+		sed.setOutputFormat(format);
+
+		String dirs = getParam("directions", config.settings.spaceExConfig.directions);
+		sed.setDirections(dirs);
+
+		String scenario = getParam("scenario", config.settings.spaceExConfig.scenario);
+		sed.setScenario(scenario);
+
+		if (!scenario.equals("phaver"))
+		{
+			// convert explicit urgent flows
+			AutomatonUtil.convertUrgentTransitions(ha, config);
+		}
+
+		sed.setSamplingTime(
+				Double.parseDouble(getParam("step", config.settings.spaceExConfig.samplingTime)));
+		sed.setTimeHorizon(
+				Double.parseDouble(getParam("time", config.settings.spaceExConfig.timeHorizon)));
+
+		SpaceExBaseComponent base = new SpaceExBaseComponent(sed);
 		base.setID(baseName + "_sys");
-	    //base.setID()
-	            
-            int id = 1;
+		// base.setID()
 
-            for (String modeName : ha.modes.keySet()) {
-                    modeNamesToIds.put(modeName, id++); 
-            }
+		int id = 1;
 
-            // add variables' names
-            for (String v : ha.variables) 
-            {
-                    Param p = new VariableParam(base); // note: this also adds p to base in the constructor
-                    p.setName(v);
-            }
-            
-            // add constants
-            for (String v : ha.constants.keySet()) 
-            {
-            	// this also adds p to base in the constructor
-                new VariableParam(base, v, ParamType.REAL, ParamDynamics.CONST); 
-            }
-            
-            // add interval variables from nondeterminism
-            Collection <String> intervalVars = getAllVariablesWithNondeterministicFlows(); 
-            
-            for (String var : intervalVars)
-            {
-            	String newVar = getIntervalVariableName(var);
-            	
-            	ha.variables.add(newVar);
-            	VariableParam p = new VariableParam(base); // note: this also adds p to base in the constructor
-                p.setName(newVar);
-                p.setControlled(false); // because it can change to any value which satisfies the invariant
-                
-                // also, anywhere the interval is not assigned we want to set it to 0 (since it's uncontrolled)
-                for (AutomatonMode am : ha.modes.values())
-                {
-                	if (am.flowDynamics == null)
-                		continue;
-                	
-                	ExpressionInterval ei = am.flowDynamics.get(var);
-                	
-                	if (ei.getInterval() == null)
-                		ei.setInterval(new Interval(0));
-                }
-            }
-        
-			/**
-			 * iterate over automaton modes to convert flow dynamics, invariant
-			 */
-            for (Entry <String, AutomatonMode> e : ha.modes.entrySet()) 
-            {
-                Location loc = new Location(base);
-                String name = e.getKey();
-                loc.setId(modeNamesToIds.get(name)); 
-                loc.setName(e.getKey());
+		for (String modeName : ha.modes.keySet())
+		{
+			modeNamesToIds.put(modeName, id++);
+		}
 
-                AutomatonMode mode = e.getValue();
-                
-                // set flow dynamics
-                if (mode.urgent)
-                	loc.setFlow(Constant.FALSE); // phaver only, other scenarios will have converted already
-                else
-                	loc.setFlow(flowDynamicsToExpression(mode.flowDynamics));
-                
-                // set invariant
-                Expression inv = mode.invariant;
-                
-                // additionally set invariant for nondeterministic flow variables
-                Map<String, Interval> varInts = getVariableIntervals(mode.flowDynamics);
-                
-                for (Entry<String, Interval> entry : varInts.entrySet())
-                {
-                	String intervalVar = getIntervalVariableName(entry.getKey());
-                	Interval i = entry.getValue();
-                	Operation bounds;
-                	
-                	if (i.isConstant())
-                		bounds = new Operation(Operator.EQUAL, intervalVar, i.middle());
-                	else
-                	{
-	                	Operation topBound = new Operation(Operator.LESSEQUAL, intervalVar, i.max);
-	                	Operation bottomBound = new Operation(Operator.GREATEREQUAL, intervalVar, i.min);
-	                	bounds = new Operation(Operator.AND, topBound, bottomBound);
-                	}
-                	
-                	inv = new Operation(Operator.AND, inv, bounds);
-                }
-                
-                loc.setInvariant(inv);
-            }
+		// add variables' names
+		for (String v : ha.variables)
+		{
+			Param p = new VariableParam(base); // note: this also adds p to base
+												// in the constructor
+			p.setName(v);
+		}
 
-            for (AutomatonTransition t : ha.transitions) 
-            {
-                Transition spaceex_t = new Transition(base);
-                
-                if (!t.reset.isEmpty())
-                {
-                	Expression e = makeResetExpression(t.reset);
-                    spaceex_t.setAssignment(e);
-                }
-                
-                spaceex_t.setGuard(t.guard);
-                
-                spaceex_t.setLabel("");
-                spaceex_t.setSource( modeNamesToIds.get(t.from.name) );
-                spaceex_t.setTarget( modeNamesToIds.get(t.to.name) );
-            }
-            
-            // Network component
-            
-            SpaceExNetworkComponent net = new SpaceExNetworkComponent(sed);
-            Bind bind = new Bind(net);
-            
-            for (String v : ha.variables) 
-            {	    
-            	// these get added to the parent in the constructor
-                new ParamMap(bind, v, v);
-                new VariableParam(net,v,ParamType.REAL,ParamDynamics.ANY,false);    
-            }
+		// add constants
+		for (String v : ha.constants.keySet())
+		{
+			// this also adds p to base in the constructor
+			new VariableParam(base, v, ParamType.REAL, ParamDynamics.CONST);
+		}
 
- 	
-            for (String c : ha.constants.keySet())
-            {
-                //ParamMap constMap = new ParamMap(bind, c , String.valueOf(ha.constants.get(c)));
-            	new ParamMap(bind, c , c);
-            	
-                new VariableParam(net,c,ParamType.REAL,ParamDynamics.CONST,false);
-            }
-            
-            sed.setSystemID(baseName + "_net");
-            bind.setAs(baseName);
-            bind.setComponent(baseName + "_sys");
-            net.setID(baseName + "_net");
-            /**
-             * 
-             */
-            /**
-             * /set initial condition
-             */     
-            Expression initialState = initialForbiddenStateExpression(config.init);
-            sed.setInitialStateConditions(initialState);
-            
-            /**
-             * /set forbidden condition
-             */
-            if (config.forbidden.entrySet().iterator().hasNext())
-            {
-                Expression ForbiddenState = initialForbiddenStateExpression(config.forbidden);
-                sed.setForbiddenStateConditions(ForbiddenState);
-            }
+		// add interval variables from nondeterminism
+		Collection<String> intervalVars = getAllVariablesWithNondeterministicFlows();
 
-            // add ouput variables
-            for (String v : config.settings.plotVariableNames) 
-               sed.addOutputVar(v);
-            
-            return sed;
+		for (String var : intervalVars)
+		{
+			String newVar = getIntervalVariableName(var);
+
+			ha.variables.add(newVar);
+			VariableParam p = new VariableParam(base); // note: this also adds p
+														// to base in the
+														// constructor
+			p.setName(newVar);
+			p.setControlled(false); // because it can change to any value which
+									// satisfies the invariant
+
+			// also, anywhere the interval is not assigned we want to set it to
+			// 0 (since it's uncontrolled)
+			for (AutomatonMode am : ha.modes.values())
+			{
+				if (am.flowDynamics == null)
+					continue;
+
+				ExpressionInterval ei = am.flowDynamics.get(var);
+
+				if (ei.getInterval() == null)
+					ei.setInterval(new Interval(0));
+			}
+		}
+
+		/**
+		 * iterate over automaton modes to convert flow dynamics, invariant
+		 */
+		for (Entry<String, AutomatonMode> e : ha.modes.entrySet())
+		{
+			Location loc = new Location(base);
+			String name = e.getKey();
+			loc.setId(modeNamesToIds.get(name));
+			loc.setName(e.getKey());
+
+			AutomatonMode mode = e.getValue();
+
+			// set flow dynamics
+			if (mode.urgent)
+				loc.setFlow(Constant.FALSE); // phaver only, other scenarios
+												// will have converted already
+			else
+				loc.setFlow(flowDynamicsToExpression(mode.flowDynamics));
+
+			// set invariant
+			Expression inv = mode.invariant;
+
+			// additionally set invariant for nondeterministic flow variables
+			Map<String, Interval> varInts = getVariableIntervals(mode.flowDynamics);
+
+			for (Entry<String, Interval> entry : varInts.entrySet())
+			{
+				String intervalVar = getIntervalVariableName(entry.getKey());
+				Interval i = entry.getValue();
+				Operation bounds;
+
+				if (i.isConstant())
+					bounds = new Operation(Operator.EQUAL, intervalVar, i.middle());
+				else
+				{
+					Operation topBound = new Operation(Operator.LESSEQUAL, intervalVar, i.max);
+					Operation bottomBound = new Operation(Operator.GREATEREQUAL, intervalVar,
+							i.min);
+					bounds = new Operation(Operator.AND, topBound, bottomBound);
+				}
+
+				inv = new Operation(Operator.AND, inv, bounds);
+			}
+
+			loc.setInvariant(inv);
+		}
+
+		for (AutomatonTransition t : ha.transitions)
+		{
+			Transition spaceex_t = new Transition(base);
+
+			if (!t.reset.isEmpty())
+			{
+				Expression e = makeResetExpression(t.reset);
+				spaceex_t.setAssignment(e);
+			}
+
+			spaceex_t.setGuard(t.guard);
+
+			spaceex_t.setLabel("");
+			spaceex_t.setSource(modeNamesToIds.get(t.from.name));
+			spaceex_t.setTarget(modeNamesToIds.get(t.to.name));
+		}
+
+		// Network component
+
+		SpaceExNetworkComponent net = new SpaceExNetworkComponent(sed);
+		Bind bind = new Bind(net);
+
+		for (String v : ha.variables)
+		{
+			// these get added to the parent in the constructor
+			new ParamMap(bind, v, v);
+			new VariableParam(net, v, ParamType.REAL, ParamDynamics.ANY, false);
+		}
+
+		for (String c : ha.constants.keySet())
+		{
+			// ParamMap constMap = new ParamMap(bind, c ,
+			// String.valueOf(ha.constants.get(c)));
+			new ParamMap(bind, c, c);
+
+			new VariableParam(net, c, ParamType.REAL, ParamDynamics.CONST, false);
+		}
+
+		sed.setSystemID(baseName + "_net");
+		bind.setAs(baseName);
+		bind.setComponent(baseName + "_sys");
+		net.setID(baseName + "_net");
+		/**
+		 * 
+		 */
+		/**
+		 * /set initial condition
+		 */
+		Expression initialState = initialForbiddenStateExpression(config.init);
+		sed.setInitialStateConditions(initialState);
+
+		/**
+		 * /set forbidden condition
+		 */
+		if (config.forbidden.entrySet().iterator().hasNext())
+		{
+			Expression ForbiddenState = initialForbiddenStateExpression(config.forbidden);
+			sed.setForbiddenStateConditions(ForbiddenState);
+		}
+
+		// add ouput variables
+		for (String v : config.settings.plotVariableNames)
+			sed.addOutputVar(v);
+
+		return sed;
 	}
-	
+
 	/**
 	 * Get the names of every variable that has an interval flow
+	 * 
 	 * @return a list of names of variables
 	 */
-	private Collection <String> getAllVariablesWithNondeterministicFlows()
+	private Collection<String> getAllVariablesWithNondeterministicFlows()
 	{
-		HashSet <String> rv = new HashSet <String>(); 
-        
-        for (AutomatonMode am : ha.modes.values())
-        {
-        	Map<String, Interval> varInts = getVariableIntervals(am.flowDynamics);
-         
-        	rv.addAll(varInts.keySet());
-        }
-        
-        return rv;
+		HashSet<String> rv = new HashSet<String>();
+
+		for (AutomatonMode am : ha.modes.values())
+		{
+			Map<String, Interval> varInts = getVariableIntervals(am.flowDynamics);
+
+			rv.addAll(varInts.keySet());
+		}
+
+		return rv;
 	}
 
 	/**
-	 * Get the interval parts of the flows for each variable. May return a map of size 0.
-	 * @param flowDynamics the flow dynamics to check
-	 * @return a mapping of variable name -> interval part of flow for all nondeterministic flows
+	 * Get the interval parts of the flows for each variable. May return a map
+	 * of size 0.
+	 * 
+	 * @param flowDynamics
+	 *            the flow dynamics to check
+	 * @return a mapping of variable name -> interval part of flow for all
+	 *         nondeterministic flows
 	 */
-	private Map<String, Interval> getVariableIntervals(LinkedHashMap<String, ExpressionInterval> flowDynamics)
+	private Map<String, Interval> getVariableIntervals(
+			LinkedHashMap<String, ExpressionInterval> flowDynamics)
 	{
 		LinkedHashMap<String, Interval> rv = new LinkedHashMap<String, Interval>();
-		
+
 		if (flowDynamics != null)
 		{
 			for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
 			{
 				Interval i = e.getValue().getInterval();
-				
+
 				if (i != null)
 					rv.put(e.getKey(), i);
 			}
 		}
-		
+
 		return rv;
 	}
 
 	/**
-	 * Get the name of the associated interval variable (for nondeterministic flows)
-	 * @param varName the variable name
+	 * Get the name of the associated interval variable (for nondeterministic
+	 * flows)
+	 * 
+	 * @param varName
+	 *            the variable name
 	 * @return the interval variable name
 	 */
 	private static String getIntervalVariableName(String varName)
@@ -403,143 +423,150 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Convert the reset dictionary to a single expression using primed variables
+	 * Convert the reset dictionary to a single expression using primed
+	 * variables
+	 * 
 	 * @return
 	 */
-	public Expression makeResetExpression(LinkedHashMap<String, ExpressionInterval> reset) 
+	public Expression makeResetExpression(LinkedHashMap<String, ExpressionInterval> reset)
 	{
 		Expression rv = null;
-        
-        for (Entry<String, ExpressionInterval> e : reset.entrySet()) 
-        {
-        	Expression part = null;
-        	ExpressionInterval ei = e.getValue();
-        	
-        	if (ei.isNondeterministicAssignment())
-        		part = makeNondeterministicAssignment(e.getKey());
-        	else if (ei.isInterval())
-        	{
-        		Interval i = ei.getInterval();
-        		
-        		Expression lessExp = new Operation(Operator.LESSEQUAL, new Variable(e.getKey()), new Constant(i.max));
-        		Expression moreExp = new Operation(Operator.GREATEREQUAL, new Variable(e.getKey()), new Constant(i.min));
-        		
-        		part = new Operation(Operator.AND, lessExp, moreExp);
-        	}
-        	else
-        		part = new Operation(Operator.EQUAL, new Variable(e.getKey()), ei.asExpression());
-        	
-        	if (rv == null)
-        		rv = part;
-        	else
-        		rv = new Operation(Operator.AND, rv, part);
-        }
-        
+
+		for (Entry<String, ExpressionInterval> e : reset.entrySet())
+		{
+			Expression part = null;
+			ExpressionInterval ei = e.getValue();
+
+			if (ei.isNondeterministicAssignment())
+				part = makeNondeterministicAssignment(e.getKey());
+			else if (ei.isInterval())
+			{
+				Interval i = ei.getInterval();
+
+				Expression lessExp = new Operation(Operator.LESSEQUAL, new Variable(e.getKey()),
+						new Constant(i.max));
+				Expression moreExp = new Operation(Operator.GREATEREQUAL, new Variable(e.getKey()),
+						new Constant(i.min));
+
+				part = new Operation(Operator.AND, lessExp, moreExp);
+			}
+			else
+				part = new Operation(Operator.EQUAL, new Variable(e.getKey()), ei.asExpression());
+
+			if (rv == null)
+				rv = part;
+			else
+				rv = new Operation(Operator.AND, rv, part);
+		}
+
 		return rv;
 	}
 
 	private Expression makeNondeterministicAssignment(String varName)
 	{
 		// 0.0 * variableName = 0.0
-		
+
 		Operation rv = new Operation(Operator.EQUAL);
-		
+
 		Operation left = new Operation(Operator.MULTIPLY);
 		left.children.add(new Constant(0));
 		left.children.add(new Variable(varName));
-		
+
 		Constant right = new Constant(0);
-		
+
 		rv.children.add(left);
 		rv.children.add(right);
-		
+
 		return rv;
 	}
-        
-	public static Expression flowDynamicsToExpression(Map <String, ExpressionInterval> flowDynamics)
-	{            
-		 Expression rv = null;
-		 
-		 for (Entry<String, ExpressionInterval> entry : flowDynamics.entrySet())
-		 {
-			 String var = entry.getKey();
-					 
-			 ExpressionInterval ei = entry.getValue();
-			 Expression assignment = ei.getExpression();
-			 Interval i = ei.getInterval();
-			 
-			 if (i != null)
-			 {
-				 String intVarName = getIntervalVariableName(var);
-				 assignment = new Operation(Operator.ADD, assignment, new Variable(intVarName));
-			 }
-			 
-			 Operation op = new Operation(Operator.EQUAL, new Variable(var), assignment);
-			 
-			 if (rv == null)
-				 rv = op;
-			 else
-			 {
-				 rv = new Operation(Operator.AND, rv, op);
-			 }
-		 }
-		 
-		 return rv;
-	}
 
+	public static Expression flowDynamicsToExpression(Map<String, ExpressionInterval> flowDynamics)
+	{
+		Expression rv = null;
+
+		for (Entry<String, ExpressionInterval> entry : flowDynamics.entrySet())
+		{
+			String var = entry.getKey();
+
+			ExpressionInterval ei = entry.getValue();
+			Expression assignment = ei.getExpression();
+			Interval i = ei.getInterval();
+
+			if (i != null)
+			{
+				String intVarName = getIntervalVariableName(var);
+				assignment = new Operation(Operator.ADD, assignment, new Variable(intVarName));
+			}
+
+			Operation op = new Operation(Operator.EQUAL, new Variable(var), assignment);
+
+			if (rv == null)
+				rv = op;
+			else
+			{
+				rv = new Operation(Operator.AND, rv, op);
+			}
+		}
+
+		return rv;
+	}
 
 	/**
 	 * Convert initial / forbidden states to an expression for use in the cfg
-	 * @param fromMap the map the convert from
+	 * 
+	 * @param fromMap
+	 *            the map the convert from
 	 * @return an expression representation of the map
 	 */
-	public Expression initialForbiddenStateExpression(LinkedHashMap <String, Expression> fromMap) 
+	public Expression initialForbiddenStateExpression(LinkedHashMap<String, Expression> fromMap)
 	{
 		Expression rv = null;
-		
+
 		for (Entry<String, Expression> entry : fromMap.entrySet())
 		{
 			Expression e = new Operation(Operator.LOC, new Variable(baseName));
 			e = new Operation(Operator.EQUAL, e, new Variable(entry.getKey()));
-			
+
 			if (entry.getValue() != null && entry.getValue() != Constant.TRUE)
 				e = new Operation(Operator.AND, e, entry.getValue());
-			
+
 			if (rv == null)
 				rv = e;
 			else
 				rv = new Operation(Operator.OR, rv, e);
 		}
-        
-        return rv;
-	}   
-	
+
+		return rv;
+	}
+
 	// custom printer for spaceex expressions
 	public static class SpaceExExpressionPrinter extends DefaultExpressionPrinter
 	{
 		public SpaceExExpressionPrinter()
 		{
 			super();
-			
-			opNames.put(Operator.AND, "&"); 
-			opNames.put(Operator.OR, "|"); 
+
+			opNames.put(Operator.AND, "&");
+			opNames.put(Operator.OR, "|");
 		}
 	}
 
 	@Override
 	protected void printAutomaton()
 	{
-		this.ha = (BaseComponent)config.root;
-		
+		this.ha = (BaseComponent) config.root;
+
 		// conditionally convert nondeterministic resets
 		String scenario = getParam("scenario", config.settings.spaceExConfig.scenario);
-	    
-	    if (!scenario.equals("phaver"))
-	    {
-	    	Hyst.log("scenario was not phaver, converting nondeterministic resets");
-			Preconditions.convertNondeterministicResets(ha); // may create interval constants
-	    }
-		
+
+		if (!scenario.equals("phaver"))
+		{
+			Hyst.log("scenario was not phaver, converting nondeterministic resets");
+			Preconditions.convertNondeterministicResets(ha); // may create
+																// interval
+																// constants
+		}
+
 		printDocument(originalFilename);
 	}
 
@@ -558,42 +585,47 @@ public class SpaceExPrinter extends ToolPrinter
 	@Override
 	protected String getCommentPrefix()
 	{
-		// config file comments are // and /* */, while xml comments are <!-- -->
+		// config file comments are // and /* */, while xml comments are <!--
+		// -->
 		return getCommentCharacterStart() + getCommentCharacterEnd();
 	}
-	
-	protected String getCommentCharacterStart() {
+
+	protected String getCommentCharacterStart()
+	{
 		return "<!--";
 	}
-	
-	protected String getCommentCharacterEnd() {
+
+	protected String getCommentCharacterEnd()
+	{
 		return "-->";
 	}
-	
-	protected String commentString(String s) {
+
+	protected String commentString(String s)
+	{
 		return this.getCommentCharacterStart() + s + this.getCommentCharacterEnd();
 	}
-	
+
 	/**
 	 * Comment a block of text using start and end comment markings
 	 */
 	@Override
-	protected void printCommentBlock(String comment) 
+	protected void printCommentBlock(String comment)
 	{
-		printLine(this.getCommentCharacterStart() + " " + 
-				comment.replace("\n", "\n" + this.indentation + " ") + "\n" + this.getCommentCharacterEnd());
+		printLine(this.getCommentCharacterStart() + " "
+				+ comment.replace("\n", "\n" + this.indentation + " ") + "\n"
+				+ this.getCommentCharacterEnd());
 	}
-	
+
 	@Override
 	public boolean isInRelease()
 	{
 		return true;
 	}
-	
+
 	@Override
-	public Map <String, String> getDefaultParams()
+	public Map<String, String> getDefaultParams()
 	{
-		LinkedHashMap <String, String> params = new LinkedHashMap <String, String>();
+		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
 
 		params.put("scenario", "auto");
 		params.put("time", "auto");
@@ -601,36 +633,36 @@ public class SpaceExPrinter extends ToolPrinter
 		params.put("output-format", "auto");
 		params.put("iter-max", "auto");
 		params.put("directions", "auto");
-		
+
 		return params;
 	}
-	
+
 	private String getParam(String p, double def)
 	{
 		String value = toolParams.get(p);
-		
+
 		if (value == null)
 			throw new AutomatonExportException("Tool Parameter was null for '" + p + "'");
-		
+
 		if (value.equals("auto"))
 			value = doubleToString(def);
-		
+
 		return value;
 	}
-	
+
 	private String getParam(String p, String def)
 	{
 		String value = toolParams.get(p);
-		
+
 		if (value == null)
 			throw new AutomatonExportException("Tool Parameter was null for '" + p + "'");
-		
+
 		if (value.equals("auto"))
 			value = def;
-		
+
 		return value;
 	}
-	
+
 	@Override
 	public String getExtension()
 	{

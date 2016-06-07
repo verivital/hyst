@@ -6,27 +6,33 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public class UIDimensions {
+public class UIDimensions
+{
 	private double mWidth, mHeight;
 
-	public UIDimensions(double width, double height) {
+	public UIDimensions(double width, double height)
+	{
 		mWidth = width;
 		mHeight = height;
 	}
 
-	public double getWidth() {
+	public double getWidth()
+	{
 		return mWidth;
 	}
 
-	public void setWidth(double width) {
+	public void setWidth(double width)
+	{
 		mWidth = width;
 	}
 
-	public double getHeight() {
+	public double getHeight()
+	{
 		return mHeight;
 	}
 
-	public void setHeight(double height) {
+	public void setHeight(double height)
+	{
 		mHeight = height;
 	}
 }

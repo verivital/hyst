@@ -9,27 +9,34 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public class ParamMap extends BindMap {
+public class ParamMap extends BindMap
+{
 	private String mParamReference;
 
 	/**
 	 * Creates a new Map and adds it to the parent Bind
-	 * @param parent The Bind this Map belongs to
+	 * 
+	 * @param parent
+	 *            The Bind this Map belongs to
 	 */
-	public ParamMap(Bind parent) {
+	public ParamMap(Bind parent)
+	{
 		super(parent);
 	}
-	
-	public ParamMap(Bind parent, String key, String reference) {
+
+	public ParamMap(Bind parent, String key, String reference)
+	{
 		super(parent, key);
 		setParamReference(reference);
 	}
 
-	public String getParamReference() {
+	public String getParamReference()
+	{
 		return mParamReference;
 	}
 
-	public void setParamReference(String paramReference) {
+	public void setParamReference(String paramReference)
+	{
 		mParamReference = paramReference;
 	}
 }

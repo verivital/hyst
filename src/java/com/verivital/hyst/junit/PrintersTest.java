@@ -48,12 +48,14 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  *
  */
 @RunWith(Parameterized.class)
-public class PrintersTest {
+public class PrintersTest
+{
 	@Before
-	public void setUpClass() {
+	public void setUpClass()
+	{
 		Expression.expressionPrinter = null;
 	}
-	
+
 	@Parameters
 	public static Collection<Object[]> data()
 	{
@@ -70,7 +72,8 @@ public class PrintersTest {
 	// tools to test here. Each test will run all of these
 	private static final ArrayList<ToolPrinter> printers;
 
-	static {
+	static
+	{
 		printers = new ArrayList<ToolPrinter>();
 
 		// System.out.println(". PrintersTest.java todo: uncomment all
@@ -81,7 +84,8 @@ public class PrintersTest {
 		addPrinter(new SpaceExPrinter());
 	};
 
-	private static void addPrinter(ToolPrinter p) {
+	private static void addPrinter(ToolPrinter p)
+	{
 		printers.add(p);
 	}
 
@@ -93,7 +97,8 @@ public class PrintersTest {
 	 *            the name used to construct the directory, and names of the
 	 *            .xml and .cfg files
 	 */
-	private void runAllPrintersOnModel(String baseName) {
+	private void runAllPrintersOnModel(String baseName)
+	{
 		String path = UNIT_BASEDIR + baseName + "/";
 		String xml = baseName + ".xml";
 		String cfg = baseName + ".cfg";
@@ -112,10 +117,12 @@ public class PrintersTest {
 	 * @param cfgName
 	 *            the name of the cfg file in the directory
 	 */
-	private void runAllPrintersOnModel(String path, String xmlName, String cfgName) {
+	private void runAllPrintersOnModel(String path, String xmlName, String cfgName)
+	{
 		boolean printedOk = false;
 
-		for (ToolPrinter tp : printers) {
+		for (ToolPrinter tp : printers)
+		{
 			// clear expression printer since no assumptions can be made about
 			// it. If null pointer exceptinons are thrown, this means
 			// it should have been assigned on printAutomaton()
@@ -124,7 +131,8 @@ public class PrintersTest {
 			SpaceExDocument sd = SpaceExImporter.importModels(path + cfgName, path + xmlName);
 			Configuration c = ModelParserTest.flatten(sd);
 
-			try {
+			try
+			{
 				String loadedFilename = "mymodel.xml";
 
 				tp.setOutputNone();
@@ -132,14 +140,17 @@ public class PrintersTest {
 				tp.print(c, "", loadedFilename);
 
 				printedOk = true;
-			} catch (PreconditionsFailedException e) {
+			}
+			catch (PreconditionsFailedException e)
+			{
 				// preconditions error, ignore this model for this printer
 			}
 		}
 
 		if (!printedOk)
 			throw new RuntimeException(
-					"No printer successfully printed the model (all precondition checks rejected it): " + xmlName);
+					"No printer successfully printed the model (all precondition checks rejected it): "
+							+ xmlName);
 	}
 
 	/**
@@ -149,25 +160,31 @@ public class PrintersTest {
 	 * @param ha
 	 *            the automaton to print
 	 */
-	private void runAllPrintersOnConfiguration(Configuration config) {
+	private void runAllPrintersOnConfiguration(Configuration config)
+	{
 		config.validate();
 		boolean printedOk = false;
 
-		for (ToolPrinter tp : printers) {
+		for (ToolPrinter tp : printers)
+		{
 			Configuration c = config.copy();
 
-			try {
+			try
+			{
 				String loadedFilename = "mymodel.xml";
 
 				tp.setOutputNone();
 				tp.print(c, "", loadedFilename);
 				printedOk = true;
-			} catch (PreconditionsFailedException e) {
+			}
+			catch (PreconditionsFailedException e)
+			{
 				// preconditions error, ignore this model for this printer
 			}
 		}
 
-		if (!printedOk) {
+		if (!printedOk)
+		{
 			System.out.println("Rejected model:\n" + config);
 			throw new RuntimeException(
 					"No printer successfully printed the model (all precondition checks rejected it)");
@@ -178,7 +195,8 @@ public class PrintersTest {
 	 * Printers should be able to print a simple model with no errors.
 	 */
 	@Test
-	public void testPrintSimpleModel() {
+	public void testPrintSimpleModel()
+	{
 		runAllPrintersOnModel(UNIT_BASEDIR + "no_vars_check/", "has_vars.xml", "has_vars.cfg");
 	}
 
@@ -186,7 +204,8 @@ public class PrintersTest {
 	 * Printers should be able to print a slightly more complex model
 	 */
 	@Test
-	public void testPrintMoreComplexModel() {
+	public void testPrintMoreComplexModel()
+	{
 		runAllPrintersOnModel("controller_heater");
 	}
 
@@ -195,17 +214,20 @@ public class PrintersTest {
 	 * state
 	 */
 	@Test
-	public void testPrintHavocInitFlows() {
+	public void testPrintHavocInitFlows()
+	{
 		runAllPrintersOnModel("havoc_flow");
 	}
 
 	@Test
-	public void testPrintUrgentSimple() {
+	public void testPrintUrgentSimple()
+	{
 		runAllPrintersOnModel("urgent_simple");
 	}
 
 	@Test
-	public void testPrintUrgent() {
+	public void testPrintUrgent()
+	{
 		runAllPrintersOnModel("urgent_composition");
 	}
 
@@ -214,7 +236,8 @@ public class PrintersTest {
 	 * occurs after a transition
 	 */
 	@Test
-	public void testPrintHavocTransitionFlows() {
+	public void testPrintHavocTransitionFlows()
+	{
 		runAllPrintersOnModel("havoc_flow_transition");
 	}
 
@@ -223,7 +246,8 @@ public class PrintersTest {
 	 * assignments and deterministic flows
 	 */
 	@Test
-	public void testPrintNondeterministicAssignments() {
+	public void testPrintNondeterministicAssignments()
+	{
 		runAllPrintersOnModel("nondeterm_reset");
 	}
 
@@ -232,16 +256,17 @@ public class PrintersTest {
 	 * 
 	 * @return the constructed Configuration
 	 */
-	private static Configuration makeSampleConfiguration() {
+	private static Configuration makeSampleConfiguration()
+	{
 		BaseComponent ha = new BaseComponent();
 		Configuration c = new Configuration(ha);
 
 		ha.variables.add("x");
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
-		c.settings.plotVariableNames[1] = "x"; 
+		c.settings.plotVariableNames[1] = "x";
 		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t = 0"));
-		
+
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
 		am1.flowDynamics.put("t", new ExpressionInterval(new Constant(1)));
@@ -265,27 +290,32 @@ public class PrintersTest {
 	 * printer
 	 */
 	@Test
-	public void testFlowConvertMultipleInitialModes() {
+	public void testFlowConvertMultipleInitialModes()
+	{
 		Configuration c = makeSampleConfiguration();
 
 		// add a second initial mode
 		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
-		
+
 		FlowPrinter.convertInitialStatesToUrgent(c);
-		
+
 		BaseComponent ha = (BaseComponent) c.root;
 		AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
-		
+
 		Assert.assertNotNull(init);
-		
+
 		boolean found = false;
 
-		for (AutomatonTransition at : ha.transitions) {
-			if (at.from == init && at.to.name.equals("stopped")) {
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from == init && at.to.name.equals("stopped"))
+			{
 				found = true;
 
-				Assert.assertTrue("reset sets x to 5", at.guard.toDefaultString().contains("x = 5"));
-				Assert.assertTrue("reset sets t to 6", at.guard.toDefaultString().contains("t = 6"));
+				Assert.assertTrue("reset sets x to 5",
+						at.guard.toDefaultString().contains("x = 5"));
+				Assert.assertTrue("reset sets t to 6",
+						at.guard.toDefaultString().contains("t = 6"));
 			}
 		}
 
@@ -298,7 +328,8 @@ public class PrintersTest {
 	 * interval expressions in the flow dynamics
 	 */
 	@Test
-	public void testPrintIntervalExpression() {
+	public void testPrintIntervalExpression()
+	{
 		Configuration c = makeSampleConfiguration();
 
 		BaseComponent ha = (BaseComponent) c.root;
@@ -308,12 +339,12 @@ public class PrintersTest {
 
 		runAllPrintersOnConfiguration(c);
 	}
-	
+
 	/**
 	 * The preconditions should split a disjunctive condition directly
 	 */
 	@Test
-	public void testDisjunctiveGuardSpaceEx() 
+	public void testDisjunctiveGuardSpaceEx()
 	{
 		Configuration c = makeSampleConfiguration();
 
@@ -329,7 +360,8 @@ public class PrintersTest {
 	 * The preconditions should split a disjunctive condition directly
 	 */
 	@Test
-	public void testDisjunctiveGuard() {
+	public void testDisjunctiveGuard()
+	{
 		Configuration c = makeSampleConfiguration();
 
 		BaseComponent ha = (BaseComponent) c.root;
@@ -339,7 +371,8 @@ public class PrintersTest {
 	}
 
 	@Test
-	public void testSpaceExHybrizized() {
+	public void testSpaceExHybrizized()
+	{
 		ToolPrinter tp = new SpaceExPrinter();
 
 		String path = UNIT_BASEDIR + "hybridized/hybridized.";
@@ -347,7 +380,8 @@ public class PrintersTest {
 		SpaceExDocument sd = SpaceExImporter.importModels(path + "cfg", path + "xml");
 		Configuration c = ModelParserTest.flatten(sd);
 
-		for (String scenario : new String[] { "supp", "stc", "phaver" }) {
+		for (String scenario : new String[] { "supp", "stc", "phaver" })
+		{
 			String loadedFilename = "hybridized.xml";
 
 			tp.setOutputNone();
@@ -361,19 +395,19 @@ public class PrintersTest {
 		// should use Math.pow, not ^
 		String[][] dynamics = { { "y", "t^2" }, { "t", "1" } };
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
-		
+
 		ToolPrinter printer = new HyCreate2Printer();
 		printer.setOutputString();
 		printer.print(c, "", "fakeinput.xml");
-		
+
 		String out = printer.outputString.toString();
-		
+
 		Assert.assertTrue("some output exists", out.length() > 10);
 		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
-		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output", 
+		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output",
 				out.contains("Math.pow($t, 2)"));
 	}
-	
+
 	@Test
 	public void testDisjunctionSpaceExPrint()
 	{
@@ -382,24 +416,22 @@ public class PrintersTest {
 		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
 
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter
-				.createComponentTemplates(doc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
-				componentTemplates);
-		
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
 		ToolPrinter printer = new SpaceExPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "fakeinput.xml");
-		
+
 		String out = printer.outputString.toString();
-		
+
 		Assert.assertTrue("some output exists", out.length() > 10);
-		
+
 		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5 | t >= 5) "
 				+ "| loc(fakeinput) == loc3 & t <= 5\"";
 		Assert.assertTrue("forbidden is correct (disjunction)", out.contains(expected));
 	}
-	
+
 	@Test
 	public void testDisjunctionFlowstarPrint()
 	{
@@ -408,30 +440,28 @@ public class PrintersTest {
 		String xmlPath = UNIT_BASEDIR + "disjunction_forbidden/disjunction_forbidden.xml";
 
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter
-				.createComponentTemplates(doc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
-				componentTemplates);
-		
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
 		ToolPrinter printer = new FlowPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "fakeinput.xml");
-		
+
 		String out = printer.outputString.toString();
-		
+
 		Assert.assertTrue("some output exists", out.length() > 10);
-		
+
 		Assert.assertTrue("standard form _error mode exists", out.contains("_error"));
 		Assert.assertFalse("standard form _init mode doesn't exist", out.contains("_init"));
 	}
-	
+
 	@Test
-	public void testPrintDisjunction() 
+	public void testPrintDisjunction()
 	{
 		// may need to add precondition to convert to standard form
-		runAllPrintersOnModel("disjunction_forbidden"); 
+		runAllPrintersOnModel("disjunction_forbidden");
 	}
-	
+
 	@Test
 	public void testPysimPrint()
 	{
@@ -440,47 +470,46 @@ public class PrintersTest {
 		String xmlPath = UNIT_BASEDIR + "controller_heater/controller_heater.xml";
 
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter
-				.createComponentTemplates(doc);
-		Configuration config = ConfigurationMaker.fromSpaceEx(doc,
-				componentTemplates);
-		
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
 		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "model.xml");
-		
+
 		String out = printer.outputString.toString();
-		
+
 		Assert.assertTrue("some output exists", out.length() > 10);
 	}
-	
+
 	@Test
 	public void testPrintHybridized()
 	{
 		if (!PythonBridge.hasPython())
 			return;
-		
+
 		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
-		SpaceExDocument doc = SpaceExImporter.importModels(path
-				+ "vanderpol_althoff.cfg", path + "vanderpol_althoff.xml");
+		SpaceExDocument doc = SpaceExImporter.importModels(path + "vanderpol_althoff.cfg",
+				path + "vanderpol_althoff.xml");
 		Configuration c = ModelParserTest.flatten(doc);
-		
-		// -T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon 0.05 -noerror
-		String params = HybridizeMixedTriggeredPass.makeParamString(0.15, "starcorners", 
-				0.05, 31, 1, 0.05, "basinhopping", true);
+
+		// -T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon
+		// 0.05 -noerror
+		String params = HybridizeMixedTriggeredPass.makeParamString(0.15, "starcorners", 0.05, 31,
+				1, 0.05, "basinhopping", true);
 
 		new HybridizeMixedTriggeredPass().runTransformationPass(c, params);
-		
+
 		// try printing to spaceex
 		ToolPrinter printer = new SpaceExPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
-		
+
 		String out = printer.outputString.toString();
-		
+
 		Assert.assertTrue("some output exists", out.length() > 10);
 	}
-	
+
 	@Test
 	public void testPrintLutModelWithoutPython()
 	{
@@ -488,15 +517,14 @@ public class PrintersTest {
 		String xmlPath = UNIT_BASEDIR + "lut_table/lut_table.xml";
 
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
-		Map<String, Component> componentTemplates = TemplateImporter
-				.createComponentTemplates(doc);
-		Configuration config = com.verivital.hyst.importer.ConfigurationMaker
-				.fromSpaceEx(doc, componentTemplates);
-		
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
 		ToolPrinter printer = new FlowPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "model.xml");
-		
+
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);

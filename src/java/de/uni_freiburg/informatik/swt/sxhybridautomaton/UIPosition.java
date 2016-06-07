@@ -6,27 +6,33 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public class UIPosition {
+public class UIPosition
+{
 	private double mX, mY;
-	
-	public UIPosition(double X, double Y) {
+
+	public UIPosition(double X, double Y)
+	{
 		mX = X;
 		mY = Y;
 	}
 
-	public double getX() {
+	public double getX()
+	{
 		return mX;
 	}
 
-	public void setX(double x) {
+	public void setX(double x)
+	{
 		mX = x;
 	}
 
-	public double getY() {
+	public double getY()
+	{
 		return mY;
 	}
 
-	public void setY(double y) {
+	public void setY(double y)
+	{
 		mY = y;
 	}
 }
