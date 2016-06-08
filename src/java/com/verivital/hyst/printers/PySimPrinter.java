@@ -5,7 +5,6 @@ package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -298,8 +297,6 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
 		appendNewline(rv);
-		appendSymbols(config.root.variables, rv);
-		appendNewline(rv);
 		appendIndentedLine(rv, "ha = HybridAutomaton()");
 
 		if (extraFuncs != null)
@@ -442,28 +439,6 @@ public class PySimPrinter extends ToolPrinter
 		printLine("result = sim.simulate_multi(q_list, max_time)");
 		printNewline();
 		printLine("return result");
-	}
-
-	private static void appendSymbols(List<String> vars, StringBuilder text)
-	{
-		StringBuilder sb = new StringBuilder();
-
-		for (String var : vars)
-		{
-			if (var != vars.get(0))
-				sb.append(", ");
-
-			sb.append("sym_" + var);
-		}
-
-		sb.append(" = symbols('");
-
-		for (String var : vars)
-			sb.append(var + " ");
-
-		sb.append("')");
-
-		appendIndentedLine(text, sb.toString());
 	}
 
 	private void printPlot()
