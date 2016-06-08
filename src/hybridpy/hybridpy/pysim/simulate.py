@@ -246,7 +246,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
             if num_added != rand:
                 raise RuntimeError("Could not generate {} points inside the invariant of mode {} after {} attempts".
-                    format(rand, mode.name, num_added))
+                    format(rand, mode.name, max_rand_attempts))
                 
 
     if check_unique:
