@@ -19,9 +19,8 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.main.Hyst;
 
 /**
- * Kodaik is a NASA tool for finding enclosures of solutions for bounded
- * nonlinear equations. It is run as a separate executable, expected to be on
- * the PATH or KODIAK_PATH
+ * Kodaik is a NASA tool for finding enclosures of solutions for bounded nonlinear equations. It is
+ * run as a separate executable, expected to be on the PATH or KODIAK_PATH
  * 
  */
 
@@ -30,17 +29,15 @@ public class KodiakUtil
 	private static KodiakExpressionPrinter printer = new KodiakExpressionPrinter();
 
 	/**
-	 * Optimize a list of functions in a hyper-rectangle using kodiak This
-	 * requires the Kodiac executable is on PATH or KODIAK_PATH, or null is
-	 * returned
+	 * Optimize a list of functions in a hyper-rectangle using kodiak This requires the Kodiac
+	 * executable is on PATH or KODIAK_PATH, or null is returned
 	 *
 	 * @param pb
 	 *            the PythonBridge interface to use
 	 * @param exp
 	 *            the expression to minimize and maximize
 	 * @param boundsList
-	 *            a list of interval bounds for each variable used in the
-	 *            expression
+	 *            a list of interval bounds for each variable used in the expression
 	 * @return a list of resultant interval bounds
 	 */
 	public static List<Interval> kodiakOptimize(List<Expression> exps,

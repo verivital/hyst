@@ -104,19 +104,17 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Convert all the explicit urgent transitions to implicit urgent ones as
-	 * follows:
+	 * Convert all the explicit urgent transitions to implicit urgent ones as follows:
 	 * 
 	 * in the following, C is a small constant, say step size / 10000
 	 * 
-	 * Adds a variable "_urgent_clock", which is initially C, and ticks at rate
-	 * 0 in every normal mode and at rate 1 in every urgent mode.
+	 * Adds a variable "_urgent_clock", which is initially C, and ticks at rate 0 in every normal
+	 * mode and at rate 1 in every urgent mode.
 	 * 
 	 * For every urgent mode, the invariant '_urgent_clock <= C' is added.
 	 * 
-	 * For every outgoing transition of the urgent mode, the guard
-	 * '_urgent_clock <= C' is used. Also, the reset '_urgent_clock := [0, C]'
-	 * is added
+	 * For every outgoing transition of the urgent mode, the guard '_urgent_clock <= C' is used.
+	 * Also, the reset '_urgent_clock := [0, C]' is added
 	 * 
 	 * In every urgent mode, all variables (except _urgent_clock) tick at rate 0
 	 * 
@@ -259,15 +257,15 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Remove all the sub-expressions with exact assignments to a given set of
-	 * variables and return the modified expression
+	 * Remove all the sub-expressions with exact assignments to a given set of variables and return
+	 * the modified expression
 	 * 
 	 * @param e
 	 *            the initial expression
 	 * @param vars
 	 *            the variables to remove
-	 * @return the modified expressions with all assignments to any variable in
-	 *         vars removed, can be null
+	 * @return the modified expressions with all assignments to any variable in vars removed, can be
+	 *         null
 	 */
 	private static Expression removeExactAssignments(Expression e, Collection<String> vars)
 	{
@@ -311,8 +309,8 @@ public abstract class AutomatonUtil
 	 *            the list of variables
 	 * @param e
 	 *            the expression to extract from
-	 * @return a mapping of variable name -> ExpressionInterval for all exact
-	 *         assignments in the expression
+	 * @return a mapping of variable name -> ExpressionInterval for all exact assignments in the
+	 *         expression
 	 */
 	public static Map<String, ExpressionInterval> extractExactAssignments(Collection<String> vars,
 			Expression e)
@@ -335,8 +333,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Extract exact assignments from an expression (recursive version, use
-	 * extractExactAssignments if calling)
+	 * Extract exact assignments from an expression (recursive version, use extractExactAssignments
+	 * if calling)
 	 * 
 	 * @param rv
 	 *            [out] where to store the output
@@ -512,8 +510,7 @@ public abstract class AutomatonUtil
 	 * 
 	 * @param ha
 	 *            the hybrid automaton
-	 * @return the center point of the first initial mode, in the order of
-	 *         ha.variablesNames
+	 * @return the center point of the first initial mode, in the order of ha.variablesNames
 	 */
 	public static HyperPoint getInitialPoint(BaseComponent ha, Configuration config)
 	{
@@ -558,8 +555,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Get a fresh (unused name), while avoiding some other names. Will add a
-	 * counter to the name until there's no longer a conflict
+	 * Get a fresh (unused name), while avoiding some other names. Will add a counter to the name
+	 * until there's no longer a conflict
 	 * 
 	 * @param desired
 	 *            the desired name
@@ -603,17 +600,15 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Check if the mode exists in the automaton recursively. This returns a
-	 * String, which is the remaining part of modeName which was not processed
-	 * when doing the check, or null if no mode exists with that name
+	 * Check if the mode exists in the automaton recursively. This returns a String, which is the
+	 * remaining part of modeName which was not processed when doing the check, or null if no mode
+	 * exists with that name
 	 * 
 	 * @param c
 	 *            the component currently being checked
 	 * @param modeName
-	 *            the mode name (preorder traversal ordering, so it may contain
-	 *            an extra suffix)
-	 * @return the unprocessed suffix (if the mode was found), or null if the
-	 *         mode was not found
+	 *            the mode name (preorder traversal ordering, so it may contain an extra suffix)
+	 * @return the unprocessed suffix (if the mode was found), or null if the mode was not found
 	 */
 	private static String checkModeExistsRec(Component c, String modeName)
 	{
@@ -644,15 +639,13 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Check if the mode name exists in the base component (part of recursive
-	 * call)
+	 * Check if the mode name exists in the base component (part of recursive call)
 	 * 
 	 * @param c
 	 *            the base component to check
 	 * @param modeName
 	 *            the mode name being checked (preorder traversal name)
-	 * @return the remaining string of modeName (if exists), or null (if doesn't
-	 *         exist)
+	 * @return the remaining string of modeName (if exists), or null (if doesn't exist)
 	 */
 	private static String checkModeExistsBase(BaseComponent c, String modeName)
 	{
@@ -676,8 +669,7 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Get a string representation of a mapping from variable names to
-	 * expression intervals
+	 * Get a string representation of a mapping from variable names to expression intervals
 	 * 
 	 * @param map
 	 *            the map to print
@@ -709,8 +701,7 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Get a string representation of a mapping from variable names to
-	 * expression intervals
+	 * Get a string representation of a mapping from variable names to expression intervals
 	 * 
 	 * @param map
 	 *            the map to print
@@ -824,9 +815,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Check whether a variable is an output variable of a component. It is an
-	 * output variable if either a flow is defined for it, or if a reset exists
-	 * where the variable is assigned.
+	 * Check whether a variable is an output variable of a component. It is an output variable if
+	 * either a flow is defined for it, or if a reset exists where the variable is assigned.
 	 * 
 	 * @param bc
 	 *            the base component
@@ -880,23 +870,20 @@ public abstract class AutomatonUtil
 	public static final byte OPS_DISJUNCTION = 1 << 6; // or operator (||)
 
 	/**
-	 * Classify an Expression's operators. This returns a bitmask, which you can
-	 * use to check for various parts of the expression. For example, val =
-	 * classifyExpression(e); if (val | NONLINEAR) {expression has nonlinear
-	 * operators}.
+	 * Classify an Expression's operators. This returns a bitmask, which you can use to check for
+	 * various parts of the expression. For example, val = classifyExpression(e); if (val |
+	 * NONLINEAR) {expression has nonlinear operators}.
 	 * 
-	 * Each category is classified separately, for example classifying 'x^2'
-	 * will set HAS_NONLINEAR, but not HAS_LINEAR, since there are no linear
-	 * operations in the expression.
+	 * Each category is classified separately, for example classifying 'x^2' will set HAS_NONLINEAR,
+	 * but not HAS_LINEAR, since there are no linear operations in the expression.
 	 * 
-	 * Notice that the operator classification is NOT the same as the expression
-	 * classification, for example "x*y" is a nonlinear expression, but only
-	 * uses linear operators (multiplication)
+	 * Notice that the operator classification is NOT the same as the expression classification, for
+	 * example "x*y" is a nonlinear expression, but only uses linear operators (multiplication)
 	 * 
 	 * @param e
 	 *            the expression to check
-	 * @return a bitmask composed of OPS_* values binary or'd ('|') together
-	 *         like (OPS_LINEAR | OPS_NONLINEAR)
+	 * @return a bitmask composed of OPS_* values binary or'd ('|') together like (OPS_LINEAR |
+	 *         OPS_NONLINEAR)
 	 */
 	public static byte classifyExpressionOps(Expression e)
 	{
@@ -946,14 +933,14 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Check if an Expression contains only operations from a set of allowed
-	 * classes (linear, nonlinear, ect.)
+	 * Check if an Expression contains only operations from a set of allowed classes (linear,
+	 * nonlinear, ect.)
 	 * 
 	 * @param e
 	 *            the expression
 	 * @param allowedClasses
-	 *            a list of classes which are allowed (from the HAS_*
-	 *            constants), like HAS_LINEAR, HAS_NONLINEAR
+	 *            a list of classes which are allowed (from the HAS_* constants), like HAS_LINEAR,
+	 *            HAS_NONLINEAR
 	 * @return
 	 */
 	public static boolean expressionContainsOnlyAllowedOps(Expression e, byte... allowedClasses)
@@ -967,13 +954,12 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Create a twp-mode configuration with modes named "mode1" and "mode2", for
-	 * unit testing
+	 * Create a twp-mode configuration with modes named "mode1" and "mode2", for unit testing
 	 * 
 	 * @param dynamics1
-	 *            a list of variable names, dynamics and possibly initial states
-	 *            for each variable, for example {{"x", "x+1", "0.5"}, {"y",
-	 *            "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 *            a list of variable names, dynamics and possibly initial states for each variable,
+	 *            for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) =
+	 *            0.5; y'==3, y(0)=0
 	 * @param inv
 	 *            the invariant string of the first mode
 	 * @param guard
@@ -1058,13 +1044,12 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Create a single-mode configuration with a mode named "on", for unit
-	 * testing
+	 * Create a single-mode configuration with a mode named "on", for unit testing
 	 * 
 	 * @param dynamics
-	 *            a list of variable names, dynamics and possibly initial states
-	 *            for each variable, for example {{"x", "x+1", "0.5"}, {"y",
-	 *            "3"}} would correspond to x'==x+1, x(0) = 0.5; y'==3, y(0)=0
+	 *            a list of variable names, dynamics and possibly initial states for each variable,
+	 *            for example {{"x", "x+1", "0.5"}, {"y", "3"}} would correspond to x'==x+1, x(0) =
+	 *            0.5; y'==3, y(0)=0
 	 * @return the constructed configuration
 	 */
 	public static Configuration makeDebugConfiguration(String[][] dynamics)
@@ -1112,9 +1097,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Use a sample-based strategy to check if two expressions are equal. This
-	 * returns null if they are, or a counter-example description string if they
-	 * are not. Uses a tolerance of 1e-9.
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they
+	 * are, or a counter-example description string if they are not. Uses a tolerance of 1e-9.
 	 * 
 	 * @param expected
 	 *            the expected expression
@@ -1130,9 +1114,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Use a sample-based strategy to check if two expressions are equal. This
-	 * returns null if they are, or a counter-example description string if they
-	 * are not. Uses a tolerance of 1e-9.
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they
+	 * are, or a counter-example description string if they are not. Uses a tolerance of 1e-9.
 	 * 
 	 * @param expected
 	 *            the expected expression
@@ -1147,9 +1130,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Use a sample-based strategy to check if two expressions are equal. This
-	 * returns null if they are, or a counter-example description string if they
-	 * are not.
+	 * Use a sample-based strategy to check if two expressions are equal. This returns null if they
+	 * are, or a counter-example description string if they are not.
 	 * 
 	 * @param expected
 	 *            the expected expression
@@ -1231,14 +1213,14 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Return an expression taking the time derivative of the given expression.
-	 * This consists of substituting the symbolic derivative for each variable
+	 * Return an expression taking the time derivative of the given expression. This consists of
+	 * substituting the symbolic derivative for each variable
 	 * 
 	 * @param e
 	 *            the expression where to do the substitution
 	 * @param timeDerivatives
-	 *            a map of variable->time derivative for each variable. All
-	 *            other Variable expressions will be assumed to be constants
+	 *            a map of variable->time derivative for each variable. All other Variable
+	 *            expressions will be assumed to be constants
 	 * @return the derivative of e
 	 */
 	public static Expression derivativeOf(Expression e, Map<String, Expression> timeDerivatives)
@@ -1315,8 +1297,8 @@ public abstract class AutomatonUtil
 	}
 
 	/**
-	 * Get the gradient vector within a mode. This uses the 'average' dynamics
-	 * if there's nondeterminism.
+	 * Get the gradient vector within a mode. This uses the 'average' dynamics if there's
+	 * nondeterminism.
 	 * 
 	 * @param am
 	 *            the mode

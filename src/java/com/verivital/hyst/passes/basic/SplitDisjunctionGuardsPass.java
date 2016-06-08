@@ -19,8 +19,8 @@ import com.verivital.hyst.passes.TransformationPass;
 /**
  * This pass splits guards with disjunctions into multiple transitions.
  * 
- * For example, A -- (x == 1 || x == 2) --> B would be split into two
- * transitions from A to B, one with (x==1) and one with (x == 2)
+ * For example, A -- (x == 1 || x == 2) --> B would be split into two transitions from A to B, one
+ * with (x==1) and one with (x == 2)
  * 
  * @author Stanley Bak (October 2014)
  *

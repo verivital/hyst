@@ -6,8 +6,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import java.util.ArrayList;
 
 /**
- * A Network Component is a system of automata. It consists of one or several
- * Binds which instantiate Base Components and bind their Params.
+ * A Network Component is a system of automata. It consists of one or several Binds which
+ * instantiate Base Components and bind their Params.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -46,8 +46,7 @@ public class SpaceExNetworkComponent extends SpaceExComponent
 	 * 
 	 * @param id
 	 *            The Bind's "As" name.
-	 * @return The requested Bind OR null if there is no Bind with the wanted
-	 *         name.
+	 * @return The requested Bind OR null if there is no Bind with the wanted name.
 	 */
 	public Bind getBind(String as)
 	{

@@ -18,8 +18,8 @@ import com.verivital.hyst.main.HystFrame;
 import com.verivital.hyst.util.Preconditions;
 
 /**
- * A generic tool printer class. Printers for individual tools will override
- * this abstract class. The model is printed by using printConfiguration().
+ * A generic tool printer class. Printers for individual tools will override this abstract class.
+ * The model is printed by using printConfiguration().
  */
 public abstract class ToolPrinter
 {
@@ -307,8 +307,7 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Get a string representation of the name of the tool, such as "SpaceEx" or
-	 * "Flow*"
+	 * Get a string representation of the name of the tool, such as "SpaceEx" or "Flow*"
 	 * 
 	 * @return the name of the tool
 	 */
@@ -329,8 +328,7 @@ public abstract class ToolPrinter
 	protected abstract String getCommentPrefix();
 
 	/**
-	 * Should this tool be considered release-quality, which will make it show
-	 * up in the GUI
+	 * Should this tool be considered release-quality, which will make it show up in the GUI
 	 * 
 	 * @return
 	 */
@@ -397,15 +395,13 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Override this method to have tool-specific parameters set through the
-	 * -toolparams flag This method returns a map ParamName -> ParamValue, for
-	 * every parameter you want to have, with the default values already set.
+	 * Override this method to have tool-specific parameters set through the -toolparams flag This
+	 * method returns a map ParamName -> ParamValue, for every parameter you want to have, with the
+	 * default values already set.
 	 * 
-	 * In your printer, you can get the manually-set parameters using
-	 * getToolParams()
+	 * In your printer, you can get the manually-set parameters using getToolParams()
 	 * 
-	 * @return a map of all the parameters for your printer, set to their
-	 *         default values
+	 * @return a map of all the parameters for your printer, set to their default values
 	 */
 	public abstract Map<String, String> getDefaultParams();
 
@@ -420,18 +416,17 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Print the automaton. The configuration is stored in the global config
-	 * variable. checkPreconditions() is called before this method, which
-	 * enforces printer assumptions (for example, that the model is flat).
+	 * Print the automaton. The configuration is stored in the global config variable.
+	 * checkPreconditions() is called before this method, which enforces printer assumptions (for
+	 * example, that the model is flat).
 	 */
 	protected abstract void printAutomaton();
 
 	/**
-	 * Check the preconditions for the printer (for example, the modes should
-	 * have at least 1 variable, no urgrent modes, ect) Typically, you'll change
-	 * preconditions.skip direction to indicate which checks should be skipped
-	 * Alternatively, printers can override this if they don't want to use the
-	 * PrinterPreconditions way of doing it. This should throw a
+	 * Check the preconditions for the printer (for example, the modes should have at least 1
+	 * variable, no urgrent modes, ect) Typically, you'll change preconditions.skip direction to
+	 * indicate which checks should be skipped Alternatively, printers can override this if they
+	 * don't want to use the PrinterPreconditions way of doing it. This should throw a
 	 * PrinterPreconditionException if assumptions about the model are violated.
 	 * 
 	 * @param c

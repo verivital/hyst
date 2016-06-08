@@ -66,8 +66,8 @@ public class SpaceExXMLPrinter
 	private Document mXMLDocument;
 
 	/**
-	 * Initialize a new SpaceExXMLPrinter with a document, which will be
-	 * translated into a SpaceEx-compatible XML DOM
+	 * Initialize a new SpaceExXMLPrinter with a document, which will be translated into a
+	 * SpaceEx-compatible XML DOM
 	 * 
 	 * @param document
 	 */
@@ -773,8 +773,8 @@ public class SpaceExXMLPrinter
 	}
 
 	/**
-	 * Compatible format: No grouping, dot as decimal seperator, at least one
-	 * digit before and after the dot
+	 * Compatible format: No grouping, dot as decimal seperator, at least one digit before and after
+	 * the dot
 	 * 
 	 * @param value
 	 * @return
@@ -794,8 +794,8 @@ public class SpaceExXMLPrinter
 	}
 
 	/**
-	 * Same as doubleToString(), except that no floating point part is enforced
-	 * (1.0 will be returned as "1").
+	 * Same as doubleToString(), except that no floating point part is enforced (1.0 will be
+	 * returned as "1").
 	 * 
 	 * @param value
 	 * @return

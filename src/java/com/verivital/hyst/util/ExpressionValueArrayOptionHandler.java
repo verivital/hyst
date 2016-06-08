@@ -13,14 +13,14 @@ import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * An {@link OptionHandler} for greedily mapping a list of tokens into a
- * collection of {@link Expression}s
+ * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of
+ * {@link Expression}s
  * 
  * This one uses FormulaParser.parseValue to get the expression.
  *
- * This {@code OptionHandler} scans for parameter which begins with
- * <tt>-(NON_NUMBER)</tt>. If found, it will stop. Use parenthesis around
- * expressions that start with -var_name to resolve parsing issues.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUMBER)</tt>. If
+ * found, it will stop. Use parenthesis around expressions that start with -var_name to resolve
+ * parsing issues.
  * </p>
  *
  * @author Stanley Bak

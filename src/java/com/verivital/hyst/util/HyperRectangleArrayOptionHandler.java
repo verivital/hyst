@@ -13,21 +13,20 @@ import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.Interval;
 
 /**
- * An {@link OptionHandler} for greedily mapping a list of tokens into a
- * collection of {@link HyperPoint}s (such as {@code HyperPoint[]}, {@code List
+ * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of
+ * {@link HyperPoint}s (such as {@code HyperPoint[]}, {@code List
  * <HyperPoint>}, etc.).
  *
- * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>.
- * If found, it will stop.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>. If found, it will
+ * stop.
  * </p>
  * 
- * All the HyperRectangles must be the same dimensionality. Each HyperRectangles
- * is a has two numbers for each dimension (comma-separated), with dimensions
- * separated by semicolons (no spaces), surrounded by parentheses, like:
- * (-1,1;-2,-1;0.2,0.4)
+ * All the HyperRectangles must be the same dimensionality. Each HyperRectangles is a has two
+ * numbers for each dimension (comma-separated), with dimensions separated by semicolons (no
+ * spaces), surrounded by parentheses, like: (-1,1;-2,-1;0.2,0.4)
  * 
- * The parenthesis are necessary because -1 would be interpreted as an argument
- * on it's own (since it starts with a dash).
+ * The parenthesis are necessary because -1 would be interpreted as an argument on it's own (since
+ * it starts with a dash).
  *
  * @author Stanley Bak
  */

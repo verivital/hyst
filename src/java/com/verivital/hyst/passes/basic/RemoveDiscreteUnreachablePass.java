@@ -14,8 +14,7 @@ import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.PreconditionsFlag;
 
 /**
- * This pass performs discrete reachability and eliminates unreachable locations
- * and transitions
+ * This pass performs discrete reachability and eliminates unreachable locations and transitions
  * 
  * @author Stanley Bak (Jan 2015)
  *

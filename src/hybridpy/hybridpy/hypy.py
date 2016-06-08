@@ -20,7 +20,7 @@ from hybridpy.tool_pysim import PySimTool
 
 # tools for which models can be generated
 TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
-         'spaceex':SpaceExTool(), 'dreach':DReachTool(), 'pysim':PySimTool()}
+         'spaceex':SpaceExTool(), 'dreach':DReachTool(), 'pysim':PySimTool(), 'pyrrt':None}
 
 # return codes for Engine.run()
 def enum(**enums):

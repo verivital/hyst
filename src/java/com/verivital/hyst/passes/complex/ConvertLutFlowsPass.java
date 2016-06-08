@@ -161,8 +161,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Look for a lut subexpression in a given expression. If it exists, return
-	 * it. Else return null.
+	 * Look for a lut subexpression in a given expression. If it exists, return it. Else return
+	 * null.
 	 * 
 	 * @return the lut subexpression or null
 	 */
@@ -189,8 +189,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Convert a lut expression which is part of a flow. This modifies am's
-	 * parent base-component.
+	 * Convert a lut expression which is part of a flow. This modifies am's parent base-component.
 	 * 
 	 * @param am
 	 *            the mode where we're applying the conversiopn
@@ -211,9 +210,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Should this value be skipped? We create modes between two table values, i
-	 * and i + 1, so if the current value is the last one in any dimension, we
-	 * skip it
+	 * Should this value be skipped? We create modes between two table values, i and i + 1, so if
+	 * the current value is the last one in any dimension, we skip it
 	 * 
 	 * @param indexList
 	 *            the index
@@ -238,8 +236,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Make the original mode an initial one with transitions to each of the
-	 * newly-created ones
+	 * Make the original mode an initial one with transitions to each of the newly-created ones
 	 * 
 	 * @param am
 	 *            the original mode
@@ -292,8 +289,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Create the AutomatonModes corresponding to this lut. This does not create
-	 * dynamics/invariants or transitions.
+	 * Create the AutomatonModes corresponding to this lut. This does not create dynamics/invariants
+	 * or transitions.
 	 * 
 	 * @param original
 	 *            the original location
@@ -326,8 +323,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Create the dynamics, invariants, and transitions among (already-created)
-	 * lut modes.
+	 * Create the dynamics, invariants, and transitions among (already-created) lut modes.
 	 * 
 	 * @param original
 	 *            the original mode
@@ -492,8 +488,8 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Replace a lut subexpression with a different expression, and return the
-	 * complete new expression
+	 * Replace a lut subexpression with a different expression, and return the complete new
+	 * expression
 	 * 
 	 * @param complete
 	 *            the complete expression
@@ -527,18 +523,17 @@ public class ConvertLutFlowsPass extends TransformationPass
 	}
 
 	/**
-	 * Perform n-linear interpolation. This is a generalization of the
-	 * tri-linear scheme given in
+	 * Perform n-linear interpolation. This is a generalization of the tri-linear scheme given in
 	 * http://paulbourke.net/miscellaneous/interpolation/
 	 * 
 	 * @param lut
 	 *            the lookup table expression
 	 * @param indexList
-	 *            the index values for each dimension we want to interpolate,
-	 *            the interpolation is done between the elements i and i + 1
+	 *            the index values for each dimension we want to interpolate, the interpolation is
+	 *            done between the elements i and i + 1
 	 * @param rangeList
-	 *            the ranges being interpolated (from the two relevant
-	 *            breakpoints in each dimension)
+	 *            the ranges being interpolated (from the two relevant breakpoints in each
+	 *            dimension)
 	 * @return an expression which is the n-linear interpolation
 	 */
 	public static Expression nLinearInterpolation(LutExpression lut, int[] indexList,

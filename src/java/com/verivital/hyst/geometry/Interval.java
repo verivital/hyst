@@ -52,9 +52,9 @@ public class Interval
 	}
 
 	/**
-	 * Get the constant value of this interval. If this interval is not a
-	 * constant, then an AutomatonExportException is raised. You can check if
-	 * it's a constant by calling isPoint() or isConstant()
+	 * Get the constant value of this interval. If this interval is not a constant, then an
+	 * AutomatonExportException is raised. You can check if it's a constant by calling isPoint() or
+	 * isConstant()
 	 * 
 	 * @return the constant value of this interval
 	 */
@@ -72,8 +72,8 @@ public class Interval
 	}
 
 	/**
-	 * Does this interval contain a certain values. This does not count the
-	 * endpoints as part of the interval.
+	 * Does this interval contain a certain values. This does not count the endpoints as part of the
+	 * interval.
 	 * 
 	 * @param d
 	 *            the value to check
@@ -85,8 +85,8 @@ public class Interval
 	}
 
 	/**
-	 * Does this interval contain a certain value? This includes the endpoints
-	 * as part of the interval.
+	 * Does this interval contain a certain value? This includes the endpoints as part of the
+	 * interval.
 	 * 
 	 * @param d
 	 *            the value to check
@@ -124,8 +124,7 @@ public class Interval
 	}
 
 	/**
-	 * Is this interval a single real-valued point (min==max, up to a small
-	 * tolerance).
+	 * Is this interval a single real-valued point (min==max, up to a small tolerance).
 	 * 
 	 * @return true iff min ~= max and min and max are not infinite or NaN
 	 */
@@ -135,8 +134,7 @@ public class Interval
 	}
 
 	/**
-	 * Is this interval a single real-valued point (min==max, up to a small
-	 * tolerance).
+	 * Is this interval a single real-valued point (min==max, up to a small tolerance).
 	 * 
 	 * @return true iff min ~= max and min and max are not infinite or NaN
 	 */
@@ -431,8 +429,8 @@ public class Interval
 	}
 
 	/**
-	 * Compute the power function for intervals. Based on Algorithm 1 from Xin
-	 * Chen's dissertation (Page 28)
+	 * Compute the power function for intervals. Based on Algorithm 1 from Xin Chen's dissertation
+	 * (Page 28)
 	 * 
 	 * @param left
 	 *            the left interval

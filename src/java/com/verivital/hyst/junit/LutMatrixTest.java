@@ -95,16 +95,15 @@ public class LutMatrixTest
 		// matlab also permits expressions like "+50" rather than 50
 
 		/*
-		 * String[] strings = {"[1 1]", "[1-1]", "[1 - 1]", "[1 -1]", "[-1 -1]",
-		 * "[-1 -(1 -1)]" }; int widths[] = {2, 1, 1, 2, 2, 2 };
+		 * String[] strings = {"[1 1]", "[1-1]", "[1 - 1]", "[1 -1]", "[-1 -1]", "[-1 -(1 -1)]" };
+		 * int widths[] = {2, 1, 1, 2, 2, 2 };
 		 * 
-		 * for (int i = 0; i < strings.length; ++i) { String s = strings[i]; int
-		 * expected = widths[i];
+		 * for (int i = 0; i < strings.length; ++i) { String s = strings[i]; int expected =
+		 * widths[i];
 		 * 
 		 * MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(s);
 		 * 
-		 * Assert.assertEquals("matrix width is incorrect for " + s, expected,
-		 * m.getDimWidth(0)); }
+		 * Assert.assertEquals("matrix width is incorrect for " + s, expected, m.getDimWidth(0)); }
 		 */
 	}
 

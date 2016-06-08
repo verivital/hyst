@@ -29,6 +29,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.PyRrtPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -40,9 +41,8 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 /**
- * A unit test suite for testing various types of printers. While
- * ModelParserTest focuses on validating that the models are input correctly,
- * this suite instead focuses on exporting models.
+ * A unit test suite for testing various types of printers. While ModelParserTest focuses on
+ * validating that the models are input correctly, this suite instead focuses on exporting models.
  * 
  * @author Stanley Bak
  *
@@ -82,6 +82,8 @@ public class PrintersTest
 		addPrinter(new HyCreate2Printer());
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
+		addPrinter(new PySimPrinter());
+		addPrinter(new PyRrtPrinter());
 	};
 
 	private static void addPrinter(ToolPrinter p)
@@ -90,12 +92,11 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * model within the tests/unit/models/ directory
+	 * Test all the printers defined in the printers array on the passed-in model within the
+	 * tests/unit/models/ directory
 	 * 
 	 * @param baseName
-	 *            the name used to construct the directory, and names of the
-	 *            .xml and .cfg files
+	 *            the name used to construct the directory, and names of the .xml and .cfg files
 	 */
 	private void runAllPrintersOnModel(String baseName)
 	{
@@ -107,8 +108,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * model
+	 * Test all the printers defined in the printers array on the passed-in model
 	 * 
 	 * @param path
 	 *            the directory path, ends in '/'
@@ -154,8 +154,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * hybrid automaton
+	 * Test all the printers defined in the printers array on the passed-in hybrid automaton
 	 * 
 	 * @param ha
 	 *            the automaton to print
@@ -210,8 +209,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with havoc flows in the init
-	 * state
+	 * Printers should be able to print a model with havoc flows in the init state
 	 */
 	@Test
 	public void testPrintHavocInitFlows()
@@ -232,8 +230,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with havoc flows in a state that
-	 * occurs after a transition
+	 * Printers should be able to print a model with havoc flows in a state that occurs after a
+	 * transition
 	 */
 	@Test
 	public void testPrintHavocTransitionFlows()
@@ -242,8 +240,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with nondeterministic
-	 * assignments and deterministic flows
+	 * Printers should be able to print a model with nondeterministic assignments and deterministic
+	 * flows
 	 */
 	@Test
 	public void testPrintNondeterministicAssignments()
@@ -286,8 +284,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test the conversion of multiple initial modes for use in the Flow*
-	 * printer
+	 * Test the conversion of multiple initial modes for use in the Flow* printer
 	 */
 	@Test
 	public void testFlowConvertMultipleInitialModes()
@@ -324,8 +321,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * The printers should be able to print a hybrid automaton which has
-	 * interval expressions in the flow dynamics
+	 * The printers should be able to print a hybrid automaton which has interval expressions in the
+	 * flow dynamics
 	 */
 	@Test
 	public void testPrintIntervalExpression()

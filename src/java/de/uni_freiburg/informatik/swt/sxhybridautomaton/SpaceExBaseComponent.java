@@ -6,8 +6,7 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import java.util.ArrayList;
 
 /**
- * A Base Component is a hybrid automaton. It consists of Locations and
- * transitions.
+ * A Base Component is a hybrid automaton. It consists of Locations and transitions.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -47,8 +46,7 @@ public class SpaceExBaseComponent extends SpaceExComponent
 	 * 
 	 * @param id
 	 *            The Location's ID.
-	 * @return The requested Location OR null if there is no Location with the
-	 *         wanted ID.
+	 * @return The requested Location OR null if there is no Location with the wanted ID.
 	 */
 	public Location getLocationByID(int id)
 	{
@@ -65,8 +63,8 @@ public class SpaceExBaseComponent extends SpaceExComponent
 	 * 
 	 * @param id
 	 *            The Location's name.
-	 * @return A Location with the given name (there may be several!) OR null if
-	 *         there is no Location with the wanted name.
+	 * @return A Location with the given name (there may be several!) OR null if there is no
+	 *         Location with the wanted name.
 	 */
 	public Location getLocation(String name)
 	{
@@ -114,8 +112,7 @@ public class SpaceExBaseComponent extends SpaceExComponent
 	 * 
 	 * @param id
 	 *            The Transition's label.
-	 * @return The requested Transition OR null if there is no Transition with
-	 *         the wanted label.
+	 * @return The requested Transition OR null if there is no Transition with the wanted label.
 	 */
 	public Transition getTransition(String label)
 	{
@@ -145,8 +142,7 @@ public class SpaceExBaseComponent extends SpaceExComponent
 	}
 
 	/**
-	 * Arrange the transitions such that the unlabeled ones are before the
-	 * labeled ones
+	 * Arrange the transitions such that the unlabeled ones are before the labeled ones
 	 */
 	public void arrangeTransitions()
 	{

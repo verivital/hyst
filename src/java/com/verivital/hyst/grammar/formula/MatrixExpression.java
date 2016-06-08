@@ -13,11 +13,11 @@ import com.verivital.hyst.ir.AutomatonExportException;
 /**
  * A matrix expression is one defined using matlab-like syntax: [1, 2; 3 4]
  * 
- * It can also be n-dimension, through the reshape function
- * reshape([1,1,2,2,3,3,4,4],2,2,2) would be a 2x2x2 matrix
+ * It can also be n-dimension, through the reshape function reshape([1,1,2,2,3,3,4,4],2,2,2) would
+ * be a 2x2x2 matrix
  * 
- * They can be used, for example, to specify look up tables. They must be at
- * least one dimensional, and each dimension must be at least width 1
+ * They can be used, for example, to specify look up tables. They must be at least one dimensional,
+ * and each dimension must be at least width 1
  */
 public class MatrixExpression extends Expression implements Iterable<Entry<Expression, int[]>>
 {
@@ -69,8 +69,8 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	}
 
 	/**
-	 * Create a 2-d matrix. The order used in get() is BACKWARDS from the matrix
-	 * order. This is to preserve the behavior in matlab
+	 * Create a 2-d matrix. The order used in get() is BACKWARDS from the matrix order. This is to
+	 * preserve the behavior in matlab
 	 * 
 	 * @param data
 	 */
@@ -120,12 +120,10 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	}
 
 	/**
-	 * Create a new MatrixExpression from values given in the same order as
-	 * matlab's reshape command
+	 * Create a new MatrixExpression from values given in the same order as matlab's reshape command
 	 * 
 	 * @param data
-	 *            the matrix data, in the same order as matlab's reshape()
-	 *            command
+	 *            the matrix data, in the same order as matlab's reshape() command
 	 * @param sizes
 	 *            the sizes for each dimension
 	 */
@@ -178,8 +176,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	 * Get an expression from this matrix
 	 * 
 	 * @param indices
-	 *            the index for each dimension, ordered from largest offset to
-	 *            smallest offset
+	 *            the index for each dimension, ordered from largest offset to smallest offset
 	 * @return
 	 */
 	public Expression get(int... indices)
@@ -311,8 +308,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	}
 
 	/**
-	 * An iterator for matrix expressions. Loop over every expression in the
-	 * matrix.
+	 * An iterator for matrix expressions. Loop over every expression in the matrix.
 	 * 
 	 * @author Stanley Bak (11-2015)
 	 *
@@ -352,8 +348,8 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 		}
 
 		/**
-		 * Increment the iterator indexList (with overflowing to the next
-		 * dimension if necessary) This returns null upon overflow (when done)
+		 * Increment the iterator indexList (with overflowing to the next dimension if necessary)
+		 * This returns null upon overflow (when done)
 		 * 
 		 * @return the incremented indexList
 		 */

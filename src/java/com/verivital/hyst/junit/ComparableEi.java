@@ -5,8 +5,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * This is an ExpressionInterval wrapper used during unit testing. It uses a
- * numerical sampling strategy in order to compare expression intervals
+ * This is an ExpressionInterval wrapper used during unit testing. It uses a numerical sampling
+ * strategy in order to compare expression intervals
  * 
  * @author Stanley Bak
  *

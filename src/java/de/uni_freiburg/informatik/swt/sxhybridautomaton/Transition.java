@@ -6,8 +6,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import com.verivital.hyst.grammar.formula.Expression;
 
 /**
- * A Transition connects two Locations within a Component. Locations are
- * referenced by their numerical IDs.
+ * A Transition connects two Locations within a Component. Locations are referenced by their
+ * numerical IDs.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -149,8 +149,7 @@ public class Transition
 	 * Set a new guard.
 	 * 
 	 * @param guard
-	 *            The Expression should be a boolean Operation (EQUAL, LESS,
-	 *            GREATER, OR...)
+	 *            The Expression should be a boolean Operation (EQUAL, LESS, GREATER, OR...)
 	 */
 	public void setGuard(Expression guard)
 	{
@@ -166,9 +165,8 @@ public class Transition
 	 * Set a new assignment.
 	 * 
 	 * @param assignment
-	 *            The Expression should be an EQUAL Operation where the left
-	 *            term is a single variable or AND Operations of such EQUAL
-	 *            Operations.
+	 *            The Expression should be an EQUAL Operation where the left term is a single
+	 *            variable or AND Operations of such EQUAL Operations.
 	 */
 	public void setAssignment(Expression assignment)
 	{

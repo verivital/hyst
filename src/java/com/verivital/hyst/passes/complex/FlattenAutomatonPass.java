@@ -24,15 +24,14 @@ import com.verivital.hyst.util.FlattenRenameUtils;
 import com.verivital.hyst.util.Preconditions;
 
 /**
- * This transformation pass performs automaton flattening. Usually you want to
- * call flattenAndOptimize, which will flatten, remove discretely-unreachable
- * modes, and convert havoc dynamics. If you instead call the pass directly
- * you'll only get the flattening (modes are a cross product of the
- * subcomponents), and havoc dynamics may not be resolved.
+ * This transformation pass performs automaton flattening. Usually you want to call
+ * flattenAndOptimize, which will flatten, remove discretely-unreachable modes, and convert havoc
+ * dynamics. If you instead call the pass directly you'll only get the flattening (modes are a cross
+ * product of the subcomponents), and havoc dynamics may not be resolved.
  * 
- * Modes get renamed based on the modes in each base component, separated by
- * SEPARATOR('_'). This can lead to ambiguous names if modes already have
- * underscores in them; this isn't handled currently.
+ * Modes get renamed based on the modes in each base component, separated by SEPARATOR('_'). This
+ * can lead to ambiguous names if modes already have underscores in them; this isn't handled
+ * currently.
  */
 public class FlattenAutomatonPass extends TransformationPass
 {
@@ -44,12 +43,11 @@ public class FlattenAutomatonPass extends TransformationPass
 	}
 
 	/**
-	 * Perform automaton flattening, as well as removing (discrete) unreachable
-	 * states. This guarantees that:
+	 * Perform automaton flattening, as well as removing (discrete) unreachable states. This
+	 * guarantees that:
 	 * 
-	 * - the root component of the configuration is a BaseComponent - every
-	 * variable must have a defined flowDyanmics in every nonurgent mode (havoc
-	 * dynamics are converted)
+	 * - the root component of the configuration is a BaseComponent - every variable must have a
+	 * defined flowDyanmics in every nonurgent mode (havoc dynamics are converted)
 	 * 
 	 * @param c
 	 *            the configuration to perform the passes on
@@ -166,10 +164,9 @@ public class FlattenAutomatonPass extends TransformationPass
 	}
 
 	/**
-	 * The variable ordering may have gotten messed up since when merging they
-	 * get adding in the order they are used in each base component. This
-	 * function modifies rv's variable order to first include all variables in
-	 * nc's order, and then any remaining variables
+	 * The variable ordering may have gotten messed up since when merging they get adding in the
+	 * order they are used in each base component. This function modifies rv's variable order to
+	 * first include all variables in nc's order, and then any remaining variables
 	 * 
 	 * @param rv
 	 * @param nc
@@ -344,8 +341,7 @@ public class FlattenAutomatonPass extends TransformationPass
 	}
 
 	/**
-	 * Add transitions from the left base component that don't have a shared
-	 * label
+	 * Add transitions from the left base component that don't have a shared label
 	 * 
 	 * @param rv
 	 *            where the add transitions to
@@ -354,8 +350,7 @@ public class FlattenAutomatonPass extends TransformationPass
 	 * @param isLeft
 	 *            is this component left-composed in the location names?
 	 * @param sharedLabels
-	 *            the list of shared labels (transitions with these labels are
-	 *            skipped)
+	 *            the list of shared labels (transitions with these labels are skipped)
 	 */
 	private static void addNonSharedTransitions(BaseComponent rv, BaseComponent comp,
 			boolean isLeft, Collection<String> sharedLabels)

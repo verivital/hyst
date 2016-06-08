@@ -3,6 +3,7 @@
  */
 package com.verivital.hyst.printers;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,6 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
-import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -37,7 +37,6 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 public class PySimPrinter extends ToolPrinter
 {
 	private static PySimExpressionPrinter pySimExpressionPrinter = new PySimExpressionPrinter();
-	private static SympyPrinter sympyPyinter = new SympyPrinter();
 
 	private static final String COMMENT_CHAR = "#";
 	public BaseComponent ha;
@@ -55,8 +54,8 @@ public class PySimPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -73,21 +72,19 @@ public class PySimPrinter extends ToolPrinter
 		return "'''\n" + text + "\n'''";
 	}
 
-	private static void appendModes(StringBuilder rv, BaseComponent ha)
+	private static void appendModes(StringBuilder rv, BaseComponent ha, ExtraPrintFuncs extraFuncs)
 	{
 		for (AutomatonMode am : ha.modes.values())
 		{
 			appendNewline(rv);
 
 			/*
-			 * one = ha.new_mode('one') one.der = lambda state, _: [2, 1]
-			 * one.inv = lambda(x): x[0] <= 2
+			 * one = ha.new_mode('one') one.der = lambda state, _: [2, 1] one.inv = lambda(x): x[0]
+			 * <= 2
 			 */
 
 			appendIndentedLine(rv, am.name + " = ha.new_mode('" + am.name + "')");
 			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
-
-			appendIndentedLine(rv, am.name + ".inv_sympy = " + sympyPyinter.print(am.invariant));
 
 			if (!am.urgent)
 			{
@@ -97,12 +94,18 @@ public class PySimPrinter extends ToolPrinter
 				appendIndentedLine(rv, am.name + ".der_interval_list = "
 						+ getIntervalListString(am.flowDynamics, ha));
 			}
+
+			if (extraFuncs != null)
+			{
+				for (String line : extraFuncs.getExtraModePrintLines(am))
+					appendIndentedLine(rv, line);
+			}
 		}
 	}
 
 	/**
-	 * Gets the interval list string. if x' == x+1 + [1,2] and y' == y-x + [-1,
-	 * 1], this would give: '[[1,2],[-1,1]]'
+	 * Gets the interval list string. if x' == x+1 + [1,2] and y' == y-x + [-1, 1], this would give:
+	 * '[[1,2],[-1,1]]'
 	 * 
 	 * @param map
 	 * @return the mapped string
@@ -138,8 +141,8 @@ public class PySimPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Gets a map string. Null values get mapped to the variable name if x' ==
-	 * x+1 and y' == y-x, this would give: '[x + 1, y - x]'
+	 * Gets a map string. Null values get mapped to the variable name if x' == x+1 and y' == y-x,
+	 * this would give: '[x + 1, y - x]'
 	 * 
 	 * @param map
 	 * @return the mapped string
@@ -167,11 +170,11 @@ public class PySimPrinter extends ToolPrinter
 		return rv.toString();
 	}
 
-	private static void appendJumps(StringBuilder rv, BaseComponent ha)
+	private static void appendJumps(StringBuilder rv, BaseComponent ha, ExtraPrintFuncs extraFuncs)
 	{
 		/*
-		 * t = ha.new_transition(one, two) t.guard = lambda(x): x[0] >= 2
-		 * t.reset = lambda(x): (x[0] + 1, x[1])
+		 * t = ha.new_transition(one, two) t.guard = lambda(x): x[0] >= 2 t.reset = lambda(x): (x[0]
+		 * + 1, x[1])
 		 */
 
 		for (AutomatonTransition at : ha.transitions)
@@ -183,7 +186,11 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
 			appendIndentedLine(rv, "t.reset = lambda state: " + getMapString(at.reset, ha));
 
-			appendIndentedLine(rv, "t.guard_sympy = " + sympyPyinter.print(at.guard));
+			if (extraFuncs != null)
+			{
+				for (String line : extraFuncs.getExtraTransitionPrintLines(at))
+					appendIndentedLine(rv, line);
+			}
 		}
 	}
 
@@ -220,6 +227,41 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 	}
 
+	public static String automatonToString(Configuration config)
+	{
+		return automatonToString(config, null);
+	}
+
+	/**
+	 * This class can be used to perform extra printing for python targets. To use, override each
+	 * function and return a list of extra Strings, one for each line to be printed (or an empty
+	 * ArrayList)
+	 */
+	public static class ExtraPrintFuncs
+	{
+		// mode is named am.name
+		public ArrayList<String> getExtraModePrintLines(AutomatonMode am)
+		{
+			return new ArrayList<String>();
+		}
+
+		// transition is named "t"
+		public ArrayList<String> getExtraTransitionPrintLines(AutomatonTransition at)
+		{
+			return new ArrayList<String>();
+		}
+
+		public ArrayList<String> getExtraDeclarationPrintLines(BaseComponent ha)
+		{
+			return new ArrayList<String>();
+		}
+
+		public ArrayList<String> getExtraImportPrintLines()
+		{
+			return new ArrayList<String>();
+		}
+	}
+
 	/**
 	 * Converts the given hybrid automaton to a python-parsable String
 	 * 
@@ -227,13 +269,12 @@ public class PySimPrinter extends ToolPrinter
 	 *            the (flat) configuration
 	 * @return
 	 */
-	public static String automatonToString(Configuration config)
+	public static String automatonToString(Configuration config, ExtraPrintFuncs extraFuncs)
 	{
 		ExpressionPrinter savedPrinter = Expression.expressionPrinter;
 
 		Expression.expressionPrinter = pySimExpressionPrinter;
 		pySimExpressionPrinter.ha = (BaseComponent) config.root;
-		sympyPyinter.ha = (BaseComponent) config.root;
 
 		StringBuilder rv = new StringBuilder();
 
@@ -244,8 +285,13 @@ public class PySimPrinter extends ToolPrinter
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HyperRectangle");
 		appendLine(rv, "from hybridpy.pysim.simulate import init_list_to_q_list");
-		appendLine(rv, "from sympy.core import symbols");
-		appendLine(rv, "from sympy import And, Or");
+
+		if (extraFuncs != null)
+		{
+			for (String line : extraFuncs.getExtraImportPrintLines())
+				appendIndentedLine(rv, line);
+		}
+
 		appendNewline(rv);
 
 		appendLine(rv, "def define_ha():");
@@ -255,8 +301,15 @@ public class PySimPrinter extends ToolPrinter
 		appendSymbols(config.root.variables, rv);
 		appendNewline(rv);
 		appendIndentedLine(rv, "ha = HybridAutomaton()");
-		appendModes(rv, ha);
-		appendJumps(rv, ha);
+
+		if (extraFuncs != null)
+		{
+			for (String line : extraFuncs.getExtraDeclarationPrintLines(ha))
+				appendIndentedLine(rv, line);
+		}
+
+		appendModes(rv, ha, extraFuncs);
+		appendJumps(rv, ha, extraFuncs);
 		appendNewline(rv);
 		appendIndentedLine(rv, "return ha");
 		appendNewline(rv);
@@ -292,11 +345,9 @@ public class PySimPrinter extends ToolPrinter
 		/*
 		 * # Variable ordering: [x, t, tglobal] rv = []
 		 * 
-		 * r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
-		 * rv.append((ha.modes['loc1'], r))
+		 * r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)]) rv.append((ha.modes['loc1'], r))
 		 * 
-		 * r = HyperRectangle([(7.5, 8.5), (0.0, 0.0), (0.0, 0.0)])
-		 * rv.append((ha.modes['loc2'], r))
+		 * r = HyperRectangle([(7.5, 8.5), (0.0, 0.0), (0.0, 0.0)]) rv.append((ha.modes['loc2'], r))
 		 * 
 		 * return rv
 		 */
@@ -376,8 +427,8 @@ public class PySimPrinter extends ToolPrinter
 	{
 		/*
 		 * ha = define_ha() init_states = define_init_states(ha) q_list =
-		 * init_list_to_q_list(init_states, center=True, star=True,
-		 * corners=False) result = sim.simulate_multi(q_list, max_time)
+		 * init_list_to_q_list(init_states, center=True, star=True, corners=False) result =
+		 * sim.simulate_multi(q_list, max_time)
 		 * 
 		 * return result
 		 */
@@ -418,8 +469,8 @@ public class PySimPrinter extends ToolPrinter
 	private void printPlot()
 	{
 		/*
-		 * draw_events = len(result) == 1 sim.plot_sim_result_multi(result,
-		 * dim_x, dim_y, filename, draw_events)
+		 * draw_events = len(result) == 1 sim.plot_sim_result_multi(result, dim_x, dim_y, filename,
+		 * draw_events)
 		 */
 
 		printNewline();
@@ -449,70 +500,6 @@ public class PySimPrinter extends ToolPrinter
 		pySimExpressionPrinter.ha = ha;
 
 		printDocument(originalFilename);
-	}
-
-	private static class SympyPrinter extends DefaultExpressionPrinter
-	{
-		BaseComponent ha;
-
-		public SympyPrinter()
-		{
-			this.opNames.put(Operator.EQUAL, "==");
-			this.opNames.put(Operator.AND, "and");
-			this.opNames.put(Operator.OR, "or");
-			this.opNames.put(Operator.POW, "**");
-		}
-
-		@Override
-		protected String printOperation(Operation o)
-		{
-			String s = null;
-
-			if (o.op == Operator.AND)
-				s = "And(" + print(o.getLeft()) + ", " + print(o.getRight()) + ")";
-			else if (o.op == Operator.OR)
-				s = "Or(" + print(o.getLeft()) + ", " + print(o.getRight()) + ")";
-			else
-				s = super.printOperation(o);
-
-			return s;
-		}
-
-		@Override
-		protected String printTrue()
-		{
-			return "True";
-		}
-
-		@Override
-		protected String printFalse()
-		{
-			return "False";
-		}
-
-		@Override
-		protected String printVariable(Variable v)
-		{
-			String rv = null;
-
-			if (ha.variables.contains(v.name))
-				rv = "sym_" + v.name;
-			else if (ha.constants.containsKey(v.name))
-			{
-				Interval i = ha.constants.get(v.name);
-
-				if (i.width() > 0)
-					throw new AutomatonExportException(
-							"tried to print pysim model with " + "interval constant");
-
-				rv = printConstantValue(i.min);
-			}
-			else
-				throw new AutomatonExportException("var '" + v.name
-						+ "' in expression was not an automaton variable or cosntant");
-
-			return rv;
-		}
 	}
 
 	private static class PySimExpressionPrinter extends DefaultExpressionPrinter

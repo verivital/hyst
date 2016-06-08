@@ -1,11 +1,10 @@
 package com.verivital.hyst.util;
 
 /**
- * List of checks. Use Flags.<name>.ordinal() in order to index into the skip
- * array
+ * List of checks. Use Flags.<name>.ordinal() in order to index into the skip array
  * 
- * CONVERT_ flags are for checks that, upon error, print a message and run a
- * pass Other flags directly throw PreconditionException upon detecting problems
+ * CONVERT_ flags are for checks that, upon error, print a message and run a pass Other flags
+ * directly throw PreconditionException upon detecting problems
  */
 public enum PreconditionsFlag
 {

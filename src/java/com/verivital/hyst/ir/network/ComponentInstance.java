@@ -10,12 +10,10 @@ import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 
 /**
- * A component instance is part of a network component. It consists of a
- * component, as well as a mapping of the variable / constant / label names of
- * the parent to those of the child.
+ * A component instance is part of a network component. It consists of a component, as well as a
+ * mapping of the variable / constant / label names of the parent to those of the child.
  * 
- * Validation guarantees: parent and child are nonnnull childTemplateName is
- * nonnull
+ * Validation guarantees: parent and child are nonnnull childTemplateName is nonnull
  * 
  * mappings are nonnull and valid (parent names exist, child names exist)
  */

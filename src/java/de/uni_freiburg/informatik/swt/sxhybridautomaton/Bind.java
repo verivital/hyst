@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * A Bind instantiates a subordinated automaton and binds its Params to values
- * or Params of the Component the Bind belongs to.
+ * A Bind instantiates a subordinated automaton and binds its Params to values or Params of the
+ * Component the Bind belongs to.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -51,8 +51,8 @@ public class Bind
 	}
 
 	/**
-	 * A Bind's Component specifies which base automaton is instantiated. It
-	 * references another Component.
+	 * A Bind's Component specifies which base automaton is instantiated. It references another
+	 * Component.
 	 * 
 	 * @return Component ID
 	 */
@@ -62,8 +62,8 @@ public class Bind
 	}
 
 	/**
-	 * A Bind's Component specifies which base automaton is instantiated It
-	 * references another Component.
+	 * A Bind's Component specifies which base automaton is instantiated It references another
+	 * Component.
 	 */
 	public void setComponent(String component)
 	{

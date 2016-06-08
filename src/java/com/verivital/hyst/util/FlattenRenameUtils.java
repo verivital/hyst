@@ -96,9 +96,9 @@ public class FlattenRenameUtils
 	}
 
 	/**
-	 * Get a set of rename assignments (oldName->newName) for a single type of
-	 * parameter. Variables are renamed if they don't have a mapping in the
-	 * parent, or if the parent uses a different name.
+	 * Get a set of rename assignments (oldName->newName) for a single type of parameter. Variables
+	 * are renamed if they don't have a mapping in the parent, or if the parent uses a different
+	 * name.
 	 * 
 	 * @param childNames
 	 *            the set of parameters to check (variables, labels, constants)
@@ -193,8 +193,7 @@ public class FlattenRenameUtils
 	}
 
 	/**
-	 * Change mode names in init and forbidden from the dotted notation to the
-	 * flattened equivalent
+	 * Change mode names in init and forbidden from the dotted notation to the flattened equivalent
 	 * 
 	 * @param c
 	 *            the configuration

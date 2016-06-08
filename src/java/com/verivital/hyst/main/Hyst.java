@@ -40,6 +40,7 @@ import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
+import com.verivital.hyst.printers.PyRrtPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -53,8 +54,8 @@ import com.verivital.hyst.util.StringOperations;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 /**
- * Main start class for Hyst If run without args, a GUI will be used. If run
- * with args, the command-line version is assumed.
+ * Main start class for Hyst If run without args, a GUI will be used. If run with args, the
+ * command-line version is assumed.
  */
 public class Hyst
 {
@@ -95,7 +96,8 @@ public class Hyst
 	// add new tool support here
 	private static final ToolPrinter[] printers = { new FlowPrinter(), new DReachPrinter(),
 			new HyCreate2Printer(), new HyCompPrinter(), new PythonQBMCPrinter(),
-			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(), };
+			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(),
+			new PyRrtPrinter() };
 
 	// passes that are run only if the user selects them
 	private static final TransformationPass[] availablePasses = { new AddIdentityResetPass(),
@@ -698,8 +700,7 @@ public class Hyst
 	}
 
 	/**
-	 * Check for internal consistency of the defined Printers and
-	 * TransformationPasses
+	 * Check for internal consistency of the defined Printers and TransformationPasses
 	 * 
 	 * @return true if they are internally consistent
 	 */
@@ -775,8 +776,7 @@ public class Hyst
 	}
 
 	/**
-	 * Print an info message to stderr, if the -v flag has been set (verbose
-	 * mode is enabled)
+	 * Print an info message to stderr, if the -v flag has been set (verbose mode is enabled)
 	 * 
 	 * @param message
 	 *            the message to print
@@ -807,8 +807,8 @@ public class Hyst
 	}
 
 	/**
-	 * Print an info message to stderr, if the -d flag has been set (debug mode
-	 * is enabled). This is even more verbose
+	 * Print an info message to stderr, if the -d flag has been set (debug mode is enabled). This is
+	 * even more verbose
 	 * 
 	 * @param message
 	 *            the message to print

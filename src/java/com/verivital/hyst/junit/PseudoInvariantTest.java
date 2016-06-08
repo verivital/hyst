@@ -113,8 +113,7 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass)
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass)
 	 */
 	@Test
 	public void testPseudoInvariantSimulatePass()
@@ -158,8 +157,8 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time
 	 */
 	@Test
 	public void testPseudoInvariantSimulateOnePass()
@@ -199,8 +198,8 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time, printing to Flow*
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time, printing to Flow*
 	 */
 	@Test
 	public void testPIVanderpolFlowstar()

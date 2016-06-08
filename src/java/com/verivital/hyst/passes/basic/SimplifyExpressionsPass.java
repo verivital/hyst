@@ -14,8 +14,8 @@ import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.util.Preconditions;
 
 /**
- * This pass attempts to simplify expressions in the automaton. Uses internal
- * rules and not anything fancy.
+ * This pass attempts to simplify expressions in the automaton. Uses internal rules and not anything
+ * fancy.
  * 
  * @author Stanley Bak (October 2014)
  *
@@ -56,8 +56,8 @@ public class SimplifyExpressionsPass extends TransformationPass
 	}
 
 	/**
-	 * Simplify a single expression and return it Boolean expressions are
-	 * simplified to Constant.FALSE or Constant.TRUE
+	 * Simplify a single expression and return it Boolean expressions are simplified to
+	 * Constant.FALSE or Constant.TRUE
 	 */
 	public static Expression simplifyExpression(Expression e)
 	{

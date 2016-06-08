@@ -7,9 +7,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExConfigValues;
 /**
  * Settings extracted from the model.
  *
- * automaton is guaranteed nonnull plotVariableNames is guaranteed nonnull, and
- * of size 2, although the elements may be null (if the model contains no
- * variables, for example)
+ * automaton is guaranteed nonnull plotVariableNames is guaranteed nonnull, and of size 2, although
+ * the elements may be null (if the model contains no variables, for example)
  * 
  * @author Stanley Bak (stanleybak@gmail.com)
  *

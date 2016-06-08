@@ -13,16 +13,14 @@ import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 
 /**
- * A network component as part of a hybrid automaton. This can compose one or
- * more subcomponents, as well as do renaming of variables, labels, constants,
- * ect.
+ * A network component as part of a hybrid automaton. This can compose one or more subcomponents, as
+ * well as do renaming of variables, labels, constants, ect.
  * 
- * The children of this class are the instantiated sub-components, not the
- * templates. Thus, if a single base component is instantiated several times,
- * there will be several children here.
+ * The children of this class are the instantiated sub-components, not the templates. Thus, if a
+ * single base component is instantiated several times, there will be several children here.
  * 
- * Validation guarantees: children is not null and size > 0, instance names are
- * valid identifiers, Components are nonnull
+ * Validation guarantees: children is not null and size > 0, instance names are valid identifiers,
+ * Components are nonnull
  * 
  */
 public class NetworkComponent extends Component

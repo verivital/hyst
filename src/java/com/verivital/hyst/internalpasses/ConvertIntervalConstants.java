@@ -8,18 +8,17 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.ir.Configuration;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
  * @author Stanley Bak
  */
 public class ConvertIntervalConstants
 {
 	/**
-	 * Converts constants that are intervals into variables with derivative zero
-	 * and an initial value of the interval.
+	 * Converts constants that are intervals into variables with derivative zero and an initial
+	 * value of the interval.
 	 */
 	public static void run(Configuration config)
 	{

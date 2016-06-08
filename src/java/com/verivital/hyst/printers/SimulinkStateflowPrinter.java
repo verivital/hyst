@@ -34,16 +34,15 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
- * Printer for Simulink/Stateflow models with non-semantics preservation and
- * semantics preservation modes
+ * Printer for Simulink/Stateflow models with non-semantics preservation and semantics preservation
+ * modes
  * 
- * Semantics preservation uses randomness to approximate nondeterministic
- * behavior allowed in hybrid automata
+ * Semantics preservation uses randomness to approximate nondeterministic behavior allowed in hybrid
+ * automata
  * 
- * Non-semantics preserving is a basic translation, and in practice, often does
- * preserve semantics (so the name is poor), under the assumption that the
- * original automata is deterministic, non-Zeno, and some other assumptions that
- * need to be clarified by Luan/Christian.
+ * Non-semantics preserving is a basic translation, and in practice, often does preserve semantics
+ * (so the name is poor), under the assumption that the original automata is deterministic,
+ * non-Zeno, and some other assumptions that need to be clarified by Luan/Christian.
  * 
  * @author Christian Schilling, Luan Nguyen
  */
@@ -63,11 +62,10 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 		// of simulators vs. reachability tools is perhaps a bit unrealistic at
 		// this stage
 		/*
-		 * params.put("time", "auto"); params.put("step", "auto-auto");
-		 * params.put("remainder", "1e-4"); params.put("precondition", "auto");
-		 * params.put("plot", "auto"); params.put("orders", "3-8");
-		 * params.put("cutoff", "1e-15"); params.put("precision", "53");
-		 * params.put("jumps", "99999999"); params.put("print", "on");
+		 * params.put("time", "auto"); params.put("step", "auto-auto"); params.put("remainder",
+		 * "1e-4"); params.put("precondition", "auto"); params.put("plot", "auto");
+		 * params.put("orders", "3-8"); params.put("cutoff", "1e-15"); params.put("precision",
+		 * "53"); params.put("jumps", "99999999"); params.put("print", "on");
 		 * params.put("aggregation", "parallelotope");
 		 */
 		params.put("semantics", "0"); // 0 = no transformation, 1 = add epsilons
@@ -156,9 +154,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	// ------------- normal static fields -------------
 
 	/*
-	 * NOTE: this is a bug in Stateflow: it REQUIRES it seems newlines to always
-	 * be Unix-style, regardless of Host operating system, so e.g., using,
-	 * System.lineSeparator() does not work
+	 * NOTE: this is a bug in Stateflow: it REQUIRES it seems newlines to always be Unix-style,
+	 * regardless of Host operating system, so e.g., using, System.lineSeparator() does not work
 	 */
 	public static final String lineSeparator = "\n";
 
@@ -641,8 +638,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	// -------------
 
 	/**
-	 * Wrapper for a variable in Stateflow. It contains a name and an iterable
-	 * of properties to be set.
+	 * Wrapper for a variable in Stateflow. It contains a name and an iterable of properties to be
+	 * set.
 	 */
 	public class VariableWrapper
 	{
@@ -876,8 +873,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 		// epsilon variable
 		private final Variable m_epsilon;
 		/*
-		 * pretty printing mode: break AND/OR expressions exceeding this
-		 * threshold deactivated for value 0
+		 * pretty printing mode: break AND/OR expressions exceeding this threshold deactivated for
+		 * value 0
 		 */
 		private final int m_prettyPrintThreshold;
 
@@ -939,12 +936,12 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 				if (m_isIntervalEquality)
 				{
 					/*
-					 * special handling for equalities via intervals (lhs - eps
-					 * <= rhs && lhs + eps >= rhs)
+					 * special handling for equalities via intervals (lhs - eps <= rhs && lhs + eps
+					 * >= rhs)
 					 * 
-					 * NOTE: This relies on the fact that an equality never
-					 * occurs below (as a child of) another equality, i.e., we
-					 * have no equality between Booleans as in "true == false".
+					 * NOTE: This relies on the fact that an equality never occurs below (as a child
+					 * of) another equality, i.e., we have no equality between Booleans as in
+					 * "true == false".
 					 */
 					final List<Expression> children = operation.children;
 					final Expression childLeft = children.get(0);
@@ -991,10 +988,9 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 						break;
 					}
 					/*
-					 * recursively print children first NOTE: If the children
-					 * are split, then the parents are always split, too. This
-					 * is because the String object returned has no notion of
-					 * line breaks. This is the intended behavior, however.
+					 * recursively print children first NOTE: If the children are split, then the
+					 * parents are always split, too. This is because the String object returned has
+					 * no notion of line breaks. This is the intended behavior, however.
 					 */
 					final Expression leftChild = children.get(0);
 					final String lhs = print(leftChild);
@@ -1101,9 +1097,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 		StringBuilder builder;
 
 		/*
-		 * forces unix-style line endings (Matlab requires this) (DID NOT WORK
-		 * TO SET to override System.lineSeparator(), maybe have to use old
-		 * style of System.get etc.)
+		 * forces unix-style line endings (Matlab requires this) (DID NOT WORK TO SET to override
+		 * System.lineSeparator(), maybe have to use old style of System.get etc.)
 		 */
 		// System.setProperty("line.separator", "\n");
 
@@ -1305,10 +1300,9 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	// ------------- methods for the main components of an HA -------------
 
 	/**
-	 * Converts the dynamics of a mode to semantics-preserving strings. For each
-	 * variable that is changed, the returned object contains one string
-	 * determining the dynamics. Additionally, the output variables are
-	 * assigned.
+	 * Converts the dynamics of a mode to semantics-preserving strings. For each variable that is
+	 * changed, the returned object contains one string determining the dynamics. Additionally, the
+	 * output variables are assigned.
 	 * 
 	 * @param mode
 	 *            automaton mode
@@ -1422,9 +1416,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Converts the transition assignment to a semantics-preserving string.
-	 * Convenience unifier of strings returned by
-	 * {@link getAssignmentIterable()}.
+	 * Converts the transition assignment to a semantics-preserving string. Convenience unifier of
+	 * strings returned by {@link getAssignmentIterable()}.
 	 * 
 	 * @param transition
 	 *            automaton transition
@@ -1436,8 +1429,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Converts an update expression to semantics-preserving strings. An update
-	 * expression is an expression like a flow or an assignment.
+	 * Converts an update expression to semantics-preserving strings. An update expression is an
+	 * expression like a flow or an assignment.
 	 * 
 	 * @param map
 	 *            map from variable name to update expression
@@ -1482,8 +1475,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Converts a conditional expression to a semantics-preserving string. A
-	 * conditional expression is an expression like an invariant or a guard.
+	 * Converts a conditional expression to a semantics-preserving string. A conditional expression
+	 * is an expression like an invariant or a guard.
 	 * 
 	 * @param expr
 	 *            conditional expression
@@ -1503,8 +1496,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/*
-	 * ----------- methods for creating the actual Stateflow strings -----------
-	 * ----------- (states, junctions, and transition labels) -----------
+	 * ----------- methods for creating the actual Stateflow strings ----------- -----------
+	 * (states, junctions, and transition labels) -----------
 	 */
 
 	/**
@@ -1778,8 +1771,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Returns the label for the transition 'choose state -> transition choose
-	 * junction'.
+	 * Returns the label for the transition 'choose state -> transition choose junction'.
 	 */
 	public String getTransitionChoose2chooseJLabel()
 	{
@@ -1787,8 +1779,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Returns the label for the transition 'time choose junction -> dwell
-	 * state'.
+	 * Returns the label for the transition 'time choose junction -> dwell state'.
 	 */
 	public String getTransitionChooseTime2dwellLabel()
 	{
@@ -1812,8 +1803,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Returns the label for the transition 'leave junction -> transition
-	 * junction'.
+	 * Returns the label for the transition 'leave junction -> transition junction'.
 	 * 
 	 * @param transitionIndex
 	 *            index of the transition
@@ -1828,9 +1818,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Returns the label for the transition 'transition junction -> entry
-	 * state'. A transition may contain a guard and an assignment, and the
-	 * target location may have an invariant.
+	 * Returns the label for the transition 'transition junction -> entry state'. A transition may
+	 * contain a guard and an assignment, and the target location may have an invariant.
 	 * 
 	 * @param transition
 	 *            automaton transition
@@ -1955,22 +1944,20 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Reads variable bounds from a series of conjuncts and puts them into an
-	 * internal format.
+	 * Reads variable bounds from a series of conjuncts and puts them into an internal format.
 	 * 
-	 * Also, equality bounds are sorted such that the left-hand side is a
-	 * variable. Especially, "constant assignments" like <code>const = 5</code>
-	 * are removed, as constants are cared for at another place already.
+	 * Also, equality bounds are sorted such that the left-hand side is a variable. Especially,
+	 * "constant assignments" like <code>const = 5</code> are removed, as constants are cared for at
+	 * another place already.
 	 * 
-	 * NOTE: We assume an "intelligent" ordering like a typical assignment in
-	 * programming languages. That is, cases like
-	 * <code>var2 = var1 & var2 = 5</code> must be given in the form
-	 * <code>var2 = 5 & var1 = var2</code> so we can write
-	 * <code>var2 = 5; var1 := var2</code> in a sequential manner.
+	 * NOTE: We assume an "intelligent" ordering like a typical assignment in programming languages.
+	 * That is, cases like <code>var2 = var1 & var2 = 5</code> must be given in the form
+	 * <code>var2 = 5 & var1 = var2</code> so we can write <code>var2 = 5; var1 := var2</code> in a
+	 * sequential manner.
 	 * 
-	 * TODO The above could be supported, but takes some effort and is not
-	 * likely to be needed at the moment. A way to implement it is to collect
-	 * all elements which are equal and find a suitable topological ordering.
+	 * TODO The above could be supported, but takes some effort and is not likely to be needed at
+	 * the moment. A way to implement it is to collect all elements which are equal and find a
+	 * suitable topological ordering.
 	 * 
 	 * NOTE: Strict and non-strict bounds (< vs. <=) are handled the same way.
 	 * 
@@ -1993,9 +1980,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 			final Expression bound;
 
 			/*
-			 * Check that either the lhs or the rhs is of type
-			 * <code>Variable</code> and that the name does not appear in the
-			 * constants map (i.e. it is a non-constant variable).
+			 * Check that either the lhs or the rhs is of type <code>Variable</code> and that the
+			 * name does not appear in the constants map (i.e. it is a non-constant variable).
 			 */
 			final boolean isVarLeft;
 			boolean isConstantVariable = false;
@@ -2036,8 +2022,8 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 					if (isConstantVariable)
 					{
 						/*
-						 * One of the expressions was a constant variable. Here
-						 * we can simply ignore the expression.
+						 * One of the expressions was a constant variable. Here we can simply ignore
+						 * the expression.
 						 */
 						// System.out.println("Skipping initial expression: " +
 						// conjunct);
@@ -2215,10 +2201,9 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Recursively applies substitution to an expression. This method converts
-	 * the input expression into an expression where each occurrence of a
-	 * variable is replaced by the respective expression defined in the
-	 * substitution map.
+	 * Recursively applies substitution to an expression. This method converts the input expression
+	 * into an expression where each occurrence of a variable is replaced by the respective
+	 * expression defined in the substitution map.
 	 * 
 	 * @param expr
 	 *            raw expression
@@ -2358,14 +2343,13 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Computes the weakest precondition string for an invariant and an
-	 * assignment. Given a transition whose assignment is non-empty and whose
-	 * target location has a non-empty invariant, the condition under which the
-	 * transition can be taken is given by the weakest precondition of the
-	 * invariant I under the assignment A, wp(I, A).
+	 * Computes the weakest precondition string for an invariant and an assignment. Given a
+	 * transition whose assignment is non-empty and whose target location has a non-empty invariant,
+	 * the condition under which the transition can be taken is given by the weakest precondition of
+	 * the invariant I under the assignment A, wp(I, A).
 	 * 
-	 * wp(I, A) can be computed by substituting each occurrence of a variable x
-	 * assigned in A via 'x = e' by the expression e.
+	 * wp(I, A) can be computed by substituting each occurrence of a variable x assigned in A via 'x
+	 * = e' by the expression e.
 	 * 
 	 * Example: A == x = x + 1 I == x - y > 0 ==> wp(I, A) == (x + 1) - y > 0
 	 * 
@@ -2388,13 +2372,11 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Returns the auxiliary variables introduced by the translation. This
-	 * function can only be called after the number of maximum transitions was
-	 * found.
+	 * Returns the auxiliary variables introduced by the translation. This function can only be
+	 * called after the number of maximum transitions was found.
 	 * 
-	 * NOTE: A call to this function initializes some data structures. If the
-	 * function is called more than once, it should be changed to store the
-	 * variables to avoid recomputation efforts.
+	 * NOTE: A call to this function initializes some data structures. If the function is called
+	 * more than once, it should be changed to store the variables to avoid recomputation efforts.
 	 * 
 	 * @param numTransMax
 	 *            maximum number of transitions

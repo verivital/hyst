@@ -39,55 +39,47 @@ import com.verivital.hyst.util.StringOperations;
 
 /**
  * This is the hybridize mixed-triggered pass from the HSCC 2016 paper,
- * "Scalable Static Hybridization Methods for Analysis of Nonlinear Systems" by
- * Bak et. al
+ * "Scalable Static Hybridization Methods for Analysis of Nonlinear Systems" by Bak et. al
  * 
- * This is the 'raw' version of the transformation, which in the paper is
- * described in Section 5. The paremeters in the paper are:
+ * This is the 'raw' version of the transformation, which in the paper is described in Section 5.
+ * The paremeters in the paper are:
  * 
- * a list of splitting elements E_1, ... E_{n-1}, where each element E_i is
- * either a real number to be used for time-triggered splitting, or a PI
- * function to be used for space-triggered splitting (list 1),
+ * a list of splitting elements E_1, ... E_{n-1}, where each element E_i is either a real number to
+ * be used for time-triggered splitting, or a PI function to be used for space-triggered splitting
+ * (list 1),
  *
- * D_1, ... D_n are the contraction domains (sets) for each new location (list
- * 2), and
+ * D_1, ... D_n are the contraction domains (sets) for each new location (list 2), and
  *
- * g_1, ... g_n$ are the dynamics abstraction functions for each location (list
- * 3).
+ * g_1, ... g_n$ are the dynamics abstraction functions for each location (list 3).
  *
- * In this pass, the g's are automatically computed based on global optimization
- * within the contraction domains and a linear approximation (based on sampling
- * near the center of each contraction domain). Thus, only two lists are
- * paramters of this pass.
+ * In this pass, the g's are automatically computed based on global optimization within the
+ * contraction domains and a linear approximation (based on sampling near the center of each
+ * contraction domain). Thus, only two lists are paramters of this pass.
  * 
- * Elements of list 1 are single numbers (time-triggered), or two
- * comma-separated lists, separated by a semicolon (space-triggered). Both
- * should be surrounded by parenthesis. The PI-function is taken by considering
- * the hyperplane at the given-point (first comma- separated list), in the
- * direction of the gradient (second comma-separated list). For example: '(0.1)
- * (0.1) (0.25,0;1,1) (0.2)'
+ * Elements of list 1 are single numbers (time-triggered), or two comma-separated lists, separated
+ * by a semicolon (space-triggered). Both should be surrounded by parenthesis. The PI-function is
+ * taken by considering the hyperplane at the given-point (first comma- separated list), in the
+ * direction of the gradient (second comma-separated list). For example: '(0.1) (0.1) (0.25,0;1,1)
+ * (0.2)'
  * 
- * Elements of list 2 are hyperrectangles, which use commas to separate min and
- * max, and semicolons to separate dimensions, surrounded by parenthesis. For
- * example: '(0.1,0.2;2.1,2.2) (-0.2,-0.1;2.2,2.3)'
+ * Elements of list 2 are hyperrectangles, which use commas to separate min and max, and semicolons
+ * to separate dimensions, surrounded by parenthesis. For example: '(0.1,0.2;2.1,2.2)
+ * (-0.2,-0.1;2.2,2.3)'
  * 
- * In addition to these parameters from the paper, the optimization method can
- * be chosen:
+ * In addition to these parameters from the paper, the optimization method can be chosen:
  * 
- * opt the optimization method, one of {basinhopping, interval, intervalXYZ}
- * where XYZ is the maximum overapproximation error (low values in high
- * dimensions may take longer)
+ * opt the optimization method, one of {basinhopping, interval, intervalXYZ} where XYZ is the
+ * maximum overapproximation error (low values in high dimensions may take longer)
  * 
- * Additionally, the user can (optionally) specify a trigger mode which
- * indicates the transformation should begin; otherwise it begins at time 0.
+ * Additionally, the user can (optionally) specify a trigger mode which indicates the transformation
+ * should begin; otherwise it begins at time 0.
  * 
- * If there are N domains given and N-1 splitting elements, the final
- * (abstracted dynamics) mode will be the last one where the trajectories will
- * remain for all time.
+ * If there are N domains given and N-1 splitting elements, the final (abstracted dynamics) mode
+ * will be the last one where the trajectories will remain for all time.
  * 
- * If there are N domains and N splitting elements, after the last splitting
- * element, the state will transition back to the original automaton (to every
- * possible state, only restricted by the invariant).
+ * If there are N domains and N splitting elements, after the last splitting element, the state will
+ * transition back to the original automaton (to every possible state, only restricted by the
+ * invariant).
  *
  * @author Stanley Bak
  *
@@ -378,12 +370,12 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Do linear approximation over all the modes in the chain. This modifies
-	 * the flow dynamics for each mode in the chain.
+	 * Do linear approximation over all the modes in the chain. This modifies the flow dynamics for
+	 * each mode in the chain.
 	 * 
 	 * @param optimizationType
-	 *            the optimization engine to use, one of "basinhopping",
-	 *            "kodiak", "interval", "intervalXX"
+	 *            the optimization engine to use, one of "basinhopping", "kodiak", "interval",
+	 *            "intervalXX"
 	 * @param oldModes
 	 *            The list of all modes in the original automaton
 	 * @param modeChain
@@ -499,8 +491,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Get the intersection (as a hashmap of var->intervals) of a mode's
-	 * invariant and a box
+	 * Get the intersection (as a hashmap of var->intervals) of a mode's invariant and a box
 	 * 
 	 * @param am
 	 *            the mode
@@ -740,8 +731,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Add transitions at the guard (for example time trigger) to the error mode
-	 * (negation of invariant)
+	 * Add transitions at the guard (for example time trigger) to the error mode (negation of
+	 * invariant)
 	 * 
 	 * @param am
 	 *            the mode to add to
@@ -770,8 +761,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Make the outgoing guard for this state (which is time-triggered). Also,
-	 * update the invariant to reflect the guard.
+	 * Make the outgoing guard for this state (which is time-triggered). Also, update the invariant
+	 * to reflect the guard.
 	 * 
 	 * @param am
 	 * @param time
@@ -786,8 +777,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Make the outgoing guard for this state (which is time-triggered). Also,
-	 * update the invariant to reflect the guard.
+	 * Make the outgoing guard for this state (which is time-triggered). Also, update the invariant
+	 * to reflect the guard.
 	 * 
 	 * @param am
 	 * @param pt
@@ -804,8 +795,8 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Make an expression which represents the pi invariant at the given point
-	 * with the given gradient
+	 * Make an expression which represents the pi invariant at the given point with the given
+	 * gradient
 	 * 
 	 * @param p
 	 *            the point where the pi is being constructed
@@ -823,8 +814,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Make an expression which represents the pi guard at the given point with
-	 * the given gradient
+	 * Make an expression which represents the pi guard at the given point with the given gradient
 	 * 
 	 * @param p
 	 *            the point where the pi is being constructed
@@ -897,8 +887,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	}
 
 	/**
-	 * Add transitions to the error mode on each side of the box for a given
-	 * mode
+	 * Add transitions to the error mode on each side of the box for a given mode
 	 * 
 	 * @param am
 	 *            the mode

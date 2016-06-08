@@ -22,8 +22,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
 
 /**
- * Creates the NAV benchmark, from "Benchmarks for Hybrid Systems Verification",
- * Fehnker et. al, HSCC 2004
+ * Creates the NAV benchmark, from "Benchmarks for Hybrid Systems Verification", Fehnker et. al,
+ * HSCC 2004
  * 
  * 
  * @author Stanley Bak (May 2016)

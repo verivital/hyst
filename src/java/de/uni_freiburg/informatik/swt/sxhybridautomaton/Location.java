@@ -6,9 +6,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import com.verivital.hyst.grammar.formula.Expression;
 
 /**
- * A Location in an automaton Component. It is identified by a unique numerical
- * ID and is also given a name. Transitions reference Locations by their ID
- * numbers.
+ * A Location in an automaton Component. It is identified by a unique numerical ID and is also given
+ * a name. Transitions reference Locations by their ID numbers.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -87,8 +86,7 @@ public class Location
 	 * Set a new invariant.
 	 * 
 	 * @param invariant
-	 *            The Expression should be a boolean Operation (EQUAL, LESS,
-	 *            GREATER, OR...)
+	 *            The Expression should be a boolean Operation (EQUAL, LESS, GREATER, OR...)
 	 * @param varInts
 	 */
 	public void setInvariant(Expression invariant)
@@ -105,9 +103,8 @@ public class Location
 	 * Set a new flow.
 	 * 
 	 * @param assignment
-	 *            The Expression should be an EQUAL Operation where the left
-	 *            term is a single variable or AND Operations of such EQUAL
-	 *            Operations.
+	 *            The Expression should be an EQUAL Operation where the left term is a single
+	 *            variable or AND Operations of such EQUAL Operations.
 	 */
 	public void setFlow(Expression flow)
 	{

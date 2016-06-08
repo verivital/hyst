@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import com.verivital.hyst.grammar.formula.Expression;
 
 /**
- * A SpaceEx automaton consists of one or more Components which represent
- * automata or systems of automata.
+ * A SpaceEx automaton consists of one or more Components which represent automata or systems of
+ * automata.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -94,8 +94,7 @@ public class SpaceExDocument
 	 * 
 	 * @param id
 	 *            The Component's ID.
-	 * @return The requested Component OR null if there is no Component with the
-	 *         wanted ID.
+	 * @return The requested Component OR null if there is no Component with the wanted ID.
 	 */
 	public SpaceExComponent getComponent(String id)
 	{

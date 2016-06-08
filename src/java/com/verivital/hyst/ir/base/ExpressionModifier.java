@@ -26,8 +26,7 @@ public abstract class ExpressionModifier
 	}
 
 	/**
-	 * Modify expressions in the initial and forbidden states in this
-	 * configuration
+	 * Modify expressions in the initial and forbidden states in this configuration
 	 * 
 	 * @param c
 	 *            the configuration
@@ -55,8 +54,8 @@ public abstract class ExpressionModifier
 	}
 
 	/**
-	 * Enumerate over all the expressions in this base component and modify them
-	 * with the passed-in object
+	 * Enumerate over all the expressions in this base component and modify them with the passed-in
+	 * object
 	 * 
 	 * @param ha
 	 *            the automaton to enumerate over

@@ -10,8 +10,7 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * Class for parsing a linear expression as a condition Top level is expected to
- * be an '=='
+ * Class for parsing a linear expression as a condition Top level is expected to be an '=='
  * 
  * @author Stanley Bak
  *

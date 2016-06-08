@@ -651,8 +651,7 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 	}
 
 	/**
-	 * Update the extension of the output file to match the tool (if there is an
-	 * output file)
+	 * Update the extension of the output file to match the tool (if there is an output file)
 	 * 
 	 * @param printer
 	 *            the tool printer that was selected
@@ -861,8 +860,7 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 	}
 
 	/**
-	 * The gui was started with a given path, populate the text fields
-	 * appropriately
+	 * The gui was started with a given path, populate the text fields appropriately
 	 * 
 	 * @param filename
 	 *            the filename that was provided

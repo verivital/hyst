@@ -11,18 +11,16 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
- * This pass converts a hybrid automaton from standard form back to normal. A
- * standard form automaton is flat, has a single initial state named _init,
- * which is urgent. It has either a single forbidden state named _error, with no
- * condition on the real variables.
+ * This pass converts a hybrid automaton from standard form back to normal. A standard form
+ * automaton is flat, has a single initial state named _init, which is urgent. It has either a
+ * single forbidden state named _error, with no condition on the real variables.
  * 
- * After running the conversion, _init and _error will be deleted, and the
- * configuration's init and forbidden variables will be populated.
+ * After running the conversion, _init and _error will be deleted, and the configuration's init and
+ * forbidden variables will be populated.
  * 
  * @author Stanley Bak
  */

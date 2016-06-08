@@ -8,8 +8,8 @@ import java.util.Arrays;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * A lookup table (LUT) as part of an expression. Currently these are only
- * allowed inside flow expressions.
+ * A lookup table (LUT) as part of an expression. Currently these are only allowed inside flow
+ * expressions.
  * 
  * @author Stanley Bak
  *
@@ -22,8 +22,7 @@ public class LutExpression extends Expression
 									// length of dimension i of table
 
 	/**
-	 * Look up table constructor. Shallow copies of the passed-in arrays are
-	 * stored
+	 * Look up table constructor. Shallow copies of the passed-in arrays are stored
 	 * 
 	 * @param inputs
 	 *            the inputs (usually variables)

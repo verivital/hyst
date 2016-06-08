@@ -11,15 +11,13 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * A ModelGenerator is an alternative input method which generates a
- * Configuration rather than loading one from files. It can take parameters, for
- * example, if the configuration generation can be take inputs like the number
- * of dimensions.
+ * A ModelGenerator is an alternative input method which generates a Configuration rather than
+ * loading one from files. It can take parameters, for example, if the configuration generation can
+ * be take inputs like the number of dimensions.
  * 
  * The parameters are automatically parsed using args4j.
  * 
- * See IntegralChainGenerator as a simple example which implements the abstract
- * methods.
+ * See IntegralChainGenerator as a simple example which implements the abstract methods.
  * 
  * @author Stanley Bak (May 2016)
  *
@@ -96,9 +94,8 @@ public abstract class ModelGenerator
 	public abstract String getName();
 
 	/**
-	 * Run the pass on the given configuration (stored in the global config
-	 * object), modifying it in place. The command-line args are parsed before
-	 * this is called
+	 * Run the pass on the given configuration (stored in the global config object), modifying it in
+	 * place. The command-line args are parsed before this is called
 	 */
 	protected abstract Configuration generateModel();
 }
