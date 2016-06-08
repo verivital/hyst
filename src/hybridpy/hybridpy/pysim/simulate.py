@@ -201,7 +201,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
     a list of symbolic states (tuple of AutomatonMode, point, where point is [x_0, ..., x_n]) 
     using the provided sample strategy
     center / star / corners are different possible sample strategies
-    rand=# will do that many random samples per init state
+    rand=# will do that many random samples per init state (where invariant is true)
     '''
 
     rv = []
@@ -224,14 +224,30 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
         if rand > 0:
             random.seed()
 
-            for _ in xrange(rand):
+            max_rand_attempts = 100 * rand
+            num_added = 0
+
+            for _ in xrange(max_rand_attempts):
                 point = []
 
                 for dim in rect.dims:
                     val = dim[0] + random.random() * (dim[1] - dim[0])
                     point.append(val)
 
+                # only accept points inside the invariant
+                if mode.inv(point) == False:
+                    continue
+
                 rv.append((mode, point))
+                num_added += 1
+
+                if num_added >= rand:
+                    break
+
+            if num_added != rand:
+                raise RuntimeError("Could not generate {} points inside the invariant of mode {} after {} attempts".
+                    format(rand, mode.name, num_added))
+                
 
     if check_unique:
         # ensure elements are unique
