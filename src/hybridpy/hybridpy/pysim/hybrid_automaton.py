@@ -120,6 +120,7 @@ class HybridAutomaton(object):
 
     modes = {}
     transitions = []
+    variables = [] # list of strings
 
     def __init__(self):
         pass

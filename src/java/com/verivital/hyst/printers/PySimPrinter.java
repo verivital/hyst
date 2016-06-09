@@ -298,9 +298,10 @@ public class PySimPrinter extends ToolPrinter
 
 		appendLine(rv, "def define_ha():");
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
-		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
 		appendNewline(rv);
 		appendIndentedLine(rv, "ha = HybridAutomaton()");
+		appendIndentedLine(rv, "ha.variables = " + quotedVarList(ha));
+		appendNewline(rv);
 
 		if (extraFuncs != null)
 		{
@@ -323,6 +324,21 @@ public class PySimPrinter extends ToolPrinter
 		Expression.expressionPrinter = savedPrinter;
 
 		return rv.toString();
+	}
+
+	private static String quotedVarList(BaseComponent c)
+	{
+		StringBuilder rv = new StringBuilder();
+
+		for (String v : c.variables)
+		{
+			if (rv.length() > 0)
+				rv.append(", ");
+
+			rv.append("\"" + v + "\"");
+		}
+
+		return "[" + rv.toString() + "]";
 	}
 
 	private static void appendNewline(StringBuilder rv)
