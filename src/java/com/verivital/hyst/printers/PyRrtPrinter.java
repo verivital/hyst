@@ -66,7 +66,7 @@ public class PyRrtPrinter extends ToolPrinter
 
 			// add the symbolic guard
 			String s = rrtSymbolicPyinter.print(at.guard);
-			rv.add("t.inv_strings = [" + s + "]");
+			rv.add("t.guard_strings = [" + s + "]");
 
 			return rv;
 		}
@@ -99,11 +99,17 @@ public class PyRrtPrinter extends ToolPrinter
 			String s = null;
 
 			if (o.op == Operator.AND)
-				s = "\"" + print(o.getLeft()) + "\", \"" + print(o.getRight()) + "\", ";
+			{
+				s = print(o.getLeft()) + ", " + print(o.getRight());
+			}
 			else if (o.op == Operator.OR)
 				throw new AutomatonExportException("-or- operation not allowed by printer");
+			else if (Operator.isComparison(o.op))
+				s = "\"" + super.printOperation(o) + "\"";
 			else
+			{
 				s = super.printOperation(o);
+			}
 
 			return s;
 		}

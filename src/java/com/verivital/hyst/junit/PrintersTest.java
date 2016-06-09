@@ -12,6 +12,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.generators.ModelGenerator;
+import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -525,5 +527,27 @@ public class PrintersTest
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testPyrrtPrint()
+	{
+		// test model with input and output variables
+		ModelGenerator navGen = new NavigationGenerator();
+		String params = "-matrix -1.2 0.1 0.1 -1.2 -i_list 2 2 A 4 3 4 B 2 4 -width 3 "
+				+ "-startx 0.5 -starty 1.5 -noise 0.1";
+		Configuration config = navGen.generate(params);
+
+		ToolPrinter printer = new PyRrtPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		String expected[] = { "inv_strings = [\"x <= 1\", \"y >= 1\", \"y <= 2\"]",
+				"guard_strings = [\"x >= 1\"]" };
+
+		for (String e : expected)
+			Assert.assertTrue("output doesn't contain string '" + e + "'", out.contains(e));
 	}
 }
