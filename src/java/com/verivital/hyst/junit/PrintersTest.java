@@ -18,6 +18,8 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
@@ -538,6 +540,13 @@ public class PrintersTest
 				+ "-startx 0.5 -starty 1.5 -noise 0.1";
 		Configuration config = navGen.generate(params);
 
+		config.root.constants.put("maxtime", new Interval(1, 1));
+
+		BaseComponent ha = (BaseComponent) config.root;
+
+		AutomatonMode am = ha.modes.values().iterator().next();
+		am.invariant = new Operation("maxtime", Operator.LESSEQUAL, 5);
+
 		ToolPrinter printer = new PyRrtPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "model.xml");
@@ -549,5 +558,9 @@ public class PrintersTest
 
 		for (String e : expected)
 			Assert.assertTrue("output doesn't contain string '" + e + "'", out.contains(e));
+
+		// maxtime should have been substituted
+		Assert.assertFalse("output contains the constant 'maxtime' (should have been substituted)",
+				out.contains("maxtime"));
 	}
 }

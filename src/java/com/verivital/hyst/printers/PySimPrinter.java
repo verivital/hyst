@@ -21,6 +21,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
@@ -275,6 +276,8 @@ public class PySimPrinter extends ToolPrinter
 		Expression.expressionPrinter = pySimExpressionPrinter;
 		pySimExpressionPrinter.ha = (BaseComponent) config.root;
 
+		new SubstituteConstantsPass().runTransformationPass(config, null);
+
 		StringBuilder rv = new StringBuilder();
 
 		if (!(config.root instanceof BaseComponent))
@@ -523,14 +526,8 @@ public class PySimPrinter extends ToolPrinter
 
 			if (index == -1)
 			{
-				Interval value = ha.constants.get(name);
-
-				if (value == null)
-					throw new AutomatonExportException("PySimPrinter tried to "
-							+ "print variable/constant not found in base component: '" + name
-							+ "'");
-
-				rv = "" + value.middle();
+				throw new AutomatonExportException("PySimPrinter tried to "
+						+ "print variable/constant not found in base component: '" + name + "'");
 			}
 			else
 				rv = BASE + "[" + index + "]";
