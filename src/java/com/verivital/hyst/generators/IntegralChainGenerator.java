@@ -28,7 +28,7 @@ import com.verivital.hyst.util.ExpressionValueArrayOptionHandler;
  * timeVar, optional, (should an explicit 'time dimension be added? parameter is the name) xi, input
  * noise list, optional, the additive noise for each input
  * 
- * where x0' == 1, x1' == x0, x2' == x1, ...
+ * where x0' == 1, x1' == x0, x2' == x1, ..., xn = u
  * 
  * @author Stanley Bak (May 2016)
  *
