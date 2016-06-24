@@ -3,7 +3,9 @@
  */
 package com.verivital.hyst.util;
 
-import java.util.List;
+import static com.verivital.hyst.util.AutomatonUtil.simplifyExpression;
+
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.grammar.formula.Constant;
@@ -15,10 +17,6 @@ import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.ir.network.ComponentInstance;
-import com.verivital.hyst.ir.network.NetworkComponent;
-import static com.verivital.hyst.util.AutomatonUtil.simplifyExpression;
-import java.util.LinkedHashMap;
 
 /**
  * classify components

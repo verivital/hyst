@@ -31,8 +31,9 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
-import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -468,7 +469,7 @@ public class ModelParserTest
 
 		// use flow* as an example printer that needs at least one variable,
 		// which should raise an error
-		ToolPrinter tp = new FlowPrinter();
+		ToolPrinter tp = new FlowstarPrinter();
 
 		tp.setOutputNone();
 
@@ -495,7 +496,7 @@ public class ModelParserTest
 		Configuration c = flatten(
 				SpaceExImporter.importModels(path + "has_vars.cfg", path + "has_vars.xml"));
 
-		ToolPrinter tp = new FlowPrinter();
+		ToolPrinter tp = new FlowstarPrinter();
 
 		tp.setOutputNone();
 		tp.print(c, "", "");
@@ -513,7 +514,7 @@ public class ModelParserTest
 		Configuration c = flatten(SpaceExImporter.importModels(path + "blank_forbidden.cfg",
 				path + "blank_forbidden.xml"));
 
-		ToolPrinter tp = new FlowPrinter();
+		ToolPrinter tp = new FlowstarPrinter();
 
 		tp.setOutputNone();
 		tp.print(c, "", "");
@@ -574,7 +575,14 @@ public class ModelParserTest
 
 		Configuration c = flatten(SpaceExImporter.importModels(path + "sys.cfg", path + "sys.xml"));
 
-		ToolPrinter tp = new FlowPrinter();
+		new SubstituteConstantsPass().runTransformationPass(c, "");
+
+		Assert.assertFalse(
+				"init expression shouldn't have redundant '3 = 3': "
+						+ c.init.get("on").toDefaultString(),
+				c.init.get("on").toDefaultString().contains("3 = 3"));
+
+		ToolPrinter tp = new FlowstarPrinter();
 
 		tp.setOutputNone();
 		tp.print(c, "", "");

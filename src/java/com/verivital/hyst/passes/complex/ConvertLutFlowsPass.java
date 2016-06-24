@@ -308,9 +308,9 @@ public class ConvertLutFlowsPass extends TransformationPass
 		ArrayList<AutomatonMode> rv = new ArrayList<AutomatonMode>();
 		BaseComponent ha = original.automaton;
 
-		for (Entry<Expression, int[]> e : lut.table)
+		for (Entry<int[], Expression> e : lut.table)
 		{
-			int[] indexList = e.getValue();
+			int[] indexList = e.getKey();
 
 			if (shouldSkip(indexList, lut.table))
 				continue;
@@ -342,9 +342,9 @@ public class ConvertLutFlowsPass extends TransformationPass
 		BaseComponent ha = original.automaton;
 		int tableDims = lut.table.getNumDims();
 
-		for (Entry<Expression, int[]> e : lut.table)
+		for (Entry<int[], Expression> e : lut.table)
 		{
-			int[] indexList = e.getValue();
+			int[] indexList = e.getKey();
 
 			if (shouldSkip(indexList, lut.table))
 				continue;

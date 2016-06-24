@@ -28,7 +28,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
-import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -78,7 +78,7 @@ public class PrintersTest
 
 		// System.out.println(". PrintersTest.java todo: uncomment all
 		// printers");
-		addPrinter(new FlowPrinter());
+		addPrinter(new FlowstarPrinter());
 		addPrinter(new HyCreate2Printer());
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
@@ -297,7 +297,7 @@ public class PrintersTest
 		// add a second initial mode
 		c.init.put("stopped", FormulaParser.parseInitialForbidden("x = 5 & t = 6"));
 
-		FlowPrinter.convertInitialStatesToUrgent(c);
+		FlowstarPrinter.convertInitialStatesToUrgent(c);
 
 		BaseComponent ha = (BaseComponent) c.root;
 		AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
@@ -443,7 +443,7 @@ public class PrintersTest
 		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
 		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
 
-		ToolPrinter printer = new FlowPrinter();
+		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "fakeinput.xml");
 
@@ -521,12 +521,63 @@ public class PrintersTest
 		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
 				componentTemplates);
 
-		ToolPrinter printer = new FlowPrinter();
+		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(config, "", "model.xml");
 
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testConstantInResetRange()
+	{
+		// model with constant in reset range. There's no good internal
+		// representation for this currently
+		// suggested fix should be to run substitute constants pass explicitly
+
+		String cfgPath = UNIT_BASEDIR + "reset_with_const/reset_with_const.cfg";
+		String xmlPath = UNIT_BASEDIR + "reset_with_const/reset_with_const.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration c = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		// print to flow*
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testConstantWithLuts()
+	{
+		// model with constant in reset range. There's no good internal
+		// representation for this currently
+		// suggested fix should be to run substitute constants pass explicitly
+
+		String cfgPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.cfg";
+		String xmlPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration c = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		// print to flow*
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+		Assert.assertTrue("output should not contain constant 'input'", !out.contains("input"));
 	}
 }

@@ -159,7 +159,7 @@ public class PythonBridge
 	 */
 	public void setTimeout(int timeoutMs)
 	{
-		log("setTimeout(" + timeoutMs + ") called");
+		logDebug("setTimeout(" + timeoutMs + ") called");
 		this.timeoutMs = timeoutMs;
 	}
 

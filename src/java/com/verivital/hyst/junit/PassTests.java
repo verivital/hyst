@@ -26,10 +26,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
-import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.python.PythonBridge;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;

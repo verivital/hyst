@@ -1,6 +1,7 @@
 package com.verivital.hyst.passes.basic;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -24,8 +25,6 @@ import com.verivital.hyst.util.ValueSubstituter;
  */
 public class SubstituteConstantsPass extends TransformationPass
 {
-	private ValueSubstituter vs = null;
-
 	public SubstituteConstantsPass()
 	{
 		preconditions = new Preconditions(true); // no preconditions
@@ -37,7 +36,34 @@ public class SubstituteConstantsPass extends TransformationPass
 	@Override
 	protected void runPass()
 	{
+		final Map<String, Interval> rootMapping = getConstMapping(config.root);
+		// modify init and forbidden
+
+		ExpressionModifier.modifyInitForbidden(config, new ExpressionModifier()
+		{
+			@Override
+			public Expression modifyExpression(Expression e)
+			{
+				return substituteConstantsIntoExpression(rootMapping, e);
+			}
+		});
+
+		removeRedundantConstaints(config.init);
+
+		if (config.forbidden != null)
+			removeRedundantConstaints(config.forbidden);
+
 		runRec(config.root);
+	}
+
+	private void removeRedundantConstaints(LinkedHashMap<String, Expression> init)
+	{
+		// remove constraints like 5 == 5->
+		for (Entry<String, Expression> e : init.entrySet())
+		{
+			Expression simpler = SimplifyExpressionsPass.simplifyExpression(e.getValue());
+			e.setValue(simpler);
+		}
 	}
 
 	private void runRec(Component c)
@@ -55,6 +81,8 @@ public class SubstituteConstantsPass extends TransformationPass
 					return substituteConstantsIntoExpression(mapping, e);
 				}
 			});
+
+			ha.constants.clear();
 		}
 		else
 		{
@@ -63,6 +91,13 @@ public class SubstituteConstantsPass extends TransformationPass
 			for (ComponentInstance ci : nc.children.values())
 			{
 				runRec(ci.child);
+			}
+
+			nc.constants.clear();
+
+			for (ComponentInstance ci : nc.children.values())
+			{
+				ci.constMapping.clear();
 			}
 		}
 	}
@@ -89,18 +124,15 @@ public class SubstituteConstantsPass extends TransformationPass
 	 *            the expression to substitute into
 	 * @return the new expression with constants substituted in
 	 */
-	public Expression substituteConstantsIntoExpression(Map<String, Interval> constants,
+	public static Expression substituteConstantsIntoExpression(Map<String, Interval> constants,
 			Expression exp)
 	{
-		if (vs == null)
-		{
-			HashMap<String, Expression> subMap = new HashMap<String, Expression>();
+		HashMap<String, Expression> subMap = new HashMap<String, Expression>();
 
-			for (Entry<String, Interval> e : constants.entrySet())
-				subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
+		for (Entry<String, Interval> e : constants.entrySet())
+			subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
 
-			vs = new ValueSubstituter(subMap);
-		}
+		ValueSubstituter vs = new ValueSubstituter(subMap);
 
 		return vs.substitute(exp);
 	}

@@ -175,24 +175,6 @@ public class RangeExtractor
 		}
 	}
 
-	/**
-	 * Get the range for a specific variable in an expression. May be null if
-	 * the range is not defined. If only one side of the range is defined, then
-	 * the min may be -Double.MAX_VALUE, and the max may be Double.MAX_VALUE
-	 * 
-	 * @param expression
-	 *            the expression to parse
-	 * @param variable
-	 *            the name of the variable
-	 * @throws EmptyRangeException
-	 *             if expression is Constant.FALSE or otherwise unsatisfiable
-	 *             for any variable in 'variables'
-	 * @throws ConstantMismatchException
-	 *             is there are constants which contradict each other
-	 * @throws UnsupportedConditionException
-	 *             if there are conditions not suited for interval range
-	 *             extraction
-	 */
 	public static Interval getVariableRange(Expression expression, String variable)
 			throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
@@ -397,10 +379,15 @@ public class RangeExtractor
 								if (ignoreUnsupported)
 									shouldSkip = true;
 								else
-									throw new UnsupportedConditionException(
-											"Unsupported condition for range extraction (one "
-													+ "side should be variable, the other side a constant): "
-													+ expression.toDefaultString());
+								{
+									String message = "Unsupported condition for range extraction (one side should be variable, the "
+											+ "other side a constant): "
+											+ expression.toDefaultString()
+											+ ". If one side is a constant, you can try running the substitute constants transformation "
+											+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+
+									throw new UnsupportedConditionException(message);
+								}
 							}
 						}
 					}
@@ -410,10 +397,14 @@ public class RangeExtractor
 					if (ignoreUnsupported)
 						shouldSkip = true;
 					else
-						throw new UnsupportedConditionException(
-								"Unsupported condition for range extraction (one "
-										+ "side should be variable, the other side a constant): "
-										+ expression.toDefaultString());
+					{
+						String message = "Unsupported condition for range extraction (one side should be variable, the "
+								+ "other side a constant): " + expression.toDefaultString()
+								+ ". If one side is a constant, you can try running the substitute constants transformation "
+								+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+
+						throw new UnsupportedConditionException(message);
+					}
 				}
 
 				if (!shouldSkip)
