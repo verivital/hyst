@@ -40,6 +40,15 @@ public class SwitchedOscillatorGenerator extends ModelGenerator
 	@Option(name = "-dims", required = true, usage = "number of dimensions in filter", metaVar = "NUM")
 	private int dims = 1;
 
+	@Option(name = "-x", usage = "x axis variable", metaVar = "VARNAME")
+	private String xVar = "x";
+
+	@Option(name = "-y", usage = "y axis variable", metaVar = "VARNAME")
+	private String yVar = "y";
+
+	@Option(name = "-strict_guards", usage = "guards use strict inequalities")
+	private boolean strictGuards = false;
+
 	@Override
 	public String getCommandLineFlag()
 	{
@@ -60,6 +69,14 @@ public class SwitchedOscillatorGenerator extends ModelGenerator
 		BaseComponent ha = new BaseComponent();
 		Configuration c = new Configuration(ha);
 
+		ha.variables.add("x");
+		ha.variables.add("y");
+
+		for (int d = 1; d < dims; ++d)
+			ha.variables.add("x" + d);
+
+		ha.variables.add("z");
+
 		AutomatonMode loc1 = ha.createMode("loc1");
 		AutomatonMode loc2 = ha.createMode("loc2");
 		AutomatonMode loc3 = ha.createMode("loc3");
@@ -70,14 +87,29 @@ public class SwitchedOscillatorGenerator extends ModelGenerator
 		loc3.invariant = FormulaParser.parseInvariant("x >= 0 && y + 0.714286 * x >= 0");
 		loc4.invariant = FormulaParser.parseInvariant("x >= 0 && y + 0.714286 * x <= 0");
 
-		ha.createTransition(loc1, loc3).guard = FormulaParser
-				.parseGuard("x == 0 & 0.714286 * x + y >= 0");
-		ha.createTransition(loc3, loc4).guard = FormulaParser
-				.parseGuard("x >= 0 & 0.714286 * x + y == 0");
-		ha.createTransition(loc4, loc2).guard = FormulaParser
-				.parseGuard("x == 0 & 0.714286 * x + y <= 0");
-		ha.createTransition(loc2, loc1).guard = FormulaParser
-				.parseGuard("x <= 0 & 0.714286 * x + y == 0");
+		if (strictGuards)
+		{
+			ha.createTransition(loc1, loc3).guard = FormulaParser
+					.parseGuard("x == 0 & 0.714286 * x + y >= 0");
+			ha.createTransition(loc3, loc4).guard = FormulaParser
+					.parseGuard("x >= 0 & 0.714286 * x + y == 0");
+			ha.createTransition(loc4, loc2).guard = FormulaParser
+					.parseGuard("x == 0 & 0.714286 * x + y <= 0");
+			ha.createTransition(loc2, loc1).guard = FormulaParser
+					.parseGuard("x <= 0 & 0.714286 * x + y == 0");
+		}
+		else
+		{
+			// non-strict guards
+			ha.createTransition(loc1, loc3).guard = FormulaParser
+					.parseGuard("x >= 0 & 0.714286 * x + y >= 0");
+			ha.createTransition(loc3, loc4).guard = FormulaParser
+					.parseGuard("x >= 0 & 0.714286 * x + y <= 0");
+			ha.createTransition(loc4, loc2).guard = FormulaParser
+					.parseGuard("x <= 0 & 0.714286 * x + y <= 0");
+			ha.createTransition(loc2, loc1).guard = FormulaParser
+					.parseGuard("x <= 0 & 0.714286 * x + y >= 0");
+		}
 
 		loc1.flowDynamics.put("x", new ExpressionInterval("-2*x + 1.4"));
 		loc1.flowDynamics.put("y", new ExpressionInterval("-y - 0.7"));
@@ -123,8 +155,8 @@ public class SwitchedOscillatorGenerator extends ModelGenerator
 			c.forbidden.put(am.name, new Operation("y", Operator.GREATEREQUAL, 0.5));
 
 		// settings
-		c.settings.plotVariableNames[0] = "x";
-		c.settings.plotVariableNames[1] = "z";
+		c.settings.plotVariableNames[0] = xVar;
+		c.settings.plotVariableNames[1] = yVar;
 
 		c.settings.spaceExConfig.timeHorizon = 4;
 		c.settings.spaceExConfig.samplingTime = 0.05;

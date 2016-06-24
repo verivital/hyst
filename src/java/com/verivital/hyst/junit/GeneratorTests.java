@@ -13,6 +13,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
+import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.printers.FlowPrinter;
@@ -80,6 +81,24 @@ public class GeneratorTests
 		Assert.assertEquals("x = 0.5 & y = 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
 				entry.getValue().toDefaultString());
 
+		ToolPrinter printer = new FlowPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testSwitchedOscillator()
+	{
+		SwitchedOscillatorGenerator gen = new SwitchedOscillatorGenerator();
+
+		String param = "-dims 2";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("four variables", 4, c.root.variables.size());
 		ToolPrinter printer = new FlowPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");

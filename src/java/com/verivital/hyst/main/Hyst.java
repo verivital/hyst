@@ -15,6 +15,7 @@ import javax.swing.UIManager;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
+import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -108,7 +109,7 @@ public class Hyst
 			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(), };
 
 	private static final ModelGenerator[] generators = { new IntegralChainGenerator(),
-			new NavigationGenerator(), };
+			new NavigationGenerator(), new SwitchedOscillatorGenerator() };
 
 	// passes that the user has selected
 	private static ArrayList<RequestedTransformationPass> requestedPasses = new ArrayList<RequestedTransformationPass>();
