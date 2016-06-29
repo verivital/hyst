@@ -39,12 +39,12 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  * @author Stanley Bak (8-2014)
  *
  */
-public class FlowPrinter extends ToolPrinter
+public class FlowstarPrinter extends ToolPrinter
 {
 	private BaseComponent ha;
 	private int DEFAULT_MAX_JUMPS = 999999999;
 
-	public FlowPrinter()
+	public FlowstarPrinter()
 	{
 		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
 		preconditions.skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()] = true;
@@ -79,8 +79,8 @@ public class FlowPrinter extends ToolPrinter
 	 */
 	private Expression simplifyExpression(Expression ex)
 	{
-		Expression subbed = new SubstituteConstantsPass()
-				.substituteConstantsIntoExpression(ha.constants, ex);
+		Expression subbed = SubstituteConstantsPass.substituteConstantsIntoExpression(ha.constants,
+				ex);
 
 		return AutomatonUtil.simplifyExpression(subbed);
 	}

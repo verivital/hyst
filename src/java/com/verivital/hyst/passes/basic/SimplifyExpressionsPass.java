@@ -22,6 +22,15 @@ import com.verivital.hyst.util.Preconditions;
  */
 public class SimplifyExpressionsPass extends TransformationPass
 {
+	private static ExpressionModifier em = new ExpressionModifier()
+	{
+		@Override
+		public Expression modifyExpression(Expression e)
+		{
+			return simplifyExpression(e);
+		}
+	};
+
 	public SimplifyExpressionsPass()
 	{
 		preconditions = new Preconditions(true); // skip all checks
@@ -31,20 +40,15 @@ public class SimplifyExpressionsPass extends TransformationPass
 	protected void runPass()
 	{
 		runRec(config.root);
+
+		ExpressionModifier.modifyInitForbidden(config, em);
 	}
 
 	private void runRec(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
-			ExpressionModifier.modifyBaseComponent((BaseComponent) c, new ExpressionModifier()
-			{
-				@Override
-				public Expression modifyExpression(Expression e)
-				{
-					return simplifyExpression(e);
-				}
-			});
+			ExpressionModifier.modifyBaseComponent((BaseComponent) c, em);
 		}
 		else
 		{

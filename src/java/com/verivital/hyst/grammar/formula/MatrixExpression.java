@@ -19,7 +19,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
  * They can be used, for example, to specify look up tables. They must be at least one dimensional,
  * and each dimension must be at least width 1
  */
-public class MatrixExpression extends Expression implements Iterable<Entry<Expression, int[]>>
+public class MatrixExpression extends Expression implements Iterable<Entry<int[], Expression>>
 {
 	private int[] sizes; // the size of each dimension, x y z
 	private Expression[] data; // the data for each cell (should be length
@@ -208,6 +208,35 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 		return data[finalIndex];
 	}
 
+	public void setExpressionAtIndex(int[] indices, Expression e)
+	{
+		if (sizes.length != indices.length)
+			throw new IndexOutOfBoundsException(
+					"Expected " + sizes.length + " indicies, got " + indices.length);
+
+		for (int d = 0; d < sizes.length; ++d)
+		{
+			if (indices[d] < 0 || indices[d] >= sizes[d])
+			{
+				throw new IndexOutOfBoundsException("got " + Arrays.toString(indices)
+						+ " with sizes " + Arrays.toString(sizes));
+			}
+		}
+
+		int finalIndex = 0;
+		int multiplier = 1;
+
+		for (int j = 0; j < indices.length; ++j)
+		{
+			int index = indices[j];
+
+			finalIndex += multiplier * index;
+			multiplier *= sizes[j];
+		}
+
+		data[finalIndex] = e;
+	}
+
 	public String toString(ExpressionPrinter printer)
 	{
 		StringBuilder rv = new StringBuilder();
@@ -302,7 +331,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	}
 
 	@Override
-	public Iterator<Entry<Expression, int[]>> iterator()
+	public Iterator<Entry<int[], Expression>> iterator()
 	{
 		return new MatrixEntryIterator(this);
 	}
@@ -313,7 +342,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 	 * @author Stanley Bak (11-2015)
 	 *
 	 */
-	private class MatrixEntryIterator implements Iterator<Entry<Expression, int[]>>
+	private class MatrixEntryIterator implements Iterator<Entry<int[], Expression>>
 	{
 		private MatrixExpression me;
 		private int[] iterator;
@@ -331,10 +360,10 @@ public class MatrixExpression extends Expression implements Iterable<Entry<Expre
 		}
 
 		@Override
-		public Entry<Expression, int[]> next()
+		public Entry<int[], Expression> next()
 		{
-			Entry<Expression, int[]> e = new AbstractMap.SimpleEntry<Expression, int[]>(
-					me.get(iterator), iterator);
+			Entry<int[], Expression> e = new AbstractMap.SimpleEntry<int[], Expression>(iterator,
+					me.get(iterator));
 
 			iterator = incrementIterator();
 

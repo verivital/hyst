@@ -77,8 +77,8 @@ public class LutMatrixTest
 		MatrixExpression m = (MatrixExpression) FormulaParser.parseValue(str);
 		double total = 0;
 
-		for (Entry<Expression, int[]> e : m)
-			total += ((Constant) e.getKey()).getVal();
+		for (Entry<int[], Expression> e : m)
+			total += ((Constant) e.getValue()).getVal();
 
 		double TOL = 1e-9;
 		Assert.assertEquals("matrix total is correct", 21, total, TOL);

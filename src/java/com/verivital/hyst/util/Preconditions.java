@@ -21,6 +21,7 @@ import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
+import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 
@@ -75,6 +76,9 @@ public class Preconditions
 
 		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()])
 			Preconditions.convertIntervalConstants(c);
+
+		if (!skip[PreconditionsFlag.CONVERT_CONSTANTS.ordinal()])
+			Preconditions.convertConstants(c);
 
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
@@ -259,6 +263,42 @@ public class Preconditions
 					"Running conversion pass to make them variables, as required by the preconditions.");
 
 			ConvertIntervalConstants.run(c);
+		}
+	}
+
+	private static boolean hasConstants(Component c)
+	{
+		boolean rv = false;
+
+		if (c.constants.size() > 0)
+		{
+			Hyst.log("Preconditions check detected constants " + c.constants.keySet()
+					+ " in automaton. Substituting values.");
+
+			rv = true;
+		}
+		else if (c instanceof NetworkComponent)
+		{
+			NetworkComponent nc = (NetworkComponent) c;
+
+			for (ComponentInstance ci : nc.children.values())
+			{
+				if (hasConstants(ci.child))
+				{
+					rv = true;
+					break;
+				}
+			}
+		}
+
+		return rv;
+	}
+
+	private static void convertConstants(Configuration c)
+	{
+		if (hasConstants(c.root))
+		{
+			new SubstituteConstantsPass().runVanillaPass(c, "");
 		}
 	}
 

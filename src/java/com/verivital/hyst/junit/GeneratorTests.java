@@ -16,7 +16,7 @@ import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
-import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
@@ -55,7 +55,7 @@ public class GeneratorTests
 
 		Assert.assertEquals("six variables", 6, c.root.variables.size());
 
-		ToolPrinter printer = new FlowPrinter();
+		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 
@@ -81,7 +81,7 @@ public class GeneratorTests
 		Assert.assertEquals("x = 0.5 & y = 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
 				entry.getValue().toDefaultString());
 
-		ToolPrinter printer = new FlowPrinter();
+		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 
@@ -99,7 +99,7 @@ public class GeneratorTests
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("four variables", 4, c.root.variables.size());
-		ToolPrinter printer = new FlowPrinter();
+		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 

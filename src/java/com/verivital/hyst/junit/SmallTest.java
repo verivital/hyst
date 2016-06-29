@@ -26,7 +26,7 @@ import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ContinuizationPass.IntervalTerm;
 import com.verivital.hyst.printers.DReachPrinter.DReachExpressionPrinter;
-import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -839,7 +839,7 @@ public class SmallTest
 	@Test
 	public void testFlowExpressionPrinter()
 	{
-		Expression.expressionPrinter = new FlowPrinter.FlowstarExpressionPrinter();
+		Expression.expressionPrinter = new FlowstarPrinter.FlowstarExpressionPrinter();
 		Expression e1 = FormulaParser.parseInvariant("t <= 5");
 		Expression e2 = FormulaParser.parseInvariant("5 <= t");
 		Expression e3 = FormulaParser.parseInvariant("5 < t");

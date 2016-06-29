@@ -23,7 +23,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
-import com.verivital.hyst.printers.FlowPrinter;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 
@@ -238,7 +238,7 @@ public class PseudoInvariantTest
 		Assert.assertEquals("-1 * x <= -0.75", on2.invariant.toDefaultString());
 
 		// try to print to Flow*
-		FlowPrinter fp = new FlowPrinter();
+		FlowstarPrinter fp = new FlowstarPrinter();
 
 		fp.setOutputNone();
 		fp.print(c, "", "filename.xml");

@@ -390,10 +390,15 @@ public class RangeExtractor
 								if (ignoreUnsupported)
 									shouldSkip = true;
 								else
-									throw new UnsupportedConditionException(
-											"Unsupported condition for range extraction (one "
-													+ "side should be variable, the other side a constant): "
-													+ expression.toDefaultString());
+								{
+									String message = "Unsupported condition for range extraction (one side should be variable, the "
+											+ "other side a constant): "
+											+ expression.toDefaultString()
+											+ ". If one side is a constant, you can try running the substitute constants transformation "
+											+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+
+									throw new UnsupportedConditionException(message);
+								}
 							}
 						}
 					}
@@ -403,10 +408,14 @@ public class RangeExtractor
 					if (ignoreUnsupported)
 						shouldSkip = true;
 					else
-						throw new UnsupportedConditionException(
-								"Unsupported condition for range extraction (one "
-										+ "side should be variable, the other side a constant): "
-										+ expression.toDefaultString());
+					{
+						String message = "Unsupported condition for range extraction (one side should be variable, the "
+								+ "other side a constant): " + expression.toDefaultString()
+								+ ". If one side is a constant, you can try running the substitute constants transformation "
+								+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+
+						throw new UnsupportedConditionException(message);
+					}
 				}
 
 				if (!shouldSkip)
