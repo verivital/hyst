@@ -200,8 +200,9 @@ public class PySimPrinter extends ToolPrinter
 	private void printProcedure()
 	{
 		printLine("import hybridpy.pysim.simulate as sim");
+		printLine("from hybridpy.pysim.simulate import init_list_to_q_list");
 
-		printLine(automatonToString(config));
+		printLine(automatonToString(config, null));
 
 		printLine("def simulate(max_time=" + getTimeParam() + "):");
 		increaseIndentation();
@@ -227,11 +228,6 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 	}
 
-	public static String automatonToString(Configuration config)
-	{
-		return automatonToString(config, null);
-	}
-
 	/**
 	 * This class can be used to perform extra printing for python targets. To use, override each
 	 * function and return a list of extra Strings, one for each line to be printed (or an empty
@@ -255,11 +251,18 @@ public class PySimPrinter extends ToolPrinter
 		{
 			return new ArrayList<String>();
 		}
+	}
 
-		public ArrayList<String> getExtraImportPrintLines()
-		{
-			return new ArrayList<String>();
-		}
+	/**
+	 * Wrapper for automatonToString(config, null)
+	 * 
+	 * @param config
+	 *            the configuration
+	 * @return the string representation of the python automaton
+	 */
+	public static String automatonToString(Configuration config)
+	{
+		return automatonToString(config, null);
 	}
 
 	/**
@@ -286,13 +289,6 @@ public class PySimPrinter extends ToolPrinter
 		BaseComponent ha = (BaseComponent) config.root;
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
 		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HyperRectangle");
-		appendLine(rv, "from hybridpy.pysim.simulate import init_list_to_q_list");
-
-		if (extraFuncs != null)
-		{
-			for (String line : extraFuncs.getExtraImportPrintLines())
-				appendIndentedLine(rv, line);
-		}
 
 		appendNewline(rv);
 

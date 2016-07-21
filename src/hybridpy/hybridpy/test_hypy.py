@@ -16,23 +16,26 @@ def get_script_dir():
 class TestHypy(unittest.TestCase):
     'Unit tests for hypy'
 
-    def test_simple(self):
+    def test_pysim(self):
         '''run the simple example from the hyst readme'''
         
         model = get_script_dir() + "/../../../examples/toy/toy.xml"
-        out_image = "toy_output.png"
-        tool = "pysim" # pysim is the built-in simulator; try flowstar or spaceex
 
         e = hypy.Engine()
         e.set_model(model) # sets input model path
-        e.set_tool(tool) # sets tool name to use
-        #e.set_print_terminal_output(True) # print output to terminal? 
-        #e.set_save_model_path('test_out.py') # save converted model?
-        #e.set_output_image(out_image) # sets output image path
-        #e.set_tool_params(["-tp", "jumps=2"]) # sets parameters for hyst conversion
-
+        e.set_tool("pysim") # sets tool name to use
         code = e.run(make_image=False)
+        self.assertEqual(code, hypy.RUN_CODES.SUCCESS)
+
+    def test_pyrrt(self):
+        '''run the pyrrt'''
         
+        model = get_script_dir() + "/../../../examples/toy/toy.xml"
+
+        e = hypy.Engine()
+        e.set_model(model) # sets input model path
+        e.set_tool("pysim") # sets tool name to use
+        code = e.run(make_image=False)
         self.assertEqual(code, hypy.RUN_CODES.SUCCESS)
 
 if __name__ == '__main__':

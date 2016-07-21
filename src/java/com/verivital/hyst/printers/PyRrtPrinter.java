@@ -77,10 +77,32 @@ public class PyRrtPrinter extends ToolPrinter
 	{
 		this.printCommentHeader();
 
+		printLine("import hybridpy.pyrrt.expt_opt as rrt");
 		printNewline();
 
 		printLine(PySimPrinter.automatonToString(config, new PyRrtExtraPrintFuncs()));
 
+		String itStr = toolParams.get("iterations");
+		int iterations = itStr.equals("auto") ? 100 : Integer.parseInt(itStr);
+		printLine("def run(num_iterations=" + iterations + "):");
+		increaseIndentation();
+		printLine("'runs rrt on the model and returns a result object'");
+		printLine("return rrt.run(num_iterations, define_init_states, define_ha)");
+		decreaseIndentation();
+		printNewline();
+
+		printLine("def plot(nodes, image_path):");
+		increaseIndentation();
+		printLine("'plot a result object produced by run()'");
+		printLine("rrt.plot(nodes, image_path)");
+		decreaseIndentation();
+		printNewline();
+
+		printLine("if __name__ == '__main__':");
+		increaseIndentation();
+		printLine("plot(run(), 'out.png')");
+		decreaseIndentation();
+		printNewline();
 	}
 
 	private static class RrtSymbolicPrinter extends DefaultExpressionPrinter
@@ -150,14 +172,9 @@ public class PyRrtPrinter extends ToolPrinter
 	{
 		LinkedHashMap<String, String> toolParams = new LinkedHashMap<String, String>();
 
-		toolParams.put("time", "auto");
-		toolParams.put("step", "auto");
-		toolParams.put("legend", "True");
-		toolParams.put("center", "True");
-		toolParams.put("star", "True");
-		toolParams.put("corners", "False");
-		toolParams.put("rand", "0");
-		toolParams.put("title", "Simulation");
+		// toolParams.put("time", "auto"); // unused currently
+		// toolParams.put("step", "auto"); // unused currently
+		toolParams.put("iterations", "auto");
 
 		return toolParams;
 	}
