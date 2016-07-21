@@ -139,13 +139,13 @@ public class PyRrtPrinter extends ToolPrinter
 		@Override
 		protected String printTrue()
 		{
-			return "True";
+			return "'0 == 0'";
 		}
 
 		@Override
 		protected String printFalse()
 		{
-			return "False";
+			return "'0 == 1'";
 		}
 	}
 
