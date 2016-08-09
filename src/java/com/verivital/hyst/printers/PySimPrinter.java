@@ -251,6 +251,16 @@ public class PySimPrinter extends ToolPrinter
 		{
 			return new ArrayList<String>();
 		}
+
+		public ArrayList<String> getImportLines(BaseComponent ha)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			rv.add("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
+			rv.add("from hybridpy.pysim.hybrid_automaton import HyperRectangle");
+
+			return rv;
+		}
 	}
 
 	/**
@@ -262,7 +272,7 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	public static String automatonToString(Configuration config)
 	{
-		return automatonToString(config, null);
+		return automatonToString(config, new ExtraPrintFuncs());
 	}
 
 	/**
@@ -284,11 +294,13 @@ public class PySimPrinter extends ToolPrinter
 		StringBuilder rv = new StringBuilder();
 
 		if (!(config.root instanceof BaseComponent))
-			throw new AutomatonExportException("PySim expected flat automaton");
+			throw new AutomatonExportException(
+					"PySimPrinter.automatonToString expected flat automaton");
 
 		BaseComponent ha = (BaseComponent) config.root;
-		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
-		appendLine(rv, "from hybridpy.pysim.hybrid_automaton import HyperRectangle");
+
+		for (String line : extraFuncs.getImportLines(ha))
+			appendLine(rv, line);
 
 		appendNewline(rv);
 
@@ -299,11 +311,8 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "ha.variables = " + quotedVarList(ha));
 		appendNewline(rv);
 
-		if (extraFuncs != null)
-		{
-			for (String line : extraFuncs.getExtraDeclarationPrintLines(ha))
-				appendIndentedLine(rv, line);
-		}
+		for (String line : extraFuncs.getExtraDeclarationPrintLines(ha))
+			appendIndentedLine(rv, line);
 
 		appendModes(rv, ha, extraFuncs);
 		appendJumps(rv, ha, extraFuncs);

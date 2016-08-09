@@ -41,6 +41,7 @@ import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PyRrtPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
@@ -98,7 +99,7 @@ public class Hyst
 	private static final ToolPrinter[] printers = { new FlowstarPrinter(), new DReachPrinter(),
 			new HyCreate2Printer(), new HyCompPrinter(), new PythonQBMCPrinter(),
 			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(),
-			new PyRrtPrinter() };
+			new PyRrtPrinter(), new HylaaPrinter() };
 
 	// passes that are run only if the user selects them
 	private static final TransformationPass[] availablePasses = { new AddIdentityResetPass(),
