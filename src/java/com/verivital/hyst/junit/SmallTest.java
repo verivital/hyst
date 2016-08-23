@@ -789,7 +789,7 @@ public class SmallTest
 		String[] args = { "-help" };
 
 		Hyst.IS_UNIT_TEST = true;
-		Hyst.convert(args);
+		Hyst.runCommandLine(args);
 	}
 
 	@Test

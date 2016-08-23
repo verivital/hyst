@@ -739,7 +739,7 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 				{
 					public void run()
 					{
-						int code = Hyst.convert(args);
+						int code = Hyst.runCommandLine(args);
 						String s = "\nConversion completed with exit code " + code + ": "
 								+ Hyst.ExitCode.values()[code];
 
@@ -820,13 +820,8 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 
 						title = pass.getName() + " Help";
 
-						if (pass.getParamHelp() == null)
-							msg = "Param is ignored; no parameter is needed for this pass.";
-						else
-						{
-							msg = pass.getName() + " " + pass.getCommandLineFlag() + "\n\n";
-							msg += "Param: " + pass.getParamHelp();
-						}
+						msg = pass.getName() + " " + pass.getCommandLineFlag() + "\n\n";
+						msg += "Param: " + pass.getParamHelp();
 
 						String helpText = pass.getLongHelp();
 
