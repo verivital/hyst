@@ -129,16 +129,13 @@ public class Hyst
 	@Option(name = "-help", aliases = { "-h" }, usage = "print command-line usage")
 	boolean doHelp = false;
 
-	@Option(name = "-help_printers", aliases = {
-			"-hp" }, usage = "print usage information on tool printers")
+	@Option(name = "-help_printers", usage = "print usage information on tool printers")
 	boolean doHelpTools = false;
 
-	@Option(name = "-help_passes", aliases = {
-			"-hp" }, usage = "print usage information on transformation passes")
+	@Option(name = "-help_passes", usage = "print usage information on transformation passes")
 	boolean doHelpPasses = false;
 
-	@Option(name = "-help_generators", aliases = {
-			"-hg" }, usage = "print usage information on model generators")
+	@Option(name = "-help_generators", usage = "print usage information on model generators")
 	boolean doHelpGenerators = false;
 
 	public static final String FLAG_INPUT = "-input";
@@ -190,7 +187,7 @@ public class Hyst
 	public static final String FLAG_TOOL = "-tool";
 
 	@Option(name = FLAG_TOOL, required = true, aliases = {
-			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS")
+			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS", handler = StringArrayOptionHandler.class)
 	public void setTool(String[] params) throws CmdLineException
 	{
 		if (params.length != 2)
@@ -304,27 +301,17 @@ public class Hyst
 	public static final String FLAG_VERBOSE = "-verbose";
 
 	@Option(name = FLAG_VERBOSE, aliases = { "-v" }, usage = "print verbose output")
-	public void setVerbose()
-	{
-		Hyst.verboseMode = true;
-	}
+	public boolean verboseFlag = false;
 
 	public static final String FLAG_DEBUG = "-debug";
 
 	@Option(name = FLAG_DEBUG, aliases = { "-d" }, usage = "print debug (and verbose) output")
-	public void setDebug()
-	{
-		Hyst.debugMode = Hyst.verboseMode = true;
-	}
+	public boolean debugFlag = false;
 
 	///////// hidden options ///////////////
 
 	@Option(name = "-novalidate", hidden = true, usage = "disable model validation")
-	public void setNoValidate()
-	{
-		Configuration.DO_VALIDATION = false;
-		Hyst.log("Internal model validatation disabled.");
-	}
+	public boolean noValidateFlag = false;
 
 	@Option(name = "-testpython", hidden = true, usage = "test if python exists on system")
 	boolean doTestPython = false;
@@ -441,15 +428,44 @@ public class Hyst
 			if (doTestPython)
 				rv = doTestPython();
 			else if (!doHelp && !doHelpTools && !doHelpPasses && !doHelpGenerators)
+			{
+				processOutputFlags();
 				rv = runCommandLine();
+			}
 		}
 		catch (CmdLineException e)
 		{
-			System.out.println(e.getMessage() + "\nUse -help for command-line options.");
+			System.out.println("Error in provided arguments: " + e.getMessage()
+					+ "\nUse -help for command-line options.");
 			rv = ExitCode.ARG_PARSE_ERROR;
 		}
 
 		return rv;
+	}
+
+	private void processOutputFlags()
+	{
+		if (debugFlag)
+		{
+			Hyst.debugMode = Hyst.verboseMode = true;
+			log("Debug mode (even more verbose) printing enabled.\n");
+		}
+		else if (verboseFlag)
+		{
+			Hyst.debugMode = false;
+			Hyst.verboseMode = true;
+			log("Verbose mode printing enabled.\n");
+		}
+		else
+			Hyst.debugMode = Hyst.verboseMode = false;
+
+		if (noValidateFlag)
+		{
+			Configuration.DO_VALIDATION = false;
+			Hyst.log("Internal model validatation disabled.");
+		}
+		else
+			Configuration.DO_VALIDATION = true;
 	}
 
 	private ExitCode doTestPython()
@@ -502,11 +518,6 @@ public class Hyst
 	{
 		ExitCode rv = ExitCode.SUCCESS;
 		Exception ex = null;
-
-		if (debugMode)
-			log("Debug mode (even more verbose) printing enabled.\n");
-		else if (verboseMode)
-			log("Verbose mode printing enabled.\n");
 
 		try
 		{

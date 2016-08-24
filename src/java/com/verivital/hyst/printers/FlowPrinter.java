@@ -46,7 +46,7 @@ public class FlowPrinter extends ToolPrinter
 	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
 	String time = "auto";
 
-	@Option(name = "-step", usage = "reachability step", metaVar = "VAL")
+	@Option(name = "-step", usage = "reachability step", metaVar = "MIN-MAX")
 	String step = "auto-auto";
 
 	@Option(name = "-rem", usage = "remainder estimate", metaVar = "VAL")
@@ -58,7 +58,7 @@ public class FlowPrinter extends ToolPrinter
 	@Option(name = "-plot", usage = "output plot type", metaVar = "VAL")
 	String plot = "auto";
 
-	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	@Option(name = "-orders", usage = "taylor model orders", metaVar = "MIN-MAX")
 	String orders = "3-8";
 
 	@Option(name = "-cutoff", usage = "taylor model cutoff", metaVar = "VAL")
