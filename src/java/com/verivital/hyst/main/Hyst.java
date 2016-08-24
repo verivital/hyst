@@ -52,6 +52,7 @@ import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
+import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.StringOperations;
 
@@ -140,21 +141,34 @@ public class Hyst
 			"-hg" }, usage = "print usage information on model generators")
 	boolean doHelpGenerators = false;
 
-	@Option(name = "-input", aliases = {
+	public static final String FLAG_INPUT = "-input";
+
+	@Option(name = FLAG_INPUT, aliases = {
 			"-i" }, usage = "input filenames", metaVar = "FILE1 FILE2 ...", handler = StringArrayOptionHandler.class)
 	public void setInput(String[] files) throws CmdLineException
 	{
+		boolean gotCfg = false;
+
 		for (String file : files)
 		{
 			if (file.endsWith(".xml"))
+			{
 				xmlFilenames.add(file);
+
+				if (cfgFilename == null)
+				{
+					String base = file.substring(0, file.length() - 4);
+					cfgFilename = base + ".cfg";
+				}
+			}
 			else if (file.endsWith(".cfg"))
 			{
-				if (cfgFilename == null)
-					cfgFilename = file;
-				else
+				if (gotCfg)
 					throw new CmdLineException(parser, hystLocalizable,
 							"Multiple .cfg input files are not allowed.");
+
+				cfgFilename = file;
+				gotCfg = true;
 			}
 			else
 				throw new CmdLineException(parser, hystLocalizable,
@@ -163,7 +177,9 @@ public class Hyst
 		}
 	}
 
-	@Option(name = "-output", required = true, aliases = {
+	public static final String FLAG_OUTPUT = "-output";
+
+	@Option(name = FLAG_OUTPUT, required = true, aliases = {
 			"-o" }, usage = "output filename", metaVar = "FILENAME")
 	String outputFilename;
 
@@ -171,7 +187,9 @@ public class Hyst
 	ToolPrinter toolPrinter = null;
 	String toolParamsString = null;
 
-	@Option(name = "-tool", required = true, aliases = {
+	public static final String FLAG_TOOL = "-tool";
+
+	@Option(name = FLAG_TOOL, required = true, aliases = {
 			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS")
 	public void setTool(String[] params) throws CmdLineException
 	{
@@ -184,7 +202,13 @@ public class Hyst
 		// look through all the model generators for the right one
 		for (ToolPrinter tp : printers)
 		{
-			if (tp.getCommandLineFlag().equalsIgnoreCase(params[0]))
+			String flag = tp.getCommandLineFlag();
+
+			if (flag.startsWith("-"))
+				throw new RuntimeException(
+						"tool's command-line flag shouldn't start with a hyphen: " + flag);
+
+			if (flag.equalsIgnoreCase(params[0]))
 			{
 				toolPrinter = tp;
 				break;
@@ -212,7 +236,14 @@ public class Hyst
 		// look through all the model generators for the right one
 		for (ModelGenerator mg : generators)
 		{
-			if (mg.getCommandLineFlag().equalsIgnoreCase(params[0]))
+			String flag = mg.getCommandLineFlag();
+
+			if (flag.startsWith("-"))
+				throw new RuntimeException(
+						"model generator's command-line flag shouldn't start with a hyphen: "
+								+ flag);
+
+			if (flag.equalsIgnoreCase(params[0]))
 			{
 				modelGenerator = mg;
 				break;
@@ -227,7 +258,9 @@ public class Hyst
 	// passes that the user has selected
 	private ArrayList<RequestedTransformationPass> requestedPasses = new ArrayList<RequestedTransformationPass>();
 
-	@Option(name = "-passes", aliases = {
+	public static final String FLAG_PASSES = "-passes";
+
+	@Option(name = FLAG_PASSES, aliases = {
 			"-p" }, usage = "run a sequence of model transformation apsses", metaVar = "PASS1 PARAMS1 PASS2 PARAMS2 ...", handler = StringArrayOptionHandler.class)
 	public void setPasses(String[] params) throws CmdLineException
 	{
@@ -243,7 +276,14 @@ public class Hyst
 
 			for (TransformationPass tp : passes)
 			{
-				if (tp.getCommandLineFlag().equals(passName))
+				String flag = tp.getCommandLineFlag();
+
+				if (flag.startsWith("-"))
+					throw new RuntimeException(
+							"transformation pass' command-line flag shouldn't start with a hyphen: "
+									+ flag);
+
+				if (flag.equalsIgnoreCase(passName))
 				{
 					// create new instances here since we may use the same pass
 					// multiple times with different parmeters
@@ -261,13 +301,17 @@ public class Hyst
 		}
 	}
 
-	@Option(name = "-verbose", aliases = { "-v" }, usage = "print verbose output")
+	public static final String FLAG_VERBOSE = "-verbose";
+
+	@Option(name = FLAG_VERBOSE, aliases = { "-v" }, usage = "print verbose output")
 	public void setVerbose()
 	{
 		Hyst.verboseMode = true;
 	}
 
-	@Option(name = "-debug", aliases = { "-d" }, usage = "print debug (and verbose) output")
+	public static final String FLAG_DEBUG = "-debug";
+
+	@Option(name = FLAG_DEBUG, aliases = { "-d" }, usage = "print debug (and verbose) output")
 	public void setDebug()
 	{
 		Hyst.debugMode = Hyst.verboseMode = true;
@@ -300,9 +344,42 @@ public class Hyst
 
 	public static void main(String[] args)
 	{
+		final String FLAG_GUI = "-gui";
+
+		if (args.length > 0 && !args[0].equals(FLAG_GUI))
+			System.exit(Hyst.runWithArguments(args));
+		else
+		{
+			// show GUI
+			final String loadFilename = (args.length >= 2) ? args[1] : null;
+
+			// use gui
+			System.out.println("Started in GUI mode. For command-line help use the -help flag.");
+
+			fixLookAndFeel();
+
+			SwingUtilities.invokeLater(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					Hyst h = new Hyst();
+					guiFrame = new HystFrame(h.printers, h.passes);
+
+					if (loadFilename != null)
+						guiFrame.guiLoad(loadFilename);
+
+					guiFrame.setVisible(true);
+				}
+			});
+		}
+	}
+
+	public static int runWithArguments(String[] args)
+	{
 		programArguments = makeSingleArgument(args);
 
-		new Hyst(args);
+		return new Hyst().run(args).ordinal();
 	}
 
 	/**
@@ -329,67 +406,68 @@ public class Hyst
 		}
 	}
 
-	private Hyst(String[] args)
+	private Hyst()
 	{
-		final String FLAG_GUI = "-gui";
+	}
 
-		if (args.length > 0 && !args[0].equals(FLAG_GUI))
+	/**
+	 * Do a model conversion return the exitCode
+	 * 
+	 * @param args
+	 *            the conversion arguments
+	 */
+	private ExitCode run(String[] args)
+	{
+		ExitCode rv = ExitCode.SUCCESS;
+
+		try
 		{
-			// try parse args
-			ExitCode code = ExitCode.SUCCESS;
+			parser.parseArgument(args);
 
-			try
-			{
-				parser.parseArgument(args);
+			checkArguments();
 
-				checkArguments();
+			if (doHelp)
+				showHelp();
 
-				if (doHelp)
-					showHelp();
+			if (doHelpTools)
+				showHelpTools();
 
-				if (doHelpTools)
-					showHelpTools();
+			if (doHelpPasses)
+				showHelpPasses();
 
-				if (doHelpPasses)
-					showHelpPasses();
+			if (doHelpGenerators)
+				showHelpGenerators();
 
-				if (doHelpGenerators)
-					showHelpGenerators();
+			if (doTestPython)
+				rv = doTestPython();
+			else if (!doHelp && !doHelpTools && !doHelpPasses && !doHelpGenerators)
+				rv = runCommandLine();
+		}
+		catch (CmdLineException e)
+		{
+			System.out.println(e.getMessage() + "\nUse -help for command-line options.");
+			rv = ExitCode.ARG_PARSE_ERROR;
+		}
 
-				if (!doHelp && !doHelpTools && !doHelpPasses && !doHelpGenerators)
-					code = runCommandLine();
-			}
-			catch (CmdLineException e)
-			{
-				System.out.println(e.getMessage() + "\nUse -help for command-line options.");
-				code = ExitCode.ARG_PARSE_ERROR;
-			}
+		return rv;
+	}
 
-			System.exit(code.ordinal());
+	private ExitCode doTestPython()
+	{
+		ExitCode rv = ExitCode.SUCCESS;
+
+		if (PythonBridge.hasPython())
+		{
+			System.out.println("Python and required packages successfully detected.");
 		}
 		else
 		{
-			final String loadFilename = (args.length >= 2) ? args[1] : null;
-
-			// use gui
-			System.out.println("Started in GUI mode. For command-line help use the -help flag.");
-
-			fixLookAndFeel();
-
-			SwingUtilities.invokeLater(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					guiFrame = new HystFrame(printers, passes);
-
-					if (loadFilename != null)
-						guiFrame.guiLoad(loadFilename);
-
-					guiFrame.setVisible(true);
-				}
-			});
+			System.out.println("Python and all required packages NOT detected.");
+			System.out.println(PythonBridge.getInstanceErrorString);
+			rv = ExitCode.NOPYTHON;
 		}
+
+		return rv;
 	}
 
 	private void showHelp()
@@ -549,7 +627,7 @@ public class Hyst
 		}
 	}
 
-	private static String makeSingleArgument(String[] ar)
+	public static String makeSingleArgument(String[] ar)
 	{
 		String rv = "";
 

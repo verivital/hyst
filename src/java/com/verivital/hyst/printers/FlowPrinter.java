@@ -10,6 +10,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -41,8 +43,42 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  */
 public class FlowPrinter extends ToolPrinter
 {
-	private BaseComponent ha;
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String time = "auto";
+
+	@Option(name = "-step", usage = "reachability step", metaVar = "VAL")
+	String step = "auto-auto";
+
+	@Option(name = "-rem", usage = "remainder estimate", metaVar = "VAL")
+	String remainder = "1e-4";
+
+	@Option(name = "-precondition", usage = "precondition method", metaVar = "VAL")
+	String precondition = "auto";
+
+	@Option(name = "-plot", usage = "output plot type", metaVar = "VAL")
+	String plot = "auto";
+
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String orders = "3-8";
+
+	@Option(name = "-cutoff", usage = "taylor model cutoff", metaVar = "VAL")
+	String cutoff = "1e-15";
+
+	@Option(name = "-precision", usage = "numerical precision", metaVar = "VAL")
+	String precision = "53";
+
 	private int DEFAULT_MAX_JUMPS = 999999999;
+
+	@Option(name = "-jumps", usage = "maximum jumps", metaVar = "VAL")
+	String jumps = "" + DEFAULT_MAX_JUMPS;
+
+	@Option(name = "-print", usage = "print stdout output", metaVar = "VAL")
+	String print = "on";
+
+	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
+	String aggregation = "parallelotope";
+
+	private BaseComponent ha;
 
 	public FlowPrinter()
 	{
@@ -136,13 +172,13 @@ public class FlowPrinter extends ToolPrinter
 			printLine("adaptive steps { min " + step[0] + ", max " + step[1] + " }");
 		else
 			throw new AutomatonExportException(
-					"Param 'step' should have one or two entries: " + toolParams.get("step"));
+					"Param 'step' should have one or two entries: " + step);
 
 		printLine("time " + getTimeParam());
 
-		printLine("remainder estimation " + toolParams.get("remainder"));
+		printLine("remainder estimation " + remainder);
 
-		if (toolParams.get("precondition").equals("auto"))
+		if (precondition.equals("auto"))
 		{
 			// follow recommendation in 1.2 manual
 			if (ha.variables.size() > 3)
@@ -151,7 +187,7 @@ public class FlowPrinter extends ToolPrinter
 				printLine("QR precondition");
 		}
 		else
-			printLine(toolParams.get("precondition") + " precondition");
+			printLine(precondition + " precondition");
 
 		printLine(getPlotParam());
 
@@ -163,13 +199,13 @@ public class FlowPrinter extends ToolPrinter
 			printLine("adaptive orders { min " + order[0] + ", max " + order[1] + " } ");
 		else
 			throw new AutomatonExportException(
-					"Param 'orders' should have one or two entries: " + toolParams.get("orders"));
+					"Param 'orders' should have one or two entries: " + orders);
 
-		printLine("cutoff " + toolParams.get("cutoff"));
-		printLine("precision " + toolParams.get("precision"));
+		printLine("cutoff " + cutoff);
+		printLine("precision " + precision);
 		printLine("output out");
 
-		int jumps = Integer.parseInt(toolParams.get("jumps"));
+		int jumps = Integer.parseInt(this.jumps);
 
 		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
 			jumps = config.settings.spaceExConfig.maxIterations;
@@ -181,12 +217,12 @@ public class FlowPrinter extends ToolPrinter
 
 	private String[] getOrderParam()
 	{
-		return toolParams.get("orders").split("-");
+		return orders.split("-");
 	}
 
 	private String getTimeParam()
 	{
-		String value = toolParams.get("time");
+		String value = time;
 
 		if (value.equals("auto"))
 			value = doubleToString(config.settings.spaceExConfig.timeHorizon);
@@ -197,7 +233,7 @@ public class FlowPrinter extends ToolPrinter
 	private String getPlotParam()
 	{
 		String auto = "gnuplot octagon";
-		String value = toolParams.get("plot");
+		String value = plot;
 
 		if (value.equals("auto"))
 			value = auto;
@@ -212,7 +248,7 @@ public class FlowPrinter extends ToolPrinter
 
 	private String[] getStepParam()
 	{
-		String value = toolParams.get("step");
+		String value = step;
 
 		if (value.contains("auto"))
 		{
@@ -495,13 +531,12 @@ public class FlowPrinter extends ToolPrinter
 
 			printLine("}");
 
-			if (toolParams.get("aggregation").equals("parallelotope"))
+			if (aggregation.equals("parallelotope"))
 				printLine("parallelotope aggregation {}");
-			else if (toolParams.get("aggregation").equals("interval"))
+			else if (aggregation.equals("interval"))
 				printLine("interval aggregation");
 			else
-				throw new AutomatonExportException(
-						"Unknown aggregation method: " + toolParams.get("aggregation"));
+				throw new AutomatonExportException("Unknown aggregation method: " + aggregation);
 		}
 
 		printLine("}");
@@ -781,25 +816,6 @@ public class FlowPrinter extends ToolPrinter
 	public boolean isInRelease()
 	{
 		return true;
-	}
-
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> toolParams = new LinkedHashMap<String, String>();
-
-		toolParams.put("time", "auto");
-		toolParams.put("step", "auto-auto");
-		toolParams.put("remainder", "1e-4");
-		toolParams.put("precondition", "auto");
-		toolParams.put("plot", "auto");
-		toolParams.put("orders", "3-8");
-		toolParams.put("cutoff", "1e-15");
-		toolParams.put("precision", "53");
-		toolParams.put("jumps", "" + DEFAULT_MAX_JUMPS);
-		toolParams.put("print", "on");
-		toolParams.put("aggregation", "parallelotope");
-
-		return toolParams;
 	}
 
 	@Override

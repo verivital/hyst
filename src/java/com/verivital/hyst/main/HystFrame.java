@@ -19,8 +19,6 @@ import java.awt.event.WindowListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -532,9 +530,13 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 		// printer flag
 		ToolPrinter printer = getSelectedToolPrinter();
 
+		rv.add(Hyst.FLAG_TOOL);
 		rv.add(printer.getCommandLineFlag());
+		rv.add(printerParamTf.getText().trim());
 
 		// passes flags
+		rv.add(Hyst.FLAG_PASSES);
+
 		for (int i = 0; i < passBoxes.size(); ++i)
 		{
 			int selectedIndex = passBoxes.get(i).getSelectedIndex();
@@ -549,13 +551,6 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 		}
 
 		// params
-		String printerParam = printerParamTf.getText().trim();
-
-		if (printerParam.length() > 0)
-		{
-			rv.add(Hyst.FLAG_TOOLPARAMS);
-			rv.add(printerParam);
-		}
 
 		// verbose/debug print mode flag
 		if (printDebug.isSelected())
@@ -571,6 +566,9 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 			rv.add(Hyst.FLAG_OUTPUT);
 			rv.add(out);
 		}
+
+		// input files
+		rv.add(Hyst.FLAG_INPUT);
 
 		// input model xml
 		rv.add(xmlTf.getText());
@@ -739,7 +737,7 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 				{
 					public void run()
 					{
-						int code = Hyst.runCommandLine(args);
+						int code = Hyst.runWithArguments(args);
 						String s = "\nConversion completed with exit code " + code + ": "
 								+ Hyst.ExitCode.values()[code];
 
@@ -782,19 +780,10 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 		else if (e.getSource() == printerButton)
 		{
 			ToolPrinter tp = getSelectedToolPrinter();
-			String text = "Multiple parameters can be given as a colon(':') separated list.\n"
-					+ "Parameters for the " + tp.getToolName() + " tool:\n";
+			String text = tp.getParamHelp().trim();
 
-			// get the default params
-			Map<String, String> params = tp.getDefaultParams();
-
-			if (params != null)
-			{
-				for (Entry<String, String> entry : params.entrySet())
-					text += "\n" + entry.getKey() + "=" + entry.getValue();
-			}
-			else
-				text += "\nNo parameters for this tool.";
+			if (text.length() == 0)
+				text = "No parameters for this tool.";
 
 			JOptionPane.showMessageDialog(this, text, "Tool Parameter Help",
 					JOptionPane.INFORMATION_MESSAGE);

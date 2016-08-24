@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -55,6 +57,24 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.VariableParam;
  */
 public class SpaceExPrinter extends ToolPrinter
 {
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String time = "auto";
+
+	@Option(name = "-step", usage = "sampling time step", metaVar = "VAL")
+	String step = "auto";
+
+	@Option(name = "-scenario", usage = "spaceex solver scenario", metaVar = "VAL")
+	String scenario = "auto";
+
+	@Option(name = "-output-format", usage = "spaceex output format", metaVar = "VAL")
+	String outputFormat = "auto";
+
+	@Option(name = "-iter-max", usage = "maximum number of jumps", metaVar = "VAL")
+	String iterMax = "auto";
+
+	@Option(name = "-directions", usage = "support function directions", metaVar = "VAL")
+	String directions = "auto";
+
 	private String cfgFilename = null;
 	private BaseComponent ha;
 
@@ -170,16 +190,16 @@ public class SpaceExPrinter extends ToolPrinter
 		sed.setMathFormat("SpaceEx");
 		sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
 		// sed.setTimeHorizon(-1);
-		sed.setMaxIterations(Integer
-				.parseInt((getParam("iter-max", config.settings.spaceExConfig.maxIterations))));
+		sed.setMaxIterations(
+				Integer.parseInt((getParam(iterMax, config.settings.spaceExConfig.maxIterations))));
 
-		String format = getParam("output-format", config.settings.spaceExConfig.outputFormat);
+		String format = getParam(outputFormat, config.settings.spaceExConfig.outputFormat);
 		sed.setOutputFormat(format);
 
-		String dirs = getParam("directions", config.settings.spaceExConfig.directions);
+		String dirs = getParam(directions, config.settings.spaceExConfig.directions);
 		sed.setDirections(dirs);
 
-		String scenario = getParam("scenario", config.settings.spaceExConfig.scenario);
+		String scenario = getParam(this.scenario, config.settings.spaceExConfig.scenario);
 		sed.setScenario(scenario);
 
 		if (!scenario.equals("phaver"))
@@ -189,9 +209,9 @@ public class SpaceExPrinter extends ToolPrinter
 		}
 
 		sed.setSamplingTime(
-				Double.parseDouble(getParam("step", config.settings.spaceExConfig.samplingTime)));
+				Double.parseDouble(getParam(step, config.settings.spaceExConfig.samplingTime)));
 		sed.setTimeHorizon(
-				Double.parseDouble(getParam("time", config.settings.spaceExConfig.timeHorizon)));
+				Double.parseDouble(getParam(time, config.settings.spaceExConfig.timeHorizon)));
 
 		SpaceExBaseComponent base = new SpaceExBaseComponent(sed);
 		base.setID(baseName + "_sys");
@@ -360,6 +380,21 @@ public class SpaceExPrinter extends ToolPrinter
 			sed.addOutputVar(v);
 
 		return sed;
+	}
+
+	private String getParam(String val, String defVal)
+	{
+		return val.equals("auto") ? defVal : val;
+	}
+
+	private String getParam(String val, int defVal)
+	{
+		return val.equals("auto") ? "" + defVal : val;
+	}
+
+	private String getParam(String val, double defVal)
+	{
+		return val.equals("auto") ? "" + defVal : val;
 	}
 
 	/**
@@ -620,47 +655,6 @@ public class SpaceExPrinter extends ToolPrinter
 	public boolean isInRelease()
 	{
 		return true;
-	}
-
-	@Override
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
-
-		params.put("scenario", "auto");
-		params.put("time", "auto");
-		params.put("step", "auto");
-		params.put("output-format", "auto");
-		params.put("iter-max", "auto");
-		params.put("directions", "auto");
-
-		return params;
-	}
-
-	private String getParam(String p, double def)
-	{
-		String value = toolParams.get(p);
-
-		if (value == null)
-			throw new AutomatonExportException("Tool Parameter was null for '" + p + "'");
-
-		if (value.equals("auto"))
-			value = doubleToString(def);
-
-		return value;
-	}
-
-	private String getParam(String p, String def)
-	{
-		String value = toolParams.get(p);
-
-		if (value == null)
-			throw new AutomatonExportException("Tool Parameter was null for '" + p + "'");
-
-		if (value.equals("auto"))
-			value = def;
-
-		return value;
 	}
 
 	@Override

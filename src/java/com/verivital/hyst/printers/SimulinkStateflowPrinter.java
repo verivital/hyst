@@ -1,5 +1,18 @@
 package com.verivital.hyst.printers;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
@@ -17,17 +30,6 @@ import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.util.Classification;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
@@ -49,31 +51,8 @@ import matlabcontrol.MatlabProxy;
  */
 public class SimulinkStateflowPrinter extends ToolPrinter
 {
-
-	/**
-	 * TODO: update, this is just copied
-	 */
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
-
-		// TODO: this needs to be pulled in in part from the Configuration
-		// object, as some of these may already be specified there
-		// although of course doing some transformation between configurations
-		// of simulators vs. reachability tools is perhaps a bit unrealistic at
-		// this stage
-		/*
-		 * params.put("time", "auto"); params.put("step", "auto-auto");
-		 * params.put("remainder", "1e-4"); params.put("precondition", "auto");
-		 * params.put("plot", "auto"); params.put("orders", "3-8");
-		 * params.put("cutoff", "1e-15"); params.put("precision", "53");
-		 * params.put("jumps", "99999999"); params.put("print", "on");
-		 * params.put("aggregation", "parallelotope");
-		 */
-		params.put("semantics", "0"); // 0 = no transformation, 1 = add epsilons
-
-		return params;
-	}
+	@Option(name = "-semantics", usage = "Use semantics preserving printer? 0 = no transformation, 1 = add epsilons", metaVar = "0/1")
+	public String semantics = "0";
 
 	// ------------- normal instance fields -------------
 
@@ -211,16 +190,16 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 																						// extension
 		String cmd_string = "SpaceExToStateflow('..\\" + f.getParent() + "\\" + example_name
 				+ ".xml'";
-		if (this.toolParams.get("semantics").equals("1"))
+		if (semantics.equals("1"))
 		{
-			System.out.println("Translating with semantics preserving mode with randomness,"
-					+ this.toolParams.get("semantics"));
+			System.out.println(
+					"Translating with semantics preserving mode with randomness," + semantics);
 			cmd_string += ", '-s')";
 		}
 		else
 		{
-			System.out.println("Translating with best gusses via non-semantics preserving mode, "
-					+ this.toolParams.get("semantics"));
+			System.out.println(
+					"Translating with best gusses via non-semantics preserving mode, " + semantics);
 			cmd_string += ")";
 		}
 		System.out.println(cmd_string);
