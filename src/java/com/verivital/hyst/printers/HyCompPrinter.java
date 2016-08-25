@@ -525,7 +525,7 @@ public class HyCompPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hycomp";
+		return "hycomp";
 	}
 
 	@Override

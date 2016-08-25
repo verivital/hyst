@@ -11,10 +11,11 @@ class ModelArgsBuilder(object):
     'make arguments associated with generating a hybrid automaton'
 
     variables = None
-    initial_rect = None
     time_bound = 10
 
     error_args = []
+    init_args = []
+
     mode_args = []
     transition_args = []
 
@@ -34,17 +35,15 @@ class ModelArgsBuilder(object):
         rv.append("-time_bound")
         rv.append(str(self.time_bound))
 
+        assert len(self.init_args) > 0, "initial states were not set with add_init_condition()"
         rv.append("-init")
-
-        for v in self.initial_rect:
-            rv.append(str(v[0]))
-            rv.append(str(v[1]))
+        rv += self.init_args
 
         if len(self.error_args) > 0:
             rv.append("-error")
             rv += self.error_args
 
-        assert len(self.mode_args) > 0
+        assert len(self.mode_args) > 0, "modes were not defined with add_mode()"
 
         rv.append("-modes")
 
@@ -59,11 +58,17 @@ class ModelArgsBuilder(object):
 
         return ['-generate', 'build'] + [arg_string]
 
-    def set_initial_rect(self, rect):
-        'assign the initial states'
+    def add_init_condition(self, mode_name, init_exp):
+        'add an initial condition'
 
-        assert len(self.variables) == len(rect)
-        self.initial_rect = rect
+        self.init_args.append(mode_name)
+        self.init_args.append(init_exp)
+    
+    def add_error_condition(self, mode_name, condition_string):
+        'add an error condition'
+
+        self.error_args.append(mode_name)
+        self.error_args.append(condition_string)
 
     def set_time_bound(self, tb):
         'assigns the time bound'
@@ -86,15 +91,8 @@ class ModelArgsBuilder(object):
 
         if reset_list != None:
             self.transition_args += reset_list
-
-    def add_error_condition(self, mode, condition):
-        'add an error condition'
-
-        self.error_args.append(mode)
-        self.error_args.append(condition)
-
-
-
+        else:
+            self.transition_args += ["null"] * len(self.variables)
 
 
 

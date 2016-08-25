@@ -58,6 +58,15 @@ public abstract class ToolPrinter
 		STDOUT, GUI, FILE, NONE, STRING,
 	};
 
+	public ToolPrinter()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"tool printer's command-line flag shouldn't start with a hyphen: " + flag);
+	}
+
 	public void setConfig(Configuration c)
 	{
 		this.config = c;
@@ -100,7 +109,7 @@ public abstract class ToolPrinter
 	 * @param networkedAutomaton
 	 *            the automaton to print
 	 */
-	public void print(Configuration c, String toolParamsString, String originalFilename)
+	public void print(Configuration c, String argument, String originalFilename)
 	{
 
 		this.originalFilename = originalFilename;
@@ -109,10 +118,7 @@ public abstract class ToolPrinter
 
 		setBaseName(originalFilename);
 
-		if (toolParamsString == null)
-			toolParamsString = "";
-
-		String[] args = AutomatonUtil.extractArgs(toolParamsString);
+		String[] args = AutomatonUtil.extractArgs(argument);
 
 		try
 		{
@@ -121,7 +127,7 @@ public abstract class ToolPrinter
 		catch (CmdLineException e)
 		{
 			String message = "Error Using Printer for " + getToolName() + ",\n Message: "
-					+ e.getMessage() + "\nArguments: '" + toolParamsString + "'\n" + getParamHelp();
+					+ e.getMessage() + "\nArguments: '" + argument + "'\n" + getParamHelp();
 
 			throw new AutomatonExportException(message);
 		}

@@ -37,6 +37,15 @@ public abstract class TransformationPass
 											// called
 	private CmdLineParser parser = new CmdLineParser(this);
 
+	public TransformationPass()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"transformation pass command-line flag shouldn't start with a hyphen: " + flag);
+	}
+
 	/**
 	 * Run the pass on the given configuration, modifying it in place. This
 	 * first checks preconditions, then runs the pass, then afterwards validates

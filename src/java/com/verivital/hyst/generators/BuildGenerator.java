@@ -1,22 +1,17 @@
 package com.verivital.hyst.generators;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
 
-import com.verivital.hyst.geometry.Interval;
-import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.Operation;
-import com.verivital.hyst.grammar.formula.Operator;
-import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.util.DoubleArrayOptionHandler;
-import com.verivital.hyst.util.ExpressionValueArrayOptionHandler;
 
 /**
  * Creates a (flat) hybrid automaton from scratch, based on the passed-in
@@ -28,126 +23,124 @@ import com.verivital.hyst.util.ExpressionValueArrayOptionHandler;
  */
 public class BuildGenerator extends ModelGenerator
 {
-	@Option(name = "-N", required = true, usage = "number of parallel chains", metaVar = "NUM")
-	private int n = 1;
+	@Option(name = "-vars", required = true, usage = "list of variables", metaVar = "VAR1 VAR2 ...")
+	private ArrayList<String> vars;
 
-	@Option(name = "-M", required = true, usage = "length of each chain", metaVar = "NUM")
-	private int m = 1;
+	@Option(name = "-time_bound", required = true, usage = "reachability time bound", metaVar = "TIME")
+	private double timeBound;
 
-	@Option(name = "-U", required = true, usage = "input expression for each chain (list of length N), "
-			+ "use parenthesis if there are parsing errors", handler = ExpressionValueArrayOptionHandler.class, metaVar = "U_0 U_1 ... U_N")
-	private List<Expression> uList;
+	@Option(name = "-init", required = true, usage = "initial mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	private List<String> initParams;
 
-	@Option(name = "-xi", usage = "noise magnitude for each input expression (list of length N)", handler = DoubleArrayOptionHandler.class, metaVar = "xi_0 xi_1 ... xi_N")
-	private List<Double> xiList = null;
+	@Option(name = "-error", usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	private List<String> errorParams = null;
 
-	@Option(name = "-time_var", usage = "the name of the time variable to add, if desired", metaVar = "NAME")
-	private String timeVar = null;
+	@Option(name = "-modes", required = true, usage = "modes to create", metaVar = "(MODENAME INVARIANT DER1 DER2 ...)+")
+	private List<String> modeParams;
 
-	@Option(name = "-var_prefix", usage = "variable name prefix", metaVar = "NAME")
-	private String varPrefix = "x";
-
-	@Option(name = "-mode_name", usage = "the name of the mode", metaVar = "NAME")
-	private String modeName = "on";
+	@Option(name = "-transitions", required = true, usage = "transitions to create", metaVar = "(FROM TO GUARD [RESET1 RESET2 ...])*")
+	private List<String> transitionParams;
 
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "integrator_chain";
+		return "build";
 	}
 
 	@Override
 	public String getName()
 	{
-		return "Chain of Integrators [Livingston16]";
+		return "Build Flat Automaton Generator";
 	}
 
 	@Override
 	protected Configuration generateModel()
 	{
-		checkParams();
-
 		BaseComponent ha = new BaseComponent();
-		Configuration c = new Configuration(ha);
 
-		AutomatonMode mode = ha.createMode(modeName);
-		mode.invariant = Constant.TRUE;
-		Expression initExp = Constant.TRUE;
+		ha.variables = vars;
 
-		if (timeVar != null)
+		int div = 2 + vars.size();
+
+		if (modeParams.size() % (div) != 0)
+			throw new AutomatonExportException(
+					"Mode params was of wrong size (should be divisble by " + div + ")");
+
+		for (int i = 0; i < modeParams.size(); i += div)
 		{
-			ha.variables.add(timeVar);
-			initExp = (new Operation(timeVar, Operator.EQUAL, 0));
-			mode.flowDynamics.put(timeVar, new ExpressionInterval(1));
-		}
+			String name = modeParams.get(i);
+			String inv = modeParams.get(i + 1);
 
-		// first variable in each chain is x_0, x_1, x_2, ... first der is
-		// x_0_der1, ect.
+			AutomatonMode am = ha.createMode(name);
+			am.invariant = FormulaParser.parseInvariant(inv);
 
-		for (int chainNum = 0; chainNum < n; ++chainNum)
-		{
-			for (int numInChain = 0; numInChain < m; ++numInChain)
+			for (int v = 0; v < vars.size(); ++v)
 			{
-				String varName = varPrefix + "_" + chainNum;
-
-				if (numInChain != 0)
-					varName += "_der" + numInChain;
-
-				ha.variables.add(varName);
-				initExp = Expression.and(initExp, new Operation(varName, Operator.EQUAL, 0));
-
-				// var_n' == var_{n+1}
-				if (numInChain != (m - 1))
-				{
-					String nextVar = varPrefix + "_" + chainNum + "_der" + (m + 1);
-					mode.flowDynamics.put(varName, new ExpressionInterval(new Variable(nextVar)));
-				}
-				else
-				{
-					// der is the input + xi
-					Interval i = null;
-
-					if (xiList != null)
-						i = new Interval(-xiList.get(chainNum), xiList.get(chainNum));
-
-					mode.flowDynamics.put(varName, new ExpressionInterval(uList.get(chainNum), i));
-				}
+				String der = modeParams.get(i + 2 + v);
+				am.flowDynamics.put(vars.get(v), new ExpressionInterval(der));
 			}
 		}
 
-		c.init.put(modeName, initExp);
+		// add transitions
+		div = 3 + vars.size();
 
-		// assign plot variables
-		if (timeVar != null)
+		if (transitionParams.size() % (div) != 0)
+			throw new AutomatonExportException(
+					"Transition params was of wrong size (should be divisble by " + div + ")");
+
+		for (int i = 0; i < transitionParams.size(); i += div)
 		{
-			c.settings.plotVariableNames[0] = timeVar;
-			c.settings.plotVariableNames[1] = varPrefix + "_0";
+			String from = transitionParams.get(i);
+			String to = transitionParams.get(i + 1);
+			String guard = transitionParams.get(i + 2);
+
+			AutomatonTransition at = ha.createTransition(ha.modes.get(from), ha.modes.get(to));
+			at.guard = FormulaParser.parseGuard(guard);
+
+			for (int v = 0; v < vars.size(); ++v)
+			{
+				String reset = modeParams.get(i + 3 + v);
+
+				if (!reset.equals("null"))
+					at.reset.put(vars.get(v), new ExpressionInterval(reset));
+			}
 		}
-		else
+
+		Configuration c = new Configuration(ha);
+		c.settings.spaceExConfig.timeHorizon = timeBound;
+
+		c.settings.plotVariableNames[0] = ha.variables.get(0);
+		c.settings.plotVariableNames[1] = ha.variables.size() > 1 ? ha.variables.get(1)
+				: ha.variables.get(0);
+
+		if (initParams.size() % 2 != 0)
+			throw new AutomatonExportException("Expected -init param count to be multiple of 2");
+
+		for (int i = 0; i < initParams.size(); i += 2)
 		{
-			// only one variable is guaranteed to exist...
-			c.settings.plotVariableNames[0] = varPrefix + "_0";
-			c.settings.plotVariableNames[1] = varPrefix + "_" + (n - 1);
+			String mode = initParams.get(i);
+			String condition = initParams.get(i + 1);
+
+			if (c.init.containsKey(mode))
+				throw new AutomatonExportException("initial mode was listed twice: " + mode);
+
+			c.init.put(mode, FormulaParser.parseInitialForbidden(condition));
+		}
+
+		if (errorParams.size() % 2 != 0)
+			throw new AutomatonExportException("Expected -error param count to be multiple of 2");
+
+		for (int i = 0; i < errorParams.size(); i += 2)
+		{
+			String mode = errorParams.get(i);
+			String condition = errorParams.get(i + 1);
+
+			if (c.forbidden.containsKey(mode))
+				throw new AutomatonExportException("error mode was listed twice: " + mode);
+
+			c.forbidden.put(mode, FormulaParser.parseInitialForbidden(condition));
 		}
 
 		return c;
 	}
-
-	private void checkParams()
-	{
-		if (n < 1)
-			throw new AutomatonExportException("Number of chains positive: " + n);
-
-		if (m < 1)
-			throw new AutomatonExportException("Chain length must be positive: " + m);
-
-		if (uList.size() != n)
-			throw new AutomatonExportException("Input list size (" + uList.size()
-					+ ") must equal number of chains (" + n + ")");
-
-		if (xiList != null && xiList.size() != n)
-			throw new AutomatonExportException("Xi list (input noise) size (" + uList.size()
-					+ ") must equal number of chains (" + n + ")");
-	}
-
 }

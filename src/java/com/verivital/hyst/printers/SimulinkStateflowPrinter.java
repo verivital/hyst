@@ -1272,7 +1272,7 @@ public class SimulinkStateflowPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-stateflow";
+		return "stateflow";
 	}
 
 	@Override

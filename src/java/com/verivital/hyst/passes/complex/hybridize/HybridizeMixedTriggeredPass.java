@@ -140,7 +140,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hybridizemt";
+		return "hybridizemt";
 	}
 
 	@Override

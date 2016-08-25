@@ -28,6 +28,15 @@ public abstract class ModelGenerator
 {
 	private CmdLineParser parser = new CmdLineParser(this);
 
+	public ModelGenerator()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"model generator's command-line flag shouldn't start with a hyphen: " + flag);
+	}
+
 	/**
 	 * Get the longer version of the help text for this pass.
 	 * 

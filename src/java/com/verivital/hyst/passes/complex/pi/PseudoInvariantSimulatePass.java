@@ -44,7 +44,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_pi_sim";
+		return "pi_sim";
 	}
 
 	@Override

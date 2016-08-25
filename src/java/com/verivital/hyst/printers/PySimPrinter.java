@@ -610,7 +610,7 @@ public class PySimPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pysim";
+		return "pysim";
 	}
 
 	@Override

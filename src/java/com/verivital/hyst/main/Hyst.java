@@ -40,6 +40,7 @@ import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
@@ -75,7 +76,8 @@ public class Hyst
 			new SubstituteConstantsPass(), new SimplifyExpressionsPass(),
 			new SplitDisjunctionGuardsPass(), new RemoveSimpleUnsatInvariantsPass(),
 			new ShortenModeNamesPass(), new ContinuizationPass(), new HybridizeMixedTriggeredPass(),
-			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(), };
+			new HybridizeMTRawPass(), new FlattenAutomatonPass(), new OrderReductionPass(),
+			new ConvertLutFlowsPass(), };
 
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
@@ -176,9 +178,8 @@ public class Hyst
 
 	public static final String FLAG_OUTPUT = "-output";
 
-	@Option(name = FLAG_OUTPUT, required = true, aliases = {
-			"-o" }, usage = "output filename", metaVar = "FILENAME")
-	String outputFilename;
+	@Option(name = FLAG_OUTPUT, aliases = { "-o" }, usage = "output filename", metaVar = "FILENAME")
+	String outputFilename = null;
 
 	// the chosen tool printer (dynamic parameter)
 	ToolPrinter toolPrinter = null;
@@ -186,10 +187,12 @@ public class Hyst
 
 	public static final String FLAG_TOOL = "-tool";
 
-	@Option(name = FLAG_TOOL, required = true, aliases = {
+	@Option(name = FLAG_TOOL, aliases = {
 			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS", handler = StringArrayOptionHandler.class)
 	public void setTool(String[] params) throws CmdLineException
 	{
+		System.out.println("tool params: " + params);
+
 		if (params.length != 2)
 			throw new CmdLineException(parser, hystLocalizable,
 					"-tool expected exactly two follow-on arguments: TOOL_NAME TOOL_PARAMS (params can be explicit empty string). See -help_printers.");
@@ -263,7 +266,7 @@ public class Hyst
 	{
 		if (params.length % 2 != 0)
 			throw new CmdLineException(parser, hystLocalizable,
-					"-passes expected multiple of two follow-on arguments: PASS_NAME PASS_PARMAS (params can be excplicit empty string). See -help_gen.");
+					"-passes expected multiple of two follow-on arguments: PASS_NAME PASS_PARAMS (params can be excplicit empty string). See -help_gen.");
 
 		for (int i = 0; i < params.length; i += 2)
 		{
@@ -274,11 +277,6 @@ public class Hyst
 			for (TransformationPass tp : passes)
 			{
 				String flag = tp.getCommandLineFlag();
-
-				if (flag.startsWith("-"))
-					throw new RuntimeException(
-							"transformation pass' command-line flag shouldn't start with a hyphen: "
-									+ flag);
 
 				if (flag.equalsIgnoreCase(passName))
 				{
@@ -391,6 +389,9 @@ public class Hyst
 				throw new CmdLineException(parser, hystLocalizable,
 						"Cannot both use model generation and provide input cfg/xml files.");
 		}
+
+		if (toolPrinter == null)
+			throw new AutomatonExportException("Tool printer must be set using " + FLAG_TOOL);
 	}
 
 	private Hyst()
@@ -411,8 +412,6 @@ public class Hyst
 		{
 			parser.parseArgument(args);
 
-			checkArguments();
-
 			if (doHelp)
 				showHelp();
 
@@ -429,13 +428,14 @@ public class Hyst
 				rv = doTestPython();
 			else if (!doHelp && !doHelpTools && !doHelpPasses && !doHelpGenerators)
 			{
+				checkArguments(); // extra checks
 				processOutputFlags();
 				rv = runCommandLine();
 			}
 		}
 		catch (CmdLineException e)
 		{
-			System.out.println("Error in provided arguments: " + e.getMessage()
+			Hyst.logError("Error in provided arguments: " + e.getMessage()
 					+ "\nUse -help for command-line options.");
 			rv = ExitCode.ARG_PARSE_ERROR;
 		}
@@ -488,23 +488,33 @@ public class Hyst
 
 	private void showHelp()
 	{
-		parser.printUsage(System.out);
+		if (!IS_UNIT_TEST)
+		{
+			System.out.println("Hyst General Usage:");
+			parser.printUsage(System.out);
+		}
 	}
 
 	private void showHelpTools()
 	{
+		System.out.println("Hyst Tool Usage:");
+
 		for (ToolPrinter printer : printers)
 			System.out.println(printer.getParamHelp());
 	}
 
 	private void showHelpPasses()
 	{
+		System.out.println("Hyst Passes Usage:");
+
 		for (TransformationPass pass : passes)
 			System.out.println(pass.getParamHelp());
 	}
 
 	private void showHelpGenerators()
 	{
+		System.out.println("Hyst Generator Usage:");
+
 		for (ModelGenerator gen : generators)
 			System.out.println(gen.getParamHelp());
 	}

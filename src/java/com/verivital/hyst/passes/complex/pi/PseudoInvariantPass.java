@@ -56,7 +56,7 @@ public class PseudoInvariantPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_pi";
+		return "pi";
 	}
 
 	@Override

@@ -441,7 +441,7 @@ public class DReachPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-dreach";
+		return "dreach";
 	}
 
 	@Override

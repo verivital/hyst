@@ -535,7 +535,7 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 		rv.add(printerParamTf.getText().trim());
 
 		// passes flags
-		rv.add(Hyst.FLAG_PASSES);
+		boolean printedPassesFlag = false;
 
 		for (int i = 0; i < passBoxes.size(); ++i)
 		{
@@ -543,6 +543,12 @@ public class HystFrame extends JFrame implements ActionListener, WindowListener,
 
 			if (selectedIndex != 0)
 			{
+				if (!printedPassesFlag)
+				{
+					printedPassesFlag = true;
+					rv.add(Hyst.FLAG_PASSES);
+				}
+
 				TransformationPass tp = availablePasses.get(selectedIndex - 1);
 				rv.add(tp.getCommandLineFlag());
 

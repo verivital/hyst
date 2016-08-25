@@ -64,7 +64,7 @@ public class SpaceExPrinter extends ToolPrinter
 	String step = "auto";
 
 	@Option(name = "-scenario", usage = "spaceex solver scenario", metaVar = "VAL")
-	String scenario = "auto";
+	public String scenario = "auto";
 
 	@Option(name = "-output-format", usage = "spaceex output format", metaVar = "VAL")
 	String outputFormat = "auto";
@@ -614,7 +614,7 @@ public class SpaceExPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-spaceex";
+		return "spaceex";
 	}
 
 	@Override

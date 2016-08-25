@@ -809,7 +809,7 @@ public class FlowPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-flowstar";
+		return "flowstar";
 	}
 
 	@Override

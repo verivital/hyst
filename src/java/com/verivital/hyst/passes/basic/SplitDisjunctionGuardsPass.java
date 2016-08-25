@@ -30,7 +30,7 @@ public class SplitDisjunctionGuardsPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_split_disjunctions";
+		return "split_disjunctions";
 	}
 
 	@Override

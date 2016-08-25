@@ -226,7 +226,7 @@ public class SimplifyExpressionsPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_simplify";
+		return "simplify";
 	}
 
 	@Override

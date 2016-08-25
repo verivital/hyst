@@ -108,7 +108,7 @@ public class SubstituteConstantsPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_sub_constants";
+		return "sub_constants";
 	}
 
 	@Override

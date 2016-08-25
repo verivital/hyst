@@ -113,11 +113,10 @@ public class HyCreate2Printer extends ToolPrinter
 		p.setVisualizeAfterComputation(true);
 
 		// plot dimensions requires index
-		String plot = getParam(this.plot, -1);
 		int xIndex;
 		int yIndex;
 
-		if (plot.equals("-1"))
+		if (plot.equals("auto"))
 		{
 			xIndex = getPlotIndex(true);
 			yIndex = getPlotIndex(false);
@@ -671,7 +670,7 @@ public class HyCreate2Printer extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hycreate";
+		return "hycreate";
 	}
 
 	@Override

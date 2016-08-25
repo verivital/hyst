@@ -49,6 +49,12 @@ public class AutomatonTransition
 	 */
 	protected AutomatonTransition(BaseComponent parent, AutomatonMode from, AutomatonMode to)
 	{
+		if (from == null)
+			throw new AutomatonExportException("Transition created with null source mode.");
+
+		if (to == null)
+			throw new AutomatonExportException("Transition created with null destination mode.");
+
 		this.parent = parent;
 		this.from = from;
 		this.to = to;
