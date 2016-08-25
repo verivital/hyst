@@ -1,0 +1,91 @@
+# Created by Hyst v1.2
+# Hybrid Automaton in Flow*
+# Converted from file: /home/stan/repositories/hyst/src/tests/regression/models/continuization/cont_approx.xml
+# Command Line arguments: /home/stan/repositories/hyst/src/tests/regression/models/continuization/cont_approx.xml -o /home/stan/repositories/hyst/src/tests/regression/result/cont_approx_flowstar.flowstar -flowstar
+
+
+hybrid reachability
+{
+    # Vars
+    state var x, v, t, a, _urgent_clock
+
+    setting
+    {
+        fixed steps 0.01
+        time 10
+        remainder estimation 1e-4
+        identity precondition
+        gnuplot octagon t,x
+        adaptive orders { min 3, max 8 } 
+        cutoff 1e-15
+        precision 53
+        output out
+        max jumps 1000
+        print on
+    }
+
+    modes
+    {
+        flying_ticking
+        {
+            linear ode
+            {
+                x' = v
+                v' = a
+                a' = -10 * v - 3 * a
+                t' = 1
+                _urgent_clock' = 0
+            }
+            inv
+            {
+                # Original invariant: t <= 4.99
+
+                t <= 4.99
+            }
+        }
+
+        init_ticking
+        {
+            linear ode
+            {
+                x' = 0
+                v' = 0
+                t' = 0
+                a' = 0
+                _urgent_clock' = 1
+            }
+            inv
+            {
+                # Original invariant: t <= 4.99 & _urgent_clock <= 0.000001
+
+                t <= 4.99   _urgent_clock <= 0.000001
+            }
+        }
+    }
+
+    jumps
+    {
+        init_ticking -> flying_ticking
+        guard
+        {
+        }
+        reset
+        {
+            a' := 10 * (1 - x) + 3 * -v
+            _urgent_clock' := 0
+        }
+        parallelotope aggregation {}
+    }
+
+    init
+    {
+        init_ticking
+        {
+            v in [0, 0]
+            t in [0, 0]
+            _urgent_clock in [0, 0.000001]
+            a in [0, 0]
+            x in [0, 0.1]
+        }
+    }
+}

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.7.0_101" class="java.beans.XMLDecoder">
+ <object class="com.stanleybak.hycreate.containers.HyCreateData" id="HyCreateData0">
+  <void property="automatonName">
+   <string>lorenz</string>
+  </void>
+  <void property="dimensions">
+   <string>x, y, z</string>
+  </void>
+  <void property="globalText">
+   <string>// Made using Hyst v1.2 from model file /home/stan/repositories/hyst/src/tests/regression/models/lorenz/lorenz.xml
+// Command line arguments were: /home/stan/repositories/hyst/src/tests/regression/models/lorenz/lorenz.xml -o /home/stan/repositories/hyst/src/tests/regression/result/lorenz_hycreate.hyc2 -hycreate</string>
+  </void>
+  <void property="initialStates">
+   <string>14.999 , 15.001 ; 14.999 , 15.001 ; 35.999 , 36.001 ; running
+</string>
+  </void>
+  <void property="modes">
+   <void method="put">
+    <string>running</string>
+    <object class="com.stanleybak.hycreate.containers.ModeData" id="ModeData0">
+     <void property="derivative">
+      <void method="add">
+       <string>return new Interval(10 + $y - $x, 10 + $y - $x);</string>
+      </void>
+      <void method="add">
+       <string>return new Interval($x * (28 - $z) - $y, $x * (28 - $z) - $y);</string>
+      </void>
+      <void method="add">
+       <string>return new Interval($x * $y - 2.6667 * $z, $x * $y - 2.6667 * $z);</string>
+      </void>
+     </void>
+     <void property="invariant">
+      <string>return true;</string>
+     </void>
+     <void property="minMaxPoints">
+      <void method="add">
+       <string>return null; // derivative has no min/max points in any box</string>
+      </void>
+      <void method="add">
+       <string>return null; // derivative has no min/max points in any box</string>
+      </void>
+      <void method="add">
+       <string>return null; // derivative has no min/max points in any box</string>
+      </void>
+     </void>
+     <void property="regridRatio">
+      <string>1.7, 1.7, 1.7</string>
+     </void>
+    </object>
+   </void>
+  </void>
+  <void id="ModelOptions0" property="options">
+   <void property="plotOptions">
+    <void property="visualizeDuringComputation">
+     <boolean>false</boolean>
+    </void>
+   </void>
+   <void property="reachabilityTime">
+    <string>6.5</string>
+   </void>
+   <void property="simulationOptions">
+    <void property="simulationType">
+     <object class="java.lang.Enum" method="valueOf">
+      <class>com.stanleybak.hycreate.containers.ModelSimulationOptions$SimulationType</class>
+      <string>REACHABILITY_ONLY</string>
+     </object>
+    </void>
+   </void>
+   <void property="timeStep">
+    <string>0.003</string>
+   </void>
+  </void>
+  <void property="versionString">
+   <string>File Version 3</string>
+  </void>
+ </object>
+</java>
+

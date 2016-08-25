@@ -1,0 +1,35 @@
+// Created by Hyst v1.2
+// Hybrid Automaton in dReach
+// Converted from file: /home/stan/repositories/hyst/src/tests/regression/models/lorenz/lorenz.xml
+// Command Line arguments: /home/stan/repositories/hyst/src/tests/regression/models/lorenz/lorenz.xml -o /home/stan/repositories/hyst/src/tests/regression/result/lorenz_dreach.drh -dreach
+
+
+//Vars
+[0, 6.5] time;
+[-1000,1000] x;
+[-1000,1000] y;
+[-1000,1000] z;
+
+
+
+// start modes
+// running
+{
+    mode 1;
+    invt:
+    flow:
+        d/dt[x] = 10.0 + y - x;
+        d/dt[y] = x * (28.0 - z) - y;
+        d/dt[z] = x * y - 2.6667 * z;
+
+    jump:
+
+    // end running
+}
+// end modes
+
+init:
+@1 (and (and (and (and (and (x >= 14.999) (x <= 15.001)) (y >= 14.999)) (y <= 15.001)) (z >= 35.999)) (z <= 36.001));
+
+goal:
+@1 (and (and (and (and (and (x >= 14.999) (x <= 15.001)) (y >= 14.999)) (y <= 15.001)) (z >= 35.999)) (z <= 36.001));
