@@ -1,80 +1,39 @@
-'''Regression test script'''
-# Stanley Bak, December 2014
-
-# Usage - set appropriate globals and then run directly with python
-
-# make sure you set the appropriate path to EXAMPLES
+'''
+Test scripts for integration tests (run each tool on each example mode
+Stanley Bak
+'''
 
 import os
 import sys
 import shutil
 import multiprocessing
-
-def get_script_path():
-    '''get the path this script'''
-    return os.path.dirname(os.path.realpath(__file__))
-
-def get_hypy_path():
-    '''get the path to the hybridpy directory'''
-    rv = get_script_path() + '/../../hybridpy'
-
-    if not os.path.exists(rv):
-        raise RuntimeError("hypy directory not detected at: " + rv)
-
-    return os.path.realpath(rv)
-
-def set_pythonpath():
-    'sets pythonpath environment variable in case it was not'
-    
-    pre_pythonpath = ""
-
-    if os.environ.get('PYTHONPATH') is not None:
-        pre_pythonpath = os.environ['PYTHONPATH'] + ":"
-
-    hypy_path = get_hypy_path()
-    os.environ['PYTHONPATH'] = pre_pythonpath + hypy_path
-
-    sys.path.append(hypy_path)
-    
-def set_hyst_bin():
-    'sets hyst_bin if it is not set'
-    
-    if os.environ.get('HYST_BIN') is None:
-        print "HYST_BIN environment variable was NOT set, trying relative path to Hyst.jar"
-        os.environ['HYST_BIN'] = get_script_path() + '/../../Hyst.jar'
-
-set_hyst_bin()
-set_pythonpath()
-
+from hybridpy.hybrid_tool import get_script_path
 import hybridpy.hypy as hypy
 
 # timeout for running the tools
 TIMEOUT = 2.0
 
 SHOULD_RUN_TOOLS = True
-NUM_THREADS = multiprocessing.cpu_count()
+print "run_tests.py debug: using a single thread"
+NUM_THREADS = 1 #multiprocessing.cpu_count()
 
 if sys.platform == "win32":
     SHOULD_RUN_TOOLS = False
     NUM_THREADS = 1
 
 # the examples to run, relative to this script
-MODELS_PATH = get_script_path() + "/models"
+MODELS_PATH = get_script_path(__file__) + "/models"
 
-# the tools and the scripts / parameters needed to run them
-TOOLS = []
-
-# add all tools from hypy
-for key in hypy.TOOLS:
-    TOOLS.append({'name':key})
+# a list of tools to run: each element is (tool_name, tool_param)
+TOOLS = [(hypy_tool_name, None) for hypy_tool_name in hypy.TOOLS]
 
 # extra tools (manual)
 #TOOLS.append({'name':'hycreate', 'param':'sim-only=1'})
 
 # the path where to put results (plots/models/work dir), relative to this script
-RESULT_PATH = get_script_path() + "/result"
+RESULT_PATH = get_script_path(__file__) + "/result"
 
-def run_single((index, total, path, tool, quit_flag)):
+def run_single((index, total, path, tool_tuple, quit_flag)):
     '''run a single model with a single tool.
 
     file is the path to the model file
@@ -89,33 +48,25 @@ def run_single((index, total, path, tool, quit_flag)):
     filename = os.path.split(path)[1]
     model = os.path.splitext(filename)[0]
 
-    tool_name = tool['name']
-    param = tool.get('param')
+    (tool_name, tool_param) = tool_tuple
 
     index_str = str(index+1) + "/" + str(total)
     print index_str + " Running " + model + " with " + tool_name
     sys.stdout.flush()
 
-    e = hypy.Engine()
-
-    e.set_timeout(TIMEOUT)
-    e.set_save_terminal_output(True)
-
-    e.set_model(path)
-    e.set_tool(tool_name)
-
-    if not param is None:
-        e.set_tool_params(['-tp', param])
-
     base = RESULT_PATH + '/' + model + '_' + tool_name
-    e.set_output_image(base + '.png')
-    e.set_save_model_path(base + hypy.TOOLS[tool_name].default_ext())
 
-    code = e.run(run_tool=SHOULD_RUN_TOOLS)
+    e = hypy.Engine(tool_name, tool_param)
+    e.set_input(path)
+    e.set_output(base + hypy.TOOLS[tool_name].default_ext())
 
-    if code in hypy.get_error_run_codes():
-        message = "Test failed for " + index_str + " model " + model + " with " + tool_name + ": " + str(code)
-        log = e.get_terminal_output()
+    result = e.run(run_tool=SHOULD_RUN_TOOLS, timeout=TIMEOUT, save_stdout=True, image_path=base + ".png")
+
+    if result['code'] in hypy.get_error_run_codes():
+        message = "Test failed for " + index_str + " model " + model + " with " + tool_name + ": " + str(result['code'])
+
+        log = "\n".join(result['stdout'])
+
         rv = (message, log)
         quit_flag.value = 1
 
@@ -125,7 +76,6 @@ def run_single((index, total, path, tool, quit_flag)):
 
 def file_tool_iter(file_list, quit_flag):
     '''iterator over all model files and tools'''
-    assert len(file_list) > 0
 
     index = 0
     total = len(TOOLS) * len(file_list)
@@ -209,16 +159,18 @@ def setup_env():
 def main():
     '''main entry point'''
     setup_env()
-    skipped_tool = False
-
-    for t in TOOLS:
-        if hypy.TOOLS[t['name']].tool_path == None:
-            skipped_tool = True
+    skipped_some_tool = False
 
     files = get_files(MODELS_PATH)
+    assert len(files) > 0, "No input .xml files detected in directory: {}".format(MODELS_PATH)
+
+    for (name, _) in TOOLS:
+        if hypy.TOOLS[name].tool_path == None:
+            print "Warning: {} is not runnable. Tool will be skipped.".format(name)
+            skipped_some_tool = True
 
     if parallel_run(files):
-        if skipped_tool == False:
+        if skipped_some_tool == False:
             print "Done running all regression tests, success."
         else:
             print "Regression test conversion passed, but some tools were not run."

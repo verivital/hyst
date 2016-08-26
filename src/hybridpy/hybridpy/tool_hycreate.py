@@ -3,13 +3,9 @@
 
 import subprocess
 import shutil
-from hybrid_tool import HybridTool
-from hybrid_tool import get_script_path
-from hybrid_tool import RunCode
-from hybrid_tool import tool_main
-
-# the path to the hycreate2 bin directory, relative to the work directory
-TOOL_PATH = get_script_path() + "/hycreate2"
+from hybridpy.hybrid_tool import HybridTool
+from hybridpy.hybrid_tool import RunCode
+from hybridpy.hybrid_tool import tool_main
 
 # flag to pass into hycreate, use -b for batch mode and -bd for debug batch mode
 HYCREATE_BATCH_MODE_FLAG = "-b"
@@ -18,7 +14,7 @@ class HyCreateTool(HybridTool):
     '''Container class for running Flow*'''
 
     def __init__(self):
-        HybridTool.__init__(self, 'hycreate', '.hyc2', TOOL_PATH)
+        HybridTool.__init__(self, 'hycreate', '.hyc2', 'HyCreate2.8.jar')
 
     def _run_tool(self):
         '''runs the tool, returns a value in RunCode'''

@@ -36,9 +36,9 @@ def is_windows():
     '''check if the current platform is windows'''
     return sys.platform == "win32"
 
-def get_script_path():
+def get_script_path(filename=__file__):
     '''get the path this script'''
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.realpath(filename))
 
 def valid_image(s):
     '''check if the given string is a valid output image (.png) path'''
@@ -165,31 +165,46 @@ def run_check_stderr(params, stdin=None, stdout=None):
 
     return rv
 
-def get_env_var_path(basename, default_path):
-    '''Get a path from an environment variable, or use a default one if
-    the environment variable is not defined. The environment variable that will be
-    checked is basename.upper() + "_BIN"
-
-    returns None if the final path doesn't exist
+def get_tool_path(filename, print_errors=True):
     '''
+    Get a path for tool's executable file. This will search directories on HYPYPATH, followed by PATH.
 
-    var = basename.upper() + "_BIN"
-    rv = os.environ.get(var)
+    returns the full path to the tool, or None 
+    '''
+    
+    rv = None
+    errors = []
 
-    if rv is None:
-        # not found at environment variable, try hardcoded path
-        rv = default_path
+    if os.path.exists(filename):
+        rv = filename
+    else:
+        for env_var_name in ["HYPYPATH", "PATH"]:
+            env_var_value = os.environ.get(env_var_name)
 
-    if rv is None or not os.path.exists(rv):
+            if env_var_value is None:
+                if print_errors:
+                    errors.append('Environment variable ' + env_var_name + ' was not set.')
 
-        if rv is not None:
-            print basename + ' not found at path: ' + rv + '.',
+                continue
 
-        if os.environ.get(var) is None:
-            print 'Environment variable ' + var + ' was NOT set.',
+            for dir_name in env_var_value.split(os.pathsep):
 
-        print "Tool will be set as non-runnable."
-        rv = None
+                try_path = os.path.join(dir_name, filename)
+
+                if os.path.exists(try_path):
+                    rv = try_path
+                    break
+
+            if rv is not None:
+                break
+
+            errors.append("No file named '" + filename + "' was found in any of the directories in " + env_var_name)
+
+    if rv is None and print_errors:
+        print "Warning: Could not find '" + filename + "' on your system:"
+
+        for line in errors:
+            print " " + line
 
     return rv
 
@@ -208,16 +223,17 @@ class HybridTool(object):
 
     default_extension = None
     explicit_temp_dir = None
-    output_obj = None
     start_timestamp = None
 
-    def __init__(self, tool_name, default_ext, path):
-        '''Initialize the tool for running. This checks if the tool exists
-        at the given path, as well as at the toolname_BIN environment variable'''
+    def __init__(self, tool_name, default_ext, tool_executable):
+        '''Initialize the tool for running.'''
 
         self.tool_name = tool_name
         self.default_extension = default_ext
-        self.tool_path = get_env_var_path(tool_name, path)
+        self.tool_path = get_tool_path(tool_executable)
+
+        if self.tool_path == None:
+            print "Tool '" + tool_name + "' is not runnable."
 
     def load_args(self, args):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
@@ -315,28 +331,8 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
-    def got_tool_output(self, line):
-        '''a line of output was produced by the tool process. This only gets called if
-        an output object is being created. This comes from a call to readline, so it's
-        always a single line of output.
-        '''
-
-        # add (line, timestamp) to output_obj['lines']
-        lines = self.output_obj['lines']
-        
-        if len(lines) == 0: # no output yet
-            self.start_timestamp = time.time()
-
-        timestamp = time.time() - self.start_timestamp
-        lines.append((line, timestamp))
-
     def create_output(self, _):
-        '''Assigns to the output object (self.output_obj). It is a dictionary;
-        add to it, don't assign the whole object since other parts are made
-        while the tool was running, for example using got_tool_output().
-
-        For all tools, obj.lines contains a list of tuples, where the first part is
-        a line of stdout output, and the second part is a timestamp in seconds (from time.time())
+        '''Create and return the output object. It should be a tool-specific dictionary.
         
         Tool working files are stored in the passed-in directory.'''
         raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")

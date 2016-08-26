@@ -2,19 +2,15 @@
 
 import subprocess
 import re
-from hybrid_tool import HybridTool
-from hybrid_tool import get_script_path
-from hybrid_tool import run_check_stderr
-from hybrid_tool import RunCode
-from hybrid_tool import tool_main
-
-# the path to the flow* executable
-TOOL_PATH = get_script_path() + "/flowstar-1.2.3/flowstar"
+from hybridpy.hybrid_tool import HybridTool
+from hybridpy.hybrid_tool import run_check_stderr
+from hybridpy.hybrid_tool import RunCode
+from hybridpy.hybrid_tool import tool_main
 
 class FlowstarTool(HybridTool):
     '''container class for running Flow*'''
     def __init__(self):
-        HybridTool.__init__(self, 'flowstar', '.flowstar', TOOL_PATH)
+        HybridTool.__init__(self, 'flowstar', '.flowstar', 'flowstar')
 
     def _run_tool(self):
         '''runs the tool, returns a value in RunCode'''

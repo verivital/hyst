@@ -9,13 +9,10 @@ import shutil
 import re
 import collections
 
-from hybrid_tool import HybridTool
-from hybrid_tool import RunCode
-from hybrid_tool import get_script_path
-from hybrid_tool import tool_main
-
-# the path to the spaceex executable
-TOOL_PATH = get_script_path() + "/spaceex/spaceex"
+from hybridpy.hybrid_tool import HybridTool
+from hybridpy.hybrid_tool import RunCode
+from hybridpy.hybrid_tool import get_script_path
+from hybridpy.hybrid_tool import tool_main
 
 class SpaceExTool(HybridTool):
     '''Container class for running SpaceEx'''
@@ -27,7 +24,7 @@ class SpaceExTool(HybridTool):
     not_affine = False
 
     def __init__(self):
-        HybridTool.__init__(self, "spaceex", '.xml', TOOL_PATH)
+        HybridTool.__init__(self, "spaceex", '.xml', 'spaceex')
 
     def _print_pipe(self, is_std_err, pipe):
         '''print the output from a pipe (from a subprocess), setting

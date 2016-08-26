@@ -3,20 +3,16 @@
 import os
 import shutil
 
-from hybrid_tool import get_script_path
-from hybrid_tool import HybridTool
-from hybrid_tool import RunCode
-from hybrid_tool import run_check_stderr
-from hybrid_tool import tool_main
-
-# the path to the dreach executable
-TOOL_PATH = get_script_path() + "/dreach/dReal-2.15.01-linux/bin/dReach"
+from hybridpy.hybrid_tool import HybridTool
+from hybridpy.hybrid_tool import RunCode
+from hybridpy.hybrid_tool import run_check_stderr
+from hybridpy.hybrid_tool import tool_main
 
 class DReachTool(HybridTool):
     '''Container class for running dReach'''
 
     def __init__(self):
-        HybridTool.__init__(self, "dreach", '.drh', TOOL_PATH)
+        HybridTool.__init__(self, "dreach", '.drh', 'dReach')
 
     def _make_image(self):
         '''makes the image after the tool runs, returns True when no error occurs'''
