@@ -14,6 +14,7 @@
 	<property name="readme_user.path"           value="../README.md"/>
 	<property name="batch_run_result.path" value="${batch_run.path}/result"/>
 	<property name="examples_dir.path"     value="../examples"/>
+	<property name="doc.path"     value="../doc"/>
 	<property name="slsf_dir.path"     value="src/matlab"/>
 	
 	<!-- detects if eclipse executable is on PATH environment variable -->
@@ -248,8 +249,24 @@
 	    </condition>
 	</target>
 	
-	<!-- run all tests -->
-	<target name ="test" depends="run_jar_test,unit_test,integration_test,python_test" description="Run the Entire Hyst Test Suite">
+	<!-- run test extra passes and generators tests (may take a while) -->
+	<target name ="test_gen_passes" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
+		<echo message="Running generator and transformation pass tests (may take a while)..."/>
+		<!-- 
+		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
+		    <arg line="plot.py" />
+		</exec>
+		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
+		-->
+		<exec dir="${doc.path}/transformation_passes/hybridization" executable="python" failonerror="true">
+				<arg line="plot.py" />
+			</exec>
+	</target>
+	
+	<!-- run test suite -->
+	<target name ="test" depends="run_jar_test,unit_test,integration_test,python_test,test_gen_passes" description="Run the Hyst Test Suite">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

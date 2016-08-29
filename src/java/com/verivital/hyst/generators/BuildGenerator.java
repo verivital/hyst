@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -12,6 +13,7 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 
 /**
  * Creates a (flat) hybrid automaton from scratch, based on the passed-in
@@ -23,22 +25,22 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
  */
 public class BuildGenerator extends ModelGenerator
 {
-	@Option(name = "-vars", required = true, usage = "list of variables", metaVar = "VAR1 VAR2 ...")
+	@Option(name = "-vars", required = true, usage = "list of variables", metaVar = "VAR1 VAR2 ...", handler = StringArrayOptionHandler.class)
 	private ArrayList<String> vars;
 
 	@Option(name = "-time_bound", required = true, usage = "reachability time bound", metaVar = "TIME")
 	private double timeBound;
 
-	@Option(name = "-init", required = true, usage = "initial mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	@Option(name = "-init", required = true, handler = StringWithSpacesArrayOptionHandler.class, usage = "initial mode names and conditions", metaVar = "(MODENAME CONDITION)+")
 	private List<String> initParams;
 
-	@Option(name = "-error", usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	@Option(name = "-error", handler = StringWithSpacesArrayOptionHandler.class, usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
 	private List<String> errorParams = null;
 
-	@Option(name = "-modes", required = true, usage = "modes to create", metaVar = "(MODENAME INVARIANT DER1 DER2 ...)+")
+	@Option(name = "-modes", required = true, handler = StringWithSpacesArrayOptionHandler.class, usage = "modes to create", metaVar = "(MODENAME INVARIANT DER1 DER2 ...)+")
 	private List<String> modeParams;
 
-	@Option(name = "-transitions", required = true, usage = "transitions to create", metaVar = "(FROM TO GUARD [RESET1 RESET2 ...])*")
+	@Option(name = "-transitions", handler = StringWithSpacesArrayOptionHandler.class, usage = "transitions to create", metaVar = "(FROM TO GUARD [RESET1 RESET2 ...])*")
 	private List<String> transitionParams;
 
 	@Override
@@ -64,7 +66,8 @@ public class BuildGenerator extends ModelGenerator
 
 		if (modeParams.size() % (div) != 0)
 			throw new AutomatonExportException(
-					"Mode params was of wrong size (should be divisble by " + div + ")");
+					"Mode params was of wrong size (should be divisble by " + div + "): "
+							+ modeParams);
 
 		for (int i = 0; i < modeParams.size(); i += div)
 		{
@@ -99,7 +102,7 @@ public class BuildGenerator extends ModelGenerator
 
 			for (int v = 0; v < vars.size(); ++v)
 			{
-				String reset = modeParams.get(i + 3 + v);
+				String reset = transitionParams.get(i + 3 + v);
 
 				if (!reset.equals("null"))
 					at.reset.put(vars.get(v), new ExpressionInterval(reset));

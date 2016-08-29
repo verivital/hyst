@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -15,7 +16,6 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Localizable;
 import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.generators.BuildGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
@@ -54,8 +54,12 @@ import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.util.CmdLineRuntimeException;
+import com.verivital.hyst.util.PairStringOptionHandler;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.StringOperations;
+import com.verivital.hyst.util.StringPairsWithSpacesArrayOptionHandler;
+import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -143,38 +147,8 @@ public class Hyst
 	public static final String FLAG_INPUT = "-input";
 
 	@Option(name = FLAG_INPUT, aliases = {
-			"-i" }, usage = "input filenames", metaVar = "FILE1 FILE2 ...", handler = StringArrayOptionHandler.class)
-	public void setInput(String[] files) throws CmdLineException
-	{
-		boolean gotCfg = false;
-
-		for (String file : files)
-		{
-			if (file.endsWith(".xml"))
-			{
-				xmlFilenames.add(file);
-
-				if (cfgFilename == null)
-				{
-					String base = file.substring(0, file.length() - 4);
-					cfgFilename = base + ".cfg";
-				}
-			}
-			else if (file.endsWith(".cfg"))
-			{
-				if (gotCfg)
-					throw new CmdLineException(parser, hystLocalizable,
-							"Multiple .cfg input files are not allowed.");
-
-				cfgFilename = file;
-				gotCfg = true;
-			}
-			else
-				throw new CmdLineException(parser, hystLocalizable,
-						"Unrecognized input file extension (expected .cfg or .xml): '" + file
-								+ "'");
-		}
-	}
+			"-i" }, usage = "input filenames", metaVar = "FILE1 FILE2 ...", handler = StringWithSpacesArrayOptionHandler.class)
+	List<String> inputArgumentList = new ArrayList<String>();
 
 	public static final String FLAG_OUTPUT = "-output";
 
@@ -188,11 +162,9 @@ public class Hyst
 	public static final String FLAG_TOOL = "-tool";
 
 	@Option(name = FLAG_TOOL, aliases = {
-			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS", handler = StringArrayOptionHandler.class)
+			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS", handler = PairStringOptionHandler.class)
 	public void setTool(String[] params) throws CmdLineException
 	{
-		System.out.println("tool params: " + params);
-
 		if (params.length != 2)
 			throw new CmdLineException(parser, hystLocalizable,
 					"-tool expected exactly two follow-on arguments: TOOL_NAME TOOL_PARAMS (params can be explicit empty string). See -help_printers.");
@@ -224,7 +196,7 @@ public class Hyst
 	String modelGenParam = null; // parameter for model generator
 
 	@Option(name = "-generate", aliases = {
-			"-gen" }, usage = "generate a model (rather than loading from a file)", metaVar = "GEN_NAME GEN_PARAMS", handler = StringArrayOptionHandler.class)
+			"-gen" }, usage = "generate a model (rather than loading from a file)", metaVar = "GEN_NAME GEN_PARAMS", handler = PairStringOptionHandler.class)
 	public void setGenerate(String[] params) throws CmdLineException
 	{
 		if (params.length != 2)
@@ -261,40 +233,8 @@ public class Hyst
 	public static final String FLAG_PASSES = "-passes";
 
 	@Option(name = FLAG_PASSES, aliases = {
-			"-p" }, usage = "run a sequence of model transformation apsses", metaVar = "PASS1 PARAMS1 PASS2 PARAMS2 ...", handler = StringArrayOptionHandler.class)
-	public void setPasses(String[] params) throws CmdLineException
-	{
-		if (params.length % 2 != 0)
-			throw new CmdLineException(parser, hystLocalizable,
-					"-passes expected multiple of two follow-on arguments: PASS_NAME PASS_PARAMS (params can be excplicit empty string). See -help_gen.");
-
-		for (int i = 0; i < params.length; i += 2)
-		{
-			String passName = params[i];
-			String passParam = params[i + 1];
-			boolean found = false;
-
-			for (TransformationPass tp : passes)
-			{
-				String flag = tp.getCommandLineFlag();
-
-				if (flag.equalsIgnoreCase(passName))
-				{
-					// create new instances here since we may use the same pass
-					// multiple times with different parmeters
-					TransformationPass instance = newTransformationPassInstance(tp);
-					requestedPasses.add(new RequestedTransformationPass(instance, passParam));
-					found = true;
-					break;
-				}
-			}
-
-			if (!found)
-				throw new CmdLineException(parser, hystLocalizable,
-						"Couldn't find transformation pass with name '" + passName
-								+ "'. See -help_gen.");
-		}
-	}
+			"-p" }, handler = StringPairsWithSpacesArrayOptionHandler.class, usage = "run a sequence of model transformation passes", metaVar = "PASS1 PARAMS1 PASS2 PARAMS2 ...")
+	List<String> passArgumentList = new ArrayList<String>();
 
 	public static final String FLAG_VERBOSE = "-verbose";
 
@@ -367,11 +307,81 @@ public class Hyst
 		return new Hyst().run(args).ordinal();
 	}
 
+	private void parseInput() throws CmdLineException
+	{
+		boolean gotCfg = false;
+
+		for (String file : inputArgumentList)
+		{
+			if (file.endsWith(".xml"))
+			{
+				xmlFilenames.add(file);
+
+				if (cfgFilename == null)
+				{
+					String base = file.substring(0, file.length() - 4);
+					cfgFilename = base + ".cfg";
+				}
+			}
+			else if (file.endsWith(".cfg"))
+			{
+				if (gotCfg)
+					throw new CmdLineException(parser, hystLocalizable,
+							"Multiple .cfg input files are not allowed.");
+
+				cfgFilename = file;
+				gotCfg = true;
+			}
+			else
+				throw new CmdLineException(parser, hystLocalizable,
+						"Unrecognized input file extension (expected .cfg or .xml): '" + file
+								+ "'");
+		}
+	}
+
+	private void parsePasses() throws CmdLineException
+	{
+		if (passArgumentList.size() % 2 != 0)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-passes expected multiple of two follow-on arguments: PASS_NAME PASS_PARAMS (params can be excplicit empty string). See -help_passes.");
+
+		for (int i = 0; i < passArgumentList.size(); i += 2)
+		{
+			String passName = passArgumentList.get(i);
+			String passParam = passArgumentList.get(i + 1);
+			boolean found = false;
+
+			for (TransformationPass tp : passes)
+			{
+				String flag = tp.getCommandLineFlag();
+
+				if (flag.equalsIgnoreCase(passName))
+				{
+					// create new instances here since we may use the same pass
+					// multiple times with different parmeters
+					TransformationPass instance = newTransformationPassInstance(tp);
+					requestedPasses.add(new RequestedTransformationPass(instance, passParam));
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				throw new CmdLineException(parser, hystLocalizable,
+						"Couldn't find transformation pass with name '" + passName
+								+ "'. See -help_passes.");
+		}
+	}
+
 	/**
 	 * Check command-line arguments for inconsistancies.
 	 */
 	private void checkArguments() throws CmdLineException
 	{
+		parseInput();
+
+		parsePasses();
+
 		if (modelGenerator == null)
 		{
 			if (cfgFilename == null)
@@ -435,7 +445,7 @@ public class Hyst
 		}
 		catch (CmdLineException e)
 		{
-			Hyst.logError("Error in provided arguments: " + e.getMessage()
+			Hyst.logError("Error in provided top-level Hyst arguments: " + e.getMessage()
 					+ "\nUse -help for command-line options.");
 			rv = ExitCode.ARG_PARSE_ERROR;
 		}
@@ -490,7 +500,7 @@ public class Hyst
 	{
 		if (!IS_UNIT_TEST)
 		{
-			System.out.println("Hyst General Usage:");
+			System.out.println(TOOL_NAME + " General Usage:");
 			parser.printUsage(System.out);
 		}
 	}
@@ -566,7 +576,7 @@ public class Hyst
 			long difMs = System.currentTimeMillis() - startMs;
 
 			toolPrinter.flush();
-			Hyst.logInfo("\nFinished converting in " + difMs + " ms");
+			Hyst.log("\nFinished converting in " + difMs + " ms");
 		}
 		catch (AutomatonExportException e)
 		{
@@ -579,6 +589,12 @@ public class Hyst
 			logError("Preconditions not met for exporting.");
 			ex = e;
 			rv = ExitCode.PRECONDITIONS_EXCEPTION;
+		}
+		catch (CmdLineRuntimeException e)
+		{
+			logError(e.getMessage());
+			ex = e;
+			rv = ExitCode.ARG_PARSE_ERROR;
 		}
 		catch (Exception e)
 		{

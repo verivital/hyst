@@ -117,8 +117,8 @@ public class PySimPrinter extends ToolPrinter
 
 			if (!am.urgent)
 			{
-				appendIndentedLine(rv,
-						am.name + ".der = lambda _, state: " + getMapString(am.flowDynamics, ha));
+				appendIndentedLine(rv, am.name + ".der = lambda _, state: "
+						+ getMapString("flow dynamics", am.flowDynamics, ha));
 
 				appendIndentedLine(rv, am.name + ".der_interval_list = "
 						+ getIntervalListString(am.flowDynamics, ha));
@@ -170,7 +170,8 @@ public class PySimPrinter extends ToolPrinter
 	 * @param map
 	 * @return the mapped string
 	 */
-	private static String getMapString(Map<String, ExpressionInterval> map, BaseComponent ha)
+	private static String getMapString(String desc, Map<String, ExpressionInterval> map,
+			BaseComponent ha)
 	{
 		StringBuffer rv = new StringBuffer();
 		rv.append("[");
@@ -185,7 +186,18 @@ public class PySimPrinter extends ToolPrinter
 			if (ei == null)
 				rv.append("None");
 			else
-				rv.append(ei.getExpression());
+			{
+				try
+				{
+					rv.append(ei.getExpression());
+				}
+				catch (AutomatonExportException e)
+				{
+					throw new AutomatonExportException(
+							"Error in " + desc + " mapping " + var + " -> " + ei.toDefaultString(),
+							e);
+				}
+			}
 		}
 
 		rv.append("]");
@@ -207,7 +219,8 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv,
 					"t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
-			appendIndentedLine(rv, "t.reset = lambda state: " + getMapString(at.reset, ha));
+			appendIndentedLine(rv,
+					"t.reset = lambda state: " + getMapString("reset assignment", at.reset, ha));
 
 			appendIndentedLine(rv, "t.guard_sympy = " + sympyPyinter.print(at.guard));
 		}

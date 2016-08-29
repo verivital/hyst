@@ -11,7 +11,6 @@ import collections
 
 from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import RunCode
-from hybridpy.hybrid_tool import get_script_path
 from hybridpy.hybrid_tool import tool_main
 
 class SpaceExTool(HybridTool):
@@ -67,7 +66,8 @@ class SpaceExTool(HybridTool):
         rv = RunCode.SUCCESS
 
         # TOOL_PATH -m $MODELNAME.xml --config $MODELNAME.cfg --output-file plots/$MODELNAME-plot.txt -v d
-        params = [self.tool_path, '-m', self.model_path, '--config', self.cfg_path, '--output-file', \
+        # run through stdbuf to prevent flow* stdout i/o buffering
+        params = ["stdbuf", "-oL", self.tool_path, '-m', self.model_path, '--config', self.cfg_path, '--output-file', \
                   'plotdata.txt', '-v', 'd']
 
         try:

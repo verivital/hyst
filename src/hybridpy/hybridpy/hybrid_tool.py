@@ -107,7 +107,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
         params.append(explicit_temp_dir)
 
     try:
-        proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(params, stdout=subprocess.PIPE)
 
         if timeout is not None:
             timer = threading.Timer(timeout, _kill_pg, [proc])
@@ -212,19 +212,6 @@ class HybridTool(object):
     '''Base class for hybrid automaton analysis tool'''
     __metaclass__ = abc.ABCMeta
 
-    tool_name = None
-    tool_path = None # the path to the tool, None if tool cannot be found
-
-    original_model_path = None
-    image_path = None
-
-    model_path = None # set after copying to temp folder
-    debug = False # if set to true, will copy temp work folder back to model folder
-
-    default_extension = None
-    explicit_temp_dir = None
-    start_timestamp = None
-
     def __init__(self, tool_name, default_ext, tool_executable):
         '''Initialize the tool for running.'''
 
@@ -234,6 +221,15 @@ class HybridTool(object):
 
         if self.tool_path == None:
             print "Tool '" + tool_name + "' is not runnable."
+
+        self.original_model_path = None
+        self.image_path = None
+
+        self.model_path = None # set after copying to temp folder
+        self.debug = False # if set to true, will copy temp work folder back to model folder
+
+        self.explicit_temp_dir = None
+        self.start_timestamp = None
 
     def load_args(self, args):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''

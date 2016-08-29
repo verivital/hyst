@@ -14,8 +14,7 @@ import hybridpy.hypy as hypy
 TIMEOUT = 2.0
 
 SHOULD_RUN_TOOLS = True
-print "run_tests.py debug: using a single thread"
-NUM_THREADS = 1 #multiprocessing.cpu_count()
+NUM_THREADS = multiprocessing.cpu_count()
 
 if sys.platform == "win32":
     SHOULD_RUN_TOOLS = False

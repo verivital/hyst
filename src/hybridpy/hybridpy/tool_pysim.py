@@ -10,10 +10,10 @@ import sys
 class PySimTool(HybridTool):
     '''container class for running pysim'''
     
-    _pysim_model = None
-    _result = None
-    
     def __init__(self):
+        self._pysim_model = None
+        self._result = None
+
         python_path = sys.executable
         HybridTool.__init__(self, 'pysim', '.py', python_path)
 

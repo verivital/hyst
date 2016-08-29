@@ -21,7 +21,7 @@ THIS SOFTWARE WAS DEVELOPED WITH FUNDING BY AIR FORCE RESEARCH LABORATORY (AFRL)
 ### HYST USAGE
 ************************************
 
-Hyst has been tested on Windows 7/8/10 and Linux (Ubuntu) using Java 1.7 and Java 1.8.
+Hyst has been tested on Windows 7/8/10 and Linux (Ubuntu x64) using Java 1.7 and Java 1.8.
 
 #### GUI USAGE:
 

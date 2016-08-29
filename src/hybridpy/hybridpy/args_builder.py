@@ -1,29 +1,35 @@
 '''
 Stanley Bak
-August 2018
+August 2016
 Hyst Args Builder
 
-This is a python interface for constructing command line arguments for Hyst, as an
-alternative to doing it as a raw list.
+These are python interface classes for constructing sub-arguments to Hyst printers/passes/generators for use in hypy, 
+as an alternative to doing it as a raw list.
 '''
 
-class ModelArgsBuilder(object):
-    'make arguments associated with generating a hybrid automaton'
+class BuildGenArgsBuilder(object):
+    '''
+    helper object to make arguments associated with generating a hybrid automaton
+    using the 'build' model generator
 
-    variables = None
-    time_bound = 10
+    make an object of this type, set values, and then on the hypy engine object do:
 
-    error_args = []
-    init_args = []
-
-    mode_args = []
-    transition_args = []
+    hypy_engine.set_generator('build', model_args_builder.get_generator_param())
+    '''
 
     def __init__(self, var_list):
         self.variables = var_list
+        self.time_bound = 10
 
-    def get_hyst_params(self):
-        'get a list of params for passing into hyst'
+        self.error_args = []
+        self.init_args = []
+
+        self.modes = {} # used to ensure unique modes
+        self.mode_args = []
+        self.transition_args = []
+
+    def get_generator_param(self):
+        'get the hyst param for the "build" generator'
 
         rv = []
 
@@ -54,21 +60,27 @@ class ModelArgsBuilder(object):
 
             rv += self.transition_args
 
-        arg_string = " ".join(["\"" + s + "\"" for s in rv])
+        arg_string = " ".join(["\"" + s + "\"" if " " in s else s for s in rv])
 
-        return ['-generate', 'build'] + [arg_string]
+        return arg_string
 
-    def add_init_condition(self, mode_name, init_exp):
+    def add_init_condition(self, mode_name, condition_str):
         'add an initial condition'
 
+        assert str(mode_name) == mode_name, "init_mode must be a string: {}".format(mode_name)
+        assert str(condition_str) == condition_str, "init_condition must be a string: {}".format(condition_str)
+
         self.init_args.append(mode_name)
-        self.init_args.append(init_exp)
+        self.init_args.append(condition_str)
     
-    def add_error_condition(self, mode_name, condition_string):
+    def add_error_condition(self, mode_name, condition_str):
         'add an error condition'
 
+        assert str(mode_name) == mode_name, "error_mode must be a string: {}".format(mode_name)
+        assert str(condition_str) == condition_str, "error_condition must be a string: {}".format(condition_str)
+
         self.error_args.append(mode_name)
-        self.error_args.append(condition_string)
+        self.error_args.append(condition_str)
 
     def set_time_bound(self, tb):
         'assigns the time bound'
@@ -78,12 +90,22 @@ class ModelArgsBuilder(object):
     def add_mode(self, name, invariant, der_list):
         'add a mode'
 
+        assert str(name) == name, "mode name must be a string: {}".format(name)
+        assert str(invariant) == invariant, "invariant condition must be a string: {}".format(invariant)
+
+        assert self.modes.get(name) is None, "mode '{}' was already in the automaton".format(name)
+
+        self.modes[name] = True
         self.mode_args.append(name)
         self.mode_args.append(invariant)
         self.mode_args += der_list
 
     def add_transition(self, from_name, to_name, guard, reset_list):
         'add a transition'
+
+        assert str(from_name) == from_name, "source mode name must be a string: {}".format(from_name)
+        assert str(to_name) == to_name, "destination mode name must be a string: {}".format(to_name)
+        assert str(guard) == guard, "guard condition must be a string: {}".format(guard)
 
         self.transition_args.append(from_name)    
         self.transition_args.append(to_name)

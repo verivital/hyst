@@ -1,6 +1,6 @@
 *~
 *.pyc
-src/tests/regression/result/*
+src/tests/integration/result/*
 src/bin/*
 .classpath
 .project

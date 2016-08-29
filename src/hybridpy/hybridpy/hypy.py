@@ -52,15 +52,7 @@ def _get_all_toolnames():
 class OutputHandler(object):
     'Object which is used to collect stdout from tools and possibly print it, save it, or process it'
 
-    lines = None # assigned if save_output is desired
-    print_output = False
-    tool_name = None # the name of the tool being run
-    user_func = None # an optional user defined function, which takes in 3 params: line, time, tool_name
-
-    _start_time = None
-
-    def __init__(self, print_output, save_output, tool_name, user_func=None):
-        self.print_output = print_output
+    def __init__(self, save_output, tool_name, user_func=None):
         self.lines = [] if save_output == True else None
         self.tool_name = tool_name
         self.user_func = user_func
@@ -75,9 +67,6 @@ class OutputHandler(object):
         '''a line of text was output by the tool. Save / print it.'''
 
         text = text.rstrip()
-
-        if self.print_output:
-            print text
 
         if self.lines is not None:
             self.lines.append(text)
@@ -96,13 +85,6 @@ class OutputHandler(object):
 
 class Engine(object):
     '''HyPy engine. Runs a hybrid systems tool'''
-    input_ = (None, None) # 2-tuple: (xml_file, cfg_file [optional])
-    printer = (None, None)
-    gen = (None, None)
-    passes = [] # list of 2-tuples
-
-    output = None # path where to save a copy of the model hyst creates (optional)
-    additional_hyst_params = [] # manually-specified parameters 
 
     def __init__(self, printer_name, printer_param=""):
         assert str(printer_name) == printer_name, "Printer name must be a string"
@@ -118,6 +100,21 @@ class Engine(object):
             raise RuntimeError('Unknown tool name: ' + name)
 
         self.printer = (printer_name, printer_param)
+        self.input_ = (None, None) # 2-tuple: (xml_file, cfg_file [optional])
+        self.gen = (None, None)
+        self.passes = [] # list of 2-tuples
+        self.output = None # path where to save a copy of the model hyst creates (optional)
+        self.additional_hyst_params = [] # manually-specified parameters 
+        self.debug = False
+        self.verbose = False
+
+    def set_debug(self, is_debug):
+        'set debug printing mode'
+        self.debug = is_debug
+
+    def set_verbose(self, is_verbose):
+        'set verbose printing mode'
+        self.verbose = is_verbose
 
     def set_input(self, xml_path, cfg_path=None):
         '''Set the input model file'''
@@ -126,7 +123,7 @@ class Engine(object):
     def set_generator(self, gen_name, gen_param=""):
         '''set the name of the model generator and param'''
         assert str(gen_name) == gen_name, "Generator name must be a string"
-        assert str(gen_param) == gen_param, "Generator param must be a string"
+        assert str(gen_param) == gen_param, "Generator param must be a string, got {}".format(type(gen_param))
     
         self.gen = (gen_name, gen_param)
 
@@ -156,7 +153,8 @@ class Engine(object):
         '''
         rv = RUN_CODES.SUCCESS
 
-        hypy_out.add_line("Converting model '" + str(self.input_[0]) + "' for " + self.printer[0] + "\n")
+        hypy_out.add_line("Using Hyst to convert {} for {}.".format("generated model" if self.input_[0] is None else 
+                            "model '" + self.input_[0] + "'", self.printer[0]))
 
         hyst_path = get_tool_path('Hyst.jar')
 
@@ -164,6 +162,12 @@ class Engine(object):
             raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPY_PATH?')
 
         params = ['java', '-jar', hyst_path]
+
+        if self.debug:
+            params.append('-debug')
+
+        if self.verbose:
+            params.append('-verbose')
 
         if self.input_[0] is not None and self.gen[0] is not None:
             raise RuntimeError("Input file provided and model generation selected. These options are incompatible.")
@@ -177,11 +181,19 @@ class Engine(object):
             params += ['-gen', self.gen[0], self.gen[1]]
         else:
             raise RuntimeError("No input file provided and no model generation params given.")
+
+        if len(self.passes) > 0:
+            params.append("-passes")
+
+            for (pass_name, param) in self.passes:
+                params += [pass_name, param]
         
         params += ['-o', self.output]
         params += ['-tool', self.printer[0], self.printer[1]]
 
-        quoted_params = ['"' + param + '"' if (' ' in param or len(param) == 0) else param for param in params]
+        params += self.additional_hyst_params
+
+        quoted_params = ["'" + param + "'" if (' ' in param or len(param) == 0) else param for param in params]
         hypy_out.add_line("Hyst command: {}".format(" ".join(quoted_params)))
 
         try:
@@ -239,7 +251,7 @@ class Engine(object):
 
         # wrapper function to capture all stdout in order
         def stdout_wrapper(line, secs, tool):
-            'wrapper to capture in-order stdout from any tool'
+            'wrapper to capture lines produced by stdout from any tool'
     
             if stdout_lines is not None:
                 stdout_lines.append(line)
@@ -247,14 +259,18 @@ class Engine(object):
             if stdout_func is not None:
                 stdout_func(line, secs, tool)
 
-        hypy_out = OutputHandler(print_stdout, save_stdout, 'hypy', user_func=stdout_wrapper)
+            if print_stdout:
+                print line
+                sys.stdout.flush() # flush after each line
+
+        hypy_out = OutputHandler(save_stdout, 'hypy', user_func=stdout_wrapper)
 
         if run_hyst == False:
             self.output = self.input_[0] # running the tool directly (no hyst)
         else:
             hypy_out.add_line("Running Hyst...")
             hyst_start_time = time.time()
-            hyst_out = OutputHandler(print_stdout, save_stdout, 'hyst', user_func=stdout_wrapper)
+            hyst_out = OutputHandler(save_stdout, 'hyst', user_func=stdout_wrapper)
             rv['code'] = self._run_hyst(hypy_out, hyst_out)
             rv['hyst_time'] = time.time() - hyst_start_time
             hypy_out.add_line("Seconds for Hyst conversion: {}\n".format(rv['hyst_time']))
@@ -271,7 +287,7 @@ class Engine(object):
 
             tool_start_time = time.time()
 
-            tool_out = OutputHandler(print_stdout, save_stdout, self.printer[0], user_func=stdout_wrapper)
+            tool_out = OutputHandler(save_stdout, self.printer[0], user_func=stdout_wrapper)
             code = hybrid_tool.run_tool(tool, self.output, image_path, timeout, tool_out.stdout_handler, temp_dir)
             rv['tool_time'] = time.time() - tool_start_time
 

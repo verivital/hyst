@@ -2,6 +2,7 @@
 
 import subprocess
 import re
+import time
 from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import run_check_stderr
 from hybridpy.hybrid_tool import RunCode
@@ -24,7 +25,8 @@ class FlowstarTool(HybridTool):
             rv = RunCode.ERROR
 
         with f:
-            if not run_check_stderr([self.tool_path], stdin=f):
+            # run through stdbuf to prevent flow* stdout i/o buffering
+            if not run_check_stderr(["stdbuf", "-oL", self.tool_path], stdin=f):
                 print "Error running flowstar tool"
                 rv = RunCode.ERROR
 

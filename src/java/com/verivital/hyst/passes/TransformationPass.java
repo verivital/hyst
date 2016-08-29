@@ -9,6 +9,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -155,7 +156,7 @@ public abstract class TransformationPass
 			String message = "Error Parsing " + getName() + ",\n Message: " + e.getMessage()
 					+ "\nArguments: '" + params + "'\n" + getParamHelp();
 
-			throw new AutomatonExportException(message);
+			throw new CmdLineRuntimeException(message, e);
 		}
 
 		runPass();

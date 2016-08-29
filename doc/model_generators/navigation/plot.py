@@ -23,14 +23,6 @@ def main():
 def gen_nav(name, a_matrix, i_list, width, start_point, time, noise):
     'generate a navigation benchmark instance and plot a simulation'
 
-    e = hypy.Engine()
-    
-    e.set_tool('pysim')
-    e.set_print_terminal_output(True)
-    e.set_save_model_path(name + '.py')
-    e.set_print_terminal_output(True)
-    e.set_output_image(name + '.png')
-
     gen_param = '-matrix ' + str(a_matrix[0][0]) + ' ' + str(a_matrix[0][1]) + \
         ' ' + str(a_matrix[1][0]) + ' ' + str(a_matrix[1][1]) + ' -i_list '
     
@@ -41,17 +33,18 @@ def gen_nav(name, a_matrix, i_list, width, start_point, time, noise):
     gen_param += '-width ' +  str(width) + ' -startx ' + str(start_x) + ' -starty ' + str(start_y) + \
         ' -noise ' + str(noise)
 
-    pysim_params = "corners=True:legend=False:rand=100:time=" + str(time) + ":title=" + name
+    tool_param = "-corners True -legend False -rand 100 -time {} -title {}".format(time, name)
+
+    e = hypy.Engine('pysim', tool_param)
+    e.set_generator('nav', gen_param)
+    e.set_output(name + '.py')
     
-    tool_params = ["-generate", "nav", gen_param, "-tp", pysim_params]
-
-    e.set_tool_params(tool_params)
-
     print 'Running ' + name
-    code = e.run()
+    e.run(print_stdout=True, image_path=name + '.png')
     print 'Finished ' + name
+    res = e.run()
 
-    if code != hypy.RUN_CODES.SUCCESS:
+    if res['code'] != hypy.RUN_CODES.SUCCESS:
         raise RuntimeError('Error in ' + name + ': ' + str(code))
 
 if __name__ == '__main__':

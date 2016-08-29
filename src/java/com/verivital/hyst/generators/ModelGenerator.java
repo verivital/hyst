@@ -9,6 +9,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 
 /**
  * A ModelGenerator is an alternative input method which generates a
@@ -68,10 +69,10 @@ public abstract class ModelGenerator
 		}
 		catch (CmdLineException e)
 		{
-			String message = "Error Parsing " + getName() + ",\n Message: " + e.getMessage()
-					+ "\nArguments: '" + params + "'\n" + getParamHelp();
+			String message = "Error Parsing Arguments for " + getName() + ",\n Message: "
+					+ e.getMessage() + "\nArguments: '" + params + "'\n" + getParamHelp();
 
-			throw new AutomatonExportException(message);
+			throw new CmdLineRuntimeException(message, e);
 		}
 
 		Configuration c = generateModel();

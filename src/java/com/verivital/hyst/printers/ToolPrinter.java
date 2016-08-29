@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.main.HystFrame;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
 
 /**
@@ -129,7 +130,7 @@ public abstract class ToolPrinter
 			String message = "Error Using Printer for " + getToolName() + ",\n Message: "
 					+ e.getMessage() + "\nArguments: '" + argument + "'\n" + getParamHelp();
 
-			throw new AutomatonExportException(message);
+			throw new CmdLineRuntimeException(message, e);
 		}
 
 		try
