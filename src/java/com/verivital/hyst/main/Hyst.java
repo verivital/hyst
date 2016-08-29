@@ -1,5 +1,6 @@
 package com.verivital.hyst.main;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
@@ -402,6 +403,16 @@ public class Hyst
 
 		if (toolPrinter == null)
 			throw new AutomatonExportException("Tool printer must be set using " + FLAG_TOOL);
+
+		for (String xmlFilename : xmlFilenames)
+			if (xmlFilename != null && !new File(xmlFilename).exists())
+				throw new CmdLineException(parser, hystLocalizable,
+						"Input .xml file not found: '" + cfgFilename + "'.");
+
+		if (cfgFilename != null && !new File(cfgFilename).exists())
+			throw new CmdLineException(parser, hystLocalizable,
+					"Input .cfg file not found: '" + cfgFilename + "'.");
+
 	}
 
 	private Hyst()
