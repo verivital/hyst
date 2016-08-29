@@ -206,8 +206,7 @@
 	<target name="reformat" depends="reformat-haseclipse,reformat-noeclipse">
 	</target>
 	
-	<!-- code reformatting moved here because I want to be able to run tests before waiting for reformatting -->
-	<target name ="integration_test" depends="build-config,build,reformat" description="Run Integration Tests">
+	<target name ="integration_test" depends="build-config,build" description="Run Integration Tests">
 		<exec dir="${integration.path}" executable="python" failonerror="true">
 		    <arg line="run_tests.py" />
 		</exec>
@@ -250,8 +249,9 @@
 	</target>
 	
 	<!-- run test extra passes and generators tests (may take a while) -->
-	<target name ="test_gen_passes" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
-		<echo message="Running generator and transformation pass tests (may take a while)..."/>
+	<!-- code reformatting moved here because I want to be able to run unit tests before waiting for reformatting -->
+	<target name ="test_gen_passes" depends="reformat" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
+		<echo message="Running generator and transformation pass tests..."/>
 		 
 		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
 		    <arg line="plot.py" />
@@ -263,9 +263,10 @@
 			<arg line="plot.py" />
 		</exec>
 		
-		<exec dir="${doc.path}/continuization" executable="python" failonerror="true">
-				<arg line="plot.py" />
-			</exec>
+		<echo message="Running test for continuization transformation pass (may take a while)..."/>
+		<exec dir="${doc.path}/transformation_passes/continuization" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
 	</target>
 	
 	<!-- run test suite -->

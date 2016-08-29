@@ -31,54 +31,44 @@ $ java -jar Hyst.jar
 
 #### COMMAND-LINE USAGE: 
 
-After building Hyst.jar, you can run it as an executable .jar file with the -help flag to see usage:
+After building Hyst.jar, you can run it as an executable .jar file with the -help flag to see the high-level usage:
 
 ```
 $ java -jar Hyst.jar -help
-Hyst v1.17
-Usage:
-hyst [OutputType] (args) XMLFilename(s) (CFGFilename)
-
-OutputType:
-	-flowstar Flow* format
-	-dreach dReach format
-        -hycomp HyComp/HyDI format
-	-hycreate HyCreate2 format
-	-hycreate_sim HyCreate2 format
-	-qbmc Python QBMC (Testing) format
-	-spaceex SpaceEx format
-	-z SMT-LIB printer format
-Optional Model Transformation Passes:
-	-pass_pi Pseudo-Invariant at Point Pass [(modename|)pt1;inv_dir1|pt2;inv_dir2|...] (point/invariant direction is a comma-separated list of reals)
-	-pass_pi_sim Pseudo-Invariant Simulation Pass [time1;time2;...]
-	-pass_scale_time Scale Time Pass [multiplier;ignorevar]
-	-pass_sub_constants Substitute Named Constants for Values Pass [no param]
-	-pass_simplify Simplify Expressions Pass [no param]
-	-pass_split_disjunctions Split Guards with Disjunctions [no param]
-	-pass_remove_unsat Remove Unsatisfiable Modes Pass [no param]
-	-shorten Shorten Mode Names Pass [no param]
-	-regularize Regularization (eliminate zeno behaviors) Pass [<num jumps>;<delta>;<epsilon>]
-
--help show this command-line help text
--v Enable verbose printing
--debug Enable debug printing (even more verbose)
--novalidate skip internal model validation (may result in Exceptions being thrown)
--o [filename] output to the given filename
-XMLFilename: The SpaceEx XML automaton to be processed (*.xml)
-CFGFilename: The automaton's config file. Will be derived from the XML filename if not explicitly stated (*.cfg)
+Hyst v1.3 General Usage:
+ -debug (-d)                            : print debug (and verbose) output
+                                          (default: false)
+ -generate (-gen) GEN_NAME GEN_PARAMS   : generate a model (rather than loading
+                                          from a file)
+ -help (-h)                             : print command-line usage (default:
+                                          true)
+ -help_generators                       : print usage information on model
+                                          generators (default: false)
+ -help_passes                           : print usage information on
+                                          transformation passes (default: false)
+ -help_printers                         : print usage information on tool
+                                          printers (default: false)
+ -input (-i) FILE1 FILE2 ...            : input filenames
+ -output (-o) FILENAME                  : output filename
+ -passes (-p) PASS1 PARAMS1 PASS2       : run a sequence of model
+ PARAMS2 ...                              transformation passes
+ -tool (-t) TOOLNAME TOOLPARAMS         : target tool and tool params
+ -verbose (-v)                          : print verbose output (default: false)
 ```
+
+Hyst consists of tool printers, model transformation passes, and model generators. To see help on the individual items, try help_printers,  -help_passes, and -help_generators. After you select a printer, pass, or generator, you then must provide an argument (even if it's empty)
 
 #### CONVERTING AN EXAMPLE: 
 
-To convert from a SpaceEx model, you run Hyst, provide the proper flag for the format you want to output, and the path to the SpaceEx .xml and, if named differently the .cfg file. You can also provide an output filename with the -o flag (stdout will be used otherwise, which may be incompatible with model formats that require multiple files).
+To convert from a SpaceEx model on the command line, you run Hyst, use the -tool (or -t) flag to select the format you want to output, use the -input (or -i) the path to the SpaceEx .xml and, if named differently, the .cfg file. You can also provide an output filename with the -o flag (stdout will be used otherwise).
 
 From the default directory of hyst/src (where Hyst.jar is compiled), execute:
 
 ```
-$ java -jar Hyst.jar -flowstar ../examples/toy/toy.xml
+$ java -jar Hyst.jar -tool flowstar "" -input ../examples/toy/toy.xml
 ```
 
-In this case -flowstar indicates we want a model in the Flow* format (see the usage above). The .cfg file will be assumed to be ../examples/toy/toy.cfg since it is not explicitly specified. Since no filename is given using the -o flag, the output will be printed to stdout.
+In this case flowstar indicates we want a model in the Flow* format, the next argument is the tool printer argument (in this case, the empty string). The input .cfg file, since it's not explicitly provided, is assumed to be ../examples/toy/toy.cfg. Since no filename is given using the -o flag, the output is printed to stdout.
 
 ************************
 ### SPECIFIC EXAMPLES FOR SUPPORTED OUTPUT FORMATS

@@ -507,26 +507,57 @@ public class Hyst
 
 	private void showHelpTools()
 	{
-		System.out.println("Hyst Tool Usage:");
+		System.out.println("Hyst Tool Help:");
+
+		System.out.print("Supported tool printer names are:");
 
 		for (ToolPrinter printer : printers)
+			System.out.print(" '" + printer.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (ToolPrinter printer : printers)
+		{
+			System.out.println("Usage for Tool Printer '" + printer.getCommandLineFlag() + "':");
 			System.out.println(printer.getParamHelp());
+		}
 	}
 
 	private void showHelpPasses()
 	{
-		System.out.println("Hyst Passes Usage:");
+		System.out.println("Hyst Passes Help:");
+
+		System.out.print("Supported transformation pass names are:");
 
 		for (TransformationPass pass : passes)
+			System.out.print(" '" + pass.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (TransformationPass pass : passes)
+		{
+			System.out
+					.println("Usage for Transformation Pass '" + pass.getCommandLineFlag() + "':");
 			System.out.println(pass.getParamHelp());
+		}
 	}
 
 	private void showHelpGenerators()
 	{
-		System.out.println("Hyst Generator Usage:");
+		System.out.println("Hyst Generator Help:");
+
+		System.out.print("Supported model generator names are:");
 
 		for (ModelGenerator gen : generators)
+			System.out.print(" '" + gen.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (ModelGenerator gen : generators)
+		{
+			System.out.println("Usage for Model Generator '" + gen.getCommandLineFlag() + "':");
 			System.out.println(gen.getParamHelp());
+		}
 	}
 
 	/**
