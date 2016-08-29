@@ -23,40 +23,35 @@ def main():
     # skip error modes so spaceex produces a plot, disable to do DCEM check
     skip_error_modes = True
     
-    hyst_params = ['-hybridizemt', \
-            '-T ' + maxtime + 
-            ' -S ' + simtype + 
-            ' -delta_tt ' + step + 
-            ' -n_pi ' + picount +
-            ' -delta_pi ' + pimaxtime + 
-            ' -epsilon ' + bloat + 
-            ' -opt ' + opt]
+    pass_params = '-T ' + maxtime + \
+            ' -S ' + simtype + \
+            ' -delta_tt ' + step + \
+            ' -n_pi ' + picount + \
+            ' -delta_pi ' + pimaxtime + \
+            ' -epsilon ' + bloat + \
+            ' -opt ' + opt
 
     if skip_error_modes:
-        hyst_params[1] += ' -noerror'
+        pass_params += ' -noerror'
 
-    print "Using Parameters: " + str(hyst_params)
-    plot_vanderpol(hyst_params)
+    print "Using Hybridize Pass Parameters: {}".format(pass_params)
+    plot_vanderpol(pass_params)
 
-def plot_vanderpol(hyst_params):
+def plot_vanderpol(pass_params):
     '''plot widths using vanderpol althoff
     '''
 
     name = 'vanderpol_althoff'
 
-    e = hypy.Engine()
+    e = hypy.Engine('spaceex')
 
-    e.set_tool_params(hyst_params)          
-    e.set_save_model_path('out_vanderpol_hybridized_plot.xml')
-    e.set_output_image('out_vanderpol_hybridized_plot.png')
-
-    e.set_print_terminal_output(True)
-    e.set_model(name + '.xml')
-    e.set_tool('spaceex')
+    e.set_input(name + '.xml')
+    e.set_output('out_vanderpol_hybridized_plot.xml')
+    e.add_pass('hybridizemt', pass_params)
         
     start = time.time()
     print 'Running computation... ',
-    code = e.run(make_image=True)
+    code = e.run(print_stdout=True, image_path='out_vanderpol_hybridized_plot.png')['code']
     dif = time.time() - start
     print 'done. Finished in ' + str(dif) + ' seconds'
 

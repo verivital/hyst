@@ -252,15 +252,18 @@
 	<!-- run test extra passes and generators tests (may take a while) -->
 	<target name ="test_gen_passes" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
 		<echo message="Running generator and transformation pass tests (may take a while)..."/>
-		<!-- 
+		 
 		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
 		    <arg line="plot.py" />
 		</exec>
 		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python" failonerror="true">
 			<arg line="plot.py" />
 		</exec>
-		-->
 		<exec dir="${doc.path}/transformation_passes/hybridization" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
+		
+		<exec dir="${doc.path}/continuization" executable="python" failonerror="true">
 				<arg line="plot.py" />
 			</exec>
 	</target>
