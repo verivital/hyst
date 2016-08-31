@@ -69,21 +69,32 @@ class FlowstarTool(HybridTool):
 
         return rv
 
-    def create_output(self, _):
-        '''Assigns to the output object (self.output_obj)
+    def parse_output(self, dummy_directory, lines, dummy_hypy_out):
+        '''Parses the tool's output and returns a python object
 
         The result object is an ordered dictionary, with:
-        'lines' -> [(line1, timestamp1), ...]       <-- stdout lines (automatically created)
-        'terminated' -> True/False                  <-- did errors occur during computation (was 'terminated' printed?)
-        'mode_times' -> [(mode1, time1), ...]       <-- list of reach-tmes computed in each mode, in order
+        'terminated' -> True/False   <-- did errors occur during computation (was 'terminated' printed?)
+        'mode_times' -> [(mode1, time1), ...]  <-- list of reach-tmes computed in each mode, in order
+        'result' -> 'UNKOWN'/'SAFE'/None  <-- if unsafe set is used and 'terminated' is false, this stores 
+                                              the text after "Result: " in stdout
         '''
 
+        rv = {'terminated': None, 'mode_times': None, 'result': None}
+
         # terminated
-        self.output_obj['terminated'] = False
+        rv['terminated'] = False
         
-        for (line, _) in reversed(self.output_obj['lines']):
+        for line in reversed(lines):
             if 'terminated' in line.lower():
-                self.output_obj['terminated'] = True
+                rv['terminated'] = True
+
+            if line.startswith('Result: '):
+                rest = line[8:]
+                rv['result'] = rest
+
+        # force result to None if the tool was terminated early
+        if rv['terminated'] == True:
+            rv['result'] = None
 
         # mode_times
         mode_times = []
@@ -96,7 +107,7 @@ class FlowstarTool(HybridTool):
         step_total = 0.0
         cur_mode = None
         
-        for (line, _) in self.output_obj['lines']:
+        for line in lines:
             if next_mode_string in line or end_string in line:
                 if cur_mode is not None:
                     mode_times.append((cur_mode, step_total))
@@ -108,18 +119,20 @@ class FlowstarTool(HybridTool):
                 res = step_regexp.match(line)
 
                 if res is not None:
-                    (cur_mode, time) = res.groups()
-                    step_total += float(time)
+                    (cur_mode, t) = res.groups()
+                    step_total += float(t)
                 else:
                     # try to match step without mode name
                     res = step_nomode_regexp.match(line)
 
                     if res is not None:
-                        time = res.group(1)
+                        t = res.group(1)
                         cur_mode = ""
-                        step_total += float(time)
+                        step_total += float()
         
-        self.output_obj['mode_times'] = mode_times
+        rv['mode_times'] = mode_times
+
+        return rv
                 
 if __name__ == "__main__":
     tool_main(FlowstarTool())

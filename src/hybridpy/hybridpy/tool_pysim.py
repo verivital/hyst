@@ -42,13 +42,13 @@ class PySimTool(HybridTool):
 
         return True
 
-    def create_output(self, _):
-        '''Assigns to the output object (self.output_obj)
+    def parse_output(self, dummy_directory, dummy_lines, dummy_hypy_out):
+        '''returns the parsed output object
 
         For pysim, this is the result of running simulate()
         '''
 
-        self.output_obj = self._result
+        return self._result
                 
 if __name__ == "__main__":
     tool_main(PySimTool())

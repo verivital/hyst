@@ -86,13 +86,13 @@ class OutputHandler(object):
 class Engine(object):
     '''HyPy engine. Runs a hybrid systems tool'''
 
-    def __init__(self, printer_name, printer_param=""):
+    def __init__(self, printer_name, printer_param=None):
         assert str(printer_name) == printer_name, "Printer name must be a string"
 
         if printer_param == None:
             printer_param = ""
         else:
-            assert str(printer_param) == printer_param, "Printer param must be a string"
+            assert str(printer_param) == printer_param, "Printer param must be a string: {}".format(repr(printer_param))
 
         name = printer_name.lower()
 
@@ -293,6 +293,7 @@ class Engine(object):
 
             tool_out = OutputHandler(save_stdout, self.printer[0], user_func=stdout_wrapper)
             code = hybrid_tool.run_tool(tool, self.output, image_path, timeout, tool_out.stdout_handler, temp_dir)
+
             rv['tool_time'] = time.time() - tool_start_time
 
             if code == hybrid_tool.RunCode.TIMEOUT:
@@ -327,6 +328,7 @@ def main():
     parser.add_argument('model', help='input model file')
     parser.add_argument('image', nargs='?', help='output image file')
     parser.add_argument('--output', '-o', metavar='PATH', help='output model file')
+    parser.add_argument('--parse_output', '-po', action='store_true', help='print the parsed tool-specific output?')
     parser.add_argument('--image_tool', '-it', metavar='PATH', help='path to tool which displays image')
     parser.add_argument('--timeout', '-to', metavar='SECONDS', type=float, \
                         help='sets timeout (seconds) for running the tool (Hyst runs without timeout)')
@@ -340,7 +342,8 @@ def main():
     model_save_path = args.output
     image_tool = args.image_tool
     timeout = args.timeout
-    tool_param = args.tool_param
+    parse_output = args.parse_output == True
+    tool_param = " ".join(args.tool_param)
 
     if image_path is not None and not image_path.endswith('.png'):
         print "Expected image path to end in .png. Instead got: " + image_path
@@ -355,9 +358,9 @@ def main():
     if model_save_path is not None:
         e.set_output(model_save_path)
 
-    runcode = e.run(print_stdout=True, timeout=timeout, image_path=image_path)
+    result = e.run(print_stdout=True, timeout=timeout, image_path=image_path, parse_output=parse_output)
 
-    if runcode == RUN_CODES.SUCCESS and image_path is not None and image_tool is not None:
+    if result['code'] == RUN_CODES.SUCCESS and image_path is not None and image_tool is not None:
         # plot it
         params = image_tool.split(" ")
         params.append(image_path)
@@ -365,7 +368,10 @@ def main():
         if subprocess.call(params) != 0:
             print "Hypy: Error running image tool (nonzero exit code): " + str(params)
 
-    return runcode
+    if result['code'] == RUN_CODES.SUCCESS and parse_output:
+        print "Parsed output:", result['output']
+
+    return result['code']
 
 if __name__ == "__main__":
     if main() == RUN_CODES.SUCCESS:

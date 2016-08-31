@@ -148,7 +148,7 @@ def run_check_stderr(params, stdin=None, stdout=None):
             # if anything is printed to stderr, it's an error
             if rv:
                 rv = False
-                print "Stderr output detected. Assuming " + process_name + " errored."
+                print "Stderr output detected. Assuming tool errored."
 
         proc.wait()
 
@@ -330,11 +330,11 @@ class HybridTool(object):
     def parse_output(self, dummy_directory, dummy_tool_stdout_lines, dummy_hypy_out):
         '''Create and return the output object. It should be a tool-specific dictionary.
         
-        Tool working files are stored in the passed-in directory.
-        lines is a list of lines produced by the tool
-        hypy_out is an OutputHandler object for printing debug/status information. Use add_line() to print text.
+        directory - the path to a folder which contains the tool's output
+        lines - a list of stdout output lines produced by the tool
+        hypy_out - an OutputHandler object for printing debug/status information. Use add_line() to output text.
         '''
-        raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
+        raise RuntimeError("Tool " + self.tool_name + " did not override parse_output()")
 
     @abc.abstractmethod
     def _run_tool(self):
