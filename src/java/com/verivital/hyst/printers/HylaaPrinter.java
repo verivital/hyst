@@ -7,10 +7,17 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Operator;
+import com.verivital.hyst.grammar.formula.Variable;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.printers.PySimPrinter.ExtraPrintFuncs;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 
 /**
@@ -59,9 +66,120 @@ public class HylaaPrinter extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
-			// add the symbolic invariant
-			// String s = rrtSymbolicPyinter.print(am.invariant);
-			// rv.add(am.name + ".inv_strings = [" + s + "]");
+			// add the jacobian
+			rv.add("def jac(_. state):");
+			rv.add("    'symbolic jacobian'\n");
+
+			rv.add("    return [");
+
+			for (String row : am.automaton.variables)
+			{
+				Expression der = am.flowDynamics.get(row).asExpression();
+
+				StringBuffer line = new StringBuffer();
+				line.append("           [");
+
+				for (String col : am.automaton.variables)
+				{
+					// find variable 'col' in expression 'der'
+					Expression e = findMultiplier(col, der);
+
+					if (e != null)
+					{
+						double val = AutomatonUtil.evaluateConstant(e);
+						line.append("" + e.toString() + ", ");
+					}
+					else
+						line.append("0, ");
+
+				}
+
+				line.append("],");
+
+				rv.add(line.toString());
+			}
+
+			rv.add("    ]");
+
+			return rv;
+		}
+
+		private Expression findMultiplier(String varName, Expression summation)
+		{
+			Expression rv = null;
+
+			if (summation instanceof Operation)
+			{
+				Operation o = summation.asOperation();
+				Operator op = o.op;
+
+				if (op == Operator.NEGATIVE)
+				{
+					rv = findMultiplier(varName, o.children.get(0));
+
+					if (rv != null)
+						rv = new Operation(Operator.NEGATIVE, rv);
+				}
+				else if (op == Operator.MULTIPLY)
+				{
+					Expression left = o.getLeft();
+					Expression right = o.getRight();
+
+					if (left instanceof Variable && right instanceof Variable)
+						throw new AutomatonExportException(
+								"Unsupported variable-variable term in linear derivative: '"
+										+ o.toDefaultString() + "'");
+					else if (left instanceof Variable)
+					{
+						if (((Variable) left).name.equals(varName))
+							rv = right;
+					}
+					else if (right instanceof Variable)
+					{
+						if (((Variable) right).name.equals(varName))
+							rv = left;
+					}
+					else if (left instanceof Constant && right instanceof Constant)
+					{
+						// allowed, doesn't affect rv
+					}
+					else
+						throw new AutomatonExportException(
+								"Unsupported term in linear derivative: '" + o.toDefaultString()
+										+ "'");
+				}
+				else if (op == Operator.ADD || op == Operator.SUBTRACT)
+				{
+					Expression left = o.getLeft();
+					Expression right = o.getRight();
+
+					Expression leftRv = findMultiplier(varName, left);
+					Expression rightRv = findMultiplier(varName, right);
+
+					if (leftRv != null && rightRv != null)
+						throw new AutomatonExportException("Unsupported term in linear derivative ("
+								+ varName + " in multiple places): " + summation.toDefaultString());
+					else if (leftRv != null)
+						rv = leftRv;
+					else if (rightRv != null)
+						rv = rightRv;
+
+					if (rv != null && op == Operator.SUBTRACT)
+						rv = new Operation(Operator.NEGATIVE, rv);
+				}
+				else
+					throw new AutomatonExportException(
+							"Unsupported operation in linear derivative (expecting +/-/*): '"
+									+ o.toDefaultString());
+			}
+			else if (summation instanceof Constant)
+			{
+				// allowed, doesn't affect things
+			}
+			else
+				throw new AutomatonExportException(
+						"Unsupported expression type in linear derivative (expecting sum of multiples): '"
+								+ summation.toDefaultString());
 
 			return rv;
 		}

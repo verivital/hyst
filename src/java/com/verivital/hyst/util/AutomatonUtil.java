@@ -1465,4 +1465,24 @@ public abstract class AutomatonUtil
 
 		return res;
 	}
+
+	/**
+	 * Evaluate an expression to a constant value, returning it
+	 * 
+	 * @param e
+	 *            an Expression which simplifies to a Constant
+	 * @return the double value
+	 * @throws AutomatonExportException
+	 *             if the expression doesn't evaluate to a constant
+	 */
+	public static double evaluateConstant(Expression e)
+	{
+		Expression s = SimplifyExpressionsPass.simplifyExpression(e);
+
+		if (!(s instanceof Constant))
+			throw new AutomatonExportException(
+					"Expression did not simplify to a constant: '" + e.toDefaultString() + "'");
+
+		return ((Constant) s).getVal();
+	}
 }
