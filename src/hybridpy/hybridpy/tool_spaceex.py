@@ -171,28 +171,35 @@ class SpaceExTool(HybridTool):
 
         shutil.copyfile(self.original_cfg_path, self.cfg_path)
 
-    def create_output(self, directory):
-        '''Assigns to the output object (self.output_obj)
-        For SpaceEx, this expects output-format=INTV
+    def parse_output(self, directory, lines, hypy_out):
+        '''returns the parsed output object
+
+        Some output options ('variables' and 'locations') are only created if SpaceEx is run with output-format=INTV
 
         The result object is an ordered dictionary, with
-        'lines' -> [(line1, timestamp1), ...]                    <-- stdout lines (automatically created)
         'variables'->{var1 -> (min, max), ...}                   <-- range of each variable in all locations
         'locations'->{loc1 -> {var1 -> (min, max), ...}, ...}    <-- range of each variable in each location
-        'fixpoint' -> True/False   <-- True if 'Found fixpoint after' found on stdout
-                                       False if 'without finding fixpoint' found on stdout
-                                       unassigned if neither
+        'fixpoint' -> True/False/unset   <-- True if 'Found fixpoint after' found on stdout
+                                             False if 'without finding fixpoint' found on stdout
+                                             unassigned if neither
+        'safe' -> True/False/uset <-- True if forbidden states are not reachable
+                                      False if forbidden states are reachable
+                                      unassigned if neither (no forbidden states in model)
         '''
+        rv = {'fixpoint': None, 'safe': None, 'variables': None, 'locations': None}
 
-        ### create 'fixpoint' from stdout
-        for (line, _) in reversed(self.output_obj['lines']):
+        ### create 'fixpoint' and 'safe' from stdout
+        for line in reversed(lines):
             if 'Found fixpoint after' in line:
-                self.output_obj['fixpoint'] = True
-                break
+                rv['fixpoint'] = True
             elif 'without finding fixpoint' in line:
-                self.output_obj['fixpoint'] = False
-                break
-        
+                rv['fixpoint'] = False
+
+            if 'Forbidden states are not reachable.' in line:
+                rv['safe'] = True
+            elif 'Forbidden states are reachable.' in line:
+                rv['safe'] = False
+ 
         ### create 'variables' and 'locations' from plotdata.txt
         filename = directory + '/plotdata.txt'
         var = collections.OrderedDict() # map from var_name -> (min, max)
@@ -226,11 +233,14 @@ class SpaceExTool(HybridTool):
                     self._read_loc_line(line, loc)
 
         if state == state_init:
-            raise RuntimeError('Format of plotdata.txt was wrong. Did you use output-format=INTV?')
+            hypy_out.add_line("Warning: Format of plotdata.txt was not INTV. Did you use output-format=INTV? " +
+                            "Skipping 'locations' and 'variables' output.")
+        else:
+            # assign to output object (don't overwrite object)
+            rv['locations'] = loc
+            rv['variables'] = var
 
-        # assign to output object (don't overwrite object)
-        self.output_obj['locations'] = loc
-        self.output_obj['variables'] = var
+        return rv
 
     # line = 'Location: loc(Heater)==heater_on & loc(Controller)==controller_on'
     loc_re = re.compile(r'loc\([^)]*\)==([^ ]+)') # use with findall

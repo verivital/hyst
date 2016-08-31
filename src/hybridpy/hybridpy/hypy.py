@@ -213,14 +213,15 @@ class Engine(object):
         return rv
 
     def run(self, run_hyst=True, run_tool=True, timeout=None, 
-                    image_path=None, save_stdout=False, print_stdout=False, stdout_func=None, make_output=False):
+                    image_path=None, save_stdout=False, print_stdout=False, stdout_func=None, parse_output=False):
         '''
         Converts the model in Hyst, runs it with the appropriate tool, 
         produces a plot image, and python results object.
 
         non-obvious parameters:
         stdout_func - a 3-param user function for processing of stream stdout. Params are: line, time, tool_name
-        make_output
+        parse_output - should tool's output be parsed into a python object? If True, 'output' in the result is set.
+                       using this option forces save_stdout to True
 
         returns a dictionary object with the following keys:
         'code' - exit code - one of RUN_CODES, SUCCESS if successful, an ERROR_* code otherwise
@@ -230,7 +231,7 @@ class Engine(object):
         'stdout' - the list of lines anything produced to stdout, only returned if save_stdout == True
         'tool_stdout' - the list of lines the tool produced to stdout, only returned if save_stdout == True
         'hypy_stdout' - the list of lines hypy produces to stdout, only returned if save_stdout == True
-        'output' - tool-specific processed output object, only returned if successful and make_output == True
+        'output' - tool-specific processed output object, only returned if successful and parse_output == True
         '''
 
         #image_path = os.path.splitext(filename)[0] + ".png" if filename is not None else "generated.png"
@@ -245,6 +246,9 @@ class Engine(object):
         rv = {}
         rv['code'] = RUN_CODES.SUCCESS
         stdout_lines = None
+
+        if parse_output:
+            save_stdout = True
         
         if save_stdout:
             stdout_lines = []
@@ -282,7 +286,7 @@ class Engine(object):
 
             temp_dir = None
 
-            if make_output:
+            if parse_output:
                 temp_dir = os.path.join(tempfile.gettempdir(), "hypy_" + random_string())
 
             tool_start_time = time.time()
@@ -297,8 +301,8 @@ class Engine(object):
                 rv['code'] = RUN_CODES.ERROR_UNSUPPORTED
             elif code != hybrid_tool.RunCode.SUCCESS:
                 rv['code'] = RUN_CODES.ERROR_TOOL
-            elif temp_dir is not None:
-                rv['output_obj'] = tool.create_output(temp_dir)
+            elif parse_output:
+                rv['output'] = tool.parse_output(temp_dir, tool_out.lines, hypy_out)
              
             if temp_dir is not None:   
                 shutil.rmtree(temp_dir)

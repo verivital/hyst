@@ -327,10 +327,13 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
-    def create_output(self, _):
+    def parse_output(self, dummy_directory, dummy_tool_stdout_lines, dummy_hypy_out):
         '''Create and return the output object. It should be a tool-specific dictionary.
         
-        Tool working files are stored in the passed-in directory.'''
+        Tool working files are stored in the passed-in directory.
+        lines is a list of lines produced by the tool
+        hypy_out is an OutputHandler object for printing debug/status information. Use add_line() to print text.
+        '''
         raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
 
     @abc.abstractmethod
