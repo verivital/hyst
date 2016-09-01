@@ -308,7 +308,7 @@ def main():
     result = e.run(image_path="toy_output.png")
     
     if result['code'] != hypy.RUN_CODES.SUCCESS:
-        print "engine.run() returned error: {}".format(code)
+        print "engine.run() returned error: {}".format(result['code'])
         exit(1)
         
     print "Completed successfully"
