@@ -62,6 +62,12 @@ public class PySimPrinter extends ToolPrinter
 	@Option(name = "-legend", usage = "use legend?", metaVar = "True/False")
 	String legend = "True";
 
+	@Option(name = "-xdim", usage = "plot x dim", metaVar = "DIM_INDEX")
+	int plotXDim = -1;
+
+	@Option(name = "-ydim", usage = "plot y dim", metaVar = "DIM_INDEX")
+	int plotYDim = -1;
+
 	private static PySimExpressionPrinter pySimExpressionPrinter = new PySimExpressionPrinter();
 	private static SympyPrinter sympyPyinter = new SympyPrinter();
 
@@ -235,16 +241,20 @@ public class PySimPrinter extends ToolPrinter
 
 		printLine(automatonToString(config));
 
-		printLine("def simulate(max_time=" + getTimeParam() + "):");
+		printLine("def simulate(init_states, max_time=" + getTimeParam() + "):");
 		increaseIndentation();
 		printLine("'''simulate the automaton from each initial rect'''");
 		printSimulate();
 		decreaseIndentation();
 		printNewline();
 
-		int xDim = ha.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yDim = ha.variables.indexOf(config.settings.plotVariableNames[1]);
-		printLine("def plot(result, filename='plot.png', dim_x=" + xDim + ", dim_y=" + yDim + "):");
+		int xDim = plotXDim >= 0 ? plotXDim
+				: ha.variables.indexOf(config.settings.plotVariableNames[0]);
+		int yDim = plotYDim >= 0 ? plotYDim
+				: ha.variables.indexOf(config.settings.plotVariableNames[1]);
+
+		printLine("def plot(result, init_states, filename='plot.png', dim_x=" + xDim + ", dim_y="
+				+ yDim + "):");
 		increaseIndentation();
 		printLine("'''plot a simulation result to a file'''");
 		printPlot();
@@ -254,7 +264,9 @@ public class PySimPrinter extends ToolPrinter
 		// check if main module
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("plot(simulate())");
+		printLine("ha = define_ha()");
+		printLine("init_states = define_init_states(ha)");
+		printLine("plot(simulate(init_states), init_states)");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -422,8 +434,6 @@ public class PySimPrinter extends ToolPrinter
 		 */
 
 		printNewline();
-		printLine("ha = define_ha()");
-		printLine("init_states = define_init_states(ha)");
 		printLine("q_list = init_list_to_q_list(init_states, " + "center=" + center + ", star="
 				+ star + ", corners=" + corners + ", rand=" + rand + ")");
 		printLine("result = sim.simulate_multi(q_list, max_time)");
@@ -465,7 +475,7 @@ public class PySimPrinter extends ToolPrinter
 		printLine("shouldShow = False");
 		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
 				+ "legend=" + legend + ", title=" + (title == "None" ? "None" : "'" + title + "'")
-				+ ", show=shouldShow)");
+				+ ", show=shouldShow, init_states=init_states)");
 	}
 
 	private String getTimeParam()

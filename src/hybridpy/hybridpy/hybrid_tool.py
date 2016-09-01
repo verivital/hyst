@@ -129,7 +129,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
 
     return rv
 
-def run_check_stderr(params, stdin=None, stdout=None):
+def run_check_stderr(params, stdin=None):
     '''run a process with a list of params
     returning True if success and False if error or stderr is used
     '''
@@ -138,7 +138,12 @@ def run_check_stderr(params, stdin=None, stdout=None):
     rv = True
 
     try:
-        proc = subprocess.Popen(params, stdin=stdin, stdout=stdout, stderr=subprocess.PIPE)
+        proc = None
+
+        if stdin is None:
+            proc = subprocess.Popen(params, stderr=subprocess.PIPE)
+        else:
+            proc = subprocess.Popen(params, stdin=stdin, stderr=subprocess.PIPE)
 
         for line in iter(proc.stderr.readline, ''):
             output_line = line.rstrip()

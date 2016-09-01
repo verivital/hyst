@@ -55,7 +55,7 @@ public class FlowPrinter extends ToolPrinter
 	@Option(name = "-precondition", usage = "precondition method", metaVar = "VAL")
 	String precondition = "auto";
 
-	@Option(name = "-plot", usage = "output plot type", metaVar = "VAL")
+	@Option(name = "-plot", usage = "output plot line in Flow* file (for example 'gnuplot octagon x,y')", metaVar = "VAL")
 	String plot = "auto";
 
 	@Option(name = "-orders", usage = "taylor model orders", metaVar = "MIN-MAX")

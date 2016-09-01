@@ -54,7 +54,12 @@ public class StringWithSpacesArrayOptionHandler extends OptionHandler<String>
 		{
 			String param = params.getParameter(counter);
 
-			if (param.startsWith("-"))
+			boolean nextAlpha = false;
+
+			if (param.length() > 1 && Character.isAlphabetic(param.charAt(1)))
+				nextAlpha = true;
+
+			if (param.startsWith("-") && nextAlpha)
 				break;
 
 			setter.addValue(param);

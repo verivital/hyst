@@ -7,12 +7,13 @@ import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.util.CmdLineRuntimeException;
+import com.verivital.hyst.util.StringPairsWithSpacesArrayOptionHandler;
 import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 
 /**
@@ -31,10 +32,10 @@ public class BuildGenerator extends ModelGenerator
 	@Option(name = "-time_bound", required = true, usage = "reachability time bound", metaVar = "TIME")
 	private double timeBound;
 
-	@Option(name = "-init", required = true, handler = StringWithSpacesArrayOptionHandler.class, usage = "initial mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	@Option(name = "-init", required = true, handler = StringPairsWithSpacesArrayOptionHandler.class, usage = "initial mode names and conditions", metaVar = "(MODENAME CONDITION)+")
 	private List<String> initParams;
 
-	@Option(name = "-error", handler = StringWithSpacesArrayOptionHandler.class, usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
+	@Option(name = "-error", handler = StringPairsWithSpacesArrayOptionHandler.class, usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
 	private List<String> errorParams = null;
 
 	@Option(name = "-modes", required = true, handler = StringWithSpacesArrayOptionHandler.class, usage = "modes to create", metaVar = "(MODENAME INVARIANT DER1 DER2 ...)+")
@@ -65,9 +66,9 @@ public class BuildGenerator extends ModelGenerator
 		int div = 2 + vars.size();
 
 		if (modeParams.size() % (div) != 0)
-			throw new AutomatonExportException(
-					"Mode params was of wrong size (should be divisble by " + div + "): "
-							+ modeParams);
+			throw new CmdLineRuntimeException(
+					"Mode params was of wrong size. Should be divisible by " + div + "; got "
+							+ modeParams.size() + " params: " + modeParams);
 
 		for (int i = 0; i < modeParams.size(); i += div)
 		{
@@ -88,8 +89,9 @@ public class BuildGenerator extends ModelGenerator
 		div = 3 + vars.size();
 
 		if (transitionParams.size() % (div) != 0)
-			throw new AutomatonExportException(
-					"Transition params was of wrong size (should be divisble by " + div + ")");
+			throw new CmdLineRuntimeException(
+					"Transition params was of wrong size. Should be divisible by " + div + "; got "
+							+ transitionParams.size() + " params: " + transitionParams);
 
 		for (int i = 0; i < transitionParams.size(); i += div)
 		{
@@ -117,7 +119,7 @@ public class BuildGenerator extends ModelGenerator
 				: ha.variables.get(0);
 
 		if (initParams.size() % 2 != 0)
-			throw new AutomatonExportException("Expected -init param count to be multiple of 2");
+			throw new CmdLineRuntimeException("Expected -init param count to be multiple of 2");
 
 		for (int i = 0; i < initParams.size(); i += 2)
 		{
@@ -125,13 +127,13 @@ public class BuildGenerator extends ModelGenerator
 			String condition = initParams.get(i + 1);
 
 			if (c.init.containsKey(mode))
-				throw new AutomatonExportException("initial mode was listed twice: " + mode);
+				throw new CmdLineRuntimeException("initial mode was listed twice: " + mode);
 
 			c.init.put(mode, FormulaParser.parseInitialForbidden(condition));
 		}
 
 		if (errorParams.size() % 2 != 0)
-			throw new AutomatonExportException("Expected -error param count to be multiple of 2");
+			throw new CmdLineRuntimeException("Expected -error param count to be multiple of 2");
 
 		for (int i = 0; i < errorParams.size(); i += 2)
 		{
@@ -139,7 +141,7 @@ public class BuildGenerator extends ModelGenerator
 			String condition = errorParams.get(i + 1);
 
 			if (c.forbidden.containsKey(mode))
-				throw new AutomatonExportException("error mode was listed twice: " + mode);
+				throw new CmdLineRuntimeException("error mode was listed twice: " + mode);
 
 			c.forbidden.put(mode, FormulaParser.parseInitialForbidden(condition));
 		}

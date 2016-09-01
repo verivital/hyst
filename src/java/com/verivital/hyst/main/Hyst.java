@@ -622,7 +622,7 @@ public class Hyst
 		}
 		catch (AutomatonExportException e)
 		{
-			logError("Automaton Export Exception while exporting.");
+			logError("\nHyst error while exporting - " + e.toString() + "\n");
 			ex = e;
 			rv = ExitCode.EXPORT_AUTOMATON_EXCEPTION;
 		}

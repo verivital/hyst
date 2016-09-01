@@ -60,7 +60,8 @@ class BuildGenArgsBuilder(object):
 
             rv += self.transition_args
 
-        arg_string = " ".join(["\"" + s + "\"" if " " in s else s for s in rv])
+        quoted_args = ["\"" + s + "\"" if " " in s else s for s in rv]
+        arg_string = " ".join(quoted_args)
 
         return arg_string
 
@@ -92,6 +93,11 @@ class BuildGenArgsBuilder(object):
 
         assert str(name) == name, "mode name must be a string: {}".format(name)
         assert str(invariant) == invariant, "invariant condition must be a string: {}".format(invariant)
+        assert len(der_list) == len(self.variables), "add_mode for '{}' expected {} derivatives but {} were given" \
+                                                    .format(name, len(self.variables), len(der_list))
+
+        for der in der_list:
+            assert str(der) == der, "derivatives must be strings: {}".format(repr(der))
 
         assert self.modes.get(name) is None, "mode '{}' was already in the automaton".format(name)
 
