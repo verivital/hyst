@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.geometry.Interval;
@@ -26,9 +28,11 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
+import com.verivital.hyst.util.PairStringOptionHandler;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
@@ -77,6 +81,19 @@ public class FlowPrinter extends ToolPrinter
 
 	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
 	String aggregation = "parallelotope";
+
+	@Option(name = "-taylor_init", usage = "override the initial states with a taylor mode", metaVar = "MODE TM", handler = PairStringOptionHandler.class)
+	public void setTaylorIinit(String[] params) throws CmdLineException
+	{
+		if (params.length != 2)
+			throw new CmdLineException("-taylor_init expected exactly two follow-on arguments");
+
+		taylorInit = new ArrayList<String>();
+		taylorInit.add(params[0]);
+		taylorInit.add(params[1]);
+	}
+
+	List<String> taylorInit = null;
 
 	private BaseComponent ha;
 
@@ -293,12 +310,31 @@ public class FlowPrinter extends ToolPrinter
 		printLine("init");
 		printLine("{");
 
-		for (Entry<String, Expression> e : config.init.entrySet())
+		if (taylorInit != null)
 		{
-			printLine(e.getKey());
+			Hyst.log("Taylor model initial state override was provided");
+
+			String modeName = taylorInit.get(0);
+			String tm = taylorInit.get(1).replace(":", "\n");
+
+			printLine(modeName);
 			printLine("{");
-			printFlowRangeConditions(removeConstants(e.getValue(), ha.constants.keySet()), true);
+
+			for (String line : tm.split("\n"))
+				printLine(line);
+
 			printLine("}"); // end mode
+		}
+		else
+		{
+			for (Entry<String, Expression> e : config.init.entrySet())
+			{
+				printLine(e.getKey());
+				printLine("{");
+				printFlowRangeConditions(removeConstants(e.getValue(), ha.constants.keySet()),
+						true);
+				printLine("}"); // end mode
+			}
 		}
 
 		printLine("}"); // end all initial modes
