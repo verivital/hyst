@@ -36,13 +36,13 @@ public class BuildGenerator extends ModelGenerator
 	private List<String> initParams;
 
 	@Option(name = "-error", handler = StringPairsWithSpacesArrayOptionHandler.class, usage = "error mode names and conditions", metaVar = "(MODENAME CONDITION)+")
-	private List<String> errorParams = null;
+	private List<String> errorParams = new ArrayList<String>();
 
 	@Option(name = "-modes", required = true, handler = StringWithSpacesArrayOptionHandler.class, usage = "modes to create", metaVar = "(MODENAME INVARIANT DER1 DER2 ...)+")
 	private List<String> modeParams;
 
 	@Option(name = "-transitions", handler = StringWithSpacesArrayOptionHandler.class, usage = "transitions to create", metaVar = "(FROM TO GUARD [RESET1 RESET2 ...])*")
-	private List<String> transitionParams;
+	private List<String> transitionParams = new ArrayList<String>();
 
 	@Override
 	public String getCommandLineFlag()

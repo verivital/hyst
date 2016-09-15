@@ -332,7 +332,7 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
-    def parse_output(self, dummy_directory, dummy_tool_stdout_lines, dummy_hypy_out):
+    def parse_output(self, _directory, _tool_stdout_lines, _hypy_out):
         '''Create and return the output object. It should be a tool-specific dictionary.
         
         directory - the path to a folder which contains the tool's output

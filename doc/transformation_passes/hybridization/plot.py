@@ -60,7 +60,7 @@ def check_dcem(pass_params):
     else:
         print "Success: DCEMs were not reachable."
 
-    if result['code'] != hypy.RUN_CODES.SUCCESS:
+    if result['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError("Hyst resturn code was: " + str(result['code']))
 
 
@@ -81,7 +81,7 @@ def plot(pass_params):
     dif = time.time() - start
     print 'done. Finished in ' + str(dif) + ' seconds'
 
-    if code != hypy.RUN_CODES.SUCCESS:
+    if code != hypy.Engine.SUCCESS:
         raise RuntimeError('Error: ' + str(code))
 
 

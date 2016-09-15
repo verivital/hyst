@@ -21,7 +21,7 @@ def run_without_pi():
     e.set_input('neuron.xml')
     code = e.run(image_path='original.png')['code']
 
-    if code != hypy.RUN_CODES.SUCCESS:
+    if code != hypy.Engine.SUCCESS:
         raise RuntimeError('Error:' + str(code))
 
 def run_with_pi():
@@ -33,7 +33,7 @@ def run_with_pi():
 
     code = e.run(image_path='pi.png')['code']
 
-    if code != hypy.RUN_CODES.SUCCESS:
+    if code != hypy.Engine.SUCCESS:
         raise RuntimeError(str(code))
 
 if __name__ == "__main__":

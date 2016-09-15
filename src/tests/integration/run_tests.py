@@ -9,6 +9,7 @@ import shutil
 import multiprocessing
 from hybridpy.hybrid_tool import get_script_path
 import hybridpy.hypy as hypy
+from hybridpy.hypy import Engine
 
 # timeout for running the tools
 TIMEOUT = 2.0
@@ -61,7 +62,7 @@ def run_single((index, total, path, tool_tuple, quit_flag)):
 
     result = e.run(run_tool=SHOULD_RUN_TOOLS, timeout=TIMEOUT, save_stdout=True, image_path=base + ".png")
 
-    if result['code'] in hypy.get_error_run_codes():
+    if result['code'] in [Engine.ERROR_TOOL, Engine.ERROR_CONVERSION, Engine.TIMEOUT_CONVERSION]:
         message = "Test failed for " + index_str + " model " + model + " with " + tool_name + ": " + str(result['code'])
 
         log = "\n".join(result['stdout'])

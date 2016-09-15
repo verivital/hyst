@@ -2,7 +2,7 @@
 
 import subprocess
 import re
-import time
+import os
 from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import run_check_stderr
 from hybridpy.hybrid_tool import RunCode
@@ -69,7 +69,28 @@ class FlowstarTool(HybridTool):
 
         return rv
 
-    def parse_output(self, dummy_directory, lines, dummy_hypy_out):
+    def parse_gnuplot_data(self, filename):
+        'extact the gnuplot octogon data from the file and return a string object'
+        
+        # octogon data starts after line: 'plot '-' notitle with lines ls 1'
+        started = False
+        rv = ""
+
+        with open(filename, "r") as f:
+            for line in f.readline():
+                print "{}: {}".format(started, line)
+            
+                if started:
+                    rv += line
+                elif line.startswith('plot'):
+                    started = True
+
+        print rv
+        exit()
+
+        return rv
+
+    def parse_output(self, directory, lines, _hypy_out):
         '''Parses the tool's output and returns a python object
 
         The result object is an ordered dictionary, with:
@@ -77,6 +98,7 @@ class FlowstarTool(HybridTool):
         'mode_times' -> [(mode1, time1), ...]  <-- list of reach-tmes computed in each mode, in order
         'result' -> 'UNKOWN'/'SAFE'/None  <-- if unsafe set is used and 'terminated' is false, this stores 
                                               the text after "Result: " in stdout
+        'gnuplot_oct_data' -> the octogon data in the tool's gnuplot output
         '''
 
         rv = {'terminated': None, 'mode_times': None, 'result': None}
@@ -93,8 +115,10 @@ class FlowstarTool(HybridTool):
                 rv['result'] = rest
 
         # force result to None if the tool was terminated early
-        if rv['terminated'] == True:
+        if rv['terminated'] is True:
             rv['result'] = None
+        else:
+            rv['gnuplot_oct_data'] = self.parse_gnuplot_data(os.path.join(directory, 'outputs', 'out.plt'))
 
         # mode_times
         mode_times = []

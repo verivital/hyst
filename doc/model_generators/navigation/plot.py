@@ -44,7 +44,7 @@ def gen_nav(name, a_matrix, i_list, width, start_point, time, noise):
     print 'Finished ' + name
     res = e.run()
 
-    if res['code'] != hypy.RUN_CODES.SUCCESS:
+    if res['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError('Error in ' + name + ': ' + str(code))
 
 if __name__ == '__main__':

@@ -53,7 +53,7 @@ class TestArgsBuilder(unittest.TestCase):
 
         res = e.run(run_tool=False)
 
-        self.assertEqual(res['code'], hypy.RUN_CODES.SUCCESS)
+        self.assertEqual(res['code'], hypy.Engine.SUCCESS)
 
 if __name__ == '__main__':
     unittest.main()

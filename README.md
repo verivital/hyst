@@ -307,7 +307,7 @@ def main():
     e.set_input(model) # sets input model path
     result = e.run(image_path="toy_output.png")
     
-    if result['code'] != hypy.RUN_CODES.SUCCESS:
+    if result['code'] != hypy.Engine.SUCCESS:
         print "engine.run() returned error: {}".format(result['code'])
         exit(1)
         

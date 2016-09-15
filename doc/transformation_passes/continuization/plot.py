@@ -47,7 +47,7 @@ def plot(plot_param):
     code = e.run(image_path=name + ".png", print_stdout=True)['code']
     print 'Finished ' + name
 
-    if code != hypy.RUN_CODES.SUCCESS:
+    if code != hypy.Engine.SUCCESS:
         print '\n\n-------------------\nError in ' + name + ': ' + str(code)
 
         raise RuntimeError('Error in ' + name + ': ' + str(code))

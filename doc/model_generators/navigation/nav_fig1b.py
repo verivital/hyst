@@ -207,23 +207,23 @@ def define_init_states(ha):
     return rv
 
 
-def simulate(max_time=5):
+def simulate(init_states, max_time=5):
     '''simulate the automaton from each initial rect'''
 
-    ha = define_ha()
-    init_states = define_init_states(ha)
     q_list = init_list_to_q_list(init_states, center=True, star=True, corners=True, rand=100)
     result = sim.simulate_multi(q_list, max_time)
 
     return result
 
-def plot(result, filename='plot.png', dim_x=0, dim_y=1):
+def plot(result, init_states, filename='plot.png', dim_x=0, dim_y=1):
     '''plot a simulation result to a file'''
 
     draw_events = len(result) == 1
     shouldShow = False
-    sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, legend=False, title='nav_fig1b', show=shouldShow)
+    sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, legend=False, title='nav_fig1b', show=shouldShow, init_states=init_states)
 
 if __name__ == '__main__':
-    plot(simulate())
+    ha = define_ha()
+    init_states = define_init_states(ha)
+    plot(simulate(init_states), init_states)
 
