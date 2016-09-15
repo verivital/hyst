@@ -1,23 +1,20 @@
 package com.verivital.hyst.passes.complex.pi;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.kohsuke.args4j.Option;
-
 import com.verivital.hyst.geometry.HyperPoint;
+import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.SymbolicStatePoint;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
-import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
-import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.StringOperations;
 
 /**
@@ -26,60 +23,69 @@ import com.verivital.hyst.util.StringOperations;
  * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants"
  * , CyPhy 2014, Bak 2014
  * 
- * The parameter is a list of times. The center of the initial set is simulated
- * for these times before splitting orthogonal to the gradient.
+ * This pass only does a single splitting, on the initial mode, as soon as the
+ * constructed hyperplane is completely on one side of the initial state box.
+ * The constructed hyperplane is orthogonal to a simulation from the center of
+ * the initial states.
  * 
- * Currently, the simulatio is only done from the initial states, staying in the
- * initial mode. If there's a demand, this should be extended to work across
- * discrete transitions.
+ * This is more light-weight than the other pseudo-invariant transformations as
+ * it doesn't require modifying the initial states or adding an urgent timer.
  * 
- * @author Stanley Bak (October 2014)
+ * @author Stanley Bak (Auhust 2016)
  *
  */
-public class PseudoInvariantSimulatePass extends TransformationPass
+public class PseudoInvariantInitPass extends TransformationPass
 {
-	@Option(name = "-times", required = true, handler = DoubleArrayOptionHandler.class, usage = "simulation times", metaVar = "TIME1 TIME2 ...")
-	private List<Double> times;
+	BaseComponent ha = null;
 
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "pi_sim";
+		return "pi_init";
 	}
 
 	@Override
 	public String getName()
 	{
-		return "Pseudo-Invariant Simulation Pass";
+		return "Pseudo-Invariant Near Initial States Pass";
 	}
 
 	@Override
 	protected void runPass()
 	{
-		Collections.sort(times);
-		Hyst.log("Simulation times: " + times);
-		BaseComponent ha = (BaseComponent) config.root;
+		ha = (BaseComponent) config.root;
 
-		SymbolicStatePoint init = new SymbolicStatePoint();
-		init.modeName = config.init.entrySet().iterator().next().getKey();
-		init.hp = AutomatonUtil.getInitialPoint(ha, config);
-		List<SymbolicStatePoint> states = pythonSimulate(config, init, times);
+		HyperRectangle initBox = HybridizeMixedTriggeredPass.getInitialBox(config);
+		final String initialMode = config.init.keySet().iterator().next();
+		HyperPoint center = initBox.center();
 
-		List<String> modes = new ArrayList<String>(times.size());
-		List<HyperPoint> points = new ArrayList<HyperPoint>(times.size());
-		List<HyperPoint> dirs = new ArrayList<HyperPoint>(times.size());
+		ArrayList<SymbolicStatePoint> startPoints = new ArrayList<SymbolicStatePoint>();
+		startPoints.add(new SymbolicStatePoint(initialMode, center));
 
-		for (SymbolicStatePoint ss : states)
-		{
-			AutomatonMode mode = ha.modes.get(ss.modeName);
-			double[] gradient = AutomatonUtil.getGradientAtPoint(mode, ss.hp);
+		double simTime = config.settings.spaceExConfig.timeHorizon;
+		ArrayList<SymbolicStatePoint> trajectory = HybridizeMixedTriggeredPass
+				.simMultiGetTrajectory(config, startPoints, simTime).get(0);
 
-			modes.add(mode.name);
-			points.add(new HyperPoint(ss.hp));
-			dirs.add(new HyperPoint(gradient));
-		}
+		SymbolicStatePoint piPoint = HybridizeMixedTriggeredPass.getPiPoint(ha, initBox,
+				trajectory);
 
-		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs, false);
+		if (piPoint == null)
+			throw new AutomatonExportException(
+					"Hyperplane from center trajectory never crossed past start box.");
+
+		// make the hyperplane according to pi-point
+		ArrayList<String> modes = new ArrayList<String>();
+		ArrayList<HyperPoint> points = new ArrayList<HyperPoint>();
+		ArrayList<HyperPoint> dirs = new ArrayList<HyperPoint>();
+
+		double[] gradient = AutomatonUtil.getGradientAtPoint(ha.modes.get(piPoint.modeName),
+				piPoint.hp);
+
+		modes.add(initialMode);
+		points.add(new HyperPoint(piPoint.hp));
+		dirs.add(new HyperPoint(gradient));
+
+		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs, true);
 		Hyst.log("Calling hyperplane pseudo-invariant pass with params: " + paramString);
 
 		// run the traditional pseudo-invariants pass

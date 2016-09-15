@@ -43,6 +43,7 @@ import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantInitPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
@@ -77,12 +78,12 @@ public class Hyst
 
 	// list of supported model transformation passes (add new ones here)
 	private final TransformationPass[] passes = { new AddIdentityResetPass(),
-			new PseudoInvariantPass(), new PseudoInvariantSimulatePass(), new TimeScalePass(),
-			new SubstituteConstantsPass(), new SimplifyExpressionsPass(),
-			new SplitDisjunctionGuardsPass(), new RemoveSimpleUnsatInvariantsPass(),
-			new ShortenModeNamesPass(), new ContinuizationPass(), new HybridizeMixedTriggeredPass(),
-			new HybridizeMTRawPass(), new FlattenAutomatonPass(), new OrderReductionPass(),
-			new ConvertLutFlowsPass(), };
+			new PseudoInvariantPass(), new PseudoInvariantSimulatePass(),
+			new PseudoInvariantInitPass(), new TimeScalePass(), new SubstituteConstantsPass(),
+			new SimplifyExpressionsPass(), new SplitDisjunctionGuardsPass(),
+			new RemoveSimpleUnsatInvariantsPass(), new ShortenModeNamesPass(),
+			new ContinuizationPass(), new HybridizeMixedTriggeredPass(), new HybridizeMTRawPass(),
+			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(), };
 
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
