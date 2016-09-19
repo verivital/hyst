@@ -787,7 +787,7 @@ public class SmallTest
 		String[] args = { "-help" };
 
 		Hyst.IS_UNIT_TEST = true;
-		Hyst.convert(args);
+		Assert.assertEquals(Hyst.runWithArguments(args), Hyst.ExitCode.SUCCESS.ordinal());
 	}
 
 	@Test

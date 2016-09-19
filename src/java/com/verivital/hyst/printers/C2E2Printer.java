@@ -3,10 +3,11 @@
  */
 package com.verivital.hyst.printers;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
@@ -34,6 +35,9 @@ import com.verivital.hyst.passes.basic.AddIdentityResetPass;
  */
 public class C2E2Printer extends ToolPrinter
 {
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String time = "auto";
+
 	private BaseComponent ha;
 
 	/**
@@ -140,7 +144,7 @@ public class C2E2Printer extends ToolPrinter
 		}
 
 		// time
-		String maxTime = toolParams.get("time");
+		String maxTime = time;
 
 		if (maxTime.equals("auto"))
 			maxTime = doubleToString(config.settings.spaceExConfig.timeHorizon);
@@ -508,16 +512,6 @@ public class C2E2Printer extends ToolPrinter
 	public boolean isInRelease()
 	{
 		return false; // TODO: enable for release
-	}
-
-	@Override
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> params = new LinkedHashMap<String, String>();
-
-		params.put("time", "auto");
-
-		return params;
 	}
 
 	@Override

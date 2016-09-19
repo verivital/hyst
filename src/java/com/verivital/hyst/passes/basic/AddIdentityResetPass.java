@@ -33,7 +33,7 @@ public class AddIdentityResetPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_identity";
+		return "pass_identity";
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -34,6 +35,15 @@ public abstract class TransformationPass
 	protected Configuration config = null; // is assigned before runPass is
 											// called
 	private CmdLineParser parser = new CmdLineParser(this);
+
+	public TransformationPass()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"transformation pass command-line flag shouldn't start with a hyphen: " + flag);
+	}
 
 	/**
 	 * Run the pass on the given configuration, modifying it in place. This first checks
@@ -143,7 +153,7 @@ public abstract class TransformationPass
 			String message = "Error Parsing " + getName() + ",\n Message: " + e.getMessage()
 					+ "\nArguments: '" + params + "'\n" + getParamHelp();
 
-			throw new AutomatonExportException(message);
+			throw new CmdLineRuntimeException(message, e);
 		}
 
 		runPass();

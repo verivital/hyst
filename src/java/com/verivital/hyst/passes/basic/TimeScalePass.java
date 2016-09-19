@@ -37,7 +37,7 @@ public class TimeScalePass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_scale_time";
+		return "scale_time";
 	}
 
 	@Override

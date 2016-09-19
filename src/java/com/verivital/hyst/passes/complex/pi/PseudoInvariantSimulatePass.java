@@ -42,7 +42,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_pi_sim";
+		return "pi_sim";
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class PseudoInvariantSimulatePass extends TransformationPass
 			dirs.add(new HyperPoint(gradient));
 		}
 
-		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs);
+		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs, false);
 		Hyst.log("Calling hyperplane pseudo-invariant pass with params: " + paramString);
 
 		// run the traditional pseudo-invariants pass

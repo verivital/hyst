@@ -70,7 +70,7 @@ public class MatlabTests
 
 		String example_name = "../examples/vanderpol/vanderpol.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=0");
+		sp.semantics = "0";
 		sp.printProcedure(example_name);
 		// TODO: it would be ideal to call via the standard printer, e.g.,
 		// sp.print(c, toolParamsString, originalFilename);
@@ -85,7 +85,7 @@ public class MatlabTests
 
 		String example_name = "../examples/heaterLygeros/heaterLygeros.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=1");
+		sp.semantics = "1";
 		sp.printProcedure(example_name);
 	}
 
@@ -98,7 +98,7 @@ public class MatlabTests
 
 		String example_name = "../examples/buck_converter/buck_dcm_vs1.xml";
 		SimulinkStateflowPrinter sp = new SimulinkStateflowPrinter();
-		sp.setToolParamsString("semantics=0");
+		sp.semantics = "0";
 		sp.printProcedure(example_name);
 	}
 

@@ -30,8 +30,8 @@ import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
-import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.StringOperations;
 
 public class ContinuizationPass extends TransformationPass
@@ -104,7 +104,7 @@ public class ContinuizationPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_continuization";
+		return "continuization";
 	}
 
 	@Override

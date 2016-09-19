@@ -36,9 +36,9 @@ def is_windows():
     '''check if the current platform is windows'''
     return sys.platform == "win32"
 
-def get_script_path():
+def get_script_path(filename=__file__):
     '''get the path this script'''
-    return os.path.dirname(os.path.realpath(__file__))
+    return os.path.dirname(os.path.realpath(filename))
 
 def valid_image(s):
     '''check if the given string is a valid output image (.png) path'''
@@ -107,7 +107,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
         params.append(explicit_temp_dir)
 
     try:
-        proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(params, stdout=subprocess.PIPE)
 
         if timeout is not None:
             timer = threading.Timer(timeout, _kill_pg, [proc])
@@ -129,7 +129,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
 
     return rv
 
-def run_check_stderr(params, stdin=None, stdout=None):
+def run_check_stderr(params, stdin=None):
     '''run a process with a list of params
     returning True if success and False if error or stderr is used
     '''
@@ -138,7 +138,12 @@ def run_check_stderr(params, stdin=None, stdout=None):
     rv = True
 
     try:
-        proc = subprocess.Popen(params, stdin=stdin, stdout=stdout, stderr=subprocess.PIPE)
+        proc = None
+
+        if stdin is None:
+            proc = subprocess.Popen(params, stderr=subprocess.PIPE)
+        else:
+            proc = subprocess.Popen(params, stdin=stdin, stderr=subprocess.PIPE)
 
         for line in iter(proc.stderr.readline, ''):
             output_line = line.rstrip()
@@ -148,7 +153,7 @@ def run_check_stderr(params, stdin=None, stdout=None):
             # if anything is printed to stderr, it's an error
             if rv:
                 rv = False
-                print "Stderr output detected. Assuming " + process_name + " errored."
+                print "Stderr output detected. Assuming tool errored."
 
         proc.wait()
 
@@ -165,31 +170,46 @@ def run_check_stderr(params, stdin=None, stdout=None):
 
     return rv
 
-def get_env_var_path(basename, default_path):
-    '''Get a path from an environment variable, or use a default one if
-    the environment variable is not defined. The environment variable that will be
-    checked is basename.upper() + "_BIN"
-
-    returns None if the final path doesn't exist
+def get_tool_path(filename, print_errors=True):
     '''
+    Get a path for tool's executable file. This will search directories on HYPYPATH, followed by PATH.
 
-    var = basename.upper() + "_BIN"
-    rv = os.environ.get(var)
+    returns the full path to the tool, or None 
+    '''
+    
+    rv = None
+    errors = []
 
-    if rv is None:
-        # not found at environment variable, try hardcoded path
-        rv = default_path
+    if os.path.exists(filename):
+        rv = filename
+    else:
+        for env_var_name in ["HYPYPATH", "PATH"]:
+            env_var_value = os.environ.get(env_var_name)
 
-    if rv is None or not os.path.exists(rv):
+            if env_var_value is None:
+                if print_errors:
+                    errors.append('Environment variable ' + env_var_name + ' was not set.')
 
-        if rv is not None:
-            print basename + ' not found at path: ' + rv + '.',
+                continue
 
-        if os.environ.get(var) is None:
-            print 'Environment variable ' + var + ' was NOT set.',
+            for dir_name in env_var_value.split(os.pathsep):
 
-        print "Tool will be set as non-runnable."
-        rv = None
+                try_path = os.path.join(dir_name, filename)
+
+                if os.path.exists(try_path):
+                    rv = try_path
+                    break
+
+            if rv is not None:
+                break
+
+            errors.append("No file named '" + filename + "' was found in any of the directories in " + env_var_name)
+
+    if rv is None and print_errors:
+        print "Warning: Could not find '" + filename + "' on your system:"
+
+        for line in errors:
+            print " " + line
 
     return rv
 
@@ -197,27 +217,24 @@ class HybridTool(object):
     '''Base class for hybrid automaton analysis tool'''
     __metaclass__ = abc.ABCMeta
 
-    tool_name = None
-    tool_path = None # the path to the tool, None if tool cannot be found
-
-    original_model_path = None
-    image_path = None
-
-    model_path = None # set after copying to temp folder
-    debug = False # if set to true, will copy temp work folder back to model folder
-
-    default_extension = None
-    explicit_temp_dir = None
-    output_obj = None
-    start_timestamp = None
-
-    def __init__(self, tool_name, default_ext, path):
-        '''Initialize the tool for running. This checks if the tool exists
-        at the given path, as well as at the toolname_BIN environment variable'''
+    def __init__(self, tool_name, default_ext, tool_executable):
+        '''Initialize the tool for running.'''
 
         self.tool_name = tool_name
         self.default_extension = default_ext
-        self.tool_path = get_env_var_path(tool_name, path)
+        self.tool_path = get_tool_path(tool_executable)
+
+        if self.tool_path == None:
+            print "Tool '" + tool_name + "' is not runnable."
+
+        self.original_model_path = None
+        self.image_path = None
+
+        self.model_path = None # set after copying to temp folder
+        self.debug = False # if set to true, will copy temp work folder back to model folder
+
+        self.explicit_temp_dir = None
+        self.start_timestamp = None
 
     def load_args(self, args):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
@@ -315,31 +332,14 @@ class HybridTool(object):
         '''get the default extension (suffix) for models of this tool'''
         return self.default_extension
 
-    def got_tool_output(self, line):
-        '''a line of output was produced by the tool process. This only gets called if
-        an output object is being created. This comes from a call to readline, so it's
-        always a single line of output.
+    def parse_output(self, _directory, _tool_stdout_lines, _hypy_out):
+        '''Create and return the output object. It should be a tool-specific dictionary.
+        
+        directory - the path to a folder which contains the tool's output
+        lines - a list of stdout output lines produced by the tool
+        hypy_out - an OutputHandler object for printing debug/status information. Use add_line() to output text.
         '''
-
-        # add (line, timestamp) to output_obj['lines']
-        lines = self.output_obj['lines']
-        
-        if len(lines) == 0: # no output yet
-            self.start_timestamp = time.time()
-
-        timestamp = time.time() - self.start_timestamp
-        lines.append((line, timestamp))
-
-    def create_output(self, _):
-        '''Assigns to the output object (self.output_obj). It is a dictionary;
-        add to it, don't assign the whole object since other parts are made
-        while the tool was running, for example using got_tool_output().
-
-        For all tools, obj.lines contains a list of tuples, where the first part is
-        a line of stdout output, and the second part is a timestamp in seconds (from time.time())
-        
-        Tool working files are stored in the passed-in directory.'''
-        raise RuntimeError("Tool " + self.tool_name + " did not override create_output()")
+        raise RuntimeError("Tool " + self.tool_name + " did not override parse_output()")
 
     @abc.abstractmethod
     def _run_tool(self):

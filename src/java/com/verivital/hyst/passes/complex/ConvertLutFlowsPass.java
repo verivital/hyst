@@ -47,7 +47,7 @@ public class ConvertLutFlowsPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-convertluts";
+		return "convertluts";
 	}
 
 	@Override

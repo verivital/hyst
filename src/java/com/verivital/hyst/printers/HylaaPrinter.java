@@ -4,8 +4,6 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -240,25 +238,13 @@ public class HylaaPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hylaa";
+		return "hylaa";
 	}
 
 	@Override
 	public boolean isInRelease()
 	{
 		return true;
-	}
-
-	@Override
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> toolParams = new LinkedHashMap<String, String>();
-
-		// toolParams.put("time", "auto"); // unused currently
-		// toolParams.put("step", "auto"); // unused currently
-		// toolParams.put("jumps", "10");
-
-		return toolParams;
 	}
 
 	@Override

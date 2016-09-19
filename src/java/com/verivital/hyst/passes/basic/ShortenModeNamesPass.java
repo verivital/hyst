@@ -29,7 +29,7 @@ public class ShortenModeNamesPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-shorten";
+		return "shorten";
 	}
 
 	@Override

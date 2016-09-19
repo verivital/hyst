@@ -21,22 +21,12 @@ class TestHypy(unittest.TestCase):
         
         model = get_script_dir() + "/../../../examples/toy/toy.xml"
 
-        e = hypy.Engine()
-        e.set_model(model) # sets input model path
-        e.set_tool("pysim") # sets tool name to use
-        code = e.run(make_image=False)
-        self.assertEqual(code, hypy.RUN_CODES.SUCCESS)
+        e = hypy.Engine('pysim')
+        e.set_input(model) # sets input model path
 
-    def test_pyrrt(self):
-        '''run the pyrrt'''
+        res = e.run()
         
-        model = get_script_dir() + "/../../../examples/toy/toy.xml"
-
-        e = hypy.Engine()
-        e.set_model(model) # sets input model path
-        e.set_tool("pysim") # sets tool name to use
-        code = e.run(make_image=False)
-        self.assertEqual(code, hypy.RUN_CODES.SUCCESS)
+        self.assertEqual(res['code'], hypy.Engine.SUCCESS)
 
 if __name__ == '__main__':
     unittest.main()

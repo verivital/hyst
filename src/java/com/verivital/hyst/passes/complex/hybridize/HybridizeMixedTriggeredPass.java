@@ -137,7 +137,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hybridizemt";
+		return "hybridizemt";
 	}
 
 	@Override
@@ -227,9 +227,11 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 * @throws AutomatonExportException
 	 *             if the initial set of states is not a box
 	 */
-	public HyperRectangle getInitialBox()
+	public static HyperRectangle getInitialBox(Configuration config)
 	{
-		int numDims = ha.variables.size();
+		ArrayList<String> variables = config.root.variables;
+
+		int numDims = variables.size();
 		HyperRectangle rv = new HyperRectangle(numDims);
 
 		// start in the middle of the initial state set
@@ -257,11 +259,11 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 			throw new AutomatonExportException("Initial values were not a box", e);
 		}
 
-		int numVars = ha.variables.size();
+		int numVars = variables.size();
 
 		for (int i = 0; i < numVars; ++i)
 		{
-			String var = ha.variables.get(i);
+			String var = variables.get(i);
 
 			Interval dimRange = ranges.get(var);
 
@@ -284,7 +286,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 */
 	private ArrayList<SymbolicStatePoint> getSimulationStart()
 	{
-		HyperRectangle initBox = getInitialBox();
+		HyperRectangle initBox = getInitialBox(config);
 		final String initialMode = config.init.keySet().iterator().next();
 
 		HyperPoint center = initBox.center();
@@ -464,7 +466,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	 *            the center point
 	 * @return the discovered pi point, or null if failed
 	 */
-	private SymbolicStatePoint getPiPoint(HyperRectangle startBox,
+	public static SymbolicStatePoint getPiPoint(BaseComponent ha, HyperRectangle startBox,
 			ArrayList<SymbolicStatePoint> centerTrajectory)
 	{
 		// the first point of simPoints is the center point we should simulate
@@ -509,7 +511,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 				simPoints, piMaxTime);
 
 		boolean rv = false;
-		SymbolicStatePoint piPoint = getPiPoint(startBox, trajectories.get(0));
+		SymbolicStatePoint piPoint = getPiPoint(ha, startBox, trajectories.get(0));
 
 		if (piPoint != null)
 		{

@@ -12,14 +12,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.verivital.hyst.generators.ModelGenerator;
-import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
-import com.verivital.hyst.grammar.formula.Operation;
-import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
@@ -33,7 +29,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.PyRrtPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -87,7 +83,7 @@ public class PrintersTest
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
 		addPrinter(new PySimPrinter());
-		addPrinter(new PyRrtPrinter());
+		addPrinter(new HylaaPrinter());
 	};
 
 	private static void addPrinter(ToolPrinter p)
@@ -374,7 +370,7 @@ public class PrintersTest
 	@Test
 	public void testSpaceExHybrizized()
 	{
-		ToolPrinter tp = new SpaceExPrinter();
+		SpaceExPrinter tp = new SpaceExPrinter();
 
 		String path = UNIT_BASEDIR + "hybridized/hybridized.";
 
@@ -386,7 +382,8 @@ public class PrintersTest
 			String loadedFilename = "hybridized.xml";
 
 			tp.setOutputNone();
-			tp.print(c, "scenario=" + scenario, loadedFilename);
+			tp.scenario = scenario;
+			tp.print(c, "", loadedFilename);
 		}
 	}
 
@@ -529,39 +526,6 @@ public class PrintersTest
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
-	}
-
-	@Test
-	public void testPyrrtPrint()
-	{
-		// test model with input and output variables
-		ModelGenerator navGen = new NavigationGenerator();
-		String params = "-matrix -1.2 0.1 0.1 -1.2 -i_list 2 2 A 4 3 4 B 2 4 -width 3 "
-				+ "-startx 0.5 -starty 1.5 -noise 0.1";
-		Configuration config = navGen.generate(params);
-
-		config.root.constants.put("maxtime", new Interval(1, 1));
-
-		BaseComponent ha = (BaseComponent) config.root;
-
-		AutomatonMode am = ha.modes.values().iterator().next();
-		am.invariant = new Operation("maxtime", Operator.LESSEQUAL, 5);
-
-		ToolPrinter printer = new PyRrtPrinter();
-		printer.setOutputString();
-		printer.print(config, "", "model.xml");
-
-		String out = printer.outputString.toString();
-
-		String expected[] = { "inv_strings = [\"x <= 1\", \"y >= 1\", \"y <= 2\"]",
-				"guard_strings = [\"x >= 1\"]" };
-
-		for (String e : expected)
-			Assert.assertTrue("output doesn't contain string '" + e + "'", out.contains(e));
-
-		// maxtime should have been substituted
-		Assert.assertFalse("output contains the constant 'maxtime' (should have been substituted)",
-				out.contains("maxtime"));
 	}
 
 	public void testConstantInResetRange()

@@ -714,7 +714,7 @@ public class PythonQBMCPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-qbmc";
+		return "qbmc";
 	}
 
 	@Override

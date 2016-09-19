@@ -100,7 +100,7 @@ public class RemoveSimpleUnsatInvariantsPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_remove_unsat";
+		return "remove_unsat";
 	}
 
 	@Override
