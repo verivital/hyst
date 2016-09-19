@@ -256,7 +256,7 @@ def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='
     end_time - the total desired simulation time (discrete events may reduce the actual time)
     print_log - should a log of states be printed to stdout?
 
-    Returns a list of dicts with keys {'traces', 'events'} where:
+    Returns a list of dicts where each dict:
     'traces': list of ModeSim objects
     'events': list of SimulationEvent objects
     '''
@@ -268,7 +268,8 @@ def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='
         if print_log:
             print "Simulation {}/{} starting in mode '{}': {}".format(q_index+1, len(q_list), q[0].name, q[1])
         
-        rv.append(simulate_one(q, end_time, max_jumps, solver_name=solver_name, max_step=max_step, print_log=print_log))
+        obj = simulate_one(q, end_time, max_jumps, solver_name=solver_name, max_step=max_step, print_log=print_log)
+        rv.append(obj)
 
     return rv
 
@@ -460,9 +461,32 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
 
     return rv
 
+def plot_init_states(init_states, mode_to_color, dim_x, dim_y):
+    'plot the initial rectangles'
+    
+    for (mode, hr) in init_states:
+        color = mode_name_to_color(mode_to_color, mode.name)
+
+        xs = []
+        ys = []
+
+        xs.append(hr.dims[dim_x][0])
+        xs.append(hr.dims[dim_x][0])
+        xs.append(hr.dims[dim_x][1])
+        xs.append(hr.dims[dim_x][1])
+        xs.append(hr.dims[dim_x][0])
+
+        ys.append(hr.dims[dim_y][0])
+        ys.append(hr.dims[dim_y][1])
+        ys.append(hr.dims[dim_y][1])
+        ys.append(hr.dims[dim_y][0])
+        ys.append(hr.dims[dim_y][0])
+
+        plt.plot(xs, ys, color=color)
+
 def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None, 
                           draw_events=True, axis_range=None, draw_func=None, legend=True, 
-                        show=False, title=None):
+                        show=False, title=None, init_states=None):
     '''plot mutliple simulations
     result_list - the result for simulate_multi
     '''
@@ -479,6 +503,9 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
     for index in xrange(num_results):
         result = result_list[index]
         _plot_sim_result_one(result, dim_x, dim_y, draw_events, mode_to_color)
+
+    if init_states is not None:
+        plot_init_states(init_states, mode_to_color, dim_x, dim_y)
 
     if legend:
         handles, labels = plt.gca().get_legend_handles_labels()
@@ -531,9 +558,27 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
 
         plt.plot(x, y, color=color, label=mode_sim.mode_name)
 
-    if draw_events:
-        loc_index = 0
+    # annotate events
+    loc_index = 0
 
-        for event in events:
+    for event in events:
+        if draw_events:
             loc_index = _annotate(event, dim_x, dim_y, loc_index)
+        
+        if event.color == 'red':
+            # draw a red 'x'
+            state = event.point
+            x = [state[dim_x]]
+            y = [state[dim_y]]
+
+            plt.plot(x, y, 'xr')
+
+
+
+
+
+
+
+
+
 

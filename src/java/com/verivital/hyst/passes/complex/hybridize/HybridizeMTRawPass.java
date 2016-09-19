@@ -209,7 +209,7 @@ public class HybridizeMTRawPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hybridizemtraw";
+		return "hybridizemtraw";
 	}
 
 	@Override

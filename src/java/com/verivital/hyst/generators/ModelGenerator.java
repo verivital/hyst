@@ -9,6 +9,7 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 
 /**
  * A ModelGenerator is an alternative input method which generates a
@@ -27,6 +28,15 @@ import com.verivital.hyst.util.AutomatonUtil;
 public abstract class ModelGenerator
 {
 	private CmdLineParser parser = new CmdLineParser(this);
+
+	public ModelGenerator()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"model generator's command-line flag shouldn't start with a hyphen: " + flag);
+	}
 
 	/**
 	 * Get the longer version of the help text for this pass.
@@ -59,10 +69,10 @@ public abstract class ModelGenerator
 		}
 		catch (CmdLineException e)
 		{
-			String message = "Error Parsing " + getName() + ",\n Message: " + e.getMessage()
-					+ "\nArguments: '" + params + "'\n" + getParamHelp();
+			String message = "Error Parsing Arguments for " + getName() + ",\n Message: "
+					+ e.getMessage() + "\nArguments: '" + params + "'\n" + getParamHelp();
 
-			throw new AutomatonExportException(message);
+			throw new CmdLineRuntimeException(message, e);
 		}
 
 		Configuration c = generateModel();

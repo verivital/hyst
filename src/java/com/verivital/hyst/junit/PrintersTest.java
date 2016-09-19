@@ -373,7 +373,7 @@ public class PrintersTest
 	@Test
 	public void testSpaceExHybrizized()
 	{
-		ToolPrinter tp = new SpaceExPrinter();
+		SpaceExPrinter tp = new SpaceExPrinter();
 
 		String path = UNIT_BASEDIR + "hybridized/hybridized.";
 
@@ -385,7 +385,8 @@ public class PrintersTest
 			String loadedFilename = "hybridized.xml";
 
 			tp.setOutputNone();
-			tp.print(c, "scenario=" + scenario, loadedFilename);
+			tp.scenario = scenario;
+			tp.print(c, "", loadedFilename);
 		}
 	}
 

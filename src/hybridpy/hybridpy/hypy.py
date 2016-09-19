@@ -9,7 +9,7 @@ import argparse
 import shutil
 
 import hybridpy.hybrid_tool as hybrid_tool
-from hybridpy.hybrid_tool import get_env_var_path
+from hybridpy.hybrid_tool import get_tool_path
 from hybridpy.hybrid_tool import random_string
 
 from hybridpy.tool_flowstar import FlowstarTool
@@ -22,20 +22,7 @@ from hybridpy.tool_pysim import PySimTool
 TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
          'spaceex':SpaceExTool(), 'dreach':DReachTool(), 'pysim':PySimTool()}
 
-# return codes for Engine.run()
-def enum(**enums):
-    '''return codes for Engine.run()'''
-    return type('Enum', (), enums)
-
-RUN_CODES = enum(SUCCESS='Success', ERROR_TOOL='Error (Tool)', \
-    ERROR_UNSUPPORTED='Error (Unsupported Dynamics)', ERROR_CONVERSION='Error (Conversion)', \
-    TIMEOUT_CONVERSION='Timeout (Conversion)', TIMEOUT_TOOL='Timeout (Tool)')
-
 EXIT_CODE_TERM = 143
-
-def get_error_run_codes():
-    '''get all the RunCode.* error values'''
-    return [RUN_CODES.ERROR_TOOL, RUN_CODES.ERROR_CONVERSION, RUN_CODES.TIMEOUT_CONVERSION]
 
 def _get_all_toolnames():
     ''' get a comma-separated list of all tool names'''
@@ -49,226 +36,283 @@ def _get_all_toolnames():
 
     return rv
 
-class Engine(object):
-    '''HyPy engine. Runs a hybrid systems tool'''
-    model_path = None
-    tool_name = None
-    image_path = None
-    timeout_tool = None
-    save_model_path = None
-    tool_params = []
-    running_tool = None # this is the hybrid_tool object, assigned only running tool process
+class OutputHandler(object):
+    'Object which is used to collect stdout from tools and possibly print it, save it, or process it'
 
-    process_return_code = None
-    print_output = False
-    save_output = False
-    output_lines = []
-    process_output_dir = None
-    result_obj = None # the result object, set if set_process_output is ture
+    def __init__(self, save_output, tool_name, user_func=None):
+        self.lines = [] if save_output is True else None
+        self.tool_name = tool_name
+        self.user_func = user_func
 
-    def __init__(self):
-        pass
+        self._start_time = time.time()
 
-    def set_create_result(self, val):
-        '''Sets whether hypy should perform tool-specific processing of the output.
+    def reset_time(self):
+        'reset timer for user-defined output function'
+        self._start_time = time.time()
 
-        If set, you can get the (tool-specific) result object by calling get_result()
-        '''
-        if val == False:
-            self.process_output_dir = None
-        else:
-            self.process_output_dir = "" # if it's not None it gets regenerated every time we run
-
-    def get_result(self):
-        '''Get the processed result object, only valid if set_create_result(True) was called'''
-
-        if self.result_obj is None and self.process_output_dir is None:
-            raise RuntimeError("Result was None; did you call set_create_result(True)?")
-
-        return self.result_obj
-
-    def set_save_model_path(self, path):
-        '''Set the path for saving the model file (optional)'''
-        self.save_model_path = path
-
-    def set_model(self, path):
-        '''Set the input model file'''
-        self.model_path = path
-
-    def set_save_terminal_output(self, val):
-        '''should terminal output (stdout / stderr) be saved? If
-        enabled, it can be retrieved after a call to run() by calling
-        get_terminal_output()'''
-        self.save_output = val
-
-    def set_print_terminal_output(self, val):
-        '''should terminal output (stdout / stderr) be printed?'''
-        self.print_output = val
-
-    def set_tool(self, name):
-        '''set the name of the tool for the conversion'''
-        name = name.lower()
-
-        if not name in TOOLS:
-            raise RuntimeError('Unknown tool name: ' + name)
-
-        self.tool_name = name
-
-    def set_output_image(self, path):
-        '''Set the path to the image outout'''
-        self.image_path = path
-
-    def set_timeout(self, seconds):
-        '''Set the timeout for both the conversion and the tool'''
-        self.timeout_tool = seconds
-
-    def set_tool_params(self, params):
-        '''set additional tool params to pass to Hyst. params is a list of parameters'''
-        self.tool_params = params
-
-    def get_terminal_output(self):
-        '''get the tool's output to stdout'''
-        assert self.save_output, "get_terminal_output() was called but set_save_terminal_output(True) was not"
-
-        return "".join(self.output_lines)
-
-    def _add_terminal_output(self, text):
+    def add_line(self, text):
         '''a line of text was output by the tool. Save / print it.'''
 
-        if self.print_output:
-            print text,
+        text = text.rstrip()
 
-        if self.save_output:
-            self.output_lines.append(text)
+        if self.lines is not None:
+            self.lines.append(text)
 
-        # if we're creating an output object, and the tool is running
-        if self.process_output_dir is not None and self.running_tool is not None:
-            self.running_tool.got_tool_output(text)
+        # if a user-defined stdout function was given
+        if self.user_func is not None:
+            self.user_func(text, time.time() - self._start_time, self.tool_name)
 
-    def get_process_return_code(self):
-        '''Get the return code of the last external process run by hypy'''
-        return self.process_return_code
-
-    def _stdout_handler(self, pipe):
+    def stdout_handler(self, pipe):
         '''printer handler for subprocesses'''
         line = pipe.readline()
 
         while line:
-            self._add_terminal_output(line)
+            self.add_line(line)
             line = pipe.readline()
 
-    def _run_hyst(self):
-        '''runs hyst on the model, returning a code in RUN_CODES'''
-        rv = RUN_CODES.SUCCESS
-        start_time = time.time()
-        format_flag = "-" + self.tool_name
+class Engine(object):
+    '''HyPy engine. Runs a hybrid systems tool'''
 
-        self.output_lines = []
-        self._add_terminal_output("Running " + self.tool_name + " on model " + str(self.model_path) + "\n")
+    # run() error codes
+    SUCCESS = 'Success'
+    ERROR_TOOL = 'Error (Tool)'
+    ERROR_UNSUPPORTED = 'Error (Unsupported Dynamics)'
+    ERROR_CONVERSION = 'Error (Conversion)'
+    TIMEOUT_CONVERSION = 'Timeout (Conversion)'
+    TIMEOUT_TOOL = 'Timeout (Tool)'
 
-        hyst_path = get_env_var_path('hyst', None)
+    def __init__(self, printer_name, printer_param=None):
+        assert str(printer_name) == printer_name, "Printer name must be a string"
+
+        if printer_param is None:
+            printer_param = ""
+        else:
+            assert str(printer_param) == printer_param, "Printer param must be a string: {}".format(repr(printer_param))
+
+        name = printer_name.lower()
+
+        if not name in TOOLS:
+            raise RuntimeError('Unknown tool name: ' + name)
+
+        self.printer = (printer_name, printer_param)
+        self.input_ = (None, None) # 2-tuple: (xml_file, cfg_file [optional])
+        self.gen = (None, None)
+        self.passes = [] # list of 2-tuples
+        self.output = None # path where to save a copy of the model hyst creates (optional)
+        self.additional_hyst_params = [] # manually-specified parameters 
+        self.debug = False
+        self.verbose = False
+
+    def set_debug(self, is_debug):
+        'set debug printing mode'
+        self.debug = is_debug
+
+    def set_verbose(self, is_verbose):
+        'set verbose printing mode'
+        self.verbose = is_verbose
+
+    def set_input(self, xml_path, cfg_path=None):
+        '''Set the input model file'''
+        self.input_ = (xml_path, cfg_path)
+
+    def set_generator(self, gen_name, gen_param=""):
+        '''set the name of the model generator and param'''
+        assert str(gen_name) == gen_name, "Generator name must be a string"
+        assert str(gen_param) == gen_param, "Generator param must be a string, got {}".format(type(gen_param))
+    
+        self.gen = (gen_name, gen_param)
+
+    def add_pass(self, pass_name, pass_param=""):
+        '''add a model transformation pass by name and its param'''
+        assert str(pass_name) == pass_name, "Pass name must be a string"
+        assert str(pass_param) == pass_param, "Pass param must be a string"
+
+        self.passes += [(pass_name, pass_param)]    
+    
+    def set_output(self, path):
+        '''Set the path for saving the model file (optional)'''
+        self.output = path
+
+    def set_additional_hyst_params(self, params):
+        '''Sets manually-specified hyst params'''
+        self.additional_hyst_params = params
+
+    def _run_hyst(self, hypy_out, hyst_out):
+        '''
+        runs hyst on the model,
+
+        hypy_out is an OutputHandler which gets hypy uses to produce output
+        hyst_out is an OutputHandler capturing hyst's output
+
+        returns a code in Engine.Error_*
+        '''
+        rv = Engine.SUCCESS
+
+        hypy_out.add_line("Using Hyst to convert {} for {}.".format(
+            "generated model" if self.input_[0] is None else 
+            "model '" + self.input_[0] + "'", self.printer[0]))
+
+        hyst_path = get_tool_path('Hyst.jar')
 
         if hyst_path is None:
-            raise RuntimeError('Hyst not found. Did you set HYST_BIN to point to Hyst.jar?')
+            raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPY_PATH?')
 
-        
         params = ['java', '-jar', hyst_path]
 
-        if self.model_path != None:
-            params.append(self.model_path)
+        if self.debug:
+            params.append('-debug')
 
-        params += self.tool_params
-        params += ['-o', self.save_model_path, format_flag] # do after to override any user flags
+        if self.verbose:
+            params.append('-verbose')
 
-        self._add_terminal_output("Hyst command: " + str(params) + "\n")
+        if self.input_[0] is not None and self.gen[0] is not None:
+            raise RuntimeError("Input file provided and model generation selected. These options are incompatible.")
+
+        if self.input_[0] is not None:
+            params += ['-i', self.input_[0]]
+
+            if self.input_[1] is not None:
+                params.append(self.input_[1]) # cfg file
+        elif self.gen[0] is not None:
+            params += ['-gen', self.gen[0], self.gen[1]]
+        else:
+            raise RuntimeError("No input file provided and no model generation params given.")
+
+        if len(self.passes) > 0:
+            params.append("-passes")
+
+            for (pass_name, param) in self.passes:
+                params += [pass_name, param]
+        
+        params += ['-o', self.output]
+        params += ['-tool', self.printer[0], self.printer[1]]
+
+        params += self.additional_hyst_params
+
+        quoted_params = ["'" + param + "'" if (' ' in param or len(param) == 0) else param for param in params]
+        hypy_out.add_line("Hyst command: {}".format(" ".join(quoted_params)))
 
         try:
             proc = subprocess.Popen(params, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            self._stdout_handler(proc.stdout)
+            hyst_out.stdout_handler(proc.stdout)
             code = proc.wait()
 
             if code == 2: # Hyst exit code 2 = preconditions not met for printer
-                rv = RUN_CODES.ERROR_UNSUPPORTED
-            elif proc.wait() != 0:
-                rv = RUN_CODES.ERROR_CONVERSION
-                self._add_terminal_output('Error: Hyst returned nonzero exit code.\n')
-
-            dif = time.time() - start_time
+                rv = Engine.ERROR_UNSUPPORTED
+            elif code != 0:
+                rv = Engine.ERROR_CONVERSION
+                hypy_out.add_line('Error: Hyst returned nonzero exit code: {}.\n'.format(code))
         except OSError as e:
-            self._add_terminal_output('Error while running Hyst: ' + e + '\n')
-            rv = RUN_CODES.ERROR_CONVERSION
-
-        self._add_terminal_output("Seconds for Hyst conversion: " + str(dif) + '\n')
+            hypy_out.add_line('Error while running Hyst: {}\n'.format(e))
+            rv = Engine.ERROR_CONVERSION
 
         return rv
 
-    def run(self, run_hyst=True, run_tool=True, make_image=True):
-        '''Converts the model in Hyst (optional) and runs it with the appropriate
-        tool (optional) to produce a plot file.
+    def run(self, run_hyst=True, run_tool=True, timeout=None, image_path=None, save_stdout=False, print_stdout=False, 
+            stdout_func=None, parse_output=False):
+        '''
+        Converts the model in Hyst, runs it with the appropriate tool, 
+        produces a plot image, and python results object.
 
-        returns SUCCESS if successful, otherwise can return one of the
-        ERROR_* codes
+        non-obvious parameters:
+        stdout_func - a 3-param user function for processing of stream stdout. Params are: line, time, tool_name
+        parse_output - should tool's output be parsed into a python object? If True, 'output' in the result is set.
+                       using this option forces save_stdout to True
+
+        returns a dictionary object with the following keys:
+        'code' - exit code - engine.SUCCESS if successful, an engine.ERROR_* code otherwise
+        'hyst_time' - time in seconds for hyst to run, only returned if run_hyst == True
+        'tool_time' - time in seconds for tool(+image) to run, only returned if run_tool == True
+        'time' - total run time in seconds
+        'stdout' - the list of lines anything produced to stdout, only returned if save_stdout == True
+        'tool_stdout' - the list of lines the tool produced to stdout, only returned if save_stdout == True
+        'hypy_stdout' - the list of lines hypy produces to stdout, only returned if save_stdout == True
+        'output' - tool-specific processed output object, only returned if successful and parse_output == True
         '''
 
-        assert self.tool_name != None, 'set_tool() should be called before run()'
-
-        image_path = None
-        
-        if make_image == True:
-            if self.image_path is None:
-                if self.model_path is not None:
-                    image_path = os.path.splitext(self.model_path)[0] + ".png"
-                else:
-                    image_path = "generated.png"
-            else:
-                image_path = self.image_path
+        #image_path = os.path.splitext(filename)[0] + ".png" if filename is not None else "generated.png"
 
         start_time = time.time()
-        tool = TOOLS.get(self.tool_name)
+        tool = TOOLS.get(self.printer[0])
 
-        if self.save_model_path is None:
-            self.save_model_path = os.path.join(tempfile.gettempdir(), self.tool_name + \
+        if self.output is None:
+            self.output = os.path.join(tempfile.gettempdir(), self.printer[0] + \
                     "_" + random_string() + tool.default_ext())
 
-        rv = RUN_CODES.SUCCESS
+        rv = {}
+        rv['code'] = Engine.SUCCESS
+        stdout_lines = None
 
-        if run_hyst == False:
-            if self.model_path is None:
-                raise RuntimeError('run_hyst was False, but model_path was None')
+        if parse_output:
+            save_stdout = True
+        
+        if save_stdout:
+            stdout_lines = []
 
-            self.save_model_path = self.model_path
+        # wrapper function to capture all stdout in order
+        def stdout_wrapper(line, secs, tool):
+            'wrapper to capture lines produced by stdout from any tool'
+    
+            if stdout_lines is not None:
+                stdout_lines.append(line)
+
+            if stdout_func is not None:
+                stdout_func(line, secs, tool)
+
+            if print_stdout:
+                print line
+                sys.stdout.flush() # flush after each line
+
+        hypy_out = OutputHandler(save_stdout, 'hypy', user_func=stdout_wrapper)
+
+        if run_hyst is False:
+            self.output = self.input_[0] # running the tool directly (no hyst)
         else:
-            rv = self._run_hyst() # will assign save_model_path
+            hypy_out.add_line("Running Hyst...")
+            hyst_start_time = time.time()
+            hyst_out = OutputHandler(save_stdout, 'hyst', user_func=stdout_wrapper)
+            rv['code'] = self._run_hyst(hypy_out, hyst_out)
+            rv['hyst_time'] = time.time() - hyst_start_time
+            hypy_out.add_line("Seconds for Hyst conversion: {}\n".format(rv['hyst_time']))
 
-        if rv == RUN_CODES.SUCCESS and run_tool:
+            if save_stdout:
+                rv['hyst_stdout'] = hyst_out.lines
 
-            if self.process_output_dir is not None:
-                self.process_output_dir = os.path.join(tempfile.gettempdir(), "hypy_" + random_string())
-                
-                tool.output_obj = {} # new output object created
-                tool.output_obj['lines'] = [] # (stdout_line, timestamp) tuple list
+        if rv['code'] == Engine.SUCCESS and run_tool:
 
-            self.running_tool = tool
-            code = hybrid_tool.run_tool(tool, self.save_model_path, image_path, \
-                                        self.timeout_tool, self._stdout_handler,
-                                        self.process_output_dir)
-            self.running_tool = None
+            temp_dir = None
+
+            if parse_output:
+                temp_dir = os.path.join(tempfile.gettempdir(), "hypy_" + random_string())
+
+            tool_start_time = time.time()
+
+            tool_out = OutputHandler(save_stdout, self.printer[0], user_func=stdout_wrapper)
+            code = hybrid_tool.run_tool(tool, self.output, image_path, timeout, tool_out.stdout_handler, temp_dir)
+
+            rv['tool_time'] = time.time() - tool_start_time
 
             if code == hybrid_tool.RunCode.TIMEOUT:
-                rv = RUN_CODES.TIMEOUT_TOOL
+                rv['code'] = Engine.TIMEOUT_TOOL
             elif code == hybrid_tool.RunCode.SKIP:
-                rv = RUN_CODES.ERROR_UNSUPPORTED
+                rv['code'] = Engine.ERROR_UNSUPPORTED
             elif code != hybrid_tool.RunCode.SUCCESS:
-                rv = RUN_CODES.ERROR_TOOL
-            elif self.process_output_dir is not None:
-                tool.create_output(self.process_output_dir)
+                rv['code'] = Engine.ERROR_TOOL
+            elif parse_output:
+                rv['output'] = tool.parse_output(temp_dir, tool_out.lines, hypy_out)
+             
+            if temp_dir is not None:   
+                shutil.rmtree(temp_dir)
 
-                self.result_obj = tool.output_obj
-                shutil.rmtree(self.process_output_dir)
+            if save_stdout:
+                rv['tool_stdout'] = tool_out.lines
 
-        dif_time = time.time() - start_time
-        self._add_terminal_output("Elapsed Seconds: " + str(dif_time) + "\n")
-        self._add_terminal_output("Result: " + str(rv) + "\n")
+        if save_stdout:
+            rv['stdout'] = stdout_lines
+
+        rv['time'] = time.time() - start_time
+        hypy_out.add_line("Hypy Elapsed Seconds: {}\n".format(rv['time']))
+        hypy_out.add_line("Hypy Result: {}\n".format(rv['code']))
 
         return rv
 
@@ -280,6 +324,7 @@ def main():
     parser.add_argument('model', help='input model file')
     parser.add_argument('image', nargs='?', help='output image file')
     parser.add_argument('--output', '-o', metavar='PATH', help='output model file')
+    parser.add_argument('--parse_output', '-po', action='store_true', help='print the parsed tool-specific output?')
     parser.add_argument('--image_tool', '-it', metavar='PATH', help='path to tool which displays image')
     parser.add_argument('--timeout', '-to', metavar='SECONDS', type=float, \
                         help='sets timeout (seconds) for running the tool (Hyst runs without timeout)')
@@ -293,33 +338,25 @@ def main():
     model_save_path = args.output
     image_tool = args.image_tool
     timeout = args.timeout
-    tool_params = args.tool_param
+    parse_output = args.parse_output is True
+    tool_param = " ".join(args.tool_param)
 
     if image_path is not None and not image_path.endswith('.png'):
         print "Expected image path to end in .png. Instead got: " + image_path
         sys.exit(1)
 
     # run hypy with the given parameters
-    e = Engine()
-    e.set_print_terminal_output(True)
+    e = Engine(tool_name, tool_param)
 
     if model_path != None:
-        e.set_model(model_path)
-
-    e.set_tool(tool_name)
-    e.set_tool_params(tool_params)
-
-    e.set_output_image(image_path)
+        e.set_input(model_path)
 
     if model_save_path is not None:
-        e.set_save_model_path(model_save_path)
+        e.set_output(model_save_path)
 
-    if timeout is not None:
-        e.set_timeout(timeout)
+    result = e.run(print_stdout=True, timeout=timeout, image_path=image_path, parse_output=parse_output)
 
-    runcode = e.run()
-
-    if runcode == RUN_CODES.SUCCESS and image_path is not None and image_tool is not None:
+    if result['code'] == Engine.SUCCESS and image_path is not None and image_tool is not None:
         # plot it
         params = image_tool.split(" ")
         params.append(image_path)
@@ -327,10 +364,13 @@ def main():
         if subprocess.call(params) != 0:
             print "Hypy: Error running image tool (nonzero exit code): " + str(params)
 
-    return runcode
+    if result['code'] == Engine.SUCCESS and parse_output:
+        print "Parsed output:", result['output']
+
+    return result['code']
 
 if __name__ == "__main__":
-    if main() == RUN_CODES.SUCCESS:
+    if main() == Engine.SUCCESS:
         sys.exit(0)
     else:
         sys.exit(1)        

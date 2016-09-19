@@ -135,7 +135,7 @@ public class RemoveDiscreteUnreachablePass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_remove_unreachable";
+		return "remove_unreachable";
 	}
 
 	@Override
