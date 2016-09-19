@@ -26,10 +26,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
-import com.verivital.hyst.matlab.MatlabBridge;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
-import com.verivital.hyst.passes.complex.OrderReductionPass;
 import com.verivital.hyst.python.PythonBridge;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -41,29 +39,34 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  *
  */
 @RunWith(Parameterized.class)
-public class PassTests {
+public class PassTests
+{
 	@Before
-	public void setUpClass() {
+	public void setUpClass()
+	{
 		Expression.expressionPrinter = null;
 	}
 
 	@Parameters
-	public static Collection<Object[]> data() {
+	public static Collection<Object[]> data()
+	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
 
-	public PassTests(boolean block) {
+	public PassTests(boolean block)
+	{
 		PythonBridge.setBlockPython(block);
 	}
 
-	private String UNIT_BASEDIR = "tests/unit/models/";
+	public static String UNIT_BASEDIR = "tests/unit/models/";
 
 	/**
 	 * make a sample network configuration, which is used in multiple tests
 	 * 
 	 * @return the constructed Configuration
 	 */
-	private static Configuration makeSampleNetworkConfiguration() {
+	private static Configuration makeSampleNetworkConfiguration()
+	{
 		NetworkComponent nc = new NetworkComponent();
 		nc.variables.add("x");
 		nc.variables.add("t");
@@ -83,7 +86,7 @@ public class PassTests {
 		ha.variables.add("x");
 		ha.variables.add("t");
 		c.settings.plotVariableNames[0] = "t";
-		c.settings.plotVariableNames[1] = "x"; 
+		c.settings.plotVariableNames[1] = "x";
 		c.init.put("running", FormulaParser.parseInitialForbidden("x = 0 & t == 0"));
 		AutomatonMode am1 = ha.createMode("running");
 		am1.flowDynamics.put("x", new ExpressionInterval(new Constant(2)));
@@ -103,10 +106,9 @@ public class PassTests {
 		return c;
 	}
 
-	
-
 	@Test
-	public void testSimplifyExpressions() {
+	public void testSimplifyExpressions()
+	{
 		Configuration c = makeSampleNetworkConfiguration();
 
 		NetworkComponent nc = (NetworkComponent) c.root;
@@ -123,71 +125,19 @@ public class PassTests {
 	 * Substitute constants and then simplify expressions
 	 */
 	@Test
-	public void testSubConstantsPll() {
+	public void testSubConstantsPll()
+	{
 		String path = UNIT_BASEDIR + "pll/";
 		String spaceExFile = path + "pll_orig.xml";
 		String configFile = path + "pll_orig.cfg";
 
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(configFile, spaceExFile);
 
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(spaceExDoc);
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(spaceExDoc);
 		Configuration config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
 
 		new SubstituteConstantsPass().runTransformationPass(config, null);
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
 	}
-
-	@Test
-	public void testOrderReductionpass() {
-		if (!MatlabBridge.hasMatlab())
-			return;
-		
-		String path = UNIT_BASEDIR + "order_reduction/";
-		System.out.println(path);
-		SpaceExDocument doc = SpaceExImporter.importModels(path + "building_full_order.cfg",
-				path + "building_full_order.xml");
-		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-		String OrderReductionPassParam = "-reducedOrder 3";
-
-		new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
-		BaseComponent ha = (BaseComponent) c.root;
-		// check variables
-		Assert.assertEquals("[x1, x2, x3, y1, time]", ha.variables.toString());
-		String flow = "{x1=0.006132 * u1 - 0.00751 * x1 - 5.275 * x2 + 0.0009639 * x3, x2=5.275 * x1 "
-				+ "- 0.06453 * u1 - 0.8575 * x2 + 0.09063 * x3, x3=0.0009639 * x1 - 0.0006972 * u1 - 0.09063 * x2 - 0.0001258 * x3, "
-				+ "time=1}";
-		String invariant = "y1 = 0.0006972 * x3 - 0.06453 * x2 - 0.006132 * x1 && time <= stoptime";
-
-		for (Map.Entry<String, AutomatonMode> e : ha.modes.entrySet()) {
-			// Check flow and invariant
-			Assert.assertEquals(flow, e.getValue().flowDynamics.toString());
-			Assert.assertEquals(invariant, e.getValue().invariant.toString());
-		}
-	}
-
-	/*
-	@Test
-	public void testLargeModelOrderReductionpass()
-	{
-		String path = UNIT_BASEDIR + "order_reduction/";
-		System.out.println(path);
-		SpaceExDocument doc = SpaceExImporter.importModels(
-				path + "iss_full_model.cfg",
-				path + "iss_full_model.xml");
-                Map <String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
-		
-		Configuration c = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
-                String OrderReductionPassParam = "10";
-		try{
-                    new OrderReductionPass().runTransformationPass(c, OrderReductionPassParam);
-                }
-                catch (RuntimeException e){
-                    System.out.println("The order reduction pass is failed" );
-                    throw e;
-                }       
-                        
-	}*/
-
 }

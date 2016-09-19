@@ -1,31 +1,28 @@
 package com.stanleybak.hycreate.containers;
 
-
-
 public class TransitionData
 {
 	private String from = "";
 	private String to = "";
-	
-	public static String DEFAULT_GUARD = 
-			"return false; // transition is disabled";
-	
-	public static String DEFAULT_RESET = 
-			"/* no reset action assignments */";
-	
+
+	public static String DEFAULT_GUARD = "return false; // transition is disabled";
+
+	public static String DEFAULT_RESET = "/* no reset action assignments */";
+
 	private String guard = DEFAULT_GUARD;
 	private String reset = DEFAULT_RESET;
-	
+
 	public TransitionData()
 	{
-		
+
 	}
-	
+
 	public String getFrom()
 	{
 		return from;
 
 	}
+
 	public void setFrom(String from)
 	{
 		this.from = from;
@@ -66,7 +63,7 @@ public class TransitionData
 		this.from = from;
 		this.to = to;
 	}
-	
+
 	public TransitionData(TransitionData other)
 	{
 		from = other.from;

@@ -10,35 +10,43 @@ public abstract class BindMap
 {
 	private Bind mParent;
 	private String mKey;
-	
+
 	/**
 	 * Creates a new Map and adds it to the parent Bind
-	 * @param parent The Bind this Map belongs to
+	 * 
+	 * @param parent
+	 *            The Bind this Map belongs to
 	 */
-	public BindMap(Bind parent) {
+	public BindMap(Bind parent)
+	{
 		setParent(parent);
 		parent.addMap(this);
 	}
 
-	public BindMap(Bind parent, String key) {
+	public BindMap(Bind parent, String key)
+	{
 		setParent(parent);
 		setKey(key);
-		parent.addMap(this); 
+		parent.addMap(this);
 	}
-	
-	public String getKey() {
+
+	public String getKey()
+	{
 		return mKey;
 	}
-	
-	public void setKey(String key) {
+
+	public void setKey(String key)
+	{
 		mKey = key;
 	}
 
-	public Bind getParent() {
+	public Bind getParent()
+	{
 		return mParent;
 	}
 
-	public void setParent(Bind parent) {
+	public void setParent(Bind parent)
+	{
 		mParent = parent;
 	}
 }

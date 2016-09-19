@@ -5,6 +5,7 @@ Simulation logic for Hybrid Automata
 from scipy.integrate import ode # pylint false positive
 import matplotlib.pyplot as plt
 from matplotlib import colors
+import random
 
 class SimulationException(Exception):
     'An error which stops the simulation from progressing'
@@ -194,12 +195,13 @@ def _dist(a, b):
 
     return rv
 
-def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=1e-9, check_unique=True):
+def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=1e-9, check_unique=True, rand=0):
     '''
     Convert a list of initial states (tuple of AutomatonMode, HyperRectangle) to 
     a list of symbolic states (tuple of AutomatonMode, point, where point is [x_0, ..., x_n]) 
     using the provided sample strategy
     center / star / corners are different possible sample strategies
+    rand=# will do that many random samples per init state
     '''
 
     rv = []
@@ -217,6 +219,18 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
         if corners:
             for point in rect.unique_corners(tol):
+                rv.append((mode, point))
+
+        if rand > 0:
+            random.seed()
+
+            for _ in xrange(rand):
+                point = []
+
+                for dim in rect.dims:
+                    val = dim[0] + random.random() * (dim[1] - dim[0])
+                    point.append(val)
+
                 rv.append((mode, point))
 
     if check_unique:
@@ -275,9 +289,16 @@ def mode_name_to_color(mode_to_color, mode_name):
             rv = first_colors[len(mode_to_color)]
         else:
             # use the hash-based approach
-            all_colors = colors.cnames.keys()
+            all_colors = []
+            all_colors += colors.cnames.keys()
+
+            # these are hard to see, remove them
+            for white in ['white', 'whitesmoke', 'floralwhite', 'antiquewhite', 'ghostwhite', 'navajowhite', 'yellow']:
+                all_colors.remove(white)
+
             index = hash(mode_name) % len(all_colors)
             rv = all_colors[index]
+            #print "rv color = " + str(rv)
 
         mode_to_color[mode_name] = rv
 
@@ -440,13 +461,17 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
     return rv
 
 def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None, 
-                          draw_events=True, axis_range=None, draw_func=None, legend=True, show=False):
+                          draw_events=True, axis_range=None, draw_func=None, legend=True, 
+                        show=False, title=None):
     '''plot mutliple simulations
     result_list - the result for simulate_multi
     '''
     num_results = len(result_list)
 
     mode_to_color = {}
+
+    if title is not None:
+        plt.title(title)
 
     if axis_range is not None:
         plt.axis(axis_range)

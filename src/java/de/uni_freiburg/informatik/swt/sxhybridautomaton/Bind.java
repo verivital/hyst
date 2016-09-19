@@ -14,29 +14,34 @@ import com.verivital.hyst.ir.AutomatonExportException;
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
  */
-public class Bind {
+public class Bind
+{
 	private SpaceExNetworkComponent mParent;
 	private String mComponent, mAs, mNote;
 	private ArrayList<BindMap> mMaps = new ArrayList<BindMap>();
 	private UIPosition mPosition;
 	private UIDimensions mDimensions;
-	
+
 	public String toString()
 	{
 		return "[Bind component(type): " + mComponent + ", instanceName(as): " + mAs + "]";
 	}
-	
+
 	/**
 	 * Creates a new Bind and adds it to the parent Component
-	 * @param parent The Component this Bind belongs to
+	 * 
+	 * @param parent
+	 *            The Component this Bind belongs to
 	 */
-	public Bind(SpaceExNetworkComponent parent) {
+	public Bind(SpaceExNetworkComponent parent)
+	{
 		mParent = parent;
 		parent.addBind(this);
 	}
 
-	public Bind(SpaceExNetworkComponent parent, String component, String as,
-			double x, double y, double w, double h) {
+	public Bind(SpaceExNetworkComponent parent, String component, String as, double x, double y,
+			double w, double h)
+	{
 		mParent = parent;
 		setComponent(component);
 		setAs(as);
@@ -44,99 +49,121 @@ public class Bind {
 		setDimensions(new UIDimensions(w, h));
 		parent.addBind(this);
 	}
-	
+
 	/**
-	 * A Bind's Component specifies which base automaton is instantiated.
-	 * It references another Component.
+	 * A Bind's Component specifies which base automaton is instantiated. It
+	 * references another Component.
+	 * 
 	 * @return Component ID
 	 */
-	public String getComponent() {
+	public String getComponent()
+	{
 		return mComponent;
 	}
 
 	/**
-	 * A Bind's Component specifies which base automaton is instantiated
-	 * It references another Component.
+	 * A Bind's Component specifies which base automaton is instantiated It
+	 * references another Component.
 	 */
-	public void setComponent(String component) {
+	public void setComponent(String component)
+	{
 		mComponent = component;
 	}
 
 	/**
 	 * A Bind's As is a unique name given to it
+	 * 
 	 * @return The Bind's name
 	 */
-	public String getAs() {
+	public String getAs()
+	{
 		return mAs;
 	}
 
 	/**
 	 * A Bind's As is a unique name given to it
 	 */
-	public void setAs(String as) {
+	public void setAs(String as)
+	{
 		mAs = as;
 	}
 
-	public String getNote() {
+	public String getNote()
+	{
 		return mNote;
 	}
 
-	public void setNote(String note) {
+	public void setNote(String note)
+	{
 		mNote = note;
 	}
 
 	/**
 	 * Get a map of this bind
-	 * @param index The map's number, starting at 0
+	 * 
+	 * @param index
+	 *            The map's number, starting at 0
 	 * @return The requested map or null if the index is out of bounds.
 	 */
-	public BindMap getMap(int index) {
-		if ((index < 0) || (index >= mMaps.size())) return null;
+	public BindMap getMap(int index)
+	{
+		if ((index < 0) || (index >= mMaps.size()))
+			return null;
 		return mMaps.get(index);
 	}
-	
-	public int getMapCount() {
+
+	public int getMapCount()
+	{
 		return mMaps.size();
 	}
 
 	/**
 	 * Add a new map to this bind. The Bind becomes its parent.
-	 * @param map The map to add.
+	 * 
+	 * @param map
+	 *            The map to add.
 	 */
-	public void addMap(BindMap map) {
+	public void addMap(BindMap map)
+	{
 		map.setParent(this);
-		
+
 		for (BindMap bm : mMaps)
 		{
 			if (bm.getKey().equals(map.getKey()))
-				throw new AutomatonExportException("Key was mapped to multiple values: '" + bm.getKey() 
-						+ "' in instance " + getAs());
+				throw new AutomatonExportException("Key was mapped to multiple values: '"
+						+ bm.getKey() + "' in instance " + getAs());
 		}
-		
+
 		mMaps.add(map);
 	}
 
-	public UIPosition getPosition() {
+	public UIPosition getPosition()
+	{
 		return mPosition;
 	}
 
-	public void setPosition(UIPosition position) {
+	public void setPosition(UIPosition position)
+	{
 		mPosition = position;
 	}
 
-	public UIDimensions getDimensions() {
+	public UIDimensions getDimensions()
+	{
 		return mDimensions;
 	}
 
-	public void setDimensions(UIDimensions dimensions) {
+	public void setDimensions(UIDimensions dimensions)
+	{
 		mDimensions = dimensions;
 	}
 
-	public SpaceExNetworkComponent getParent() {
+	public SpaceExNetworkComponent getParent()
+	{
 		return mParent;
 	}
 
-	public void setParent(SpaceExNetworkComponent parent) {
+	public void setParent(SpaceExNetworkComponent parent)
+	{
 		mParent = parent;
 	}
 }

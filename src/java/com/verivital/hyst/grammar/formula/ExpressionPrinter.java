@@ -2,8 +2,6 @@ package com.verivital.hyst.grammar.formula;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 
-
-
 public abstract class ExpressionPrinter
 {
 	public String print(Expression e)
@@ -30,13 +28,14 @@ public abstract class ExpressionPrinter
 			}
 			catch (AutomatonExportException ex)
 			{
-				throw new RuntimeException("No print method defined in ExpressionPrinter for type " + e.getClass().getName());
+				throw new RuntimeException("No print method defined in ExpressionPrinter for type "
+						+ e.getClass().getName());
 			}
 		}
-		
+
 		return rv;
 	}
-	
+
 	protected String printLut(LutExpression l)
 	{
 		return l.toString(this);
@@ -46,16 +45,16 @@ public abstract class ExpressionPrinter
 	{
 		return m.toString(this);
 	}
-	
+
 	protected String printVariable(Variable v)
 	{
 		return v.name;
 	}
-	
+
 	protected String printConstant(Constant c)
 	{
 		String rv = null;
-		
+
 		if (c == Constant.TRUE)
 			rv = printTrue();
 		else if (c == Constant.FALSE)
@@ -65,27 +64,29 @@ public abstract class ExpressionPrinter
 
 		return rv;
 	}
-	
+
 	protected String printConstantValue(double d)
 	{
 		return "" + d;
 	}
-	
+
 	protected String printTrue()
 	{
 		return "true";
 	}
-	
+
 	protected String printFalse()
 	{
 		return "false";
 	}
-	
-	// although Operators are technically not expressions, it's better to define this here to keep the printing all in once place
+
+	// although Operators are technically not expressions, it's better to define
+	// this here to keep the printing all in once place
 	public abstract String printOperator(Operator op);
-	
+
 	/**
 	 * Prefix printing for everything
+	 * 
 	 * @param o
 	 * @return
 	 */
@@ -93,13 +94,13 @@ public abstract class ExpressionPrinter
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append(printOperator(o.op));
-		
+
 		for (Expression e : o.children)
 		{
 			sb.append(" ");
 			sb.append(print(e));
 		}
-		
+
 		return "(" + sb.toString() + ")";
 	}
 }

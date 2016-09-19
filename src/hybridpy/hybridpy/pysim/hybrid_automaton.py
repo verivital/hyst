@@ -3,7 +3,7 @@ Hybrid Automaton Simulation Library
 Stanley Bak (12-2015)
 '''
 
-
+from sympy.core import symbols
 
 class HyperRectangle(object):
     'An n-dimensional box'
@@ -81,6 +81,8 @@ class AutomatonMode(object):
     der = None # function returning derivative at a point
     inv = None # function taking a state and returning true/false
     transitions = None # outgoing transitions
+    
+    der_interval_list = [] # list of pairs, the derivative's interval uncertainty for each dim
 
     def __init__(self, parent, name):
         self.parent = parent
@@ -99,6 +101,8 @@ class AutomatonTransition(object):
 
     guard = None # function taking a state and returning true/false
     reset = None # function taking a state and returning a new state
+    
+    guard_sympy = None # symbolic expression for the guard
 
     def __init__(self, parent, from_mode, to_mode, name=None):
         self.parent = parent

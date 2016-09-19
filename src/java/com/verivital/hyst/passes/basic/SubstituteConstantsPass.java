@@ -1,7 +1,7 @@
 package com.verivital.hyst.passes.basic;
 
-
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -18,86 +18,122 @@ import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.ValueSubstituter;
 
-
 /**
- * This pass substitutes constants in expressions for their values (assumes all constants are not intervals).
+ * This pass substitutes constants in expressions for their values (assumes all
+ * constants are not intervals).
  *
  */
 public class SubstituteConstantsPass extends TransformationPass
 {
-	private ValueSubstituter vs = null;
-	
 	public SubstituteConstantsPass()
 	{
 		preconditions = new Preconditions(true); // no preconditions
-		
+
 		// except that constants can't be intervals
 		preconditions.skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()] = false;
 	}
-	
+
 	@Override
 	protected void runPass()
 	{
+		final Map<String, Interval> rootMapping = getConstMapping(config.root);
+		// modify init and forbidden
+
+		ExpressionModifier.modifyInitForbidden(config, new ExpressionModifier()
+		{
+			@Override
+			public Expression modifyExpression(Expression e)
+			{
+				return substituteConstantsIntoExpression(rootMapping, e);
+			}
+		});
+
+		removeRedundantConstaints(config.init);
+
+		if (config.forbidden != null)
+			removeRedundantConstaints(config.forbidden);
+
 		runRec(config.root);
 	}
-	
+
+	private void removeRedundantConstaints(LinkedHashMap<String, Expression> init)
+	{
+		// remove constraints like 5 == 5->
+		for (Entry<String, Expression> e : init.entrySet())
+		{
+			Expression simpler = SimplifyExpressionsPass.simplifyExpression(e.getValue());
+			e.setValue(simpler);
+		}
+	}
+
 	private void runRec(Component c)
 	{
 		if (c instanceof BaseComponent)
 		{
-			final BaseComponent ha = (BaseComponent)c;
+			final BaseComponent ha = (BaseComponent) c;
 			final Map<String, Interval> mapping = getConstMapping(ha);
-			
-			ExpressionModifier.modifyBaseComponent(ha, new ExpressionModifier(){
+
+			ExpressionModifier.modifyBaseComponent(ha, new ExpressionModifier()
+			{
 				@Override
 				public Expression modifyExpression(Expression e)
 				{
 					return substituteConstantsIntoExpression(mapping, e);
 				}
 			});
+
+			ha.constants.clear();
 		}
 		else
 		{
-			NetworkComponent nc = (NetworkComponent)c;
-			
+			NetworkComponent nc = (NetworkComponent) c;
+
 			for (ComponentInstance ci : nc.children.values())
 			{
 				runRec(ci.child);
 			}
+
+			nc.constants.clear();
+
+			for (ComponentInstance ci : nc.children.values())
+			{
+				ci.constMapping.clear();
+			}
 		}
 	}
-	
+
 	private static Map<String, Interval> getConstMapping(Component c)
 	{
 		Map<String, Interval> rv = new HashMap<String, Interval>();
-		
+
 		for (Entry<String, Interval> r : c.constants.entrySet())
 		{
 			String name = r.getKey();
 			rv.put(name, c.getConstantValue(name));
 		}
-		
+
 		return rv;
 	}
 
 	/**
 	 * Substitute the constants into a single expression
-	 * @param ha the automaton we're working with
-	 * @param exp the expression to substitute into
+	 * 
+	 * @param ha
+	 *            the automaton we're working with
+	 * @param exp
+	 *            the expression to substitute into
 	 * @return the new expression with constants substituted in
 	 */
-	public Expression substituteConstantsIntoExpression(Map <String, Interval> constants, Expression exp)
+	public static Expression substituteConstantsIntoExpression(Map<String, Interval> constants,
+			Expression exp)
 	{
-		if (vs == null)
-		{
-			HashMap <String, Expression> subMap = new HashMap <String, Expression>();
-			
-			for (Entry<String, Interval> e : constants.entrySet())
-				subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
-			
-			vs = new ValueSubstituter(subMap);
-		}
-		
+		HashMap<String, Expression> subMap = new HashMap<String, Expression>();
+
+		for (Entry<String, Interval> e : constants.entrySet())
+			subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
+
+		ValueSubstituter vs = new ValueSubstituter(subMap);
+
 		return vs.substitute(exp);
 	}
 
@@ -106,7 +142,7 @@ public class SubstituteConstantsPass extends TransformationPass
 	{
 		return "-pass_sub_constants";
 	}
-	
+
 	@Override
 	public String getName()
 	{

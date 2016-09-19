@@ -175,9 +175,14 @@ If you plan to do Hyst development that will work its way back into the main bra
 * Delete commented-out garbage code.
 * Use meaningful variable and method names.
 * Use Java naming conventions for class and method names. Class names should be CapitalizedCamelCase, and methods should be lowercaseFirstCamelCase.
-* Use consistent a per-file code format. We have different conventions between different files, which isn't ideal, but each file should be consistent. In Eclipse you can right click within a file and do Source -> Format and it will reformat it for you.
-* Please try to keep lines less than 120 characters. If your lines are too long, consider breaking them up into multiple shorter lines that are easier to read.
 * If you copy a printer as a template, for example the Flow* printer, your final printer shouldn't make references to Flow* or its parameters. Read through your code before submitting.
+* Please follow the Hyst Code Format
+
+#### Code Format:
+
+Hyst has a standard code format. When you run ant, if the eclipse executable is on your path, it will automatically try to reformat every java file. You will see a message: "Eclipse is present. Performing code reformatting." Otherwise, if it cannot find eclipse, you'll see this message "Eclipse NOT found on PATH. Your code will not be auto-reformatted." If the reformat process fails, it might be because the format file is open within eclipse. Try closing eclipse and then running ant again.
+
+You can save significant coding time by setting up auto formatting every time you save your code. The Eclipse file describing the Hyst code format is in hyst/HystCodeFormat.xml. To import this file into Eclipse, go to Project Properties -> Java Code Style -> Formatter -> Enable Project Specific Settings -> Import, and then select HystCodeFormat.xml. To reformat every time you save (recommended), go to Project Properties, choose Java -> Editor -> Save Actions -> Enable Project Specific Properties. Next, enable the "Perform the selected actions on save", and check the "Format source code" box. You make also want to select "Organize Imports" as a save action.
 
 #### BUILDING HYST: 
 

@@ -164,14 +164,19 @@ class Engine(object):
         format_flag = "-" + self.tool_name
 
         self.output_lines = []
-        self._add_terminal_output("Running " + self.tool_name + " on model " + self.model_path + "\n")
+        self._add_terminal_output("Running " + self.tool_name + " on model " + str(self.model_path) + "\n")
 
         hyst_path = get_env_var_path('hyst', None)
 
         if hyst_path is None:
             raise RuntimeError('Hyst not found. Did you set HYST_BIN to point to Hyst.jar?')
 
-        params = ['java', '-jar', hyst_path, self.model_path]
+        
+        params = ['java', '-jar', hyst_path]
+
+        if self.model_path != None:
+            params.append(self.model_path)
+
         params += self.tool_params
         params += ['-o', self.save_model_path, format_flag] # do after to override any user flags
 
@@ -205,14 +210,16 @@ class Engine(object):
         ERROR_* codes
         '''
 
-        assert self.model_path != None, 'set_model() should be called before run()'
         assert self.tool_name != None, 'set_tool() should be called before run()'
 
         image_path = None
         
         if make_image == True:
             if self.image_path is None:
-                image_path = os.path.splitext(self.model_path)[0] + ".png"
+                if self.model_path is not None:
+                    image_path = os.path.splitext(self.model_path)[0] + ".png"
+                else:
+                    image_path = "generated.png"
             else:
                 image_path = self.image_path
 
@@ -226,6 +233,9 @@ class Engine(object):
         rv = RUN_CODES.SUCCESS
 
         if run_hyst == False:
+            if self.model_path is None:
+                raise RuntimeError('run_hyst was False, but model_path was None')
+
             self.save_model_path = self.model_path
         else:
             rv = self._run_hyst() # will assign save_model_path
@@ -293,7 +303,9 @@ def main():
     e = Engine()
     e.set_print_terminal_output(True)
 
-    e.set_model(model_path)
+    if model_path != None:
+        e.set_model(model_path)
+
     e.set_tool(tool_name)
     e.set_tool_params(tool_params)
 

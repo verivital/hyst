@@ -1,6 +1,5 @@
 package com.verivital.hyst.ir;
 
-
 @SuppressWarnings("serial")
 public class AutomatonExportException extends RuntimeException
 {
