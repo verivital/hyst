@@ -104,30 +104,14 @@ public class PySimPrinter extends ToolPrinter
 		return "'''\n" + text + "\n'''";
 	}
 
-	private static void appendModes(StringBuilder rv, BaseComponent ha, ExtraPrintFuncs extraFuncs)
+	private static void appendModes(StringBuilder rv, BaseComponent ha,
+			PythonPrinterCustomization custom)
 	{
 		for (AutomatonMode am : ha.modes.values())
 		{
 			appendNewline(rv);
 
-			/*
-			 * one = ha.new_mode('one') one.der = lambda state, _: [2, 1] one.inv = lambda(x): x[0]
-			 * <= 2
-			 */
-
-			appendIndentedLine(rv, am.name + " = ha.new_mode('" + am.name + "')");
-			appendIndentedLine(rv, am.name + ".inv = lambda state: " + am.invariant);
-
-			if (!am.urgent)
-			{
-				appendIndentedLine(rv, am.name + ".der = lambda _, state: "
-						+ getMapString("flow dynamics", am.flowDynamics, ha));
-
-				appendIndentedLine(rv, am.name + ".der_interval_list = "
-						+ getIntervalListString(am.flowDynamics, ha));
-			}
-
-			for (String line : extraFuncs.getExtraModePrintLines(am))
+			for (String line : custom.getPrintModeLines(am))
 				appendIndentedLine(rv, line);
 		}
 	}
@@ -211,7 +195,8 @@ public class PySimPrinter extends ToolPrinter
 		return rv.toString();
 	}
 
-	private static void appendJumps(StringBuilder rv, BaseComponent ha, ExtraPrintFuncs extraFuncs)
+	private static void appendJumps(StringBuilder rv, BaseComponent ha,
+			PythonPrinterCustomization custom)
 	{
 		/*
 		 * t = ha.new_transition(one, two) t.guard = lambda(x): x[0] >= 2 t.reset = lambda(x): (x[0]
@@ -222,17 +207,8 @@ public class PySimPrinter extends ToolPrinter
 		{
 			appendNewline(rv);
 
-			appendIndentedLine(rv,
-					"t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
-			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
-			appendIndentedLine(rv,
-					"t.reset = lambda state: " + getMapString("reset assignment", at.reset, ha));
-
-			if (extraFuncs != null)
-			{
-				for (String line : extraFuncs.getExtraTransitionPrintLines(at))
-					appendIndentedLine(rv, line);
-			}
+			for (String line : custom.getPrintTransitions(at))
+				appendIndentedLine(rv, line);
 		}
 	}
 
@@ -277,16 +253,54 @@ public class PySimPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This class can be used to perform extra printing for python targets. To use, override each
-	 * function and return a list of extra Strings, one for each line to be printed (or an empty
-	 * ArrayList)
+	 * This class can be used to customize the printing for python targets. To use, override each
+	 * function or member
 	 */
-	public static class ExtraPrintFuncs
+	public static class PythonPrinterCustomization
 	{
+		public String automatonObjectName = "HybridAutomaton";
+
 		// mode is named am.name
 		public ArrayList<String> getExtraModePrintLines(AutomatonMode am)
 		{
 			return new ArrayList<String>();
+		}
+
+		public ArrayList<String> getPrintTransitions(AutomatonTransition at)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			rv.add("t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
+			rv.add("t.guard = lambda state: " + at.guard);
+			rv.add("t.reset = lambda state: "
+					+ getMapString("reset assignment", at.reset, at.parent));
+
+			for (String line : getExtraTransitionPrintLines(at))
+				rv.add(line);
+
+			return rv;
+		}
+
+		public ArrayList<String> getPrintModeLines(AutomatonMode am)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			rv.add(am.name + " = ha.new_mode('" + am.name + "')");
+			rv.add(am.name + ".inv = lambda state: " + am.invariant);
+
+			if (!am.urgent)
+			{
+				rv.add(am.name + ".der = lambda _, state: "
+						+ getMapString("flow dynamics", am.flowDynamics, am.automaton));
+
+				rv.add(am.name + ".der_interval_list = "
+						+ getIntervalListString(am.flowDynamics, am.automaton));
+			}
+
+			for (String line : getExtraModePrintLines(am))
+				rv.add(line);
+
+			return rv;
 		}
 
 		// transition is named "t"
@@ -320,7 +334,7 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	public static String automatonToString(Configuration config)
 	{
-		return automatonToString(config, new ExtraPrintFuncs());
+		return automatonToString(config, new PythonPrinterCustomization());
 	}
 
 	/**
@@ -330,7 +344,7 @@ public class PySimPrinter extends ToolPrinter
 	 *            the (flat) configuration
 	 * @return
 	 */
-	public static String automatonToString(Configuration config, ExtraPrintFuncs extraFuncs)
+	public static String automatonToString(Configuration config, PythonPrinterCustomization custom)
 	{
 		ExpressionPrinter savedPrinter = Expression.expressionPrinter;
 
@@ -347,8 +361,8 @@ public class PySimPrinter extends ToolPrinter
 
 		BaseComponent ha = (BaseComponent) config.root;
 
-		if (extraFuncs != null)
-			for (String line : extraFuncs.getImportLines(ha))
+		if (custom != null)
+			for (String line : custom.getImportLines(ha))
 				appendLine(rv, line);
 
 		appendNewline(rv);
@@ -356,15 +370,15 @@ public class PySimPrinter extends ToolPrinter
 		appendLine(rv, "def define_ha():");
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendNewline(rv);
-		appendIndentedLine(rv, "ha = HybridAutomaton()");
+		appendIndentedLine(rv, "ha = " + custom.automatonObjectName + "()");
 		appendIndentedLine(rv, "ha.variables = " + quotedVarList(ha));
 		appendNewline(rv);
 
-		for (String line : extraFuncs.getExtraDeclarationPrintLines(ha))
+		for (String line : custom.getExtraDeclarationPrintLines(ha))
 			appendIndentedLine(rv, line);
 
-		appendModes(rv, ha, extraFuncs);
-		appendJumps(rv, ha, extraFuncs);
+		appendModes(rv, ha, custom);
+		appendJumps(rv, ha, custom);
 		appendNewline(rv);
 		appendIndentedLine(rv, "return ha");
 		appendNewline(rv);

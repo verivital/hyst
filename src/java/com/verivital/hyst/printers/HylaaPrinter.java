@@ -9,17 +9,18 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
-import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.printers.PySimPrinter.ExtraPrintFuncs;
+import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.python.PythonBridge;
 import com.verivital.hyst.python.PythonUtil;
-import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.StringOperations;
 
 /**
  * Printer for Python-based Hylaa.
@@ -47,167 +48,173 @@ public class HylaaPrinter extends ToolPrinter
 		return "'''\n" + text + "\n'''";
 	}
 
-	public static class HylaaExtraPrintFuncs extends ExtraPrintFuncs
+	public static class HylaaExtraPrintFuncs extends PythonPrinterCustomization
 	{
+		public HylaaExtraPrintFuncs()
+		{
+			this.automatonObjectName = "LinearHybridAutomaton";
+		}
+
 		@Override
 		public ArrayList<String> getImportLines(BaseComponent ha)
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
-			rv.add("from hylaa.hybrid_automaton import HybridAutomaton");
-			rv.add("from hylaa.hybrid_automaton import HyperRectangle");
-			rv.add("import hylaa.engine as hylaa");
+			rv.add("import numpy as np");
+
+			rv.add("from hylaa.hybrid_automaton import LinearHybridAutomaton, LinearConstraint, HyperRectangle");
+			rv.add("from hylaa.engine import HylaaSettings");
+			rv.add("from hylaa.engine import HylaaEngine");
+			rv.add("from hylaa.plotutil import PlotSettings");
 
 			return rv;
 		}
 
-		@Override
-		public ArrayList<String> getExtraModePrintLines(AutomatonMode am)
+		public ArrayList<String> getPrintTransitions(AutomatonTransition at)
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
-			// add the jacobian
-			rv.add("def jac(_. state):");
-			rv.add("    'symbolic jacobian'\n");
+			// guard
+			// trans = ha.new_transition(loc1, loc2)
+			// trans.guard_list = [guard]
 
-			rv.add("    return [");
+			rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 
-			for (String row : am.automaton.variables)
+			if (at.guard != Constant.TRUE)
 			{
-				Expression der = am.flowDynamics.get(row).asExpression();
+				ArrayList<Operation> parts = DynamicsUtil.splitConjunction(at.guard);
 
-				if (PythonBridge.hasPython())
-					der = PythonUtil.pythonSimplifyExpressionChop(der, 1e-9);
-
-				StringBuffer line = new StringBuffer();
-				line.append("           [");
-
-				for (String col : am.automaton.variables)
+				for (Operation o : parts)
 				{
-					Expression e = null;
+					ArrayList<String> conds = toLinearConstraints(o, at.parent.variables);
 
-					try
+					for (int i = 0; i < conds.size(); ++i)
 					{
-						// find variable 'col' in expression 'der'
-						e = findMultiplier(col, der);
+						rv.add("trans.guard_list.append(" + conds.get(i) + ") # "
+								+ o.toDefaultString());
 					}
-					catch (AutomatonExportException ex)
-					{
-						throw new PreconditionsFailedException(
-								"Error extracting linear dynamics for variable '" + col
-										+ "' in derivative expression: '" + der.toDefaultString()
-										+ "'",
-								ex);
-					}
-
-					if (e != null)
-					{
-						double val = AutomatonUtil.evaluateConstant(e);
-						line.append("" + val + ", ");
-					}
-					else
-						line.append("0, ");
-
 				}
-
-				line.append("],");
-
-				rv.add(line.toString());
 			}
 
-			rv.add("    ]");
+			if (at.reset.size() > 0)
+				throw new PreconditionsFailedException(
+						"Resets not currently supported in hylaa printer: " + at);
 
 			return rv;
 		}
 
-		private Expression findMultiplier(String varName, Expression summation)
+		public ArrayList<String> getPrintModeLines(AutomatonMode am)
 		{
-			Expression rv = null;
+			ArrayList<String> rv = new ArrayList<String>();
 
-			if (summation instanceof Operation)
+			rv.add(am.name + " = ha.new_mode('" + am.name + "')");
+
+			try
 			{
-				Operation o = summation.asOperation();
-				Operator op = o.op;
+				rv.add(am.name + ".a_matrix = np.array("
+						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am)) + ")");
+				rv.add(am.name + ".b_vector = np.array("
+						+ toPythonList(DynamicsUtil.extractDynamicsVectorB(am)) + ")");
 
-				if (op == Operator.NEGATIVE)
+				// invariant
+				// loc1.inv_list = [inv1]
+				if (am.invariant != Constant.TRUE)
 				{
-					rv = findMultiplier(varName, o.children.get(0));
+					ArrayList<Operation> parts = DynamicsUtil.splitConjunction(am.invariant);
 
-					if (rv != null)
-						rv = new Operation(Operator.NEGATIVE, rv);
-				}
-				else if (op == Operator.MULTIPLY)
-				{
-					Expression left = o.getLeft();
-					Expression right = o.getRight();
-
-					if (left instanceof Variable && right instanceof Variable)
-						throw new AutomatonExportException(
-								"Unsupported variable-variable term in linear derivative: '"
-										+ o.toDefaultString() + "'");
-					else if (left instanceof Variable)
+					for (Operation o : parts)
 					{
-						if (((Variable) left).name.equals(varName))
-							rv = right;
-					}
-					else if (right instanceof Variable)
-					{
-						if (((Variable) right).name.equals(varName))
-							rv = left;
-					}
-					else if (left instanceof Constant && right instanceof Constant)
-					{
-						// allowed, doesn't affect rv
-					}
-					else
-						throw new AutomatonExportException(
-								"Unsupported term in linear derivative: '" + o.toDefaultString()
-										+ "'");
-				}
-				else if (op == Operator.ADD || op == Operator.SUBTRACT)
-				{
-					Expression left = o.getLeft();
-					Expression right = o.getRight();
+						ArrayList<String> invs = toLinearConstraints(o, am.automaton.variables);
 
-					Expression leftRv = findMultiplier(varName, left);
-					Expression rightRv = findMultiplier(varName, right);
-
-					if (leftRv != null && rightRv != null)
-						throw new AutomatonExportException("Unsupported term in linear derivative ("
-								+ varName + " in multiple places): " + summation.toDefaultString());
-					else if (leftRv != null)
-						rv = leftRv;
-					else if (rightRv != null)
-						rv = rightRv;
-
-					if (rv != null && op == Operator.SUBTRACT)
-						rv = new Operation(Operator.NEGATIVE, rv);
-				}
-				else
-					throw new AutomatonExportException(
-							"Unsupported operation in linear derivative (expecting +/-/*): '"
+						for (int i = 0; i < invs.size(); ++i)
+						{
+							rv.add(am.name + ".inv_list.append(" + invs.get(i) + ") # "
 									+ o.toDefaultString());
+						}
+					}
+				}
 			}
-			else if (summation instanceof Constant)
+			catch (AutomatonExportException e)
 			{
-				// allowed, doesn't affect things
+				throw new PreconditionsFailedException(e.toString(), e);
 			}
-			else if (summation instanceof Variable)
-			{
-				// maybe variable by itself
-
-				Variable v = (Variable) summation;
-
-				if (v.name.equals(varName))
-					rv = new Constant(1);
-			}
-			else
-				throw new AutomatonExportException(
-						"Unsupported expression type (" + summation.getClass()
-								+ ") in linear derivative (expecting sum of multiples): '"
-								+ summation.toDefaultString() + "'");
 
 			return rv;
+		}
+
+		/**
+		 * Convert a conditions to a list of 'LinearConstraint()' initialization strings
+		 * 
+		 * @param condition
+		 *            a basic condition
+		 * @param vars
+		 *            the variables
+		 * 
+		 * @return a list of 'LinearConstraint()' strings (one constraints may produce multiple
+		 *         linear constraints)
+		 */
+		private ArrayList<String> toLinearConstraints(Operation o, ArrayList<String> vars)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			Operator op = o.op;
+
+			// extract the variable vector on the left and right hand sides
+			ArrayList<Double> leftVec = DynamicsUtil.extractLinearVector(o.getLeft(), vars);
+			double leftVal = DynamicsUtil.extractLinearValue(o.getLeft());
+
+			ArrayList<Double> rightVec = DynamicsUtil.extractLinearVector(o.getRight(), vars);
+			double rightVal = DynamicsUtil.extractLinearValue(o.getRight());
+
+			// normal form has all variables on left and all constants on the right
+			for (int i = 0; i < leftVec.size(); ++i)
+				leftVec.set(i, leftVec.get(i) - rightVec.get(i));
+
+			rightVal -= leftVal;
+			// now, only work with leftVec and rightVal
+
+			if (op == Operator.LESS || op == Operator.LESSEQUAL || op == Operator.EQUAL)
+			{
+				StringBuilder str = new StringBuilder("LinearConstraint(");
+				str.append(toPythonList(leftVec));
+				str.append(", " + ToolPrinter.doubleToString(rightVal));
+				str.append(")");
+				rv.add(str.toString());
+			}
+
+			if (op == Operator.GREATER || op == Operator.GREATEREQUAL || op == Operator.EQUAL)
+			{
+				for (int i = 0; i < leftVec.size(); ++i)
+					leftVec.set(i, -leftVec.get(i));
+
+				StringBuilder str = new StringBuilder("LinearConstraint(");
+				str.append(toPythonList(leftVec));
+				str.append(", " + ToolPrinter.doubleToString(-rightVal));
+				str.append(")");
+				rv.add(str.toString());
+			}
+
+			if (op != Operator.EQUAL && op != Operator.LESS && op != Operator.LESSEQUAL
+					&& op != Operator.GREATER && op != Operator.GREATEREQUAL)
+				throw new AutomatonExportException(
+						"Not a linear condition: " + o.toDefaultString());
+
+			return rv;
+		}
+
+		private String toPythonList(ArrayList<Double> list)
+		{
+			return "[" + StringOperations.join(", ", list.toArray(new Double[] {})) + "]";
+		}
+
+		private String toPythonListList(ArrayList<ArrayList<Double>> matrix)
+		{
+			ArrayList<String> convertedLists = new ArrayList<String>();
+
+			for (ArrayList<Double> row : matrix)
+				convertedLists.add(toPythonList(row));
+
+			return "[" + StringOperations.join(", ", convertedLists.toArray(new String[] {})) + "]";
 		}
 
 		@Override
@@ -223,10 +230,23 @@ public class HylaaPrinter extends ToolPrinter
 		}
 	}
 
+	private static ExpressionModifier em = new ExpressionModifier()
+	{
+		@Override
+		public Expression modifyExpression(Expression e)
+		{
+			return PythonUtil.pythonSimplifyExpressionChop(e, 1e-9);
+		}
+	};
+
 	@Override
 	protected void printAutomaton()
 	{
 		new SimplifyExpressionsPass().runVanillaPass(config, "");
+
+		// simplify all the expressions using python
+		if (PythonBridge.hasPython())
+			ExpressionModifier.modifyBaseComponent((BaseComponent) config.root, em);
 
 		this.printCommentHeader();
 
@@ -237,24 +257,45 @@ public class HylaaPrinter extends ToolPrinter
 		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
 		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
 
-		printLine("def run(dim_x=" + xDim + ", dim_y=" + yDim + "):");
+		printLine("def main():");
 		increaseIndentation();
-		printLine("'runs hylaa on the model and returns a result object'");
+		printLine("'runs hylaa on the model'");
 		printLine("ha = define_ha()");
-		printLine("return hylaa.run(dim_x, dim_y, define_init_states(ha), ha)");
-		decreaseIndentation();
+		printLine("init = define_init_states(ha)");
 		printNewline();
 
-		printLine("def plot(nodes, image_path):");
-		increaseIndentation();
-		printLine("'plot a result object produced by run()'");
-		printLine("pass");
+		/*
+		 * plot_settings = PlotSettings()
+		 * 
+		 * plot_settings.plot_mode = PlotSettings.PLOT_FULL plot_settings.xdim = 0
+		 * plot_settings.ydim = 1
+		 * 
+		 * settings = HylaaSettings(step=0.25, max_time=10.0, plot_settings=plot_settings)
+		 * 
+		 * engine = HylaaEngine(ha, settings) engine.run(init)
+		 */
+
+		printLine("plot_settings = PlotSettings()");
+		printLine("plot_settings.plot_mode = PlotSettings.PLOT_FULL");
+		printLine("plot_settings.xdim = " + xDim);
+		printLine("plot_settings.ydim = " + yDim);
+		printNewline();
+
+		double step = config.settings.spaceExConfig.samplingTime;
+		double maxTime = config.settings.spaceExConfig.timeHorizon;
+
+		printLine("settings = HylaaSettings(step=" + step + ", max_time=" + maxTime
+				+ ", plot_settings=plot_settings)");
+		printNewline();
+
+		printLine("engine = HylaaEngine(ha, settings)");
+		printLine("engine.run(init)");
 		decreaseIndentation();
 		printNewline();
 
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("plot(run(), 'out.png')");
+		printLine("main()");
 		decreaseIndentation();
 		printNewline();
 	}
