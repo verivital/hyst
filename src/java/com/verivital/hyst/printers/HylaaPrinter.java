@@ -16,6 +16,8 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.ExtraPrintFuncs;
+import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
@@ -73,6 +75,9 @@ public class HylaaPrinter extends ToolPrinter
 			for (String row : am.automaton.variables)
 			{
 				Expression der = am.flowDynamics.get(row).asExpression();
+
+				if (PythonBridge.hasPython())
+					der = PythonUtil.pythonSimplifyExpressionChop(der, 1e-9);
 
 				StringBuffer line = new StringBuffer();
 				line.append("           [");

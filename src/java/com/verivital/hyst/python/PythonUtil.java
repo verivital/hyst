@@ -349,8 +349,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Use python-sympy to simplify an expression. If python doesn't exist on the system, this does
-	 * nothing.
+	 * Use python-sympy to simplify an expression.
 	 * 
 	 * @param e
 	 *            the input expression

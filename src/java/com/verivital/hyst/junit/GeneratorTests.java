@@ -12,13 +12,18 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.generators.IntegralChainGenerator;
+import com.verivital.hyst.generators.NamedNavigationGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.printers.FlowstarPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.python.PythonUtil;
 
 /**
  * JUnit tests for model generators
@@ -88,6 +93,54 @@ public class GeneratorTests
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testNamedNav()
+	{
+		NamedNavigationGenerator gen = new NamedNavigationGenerator();
+
+		String param = "-name nav02";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("four variables", 4, c.root.variables.size());
+
+		Assert.assertEquals("one inital state", 1, c.init.entrySet().size());
+
+		Entry<String, Expression> entry = c.init.entrySet().iterator().next();
+
+		// x0 = new Interval[] { new Interval(2, 3), new Interval(1, 2) };
+		// v0 = new Interval[] { new Interval(-0.3, 0.3), new Interval(-0.3, 0.3) };
+
+		Assert.assertEquals("mode_2_1", entry.getKey());
+		Assert.assertEquals(
+				"2 <= x & x <= 3 & 1 <= y & y <= 2 & -0.3 <= xvel & xvel <= 0.3 & -0.3 <= yvel & yvel <= 0.3",
+				entry.getValue().toDefaultString());
+
+		BaseComponent ha = (BaseComponent) c.root;
+
+		AutomatonMode am = ha.modes.get("mode_1_0");
+		Expression e = am.flowDynamics.get("xvel").asExpression();
+
+		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0)", e.toDefaultString());
+
+		// make sure it simplifies to an easy linear expression
+		if (PythonBridge.hasPython())
+		{
+			Assert.assertEquals("-1.2 * xvel + 0.1 * yvel + 1.2",
+					PythonUtil.pythonSimplifyExpressionChop(e, 1e-9).toDefaultString());
+
+			// test printing to Hylaa
+			ToolPrinter printer = new HylaaPrinter();
+			printer.setOutputString();
+			printer.print(c, "", "model.xml");
+
+			String out = printer.outputString.toString();
+
+			// TODO remove printing
+			System.out.println(out);
+			Assert.assertTrue("some output exists", out.length() > 10);
+		}
 	}
 
 	@Test

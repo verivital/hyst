@@ -21,6 +21,7 @@ import org.kohsuke.args4j.Option;
 import com.verivital.hyst.generators.BuildGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
+import com.verivital.hyst.generators.NamedNavigationGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
 import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -90,7 +91,8 @@ public class Hyst
 
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
-			new NavigationGenerator(), new SwitchedOscillatorGenerator(), new BuildGenerator() };
+			new NavigationGenerator(), new NamedNavigationGenerator(),
+			new SwitchedOscillatorGenerator(), new BuildGenerator() };
 
 	public static String TOOL_NAME = "Hyst v1.3";
 
