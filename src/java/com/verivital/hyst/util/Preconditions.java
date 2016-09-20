@@ -608,5 +608,10 @@ public class Preconditions
 			super(s);
 		}
 
+		public PreconditionsFailedException(String s, Exception e)
+		{
+			super(s, e);
+		}
+
 	}
 }

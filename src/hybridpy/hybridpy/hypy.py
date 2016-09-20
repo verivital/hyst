@@ -17,12 +17,11 @@ from hybridpy.tool_dreach import DReachTool
 from hybridpy.tool_spaceex import SpaceExTool
 from hybridpy.tool_hycreate import HyCreateTool
 from hybridpy.tool_pysim import PySimTool
-from hybridpy.tool_pyrrt import PyRrtTool
 
 # tools for which models can be generated
 TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
          'spaceex':SpaceExTool(), 'dreach':DReachTool(), \
-         'pysim':PySimTool(), 'pyrrt':PyRrtTool()}
+         'pysim':PySimTool()}
 
 EXIT_CODE_TERM = 143
 

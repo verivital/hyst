@@ -14,9 +14,10 @@ import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.ExtraPrintFuncs;
 import com.verivital.hyst.util.AutomatonUtil;
-import com.verivital.hyst.util.PreconditionsFlag;
+import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
  * Printer for Python-based Hylaa.
@@ -30,7 +31,6 @@ public class HylaaPrinter extends ToolPrinter
 
 	public HylaaPrinter()
 	{
-		preconditions.skip(PreconditionsFlag.NO_URGENT); // skip the no-urgent-modes check
 	}
 
 	@Override
@@ -79,13 +79,26 @@ public class HylaaPrinter extends ToolPrinter
 
 				for (String col : am.automaton.variables)
 				{
-					// find variable 'col' in expression 'der'
-					Expression e = findMultiplier(col, der);
+					Expression e = null;
+
+					try
+					{
+						// find variable 'col' in expression 'der'
+						e = findMultiplier(col, der);
+					}
+					catch (AutomatonExportException ex)
+					{
+						throw new PreconditionsFailedException(
+								"Error extracting linear dynamics for variable '" + col
+										+ "' in derivative expression: '" + der.toDefaultString()
+										+ "'",
+								ex);
+					}
 
 					if (e != null)
 					{
 						double val = AutomatonUtil.evaluateConstant(e);
-						line.append("" + e.toString() + ", ");
+						line.append("" + val + ", ");
 					}
 					else
 						line.append("0, ");
@@ -174,10 +187,20 @@ public class HylaaPrinter extends ToolPrinter
 			{
 				// allowed, doesn't affect things
 			}
+			else if (summation instanceof Variable)
+			{
+				// maybe variable by itself
+
+				Variable v = (Variable) summation;
+
+				if (v.name.equals(varName))
+					rv = new Constant(1);
+			}
 			else
 				throw new AutomatonExportException(
-						"Unsupported expression type in linear derivative (expecting sum of multiples): '"
-								+ summation.toDefaultString());
+						"Unsupported expression type (" + summation.getClass()
+								+ ") in linear derivative (expecting sum of multiples): '"
+								+ summation.toDefaultString() + "'");
 
 			return rv;
 		}
@@ -198,6 +221,8 @@ public class HylaaPrinter extends ToolPrinter
 	@Override
 	protected void printAutomaton()
 	{
+		new SimplifyExpressionsPass().runVanillaPass(config, "");
+
 		this.printCommentHeader();
 
 		printNewline();
