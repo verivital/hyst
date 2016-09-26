@@ -17,6 +17,10 @@ import tempfile
 from hybridpy.hypy import Engine
 from hybridpy.hybrid_tool import random_string
 
+class StrategyFailedError(RuntimeError):
+    'When a strategy fails it raises this type of exception'
+    pass
+
 class HypyStrategy(object):
     'an abstract strategy class'
     __metaclass__ = abc.ABCMeta
@@ -57,12 +61,15 @@ class HypyStrategy(object):
 
     def set_output(self, path):
         '''Set the path for saving the model file (optional)'''
+        assert str(path) == path
+
         self.output = path
 
     def run(self, image_path=None, print_stdout=False):
         '''
         run the strategy on the input model. Returns the Hypy result object on
-        the last run of the tool.
+        the last run of the tool. If the strategy fails, this should raise
+        a StrategyFailedError object
         '''
 
         self.image_base = image_path
@@ -118,7 +125,7 @@ class HypyStrategy(object):
         '''
 
         assert isinstance(engine, Engine)
-        
+
         return engine.run(run_hyst=run_hyst, run_tool=run_tool, timeout=timeout, image_path=self._get_image_path(), 
                           save_stdout=save_stdout, print_stdout=print_stdout or self.print_stdout, 
                           stdout_func=stdout_func, parse_output=parse_output)
@@ -136,7 +143,7 @@ class HypyStrategy(object):
         if self.image_base is not None:
             parts = os.path.splitext(self.image_base)
             rv = parts[0] + str(self.make_engine_count) + parts[1]
-    
+
         return rv
 
     def model_to_objects(self, verbose=False, debug=False):
@@ -184,10 +191,9 @@ class HypyStrategy(object):
     def _run(self):
         '''
         implementation of the strategy; returns a hypy result object from the last
-        run of the strategy.
+        run of the strategy. If the strategy fails, this should raise StrategyFailedError
         '''
         return None
-
 
 class FlowstarAutotune(HypyStrategy):
     '''
@@ -195,27 +201,90 @@ class FlowstarAutotune(HypyStrategy):
     until completion.
     '''
 
-    def _run(self):
+    def __init__(self, should_output=False):
+        HypyStrategy.__init__(self)
 
+        self.should_output = should_output
+
+    def out(self, msg):
+        'print out a mesasge, if should_output was set to True'
+
+        if self.should_output:
+            print msg
+
+    def get_valid_start_params(self):
+        '''
+        an iterator for valid start params for flow*
+
+        yields tuples of (step, order)
+        '''
+
+        found = False
         _, init_list, settings = self.model_to_objects()
 
         assert len(init_list) == 1
 
-        for num_steps in [10, 100, 1000]:
-            params = ''
+        for num_steps, order in [(10, 3), (50, 4), (200, 5), (500, 6), (500, 8)]:
             step = settings.max_time / num_steps
-            print "Trying Step {}".format(step)
+            self.out("Checking start params step = {}, order = {}".format(step, order))
 
-            params += '-step ' + str(step)
+            params = '-step {}'.format(step)
+            params += ' -orders {}-{}'.format(order, order)
+            
+            # try just a single step
+            params += ' -time {}'.format(step)
 
             e = self.make_engine('flowstar', params)
 
-            res = self.run_engine(e, print_stdout=True, parse_output=True)
+            res = self.run_engine(e, parse_output=True)
 
-            if res['code'] == Engine.SUCCESS:
+            if res['code'] != Engine.SUCCESS:
+                raise RuntimeError("Hypy Failed: {}".format(res['code']))
+
+            obj = res['output']
+
+            if obj['terminated'] is False:
+                found = True
+                yield (step, order)
+
+        if not found:
+            raise StrategyFailedError('Could not find valid start params for Flow*')
+
+    def _run(self):
+        completed = False
+
+        for step, order in self.get_valid_start_params():
+            self.out("Valid start params step = {}, order = {}".format(step, order))
+
+            params = '-step {}'.format(step)
+            params += ' -orders {}-{}'.format(order, order)
+
+            e = self.make_engine('flowstar', params)
+
+            e.add_pass("pi_init", "")
+
+            res = self.run_engine(e, parse_output=True, print_stdout=True)
+
+            if res['code'] != Engine.SUCCESS:
+                raise RuntimeError("Hypy Failed: {}".format(res['code']))
+
+            obj = res['output']
+
+            self.out("Result was {}".format(obj['result']))
+
+            if obj['result'] is not None:
+                completed = True
                 break
+                
+
+        if not completed:
+            raise StrategyFailedError("Could not find paramters to complete the computation")
+
 
         return res
+
+
+
 
 
 
