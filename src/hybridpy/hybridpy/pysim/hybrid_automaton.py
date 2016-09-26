@@ -110,7 +110,7 @@ class AutomatonTransition(object):
     def __str__(self):
         rv = self.name
         
-        if rv == None:
+        if rv is None:
             rv = self.from_mode.name + " -> " + self.to_mode.name
 
         return rv

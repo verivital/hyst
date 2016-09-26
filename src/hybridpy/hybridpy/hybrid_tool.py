@@ -67,7 +67,7 @@ def tool_main(tool_obj, extra_args=None):
 
     args = parser.parse_args()
 
-    if args.image == None:
+    if args.image is None:
         args.image = os.path.splitext(args.model)[0] + '.png'
 
     tool_obj.load_args(args)
@@ -224,7 +224,7 @@ class HybridTool(object):
         self.default_extension = default_ext
         self.tool_path = get_tool_path(tool_executable)
 
-        if self.tool_path == None:
+        if self.tool_path is None:
             print "Tool '" + tool_name + "' is not runnable."
 
         self.original_model_path = None
@@ -247,7 +247,7 @@ class HybridTool(object):
         if not os.path.exists(self.original_model_path):
             raise RuntimeError('Model file not found at path: ' + self.original_model_path)
 
-        if args.debug == True:
+        if args.debug is True:
             self.set_debug(True)
 
         if args.explicit_temp_dir is not None:

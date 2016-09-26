@@ -9,12 +9,11 @@ import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
 /**
- * An {@link OptionHandler} which parses Strings which are expected as multiples
- * of two. Stops when the first non-multiple of two is encountered (because it
- * starts with a hyphen '-').
+ * An {@link OptionHandler} which parses Strings which are expected as multiples of two. Stops when
+ * the first non-multiple of two is encountered (because it starts with a hyphen '-').
  *
- * This {@code OptionHandler} scans for parameter which begins with
- * <tt>-(NON_NUMBER)</tt>. If found, it will stop.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUMBER)</tt>. If
+ * found, it will stop.
  * </p>
  *
  * @author Stanley Bak

@@ -17,9 +17,8 @@ import com.verivital.hyst.util.StringPairsWithSpacesArrayOptionHandler;
 import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 
 /**
- * Creates a (flat) hybrid automaton from scratch, based on the passed-in
- * arguments. This works with Hypy's ModelArgsBuilder object to aid python
- * creation of hybrid automaton models
+ * Creates a (flat) hybrid automaton from scratch, based on the passed-in arguments. This works with
+ * Hypy's ModelArgsBuilder object to aid python creation of hybrid automaton models
  * 
  * @author Stanley Bak (August 2016)
  *

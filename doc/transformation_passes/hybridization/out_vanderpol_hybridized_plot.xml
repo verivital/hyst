@@ -15,7 +15,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.0446199584971207 &amp;
  y &lt;= 2.3699999999999997 &amp;
  2.14717243966 * x + -4.095571019203355 * y &lt;= -5.5987319024338085 &amp;
- _y_interval &lt;= 0.02632023328031785 &amp;
+ _y_interval &lt;= 0.026320233280319627 &amp;
  _y_interval &gt;= -0.22575768674928653</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == -7.2948237230305 * x + -1.0332018720817682 * y + 8.97581356414588 + _y_interval &amp;
@@ -136,7 +136,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= 0.375250309237 &amp;
  0.197656805026 * x + -2.6071595502603655 * y &lt;= -0.11844432929005005 &amp;
  _y_interval &lt;= 0.05643355472675715 &amp;
- _y_interval &gt;= -0.06095607663782099</invariant>
+ _y_interval &gt;= -0.06463331762349789</invariant>
       <flow>x' == 0.9999999999999999 * y &amp;
  y' == -2.0404016294860807 * x + -3.0319129428106155 * y + 2.0890873381390342 + _y_interval &amp;
  _tt' == 0</flow>
@@ -160,7 +160,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -0.082136847264 &amp;
  y &lt;= 0.12677943082760001 &amp;
  _y_interval &lt;= 0.051863415138124536 &amp;
- _y_interval &gt;= -0.04949812347739213</invariant>
+ _y_interval &gt;= -0.05250620052698318</invariant>
       <flow>x' == 1 * y &amp;
  y' == -1.0902530527786047 * x + -3.0871931416708827 * y + 0.18246286136761825 + _y_interval &amp;
  _tt' == -1</flow>
@@ -171,7 +171,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= 2.1416744419 &amp;
  y &gt;= -0.173337054677 &amp;
  y &lt;= 0.025625285814500003 &amp;
- _y_interval &lt;= 0.048309181596048356 &amp;
+ _y_interval &lt;= 0.05122708068787962 &amp;
  _y_interval &gt;= -0.04906080120427525</invariant>
       <flow>x' == 1 * y &amp;
  y' == -0.7015376036953908 * x + -3.0827148204120602 * y - 0.60306502788421 + _y_interval &amp;
@@ -208,7 +208,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -0.37629830202299996 &amp;
  y &lt;= -0.205003638035 &amp;
  _y_interval &lt;= 0.04850202210119536 &amp;
- _y_interval &gt;= -0.036750540513420416</invariant>
+ _y_interval &gt;= -0.03942523513616725</invariant>
       <flow>x' == 1 * y &amp;
  y' == 0.15763113702372586 * x + -2.965855209302103 * y - 2.305359327156439 + _y_interval &amp;
  _tt' == -1</flow>
@@ -244,7 +244,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -0.358303798814 &amp;
  -0.506382733519 * x + -0.5990414872089687 * y &lt;= -0.6472988380374848 &amp;
  _y_interval &lt;= 0.07119613784444634 &amp;
- _y_interval &gt;= -0.04932066170929139</invariant>
+ _y_interval &gt;= -0.05358618494934797</invariant>
       <flow>x' == 1 * y &amp;
  y' == 0.8230314963807289 * x + -2.7162863659492675 * y - 3.514380317877348 + _y_interval &amp;
  _tt' == 0</flow>
@@ -268,7 +268,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -0.632682703097 &amp;
  y &lt;= -0.45958338307200003 &amp;
  _y_interval &lt;= 0.03729097632593259 &amp;
- _y_interval &gt;= -0.025122894302361365</invariant>
+ _y_interval &gt;= -0.026787462271406604</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == 1.0080805173031904 * x + -2.379911636080512 * y - 3.6917628543387204 + _y_interval &amp;
  _tt' == -1</flow>
@@ -352,7 +352,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -0.6849914880119999 &amp;
  -0.796572935559 * x + -0.5194203105768086 * y &lt;= -0.7723723104082267 &amp;
  _y_interval &lt;= 0.033380714656731536 &amp;
- _y_interval &gt;= -0.017333283149760237</invariant>
+ _y_interval &gt;= -0.018939256548963446</invariant>
       <flow>x' == 1 * y &amp;
  y' == 1.3557109330372066 * x + -1.3356948970440399 * y - 3.600228400207595 + _y_interval &amp;
  _tt' == 0</flow>
@@ -376,7 +376,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -0.909099865861 &amp;
  y &lt;= -0.7627202434289999 &amp;
  _y_interval &lt;= 0.021527537882058967 &amp;
- _y_interval &gt;= -0.010707723966729366</invariant>
+ _y_interval &gt;= -0.011578805536084924</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.386277947226221 * x + -1.0373374382820777 * y - 3.4060616987293515 + _y_interval &amp;
  _tt' == -1</flow>
@@ -460,7 +460,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -1.02702327946 &amp;
  -1.13349762174 * x + -0.9578191752725698 * y &lt;= -0.08448668420870886 &amp;
  _y_interval &lt;= 0.022897174676975274 &amp;
- _y_interval &gt;= -0.006135927239560246</invariant>
+ _y_interval &gt;= -0.007095873384870721</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.3533967408712262 * x + -0.12915152427933366 * y - 2.5007556589826665 + _y_interval &amp;
  _tt' == 0</flow>
@@ -472,7 +472,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -1.2372357705700001 &amp;
  y &lt;= -1.0785130732102313 &amp;
  _y_interval &lt;= 0.021634174167913578 &amp;
- _y_interval &gt;= -0.0058770857109966546</invariant>
+ _y_interval &gt;= -0.0058770857109965435</invariant>
       <flow>x' == 1.0000000000000013 * y &amp;
  y' == 1.3231440265907963 * x + -0.006397058844569523 * y - 2.330562825403136 + _y_interval &amp;
  _tt' == -1</flow>
@@ -496,7 +496,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -1.3487877158200001 &amp;
  y &lt;= -1.18253814566 &amp;
  _y_interval &lt;= 0.02220259611286779 &amp;
- _y_interval &gt;= -0.004546902416013854</invariant>
+ _y_interval &gt;= -0.004546902416013632</invariant>
       <flow>x' == 1 * y &amp;
  y' == 1.2329701471026746 * x + 0.22183853297437264 * y - 1.9697802458891887 + _y_interval &amp;
  _tt' == -1</flow>
@@ -508,7 +508,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -1.24083729903 &amp;
  -1.35030603056 * x + -1.294860800490529 * y &lt;= 0.6784863934784402 &amp;
  _y_interval &lt;= 0.020566234633047076 &amp;
- _y_interval &gt;= -0.0035969020102515348</invariant>
+ _y_interval &gt;= -0.0035969020102513127</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.1714881544496283 * x + 0.32568148509880324 * y - 1.783158740884734 + _y_interval &amp;
  _tt' == 0</flow>
@@ -520,7 +520,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -1.4707772845 &amp;
  y &lt;= -1.296451452164713 &amp;
  _y_interval &lt;= 0.022971556317988195 &amp;
- _y_interval &gt;= -0.003363514255457556</invariant>
+ _y_interval &gt;= -0.003363514255457334</invariant>
       <flow>x' == 1 * y &amp;
  y' == 1.0964672034781588 * x + 0.42603418407725735 * y - 1.5882946996846212 + _y_interval &amp;
  _tt' == -1</flow>
@@ -556,7 +556,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -1.70604476839 &amp;
  y &lt;= -1.51509041597 &amp;
  _y_interval &lt;= 0.024257330871333638 &amp;
- _y_interval &gt;= -0.001713576055178745</invariant>
+ _y_interval &gt;= -0.001713576055178967</invariant>
       <flow>x' == 1 * y &amp;
  y' == 0.7190177201237007 * x + 0.7151981514678739 * y - 0.9173852548775969 + _y_interval &amp;
  _tt' == -1</flow>
@@ -592,7 +592,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -1.95509986086 &amp;
  y &lt;= -1.7498661601899999 &amp;
  _y_interval &lt;= 0.025456247662327236 &amp;
- _y_interval &gt;= -0.0005639270471866631</invariant>
+ _y_interval &gt;= -0.0005639270471868851</invariant>
       <flow>x' == 0.9999999999999989 * y &amp;
  y' == 0.1341733217870787 * x + 0.9062890379621197 * y - 0.3471959301502532 + _y_interval &amp;
  _tt' == -1</flow>
@@ -628,7 +628,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -2.05950557951 &amp;
  -2.16744075954 * x + -2.17329875193542 * y &lt;= 4.697634007611526 &amp;
  _y_interval &lt;= 0.01442580891046008 &amp;
- _y_interval &gt;= -0.0000032320280398678847</invariant>
+ _y_interval &gt;= -0.000003232028040311974</invariant>
       <flow>x' == 1.0000000000000027 * y &amp;
  y' == -0.8625560930522121 * x + 0.9989685975928316 * y - 0.004414073517259087 + _y_interval &amp;
  _tt' == 0</flow>
@@ -640,7 +640,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -2.3287194855099997 &amp;
  y &lt;= -2.1141767270404728 &amp;
  _y_interval &lt;= 0.02855435373544113 &amp;
- _y_interval &gt;= -0.000013491371123830476</invariant>
+ _y_interval &gt;= -0.000013491371123386386</invariant>
       <flow>x' == 1 * y &amp;
  y' == -1.2211978961363186 * x + 0.9975212675760826 * y - 0.011012750898147239 + _y_interval &amp;
  _tt' == -1</flow>
@@ -652,7 +652,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -2.43414308338 &amp;
  y &lt;= -2.2220483529800004 &amp;
  _y_interval &lt;= 0.03382299351377949 &amp;
- _y_interval &gt;= -0.00013532874807653528</invariant>
+ _y_interval &gt;= -0.00013532874807675732</invariant>
       <flow>x' == 1 * y &amp;
  y' == -1.761382218039392 * x + 0.9732610835677913 * y - 0.12450151370919249 + _y_interval &amp;
  _tt' == -1</flow>
@@ -700,7 +700,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -2.71004772959 &amp;
  y &lt;= -2.54699427114 &amp;
  _y_interval &lt;= 0.04956290359144411 &amp;
- _y_interval &gt;= -0.0009593646391080624</invariant>
+ _y_interval &gt;= -0.0009593646391081734</invariant>
       <flow>x' == 0.9999999999999972 * y &amp;
  y' == -4.1874785076911945 * x + 0.6323694138670868 * y - 1.9326494320537064 + _y_interval &amp;
  _tt' == -1</flow>
@@ -711,8 +711,8 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= -0.619883176506 &amp;
  y &gt;= -2.734158877 &amp;
  y &lt;= -2.5989583948600004 &amp;
- _y_interval &lt;= 0.05053499825754004 &amp;
- _y_interval &gt;= -0.0009597088306619872</invariant>
+ _y_interval &lt;= 0.04862341272898951 &amp;
+ _y_interval &gt;= -0.0009597088306618762</invariant>
       <flow>x' == 1.0000000000000033 * y &amp;
  y' == -4.940055124838767 * x + 0.45418894370808854 * y - 2.910874371482549 + _y_interval &amp;
  _tt' == -1</flow>
@@ -724,7 +724,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -2.734158877 &amp;
  y &lt;= -2.60921140566 &amp;
  _y_interval &lt;= 0.05150172011891141 &amp;
- _y_interval &gt;= -0.0011383961480833094</invariant>
+ _y_interval &gt;= -0.0011383961480834204</invariant>
       <flow>x' == 1.0000000000000036 * y &amp;
  y' == -5.661429690038847 * x + 0.23895956072620644 * y - 4.066520867118103 + _y_interval &amp;
  _tt' == -1</flow>
@@ -736,7 +736,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -2.5868220281409537 &amp;
  -2.64297594449 * x + 1.0823673817341999 * y &lt;= -0.18325174930281163 &amp;
  _y_interval &lt;= 0.03319232372145886 &amp;
- _y_interval &gt;= -0.001705068822695166</invariant>
+ _y_interval &gt;= -0.001705068822694944</invariant>
       <flow>x' == 1.0000000000000033 * y &amp;
  y' == -6.184313844456332 * x + 0.04666514295619591 * y - 5.06190535822799 + _y_interval &amp;
  _tt' == 0</flow>
@@ -783,8 +783,8 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -2.34484783512 &amp;
  y &lt;= -2.1686032773174992 &amp;
  -2.22062485708 * x + 3.7680323426340303 * y &lt;= -5.186549279937355 &amp;
- _y_interval &lt;= 0.03199750591525152 &amp;
- _y_interval &gt;= -0.007117966111212848</invariant>
+ _y_interval &lt;= 0.030998572493224685 &amp;
+ _y_interval &gt;= -0.007117966111213292</invariant>
       <flow>x' == 1 * y &amp;
  y' == -7.363426553460576 * x + -0.9877629257775653 * y - 8.971670788612752 + _y_interval &amp;
  _tt' == 0</flow>
@@ -867,7 +867,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= -1.81707499701 &amp;
  y &gt;= -1.05846128626 &amp;
  y &lt;= -0.7470901454019999 &amp;
- _y_interval &lt;= 0.04819003109598974 &amp;
+ _y_interval &lt;= 0.04992876999014939 &amp;
  _y_interval &gt;= -0.03984632467749538</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == -4.415745946472112 * x + -2.578915094190371 * y - 6.461915272112165 + _y_interval &amp;
@@ -928,7 +928,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= -0.28201142770800003 &amp;
  y &lt;= -0.056172075083 &amp;
  _y_interval &lt;= 0.026270805741170022 &amp;
- _y_interval &gt;= -0.024493011689551203</invariant>
+ _y_interval &gt;= -0.02520485493112057</invariant>
       <flow>x' == 1 * y &amp;
  y' == -1.6769938178182977 * x + -3.0074173065829224 * y - 1.3552424218854906 + _y_interval &amp;
  _tt' == -1</flow>
@@ -999,7 +999,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 0.231193673323 &amp;
  y &lt;= 0.40286268814812387 &amp;
  0.352313580934 * x + 0.9590968323520812 * y &lt;= -0.35241799449917516 &amp;
- _y_interval &lt;= 0.02023344233851554 &amp;
+ _y_interval &lt;= 0.01956286915070793 &amp;
  _y_interval &gt;= -0.022710192123526873</invariant>
       <flow>x' == 1 * y &amp;
  y' == 0.24908650962519965 * x + -2.880871897591278 * y + 2.46069151472226 + _y_interval &amp;
@@ -1323,7 +1323,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= -0.7089959421459999 &amp;
  y &gt;= 1.2669309854 &amp;
  y &lt;= 1.4318400553400001 &amp;
- _y_interval &lt;= 0.003373000306400309 &amp;
+ _y_interval &lt;= 0.003373000306400531 &amp;
  _y_interval &gt;= -0.021017069628497254</invariant>
       <flow>x' == 1 * y &amp;
  y' == 1.1396176108984641 * x + 0.37144940025063466 * y + 1.6963141562433464 + _y_interval &amp;
@@ -1431,7 +1431,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= 0.028095956010500002 &amp;
  y &gt;= 1.9926370776699998 &amp;
  y &lt;= 2.2007309347599997 &amp;
- _y_interval &lt;= 0.00003006651061676635 &amp;
+ _y_interval &lt;= 0.00003006651061721044 &amp;
  _y_interval &gt;= -0.024702572660513233</invariant>
       <flow>x' == 0.9999999999999989 * y &amp;
  y' == -0.6880468814580623 * x + 0.9944658273073141 * y + 0.02320682274477015 + _y_interval &amp;
@@ -1443,7 +1443,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.10052214852 &amp;
  y &lt;= 2.256362036234662 &amp;
  2.20628363358 * x + 2.169936190969114 * y &lt;= 4.862118727001252 &amp;
- _y_interval &lt;= 0.00000010190572208301774 &amp;
+ _y_interval &lt;= 0.00000010190572163892853 &amp;
  _y_interval &gt;= -0.013794870055539477</invariant>
       <flow>x' == 1 * y &amp;
  y' == -1.0258696350669145 * x + 0.9999647443623932 * y + 0.00015360472991687857 + _y_interval &amp;
@@ -1455,7 +1455,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= 0.196930172314 &amp;
  y &gt;= 2.1561819182249544 &amp;
  y &lt;= 2.3638469252 &amp;
- _y_interval &lt;= 0.000040806038162255476 &amp;
+ _y_interval &lt;= 0.000040806038161811387 &amp;
  _y_interval &gt;= -0.028857328652259095</invariant>
       <flow>x' == 0.9999999999999979 * y &amp;
  y' == -1.4083314175353525 * x + 0.9918390037099487 * y + 0.03688793862211348 + _y_interval &amp;
@@ -1491,7 +1491,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.4600585830500004 &amp;
  y &lt;= 2.6061583842375633 &amp;
  2.55604412129 * x + 1.5601334614068012 * y &lt;= 5.159772231451693 &amp;
- _y_interval &lt;= 0.0003889472922791182 &amp;
+ _y_interval &lt;= 0.00038894729227889613 &amp;
  _y_interval &gt;= -0.02417201937799285</invariant>
       <flow>x' == 1 * y &amp;
  y' == -3.145271467933035 * x + 0.8206931243421698 * y + 0.9084075358090218 + _y_interval &amp;
@@ -1527,8 +1527,8 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= 0.9043072347400001 &amp;
  y &gt;= 2.6164198168 &amp;
  y &lt;= 2.7280452171 &amp;
- _y_interval &lt;= 0.0007380998500908786 &amp;
- _y_interval &gt;= -0.047582631796536934</invariant>
+ _y_interval &lt;= 0.0007380998500907676 &amp;
+ _y_interval &gt;= -0.04605620118344045</invariant>
       <flow>x' == 0.999999999999996 * y &amp;
  y' == -5.208065390707131 * x + 0.38005026367141054 * y + 3.3132996885836685 + _y_interval &amp;
  _tt' == -1</flow>
@@ -1540,7 +1540,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.6016523031800003 &amp;
  y &lt;= 2.7280452171 &amp;
  _y_interval &lt;= 0.0013019924192403387 &amp;
- _y_interval &gt;= -0.050778518141892715</invariant>
+ _y_interval &gt;= -0.0490555610640957</invariant>
       <flow>x' == 1.0000000000000036 * y &amp;
  y' == -5.908385748917441 * x + 0.15185081493870164 * y + 4.520378608448706 + _y_interval &amp;
  _tt' == -1</flow>
@@ -1551,7 +1551,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.569483681739218 &amp;
  y &lt;= 2.70206527462 &amp;
  2.6196570268 * x + -1.391428137602362 * y &lt;= -0.8651761711967518 &amp;
- _y_interval &lt;= 0.0017948128361084947 &amp;
+ _y_interval &lt;= 0.0017948128361082727 &amp;
  _y_interval &gt;= -0.032153188434868474</invariant>
       <flow>x' == 1 * y &amp;
  y' == -6.40029547466432 * x + -0.04944228010385938 * y + 5.532186356440744 + _y_interval &amp;
@@ -1563,7 +1563,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  x &lt;= 1.24012650232 &amp;
  y &gt;= 2.4786258782100004 &amp;
  y &lt;= 2.6697848429587245 &amp;
- _y_interval &lt;= 0.004669671332727887 &amp;
+ _y_interval &lt;= 0.004669671332728331 &amp;
  _y_interval &gt;= -0.05966048350470787</invariant>
       <flow>x' == 1 * y &amp;
  y' == -6.795049619442654 * x + -0.2669747092221852 * y + 6.522906176409128 + _y_interval &amp;
@@ -1624,7 +1624,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 1.66049338645 &amp;
  y &lt;= 1.9897258656 &amp;
  _y_interval &lt;= 0.03582282090714628 &amp;
- _y_interval &gt;= -0.06626613570877726</invariant>
+ _y_interval &gt;= -0.06928419289812737</invariant>
       <flow>x' == 0.9999999999999993 * y &amp;
  y' == -6.910886936362595 * x + -1.6222095925808941 * y + 9.571639937748973 + _y_interval &amp;
  _tt' == -1</flow>
@@ -1684,7 +1684,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 0.699309472108 &amp;
  y &lt;= 1.005953923149 &amp;
  _y_interval &lt;= 0.038058856657641194 &amp;
- _y_interval &gt;= -0.04517733601076923</invariant>
+ _y_interval &gt;= -0.0467380485997948</invariant>
       <flow>x' == 1 * y &amp;
  y' == -4.244103182371797 * x + -2.6191482935445456 * y + 6.1716011069883505 + _y_interval &amp;
  _tt' == -1</flow>

@@ -18,18 +18,16 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.StringOperations;
 
 /**
- * This pass splits the initial mode into several using the technique of
- * pseudo-invariants:
- * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants"
- * , CyPhy 2014, Bak 2014
+ * This pass splits the initial mode into several using the technique of pseudo-invariants:
+ * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants" , CyPhy 2014, Bak
+ * 2014
  * 
- * This pass only does a single splitting, on the initial mode, as soon as the
- * constructed hyperplane is completely on one side of the initial state box.
- * The constructed hyperplane is orthogonal to a simulation from the center of
- * the initial states.
+ * This pass only does a single splitting, on the initial mode, as soon as the constructed
+ * hyperplane is completely on one side of the initial state box. The constructed hyperplane is
+ * orthogonal to a simulation from the center of the initial states.
  * 
- * This is more light-weight than the other pseudo-invariant transformations as
- * it doesn't require modifying the initial states or adding an urgent timer.
+ * This is more light-weight than the other pseudo-invariant transformations as it doesn't require
+ * modifying the initial states or adding an urgent timer.
  * 
  * @author Stanley Bak (Auhust 2016)
  *

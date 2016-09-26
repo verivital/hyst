@@ -10,16 +10,15 @@ import org.kohsuke.args4j.spi.Setter;
 
 /**
  * <p>
- * An {@link OptionHandler} for greedily mapping a list of tokens into a
- * collection of {@link String}s (such as {@code String[]}, {@code List<String>}
- * , etc.).
+ * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of
+ * {@link String}s (such as {@code String[]}, {@code List<String>} , etc.).
  * </p>
  *
- * This one allows spaces within the arguments. It expects pair of arguments
- * (groups of two), and at least one group.
+ * This one allows spaces within the arguments. It expects pair of arguments (groups of two), and at
+ * least one group.
  *
- * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>.
- * If found, it will stop.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-</tt>. If found, it will
+ * stop.
  * </p>
  *
  * @author PlainText,LuVar

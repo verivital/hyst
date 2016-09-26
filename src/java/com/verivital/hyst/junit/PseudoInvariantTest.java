@@ -248,8 +248,8 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time, printing to Flow*
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time, printing to Flow*
 	 */
 	@Test
 	public void testInitPIVanderpol()

@@ -2,13 +2,12 @@
 Created by Hyst v1.3
 Hybrid Automaton in PySim
 Converted from file: 
-Command Line arguments: -gen nav "-matrix -0.8 -0.2 -0.1 -0.8 -i_list 2 A 0 0 0 2 4 6 6 6 2 4 B 3 4 2 4 7 7 4 2 4 6 6 6 -width 5 -startx 3.5 -starty 3.5 -noise 0.1" -o nav_fig2a.py -tool pysim "-corners True -legend False -rand 100 -time 10 -title nav_fig2a"
+Command Line arguments: -gen nav "-matrix -0.8 -0.2 -0.1 -0.8 -i_list 2 4 6 6 6 2 4 7 7 4 2 4 B 3 4 2 4 6 6 6 2 A 0 0 0 -width 5 -startx 3.5 -starty 3.5 -noise 0.1" -o nav_fig2a.py -tool pysim "-corners True -legend False -rand 100 -time 10 -title nav_fig2a"
 '''
 
 import hybridpy.pysim.simulate as sim
-from hybridpy.pysim.simulate import init_list_to_q_list
-from hybridpy.pysim.hybrid_automaton import HybridAutomaton
-from hybridpy.pysim.hybrid_automaton import HyperRectangle
+from hybridpy.pysim.simulate import init_list_to_q_list, PySimSettings
+from hybridpy.pysim.hybrid_automaton import HybridAutomaton, HyperRectangle
 
 def define_ha():
     '''make the hybrid automaton and return it'''
@@ -474,24 +473,35 @@ def define_init_states(ha):
 
     return rv
 
+def define_settings():
+    '''defines the automaton / plot settings'''
+    s = PySimSettings()
+    s.max_time = 10.0
+    s.step = 0.1
+    s.x_dim = 0
+    s.y_dim = 1
 
-def simulate(init_states, max_time=10):
+    return s
+
+
+def simulate(init_states, settings):
     '''simulate the automaton from each initial rect'''
 
     q_list = init_list_to_q_list(init_states, center=True, star=True, corners=True, rand=100)
-    result = sim.simulate_multi(q_list, max_time)
+    result = sim.simulate_multi(q_list, settings.max_time)
 
     return result
 
-def plot(result, init_states, filename='plot.png', dim_x=0, dim_y=1):
+def plot(result, init_states, image_path, settings):
     '''plot a simulation result to a file'''
 
     draw_events = len(result) == 1
     shouldShow = False
-    sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, legend=False, title='nav_fig2a', show=shouldShow, init_states=init_states)
+    sim.plot_sim_result_multi(result, settings.dim_x, settings.dim_y, image_path, draw_events, legend=False, title='nav_fig2a', show=shouldShow, init_states=init_states)
 
 if __name__ == '__main__':
     ha = define_ha()
+    settings = define_settings()
     init_states = define_init_states(ha)
-    plot(simulate(init_states), init_states)
+    plot(simulate(init_states, settings), init_states, settings)
 

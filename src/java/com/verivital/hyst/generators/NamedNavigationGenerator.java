@@ -62,14 +62,14 @@ public class NamedNavigationGenerator extends ModelGenerator
 		}
 		else if (name.equals("nav02"))
 		{
-			map = new String[] { "B", "2", "4", "2", "3", "4", "2", "2", "A" };
+			map = new String[] { "B", "2", "4", "4", "3", "4", "2", "2", "A" };
 			matA = new double[] { -1.2, 0.1, 0.1, -1.2 };
 			x0 = new Interval[] { new Interval(2, 3), new Interval(1, 2) };
 			v0 = new Interval[] { new Interval(-0.3, 0.3), new Interval(-0.3, 0.3) };
 		}
 		else if (name.equals("nav03"))
 		{
-			map = new String[] { "B", "2", "4", "2", "3", "4", "2", "2", "A" };
+			map = new String[] { "B", "2", "4", "4", "3", "4", "2", "2", "A" };
 			matA = new double[] { -1.2, 0.1, 0.1, -1.2 };
 			x0 = new Interval[] { new Interval(2, 3), new Interval(1, 2) };
 			v0 = new Interval[] { new Interval(-0.4, 0.4), new Interval(-0.4, 0.4) };

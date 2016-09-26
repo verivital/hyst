@@ -139,6 +139,8 @@ public class NavigationGenerator extends ModelGenerator
 					"Width(" + width + ") should evenly divide number of elements in i_list ("
 							+ iListProcessed.size() + ").");
 
+		flipIListProcessed();
+
 		if (xVelInit.size() == 0)
 		{
 			xVelInit.add(-1.0);
@@ -178,6 +180,23 @@ public class NavigationGenerator extends ModelGenerator
 					"Expected 1 or 2 initial y vel values, got: " + yVelInit);
 
 		startModeName = findStartModeName();
+	}
+
+	/**
+	 * Flip I-list-processed vertically so element zero is at the origin (bottom left), rather than
+	 * the top left
+	 */
+	private void flipIListProcessed()
+	{
+		ArrayList<Integer> newList = new ArrayList<Integer>();
+
+		for (int offset = iListProcessed.size() - width; offset >= 0; offset -= width)
+		{
+			for (int i = 0; i < width; ++i)
+				newList.add(iListProcessed.get(offset + i));
+		}
+
+		iListProcessed = newList;
 	}
 
 	private String findStartModeName()

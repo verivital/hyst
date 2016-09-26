@@ -2,10 +2,20 @@
 Simulation logic for Hybrid Automata
 '''
 
-from scipy.integrate import ode # pylint false positive
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import random
+from scipy.integrate import ode # pylint false positive
+
+class PySimSettings(object):
+    'A pysim settings containts'
+
+    def __init__(self):
+        self.max_time = 1.0
+        self.step = 1.0
+        self.dim_x = 0
+        self.dim_y = 1
+        self.filename = "plot.png"
 
 class SimulationException(Exception):
     'An error which stops the simulation from progressing'
@@ -148,11 +158,11 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
 
         # resets to None are identity resets
         for dim in xrange(len(post_state)):
-            if post_state[dim] == None:
+            if post_state[dim] is None:
                 post_state[dim] = solver.y[dim]
 
         rv_post_jump_q = (t.to_mode, post_state)
-    elif mode.inv(solver.y) == False:
+    elif mode.inv(solver.y) is False:
         raise SimulationException('Invariant became false')
     else:
         # continuous post
@@ -168,7 +178,7 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
             solver_over_max_time(solver, max_time, init_time, init_state)
 
         # limit the size of the step if certain events occur
-        is_invariant_false = lambda state: mode.inv(state) == False
+        is_invariant_false = lambda state: mode.inv(state) is False
         is_transition_enabled = lambda state: len(get_active_transitions(mode, state)) > 0
     
         for event_func in is_invariant_false, is_transition_enabled:
@@ -176,7 +186,7 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
                 step_size = solver.t - init_time
 
                 find_event_bisection(solver, event_func, init_state, init_time, 
-                        step_size, solver.y, tol=jump_error_tol)
+                                     step_size, solver.y, tol=jump_error_tol)
 
     return rv_post_jump_q
 
@@ -235,7 +245,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
                     point.append(val)
 
                 # only accept points inside the invariant
-                if mode.inv(point) == False:
+                if mode.inv(point) is False:
                     continue
 
                 rv.append((mode, point))
@@ -246,7 +256,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
             if num_added != rand:
                 raise RuntimeError("Could not generate {} points inside the invariant of mode {} after {} attempts".
-                    format(rand, mode.name, max_rand_attempts))
+                                   format(rand, mode.name, max_rand_attempts))
                 
 
     if check_unique:
@@ -301,7 +311,7 @@ def mode_name_to_color(mode_to_color, mode_name):
 
     rv = mode_to_color.get(mode_name)
 
-    if rv == None:
+    if rv is None:
         if len(mode_to_color) < len(first_colors):
             rv = first_colors[len(mode_to_color)]
         else:

@@ -111,7 +111,7 @@ class HypyStrategy(object):
         return e
 
     def run_engine(self, engine, run_hyst=True, run_tool=True, timeout=None, save_stdout=False, 
-                   stdout_func=None, parse_output=False):
+                   print_stdout=False, stdout_func=None, parse_output=False):
         '''
         The suggested way for a strategy implementation to run a hypy.Engine. This auto-populates
         the image and print_stdout.
@@ -120,8 +120,8 @@ class HypyStrategy(object):
         assert isinstance(engine, Engine)
         
         return engine.run(run_hyst=run_hyst, run_tool=run_tool, timeout=timeout, image_path=self._get_image_path(), 
-                          save_stdout=save_stdout, print_stdout=self.print_stdout, stdout_func=stdout_func, 
-                          parse_output=parse_output)
+                          save_stdout=save_stdout, print_stdout=print_stdout or self.print_stdout, 
+                          stdout_func=stdout_func, parse_output=parse_output)
 
     def _get_image_path(self):
         '''
@@ -196,14 +196,26 @@ class FlowstarAutotune(HypyStrategy):
     '''
 
     def _run(self):
-        params = ''
 
-        obj = self.model_to_object()
+        _, init_list, settings = self.model_to_objects()
 
-        e = self.make_engine('flowstar', params)
+        assert len(init_list) == 1
 
-        return self.run_engine(e, parse_output=True)
+        for num_steps in [10, 100, 1000]:
+            params = ''
+            step = settings.max_time / num_steps
+            print "Trying Step {}".format(step)
 
+            params += '-step ' + str(step)
+
+            e = self.make_engine('flowstar', params)
+
+            res = self.run_engine(e, print_stdout=True, parse_output=True)
+
+            if res['code'] == Engine.SUCCESS:
+                break
+
+        return res
 
 
 

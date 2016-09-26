@@ -123,8 +123,8 @@ public class PseudoInvariantPass extends TransformationPass
 	 * @param points
 	 * @param dirs
 	 * @param skipUrgentInit
-	 *            should we omit constructing an urgent start state and assume
-	 *            all initial states go to the first mode?
+	 *            should we omit constructing an urgent start state and assume all initial states go
+	 *            to the first mode?
 	 * @return a string you can call runPass() with
 	 */
 	public static String makeParamString(List<String> modes, List<HyperPoint> points,

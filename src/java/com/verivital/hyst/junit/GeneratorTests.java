@@ -18,12 +18,12 @@ import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
-import com.verivital.hyst.python.PythonUtil;
 
 /**
  * JUnit tests for model generators
@@ -83,7 +83,8 @@ public class GeneratorTests
 		Entry<String, Expression> entry = c.init.entrySet().iterator().next();
 
 		Assert.assertEquals("mode_0_1", entry.getKey());
-		Assert.assertEquals("x = 0.5 & y = 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
+		Assert.assertEquals(
+				"0.5 <= x & x <= 0.5 & 1.5 <= y & y <= 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
 				entry.getValue().toDefaultString());
 
 		ToolPrinter printer = new FlowstarPrinter();
@@ -121,15 +122,28 @@ public class GeneratorTests
 
 		AutomatonMode am = ha.modes.get("mode_1_0");
 		Expression e = am.flowDynamics.get("xvel").asExpression();
-
 		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0)", e.toDefaultString());
+
+		// check dynamics in mode 'A'
+		am = ha.modes.get("mode_2_0");
+		e = am.flowDynamics.get("xvel").asExpression();
+		Assert.assertEquals("0", e.toDefaultString());
+
+		// check dynamics in mode 'B'
+		am = ha.modes.get("mode_0_2");
+		e = am.flowDynamics.get("xvel").asExpression();
+		Assert.assertEquals("0", e.toDefaultString());
+
+		// check condition from mode_2_1 to mode_2_0 is y <= 1
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from.name.equals("mode_2_1") && at.to.name.equals("mode_2_0"))
+				Assert.assertEquals(at.guard.toDefaultString(), "y <= 1");
+		}
 
 		// make sure it simplifies to an easy linear expression
 		if (PythonBridge.hasPython())
 		{
-			Assert.assertEquals("-1.2 * xvel + 0.1 * yvel + 1.2",
-					PythonUtil.pythonSimplifyExpressionChop(e, 1e-9).toDefaultString());
-
 			// test printing to Hylaa
 			ToolPrinter printer = new HylaaPrinter();
 			printer.setOutputString();
@@ -137,8 +151,7 @@ public class GeneratorTests
 
 			String out = printer.outputString.toString();
 
-			// TODO remove printing
-			System.out.println(out);
+			// System.out.println(out);
 			Assert.assertTrue("some output exists", out.length() > 10);
 		}
 	}

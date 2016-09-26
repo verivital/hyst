@@ -213,29 +213,31 @@ public class PySimPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print the actual Flow* code
+	 * Print the actual Pysim code
 	 */
 	private void printProcedure()
 	{
 		printLine("import hybridpy.pysim.simulate as sim");
-		printLine("from hybridpy.pysim.simulate import init_list_to_q_list");
+		printLine("from hybridpy.pysim.simulate import init_list_to_q_list, PySimSettings");
+
+		config.settings.spaceExConfig.timeHorizon = Double.parseDouble(getTimeParam());
+
+		if (plotXDim >= 0)
+			config.settings.plotVariableNames[0] = ha.variables.get(plotXDim);
+
+		if (plotYDim >= 0)
+			config.settings.plotVariableNames[1] = ha.variables.get(plotYDim);
 
 		printLine(automatonToString(config));
 
-		printLine("def simulate(init_states, max_time=" + getTimeParam() + "):");
+		printLine("def simulate(init_states, settings):");
 		increaseIndentation();
 		printLine("'''simulate the automaton from each initial rect'''");
 		printSimulate();
 		decreaseIndentation();
 		printNewline();
 
-		int xDim = plotXDim >= 0 ? plotXDim
-				: ha.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yDim = plotYDim >= 0 ? plotYDim
-				: ha.variables.indexOf(config.settings.plotVariableNames[1]);
-
-		printLine("def plot(result, init_states, filename='plot.png', dim_x=" + xDim + ", dim_y="
-				+ yDim + "):");
+		printLine("def plot(result, init_states, image_path, settings):");
 		increaseIndentation();
 		printLine("'''plot a simulation result to a file'''");
 		printPlot();
@@ -246,8 +248,9 @@ public class PySimPrinter extends ToolPrinter
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
 		printLine("ha = define_ha()");
+		printLine("settings = define_settings()");
 		printLine("init_states = define_init_states(ha)");
-		printLine("plot(simulate(init_states), init_states)");
+		printLine("plot(simulate(init_states, settings), init_states, settings)");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -318,8 +321,7 @@ public class PySimPrinter extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
-			rv.add("from hybridpy.pysim.hybrid_automaton import HybridAutomaton");
-			rv.add("from hybridpy.pysim.hybrid_automaton import HyperRectangle");
+			rv.add("from hybridpy.pysim.hybrid_automaton import HybridAutomaton, HyperRectangle");
 
 			return rv;
 		}
@@ -388,10 +390,40 @@ public class PySimPrinter extends ToolPrinter
 		appendInit(rv, config);
 		appendNewline(rv);
 
+		appendLine(rv, "def define_settings():");
+		appendIndentedLine(rv, "'''defines the automaton / plot settings'''");
+		appendSettings(rv, config);
+		appendNewline(rv);
+
 		// restore expressionPrinter
 		Expression.expressionPrinter = savedPrinter;
 
 		return rv.toString();
+	}
+
+	public static void appendSettings(StringBuilder rv, Configuration config)
+	{
+		appendIndentedLine(rv, "s = PySimSettings()");
+		appendIndentedLine(rv, "s.max_time = " + config.settings.spaceExConfig.timeHorizon);
+		appendIndentedLine(rv, "s.step = " + config.settings.spaceExConfig.samplingTime);
+
+		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
+
+		if (xDim == -1)
+			throw new AutomatonExportException(
+					"Cannot find x dim in automaton: " + config.settings.plotVariableNames[0]);
+
+		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
+
+		if (yDim == -1)
+			throw new AutomatonExportException(
+					"Cannot find y dim in automaton: " + config.settings.plotVariableNames[1]);
+
+		appendIndentedLine(rv, "s.x_dim = " + xDim);
+		appendIndentedLine(rv, "s.y_dim = " + yDim);
+
+		appendNewline(rv);
+		appendIndentedLine(rv, "return s");
 	}
 
 	private static String quotedVarList(BaseComponent c)
@@ -520,7 +552,7 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 		printLine("q_list = init_list_to_q_list(init_states, " + "center=" + center + ", star="
 				+ star + ", corners=" + corners + ", rand=" + rand + ")");
-		printLine("result = sim.simulate_multi(q_list, max_time)");
+		printLine("result = sim.simulate_multi(q_list, settings.max_time)");
 		printNewline();
 		printLine("return result");
 	}
@@ -535,9 +567,11 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 		printLine("draw_events = len(result) == 1");
 		printLine("shouldShow = False");
-		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
-				+ "legend=" + legend + ", title=" + (title == "None" ? "None" : "'" + title + "'")
-				+ ", show=shouldShow, init_states=init_states)");
+		printLine(
+				"sim.plot_sim_result_multi(result, settings.dim_x, settings.dim_y, image_path, draw_events, "
+						+ "legend=" + legend + ", title="
+						+ (title == "None" ? "None" : "'" + title + "'")
+						+ ", show=shouldShow, init_states=init_states)");
 	}
 
 	private String getTimeParam()
