@@ -2,6 +2,8 @@ package com.verivital.hyst.passes.complex.pi;
 
 import java.util.ArrayList;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.geometry.HyperPoint;
 import com.verivital.hyst.geometry.HyperRectangle;
 import com.verivital.hyst.geometry.SymbolicStatePoint;
@@ -29,6 +31,9 @@ import com.verivital.hyst.util.AutomatonUtil;
  */
 public class PseudoInvariantInitPass extends TransformationPass
 {
+	@Option(name = "-skip_error", usage = "skip the pass if invariant errors occur (rather than raising an exception)")
+	public boolean skipError = false;
+
 	BaseComponent ha = null;
 
 	@Override
@@ -63,25 +68,33 @@ public class PseudoInvariantInitPass extends TransformationPass
 				trajectory);
 
 		if (piPoint == null)
-			throw new AutomatonExportException(
-					"Hyperplane from center trajectory never crossed past start box.");
+		{
+			if (!skipError)
+				throw new AutomatonExportException(
+						"Hyperplane from center trajectory never crossed past start box.");
+			else
+				Hyst.log("Hyperplane from center trajectory never crossed past start box. "
+						+ "-skip_error was set skipping pass");
+		}
+		else
+		{
+			// make the hyperplane according to pi-point
+			ArrayList<String> modes = new ArrayList<String>();
+			ArrayList<HyperPoint> points = new ArrayList<HyperPoint>();
+			ArrayList<HyperPoint> dirs = new ArrayList<HyperPoint>();
 
-		// make the hyperplane according to pi-point
-		ArrayList<String> modes = new ArrayList<String>();
-		ArrayList<HyperPoint> points = new ArrayList<HyperPoint>();
-		ArrayList<HyperPoint> dirs = new ArrayList<HyperPoint>();
+			double[] gradient = AutomatonUtil.getGradientAtPoint(ha.modes.get(piPoint.modeName),
+					piPoint.hp);
 
-		double[] gradient = AutomatonUtil.getGradientAtPoint(ha.modes.get(piPoint.modeName),
-				piPoint.hp);
+			modes.add(initialMode);
+			points.add(new HyperPoint(piPoint.hp));
+			dirs.add(new HyperPoint(gradient));
 
-		modes.add(initialMode);
-		points.add(new HyperPoint(piPoint.hp));
-		dirs.add(new HyperPoint(gradient));
+			String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs, true);
+			Hyst.log("Calling hyperplane pseudo-invariant pass with params: " + paramString);
 
-		String paramString = PseudoInvariantPass.makeParamString(modes, points, dirs, true);
-		Hyst.log("Calling hyperplane pseudo-invariant pass with params: " + paramString);
-
-		// run the traditional pseudo-invariants pass
-		new PseudoInvariantPass().runTransformationPass(config, paramString);
+			// run the traditional pseudo-invariants pass
+			new PseudoInvariantPass().runTransformationPass(config, paramString);
+		}
 	}
 }

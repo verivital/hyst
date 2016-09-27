@@ -224,7 +224,11 @@ class FlowstarAutotune(HypyStrategy):
 
         assert len(init_list) == 1
 
-        for num_steps, order in [(10, 3), (50, 4), (200, 5), (500, 6), (500, 8)]:
+        print ".todo in strategy.py, revert try_params_list"
+        #try_params = [(10, 3), (50, 4), (200, 5), (500, 6), (500, 8)]
+        try_params = [(500, 8)]
+
+        for num_steps, order in try_params:
             step = settings.max_time / num_steps
             self.out("Checking start params step = {}, order = {}".format(step, order))
 
@@ -260,6 +264,7 @@ class FlowstarAutotune(HypyStrategy):
             params += ' -orders {}-{}'.format(order, order)
 
             e = self.make_engine('flowstar', params)
+            e.set_debug(True)
 
             e.add_pass("pi_init", "")
 

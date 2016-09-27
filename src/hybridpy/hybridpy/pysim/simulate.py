@@ -162,7 +162,7 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
                 post_state[dim] = solver.y[dim]
 
         rv_post_jump_q = (t.to_mode, post_state)
-    elif mode.inv(solver.y) is False:
+    elif not mode.inv(solver.y): # don't use 'is False'
         raise SimulationException('Invariant became false')
     else:
         # continuous post
@@ -177,16 +177,26 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
         if solver.t > max_time:
             solver_over_max_time(solver, max_time, init_time, init_state)
 
-        # limit the size of the step if certain events occur
-        is_invariant_false = lambda state: mode.inv(state) is False
+        # note: don't use 'is False', since the result is a numpy._bool
+        is_invariant_false = lambda state: not mode.inv(state)
         is_transition_enabled = lambda state: len(get_active_transitions(mode, state)) > 0
     
         for event_func in is_invariant_false, is_transition_enabled:
+
             if event_func(solver.y):
                 step_size = solver.t - init_time
 
                 find_event_bisection(solver, event_func, init_state, init_time, 
                                      step_size, solver.y, tol=jump_error_tol)
+
+        # check for unbounded state
+        bounds = 1e15
+        state = solver.y
+
+        for val in state:
+            if abs(val) > bounds:
+                raise SimulationException("Continuous post reached unreasonably large state; " + 
+                                          "may cause floating-point issues.")
 
     return rv_post_jump_q
 
@@ -245,7 +255,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
                     point.append(val)
 
                 # only accept points inside the invariant
-                if mode.inv(point) is False:
+                if not mode.inv(point): # don't use 'is False'
                     continue
 
                 rv.append((mode, point))
@@ -350,7 +360,7 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     return (mode, point)
 
 def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, 
-                    reraise_errors=False, max_step=None, print_log=False):
+                 reraise_errors=False, max_step=None, print_log=False):
     '''
     Simulate the hybrid automaton from a single initial point 
     q - a symbolic state: (AutomatonMode, point), where point is [x_0, ..., x_n]
@@ -393,7 +403,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     times.append(solver.t)
     traces.append(ModeSim(mode.name, points, times))
 
-    if mode == None:
+    if mode is None:
         raise RuntimeError("Initial mode was not set.")
 
     events.append(SimulationEvent('Init', solver.y))
@@ -438,7 +448,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
 
         if reraise_errors:
             raise e
-        else:
+        elif print_log:
             print "Warning: {} (SimulationException) in mode {} at state {}".format(
                 str(e), mode.name, solver.y)
 
