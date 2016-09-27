@@ -212,28 +212,26 @@ class FlowstarAutotune(HypyStrategy):
         if self.should_output:
             print msg
 
-    def get_valid_start_params(self):
+    def get_valid_start_params(self, max_time):
         '''
         an iterator for valid start params for flow*
 
-        yields tuples of (step, order)
+        yields tuples of (step, (min_order, max_order))
         '''
 
         found = False
-        _, init_list, settings = self.model_to_objects()
-
-        assert len(init_list) == 1
 
         print ".todo in strategy.py, revert try_params_list"
-        #try_params = [(10, 3), (50, 4), (200, 5), (500, 6), (500, 8)]
-        try_params = [(500, 8)]
+        #try_params = [(10, (2,2)), (50, (2,4)), (200, (2,5)), (500, 6), (500, (6,8))]
 
-        for num_steps, order in try_params:
-            step = settings.max_time / num_steps
-            self.out("Checking start params step = {}, order = {}".format(step, order))
+        try_params = [(500, (2,6))]
+
+        for num_steps, orders in try_params:
+            step = max_time / num_steps
+            self.out("Checking start params step = {}, orders = {}".format(step, orders))
 
             params = '-step {}'.format(step)
-            params += ' -orders {}-{}'.format(order, order)
+            params += ' -orders {}-{}'.format(orders[0], orders[1])
             
             # try just a single step
             params += ' -time {}'.format(step)
@@ -249,7 +247,7 @@ class FlowstarAutotune(HypyStrategy):
 
             if obj['terminated'] is False:
                 found = True
-                yield (step, order)
+                yield (step, orders)
 
         if not found:
             raise StrategyFailedError('Could not find valid start params for Flow*')
@@ -257,16 +255,45 @@ class FlowstarAutotune(HypyStrategy):
     def _run(self):
         completed = False
 
-        for step, order in self.get_valid_start_params():
-            self.out("Valid start params step = {}, order = {}".format(step, order))
+        _, init_list, settings = self.model_to_objects()
+
+        assert len(init_list) == 1
+        hr = init_list[0].hr
+
+        # find splitting dimension: split along widest dimension
+        split_dim = 0
+        max_width = hr.dims[0][0] - hr.dims[0][1]
+
+        for d in xrange(len(hr.dims)):
+            width = hr.dims[d][0] - hr.dims[d][1]
+
+            if width > max_width:
+                max_width = width
+                split_dim = d
+
+        print "split_dim = {}".format(split_dim)
+
+        # move min_x across hr.dims[split_dim]   
+        min_x = hr.dims[split_dim][0]
+        step = max_width / 32 # initially split into 32 parts
+
+        while True:
+            result = init_list.mode
+
+        "WORKING HERE"()!!!!!!!!
+
+        for step, orders in self.get_valid_start_params(settings.max_time):
+            self.out("Valid start params step = {}, order = {}".format(step, orders))
 
             params = '-step {}'.format(step)
-            params += ' -orders {}-{}'.format(order, order)
+            params += ' -orders {}-{}'.format(orders[0], orders[1])
 
             e = self.make_engine('flowstar', params)
             e.set_debug(True)
 
-            e.add_pass("pi_init", "")
+            e.add_pass('set_init', '-mode "' + init_list[0].mode.name + '" -condition "' +
+                       self.to_condition_string(init_hr))
+            e.add_pass("pi_init", "-skip_error")
 
             res = self.run_engine(e, parse_output=True, print_stdout=True)
 

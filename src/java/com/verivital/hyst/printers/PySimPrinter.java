@@ -250,7 +250,7 @@ public class PySimPrinter extends ToolPrinter
 		printLine("ha = define_ha()");
 		printLine("settings = define_settings()");
 		printLine("init_states = define_init_states(ha)");
-		printLine("plot(simulate(init_states, settings), init_states, settings)");
+		printLine("plot(simulate(init_states, settings), init_states, 'plot.png', settings)");
 		decreaseIndentation();
 		printNewline();
 	}

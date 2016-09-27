@@ -309,6 +309,42 @@ def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='
 
     return rv
 
+def get_ordered_plot_colors():
+    'return a list of valid colors, in order'
+
+    rv = []
+
+    # remove any colors with 'white' or 'yellow in the name
+    skip_colors_substrings = ['white', 'yellow']
+    skip_colors_exact = ['black', 'red', 'blue']
+
+    for col in colors.cnames:
+        skip = False
+
+        for col_substring in skip_colors_substrings:
+            if col_substring in col:
+                skip = True
+                break
+
+        if not skip and not col in skip_colors_exact:
+            rv.append(col)
+
+    # we'll re-add these later; remove them before shuffling
+    first_colors = ['lime', 'cyan', 'magenta', 'orange', 'green'] 
+
+    for col in first_colors:
+        rv.remove(col)
+
+    # deterministic shuffle of all remaining colors
+    random.seed(0)
+    random.shuffle(rv)
+
+    # prepend first_colors so they get used first
+    rv = first_colors + rv
+
+    return rv
+
+
 def mode_name_to_color(mode_to_color, mode_name):
     '''get the color string from a mode name. 
     There is better (manual) color selection early on.
@@ -325,13 +361,7 @@ def mode_name_to_color(mode_to_color, mode_name):
         if len(mode_to_color) < len(first_colors):
             rv = first_colors[len(mode_to_color)]
         else:
-            # use the hash-based approach
-            all_colors = []
-            all_colors += colors.cnames.keys()
-
-            # these are hard to see, remove them
-            for white in ['white', 'whitesmoke', 'floralwhite', 'antiquewhite', 'ghostwhite', 'navajowhite', 'yellow']:
-                all_colors.remove(white)
+            all_colors = get_ordered_plot_colors()
 
             index = hash(mode_name) % len(all_colors)
             rv = all_colors[index]
