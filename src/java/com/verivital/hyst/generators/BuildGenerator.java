@@ -6,7 +6,9 @@ import java.util.List;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
@@ -80,8 +82,11 @@ public class BuildGenerator extends ModelGenerator
 
 			for (int v = 0; v < vars.size(); ++v)
 			{
-				String der = modeParams.get(i + 2 + v);
-				am.flowDynamics.put(vars.get(v), new ExpressionInterval(der));
+				String der = modeParams.get(i + 2 + v).trim();
+
+				ExpressionInterval ei = derStringToExpInterval(der);
+
+				am.flowDynamics.put(vars.get(v), ei);
 			}
 		}
 
@@ -147,5 +152,52 @@ public class BuildGenerator extends ModelGenerator
 		}
 
 		return c;
+	}
+
+	private static ExpressionInterval derStringToExpInterval(String der)
+	{
+		ExpressionInterval rv = null;
+
+		if (der.endsWith("]"))
+		{
+			String noSpaces = der.replace(" ", "");
+
+			// nondeterministic flow
+			int start = noSpaces.indexOf('[');
+
+			if (start == -1)
+				throw new AutomatonExportException("Malforming nondeterministic flow: " + der);
+
+			// the character before der must be a '+', or the first
+			// character
+			String expressionStr = "0";
+
+			if (start != 0)
+			{
+				if (noSpaces.charAt(start - 1) != '+')
+					throw new AutomatonExportException(
+							"Malforming nondeterministic flow; non-plus operation; must end in '+ [min,max]': "
+									+ der);
+
+				expressionStr = noSpaces.substring(0, start - 1);
+			}
+
+			String rangeStr = noSpaces.substring(start + 1, noSpaces.length() - 1);
+			String[] parts = rangeStr.split(",");
+
+			if (parts.length != 2)
+				throw new AutomatonExportException(
+						"Malforming nondeterministic flow; interval without two parts; must end in '+ [min,max]': "
+								+ der);
+
+			Interval interval = new Interval(Double.parseDouble(parts[0]),
+					Double.parseDouble(parts[1]));
+
+			rv = new ExpressionInterval(expressionStr, interval);
+		}
+		else
+			rv = new ExpressionInterval(der);
+
+		return rv;
 	}
 }
