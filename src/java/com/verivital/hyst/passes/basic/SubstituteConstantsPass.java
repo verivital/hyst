@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionModifier;
@@ -30,7 +31,7 @@ public class SubstituteConstantsPass extends TransformationPass
 		preconditions = new Preconditions(true); // no preconditions
 
 		// except that constants can't be intervals
-		preconditions.skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()] = false;
+		preconditions.skip[PreconditionsFlag.CONVERT_INTERVAL_CONST_TO_VAR.ordinal()] = false;
 	}
 
 	@Override
@@ -130,7 +131,17 @@ public class SubstituteConstantsPass extends TransformationPass
 		HashMap<String, Expression> subMap = new HashMap<String, Expression>();
 
 		for (Entry<String, Interval> e : constants.entrySet())
-			subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
+		{
+			try
+			{
+				subMap.put(e.getKey(), new Constant(e.getValue().asConstant()));
+			}
+			catch (AutomatonExportException ex)
+			{
+				throw new AutomatonExportException("Error creating constant from variable '"
+						+ e.getKey() + "' = " + e.getValue());
+			}
+		}
 
 		ValueSubstituter vs = new ValueSubstituter(subMap);
 

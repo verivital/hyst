@@ -21,6 +21,7 @@ import com.verivital.hyst.main.HystFrame;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
+import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
  * A generic tool printer class. Printers for individual tools will override
@@ -112,7 +113,6 @@ public abstract class ToolPrinter
 	 */
 	public void print(Configuration c, String argument, String originalFilename)
 	{
-
 		this.originalFilename = originalFilename;
 
 		boolean shouldCloseStream = false;
@@ -152,8 +152,14 @@ public abstract class ToolPrinter
 				outputString = new StringBuffer();
 
 			this.config = c;
-			checkPreconditions(c);
+
+			preconditions.check(c, getToolName());
 			printAutomaton();
+		}
+		catch (PreconditionsFailedException e)
+		{
+			throw new PreconditionsFailedException(
+					"Preconditions for tool " + getToolName() + " failed", e);
 		}
 		catch (FileNotFoundException e)
 		{
@@ -390,20 +396,4 @@ public abstract class ToolPrinter
 	 * enforces printer assumptions (for example, that the model is flat).
 	 */
 	protected abstract void printAutomaton();
-
-	/**
-	 * Check the preconditions for the printer (for example, the modes should
-	 * have at least 1 variable, no urgrent modes, ect) Typically, you'll change
-	 * preconditions.skip direction to indicate which checks should be skipped
-	 * Alternatively, printers can override this if they don't want to use the
-	 * PrinterPreconditions way of doing it. This should throw a
-	 * PrinterPreconditionException if assumptions about the model are violated.
-	 * 
-	 * @param c
-	 *            the configuration before passing it to the printer
-	 */
-	protected void checkPreconditions(Configuration c)
-	{
-		preconditions.check(c, this.getClass().getName());
-	}
 }

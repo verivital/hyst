@@ -1358,6 +1358,18 @@ public class ModelParserTest
 		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
 		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
 
-		com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		Assert.assertNotNull(config);
+
+		/*
+		 * We need a network printer for this:
+		 * 
+		 * ToolPrinter printer = new SpaceExPrinter();
+		 * printer.setOutputString(); printer.print(config, "", "model.xml");
+		 * 
+		 * System.out.println(printer.outputString.toString());
+		 */
 	}
 }

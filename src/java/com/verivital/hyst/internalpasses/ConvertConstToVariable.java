@@ -90,18 +90,15 @@ public class ConvertConstToVariable
 		int index = name.indexOf(".");
 		if (index == -1)
 		{
-			if (nc.constants.containsKey(name))
+			if (!nc.constants.containsKey(name))
 				throw new AutomatonExportException("Constant not found, but conversion desired: "
 						+ name + " in component " + nc.instanceName);
 
 			rv = nc.constants.get(name);
 
+			// add it as a variable
 			changeMapping(nc, name);
-			setVariableDynamics(nc, name, new ExpressionInterval(new Constant(0))); // add
-																					// it
-																					// as
-																					// a
-																					// variable....
+			setVariableDynamics(nc, name, new ExpressionInterval(new Constant(0)));
 		}
 		else
 		{
@@ -205,6 +202,12 @@ public class ConvertConstToVariable
 					if (ci.child instanceof NetworkComponent)
 					{
 						changeMapping((NetworkComponent) ci.child, map.childParam);
+					}
+					else
+					{
+						// it's a base component
+						ci.child.constants.remove(name);
+						ci.child.variables.add(name);
 					}
 
 					mapIt.remove(); // remove the const mapping
