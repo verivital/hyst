@@ -225,7 +225,7 @@ public class FlowstarPrinter extends ToolPrinter
 		int jumps = Integer.parseInt(this.jumps);
 
 		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
-			jumps = config.settings.spaceExConfig.maxIterations;
+			jumps = config.settings.spaceExConfig.maxIterations - 1;
 
 		printLine("max jumps " + jumps);
 		printLine("print on");
@@ -593,7 +593,7 @@ public class FlowstarPrinter extends ToolPrinter
 			if (op.equals(Operator.GREATER) || op.equals(Operator.LESS)
 					|| op.equals(Operator.NOTEQUAL) || op == Operator.OR)
 				throw new AutomatonExportException(
-						"Flow* printer doesn't support operator " + op.toDefaultString());
+						"Flow* printer doesn't support operator '" + op.toDefaultString() + "'");
 
 			return super.printOperator(op);
 		}

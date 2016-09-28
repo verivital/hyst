@@ -675,4 +675,49 @@ public class PrintersTest
 				fp.outputString.toString().contains("x in [-2, 1.5]"));
 
 	}
+
+	@Test
+	public void testFlowstarStrictIneq()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		// printing a strict inequality '<' in flow* should convert it to a
+		// non-strict one '<='
+
+		String[][] dynamics = { { "x", "1", "0" }, { "y", "1", "0" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+
+		BaseComponent ha = ((BaseComponent) c.root);
+
+		AutomatonMode off = ha.createMode("off");
+		off.flowDynamics.put("x", new ExpressionInterval(1));
+		off.flowDynamics.put("y", new ExpressionInterval(2));
+		off.invariant = Constant.TRUE;
+
+		AutomatonMode on = ha.modes.get("on");
+
+		AutomatonTransition at = ha.createTransition(on, off);
+		at.guard = FormulaParser.parseGuard("x < 1");
+
+		c.validate();
+
+		Assert.assertEquals("two modes", 2, ha.modes.size());
+
+		// try to print to Flow*
+		FlowstarPrinter fp = new FlowstarPrinter();
+
+		fp.setOutputNone();
+
+		try
+		{
+			fp.print(c, "", "filename.xml");
+			Assert.fail("Expected exception due to strict inequality operator.");
+		}
+		catch (AutomatonExportException e)
+		{
+			Assert.assertTrue("exception was due to strict inequality",
+					e.toString().contains("doesn't support operator"));
+		}
+	}
 }
