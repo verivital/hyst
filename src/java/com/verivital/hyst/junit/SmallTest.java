@@ -956,7 +956,9 @@ public class SmallTest
 				new ExpressionClassification("ln(x + 1)", AutomatonUtil.OPS_NONLINEAR,
 						AutomatonUtil.OPS_LINEAR),
 				new ExpressionClassification("lut([t], [0,0,1,1,0], [1,2,3,4,8])",
-						AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX), };
+						AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX),
+				new ExpressionClassification("-100 * x - 4 * v - 9.81",
+						AutomatonUtil.OPS_LINEAR), };
 
 		for (ExpressionClassification test : tests)
 		{

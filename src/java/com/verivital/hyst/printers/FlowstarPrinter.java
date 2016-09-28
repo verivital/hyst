@@ -404,6 +404,14 @@ public class FlowstarPrinter extends ToolPrinter
 			// high degree and high dimension ODEs.
 			// "nonpoly ode" works with nonlinear terms
 
+			// first simplify
+			for (Entry<String, ExpressionInterval> entry : mode.flowDynamics.entrySet())
+			{
+				ExpressionInterval ei = entry.getValue();
+				ei.setExpression(simplifyExpression(ei.getExpression()));
+			}
+
+			// then classify
 			if (isNonLinearDynamics(mode.flowDynamics))
 				printLine("nonpoly ode");
 			else if (Classification.isLinearDynamics(mode.flowDynamics))
@@ -415,11 +423,11 @@ public class FlowstarPrinter extends ToolPrinter
 			else
 				printLine("poly ode 3");
 
+			// then print
 			printLine("{");
 			for (Entry<String, ExpressionInterval> entry : mode.flowDynamics.entrySet())
 			{
 				ExpressionInterval ei = entry.getValue();
-				ei.setExpression(simplifyExpression(ei.getExpression()));
 
 				// be explicit (even though x' == 0 is implied by Flow*)
 				printLine(entry.getKey() + "' = " + ei);
