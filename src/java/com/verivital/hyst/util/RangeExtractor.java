@@ -15,6 +15,8 @@ import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
+import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 
 public class RangeExtractor
 {
@@ -44,7 +46,22 @@ public class RangeExtractor
 		try
 		{
 			Map<String, Double> constantMap = getConstants(expression);
-			getVariableRangesRecursive(expression, ranges, null, constantMap, false);
+			// add all constants
+			for (Entry<String, Double> e : constantMap.entrySet())
+			{
+				double val = e.getValue();
+
+				ranges.put(e.getKey(), new Interval(val));
+			}
+
+			Map<String, Interval> constantIntervalMap = doubleMapToIntervalMap(constantMap);
+
+			expression = SubstituteConstantsPass
+					.substituteConstantsIntoExpression(constantIntervalMap, expression);
+
+			expression = SimplifyExpressionsPass.simplifyExpression(expression);
+
+			getVariableRangesRecursive(expression, ranges, null, false);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -76,7 +93,23 @@ public class RangeExtractor
 		try
 		{
 			Map<String, Double> constantMap = getConstants(expression);
-			getVariableRangesRecursive(expression, ranges, null, constantMap, true);
+
+			// add all constants
+			for (Entry<String, Double> e : constantMap.entrySet())
+			{
+				double val = e.getValue();
+
+				ranges.put(e.getKey(), new Interval(val));
+			}
+
+			Map<String, Interval> constantIntervalMap = doubleMapToIntervalMap(constantMap);
+
+			expression = SubstituteConstantsPass
+					.substituteConstantsIntoExpression(constantIntervalMap, expression);
+
+			expression = SimplifyExpressionsPass.simplifyExpression(expression);
+
+			getVariableRangesRecursive(expression, ranges, null, true);
 		}
 		catch (AutomatonExportException e)
 		{
@@ -189,10 +222,24 @@ public class RangeExtractor
 		{
 			Map<String, Double> constantMap = getConstants(expression);
 
-			getVariableRangesRecursive(expression, ranges, equalVars, constantMap, false);
+			Double constValue = constantMap.get(variable);
 
-			if (ranges.size() > 0)
-				rv = mergeAllRanges(ranges.values());
+			if (constValue != null)
+				rv = new Interval(constValue);
+			else
+			{
+				Map<String, Interval> constantIntervalMap = doubleMapToIntervalMap(constantMap);
+
+				expression = SubstituteConstantsPass
+						.substituteConstantsIntoExpression(constantIntervalMap, expression);
+
+				expression = SimplifyExpressionsPass.simplifyExpression(expression);
+
+				getVariableRangesRecursive(expression, ranges, equalVars, false);
+
+				if (ranges.size() > 0)
+					rv = mergeAllRanges(ranges.values());
+			}
 		}
 		catch (AutomatonExportException e)
 		{
@@ -217,6 +264,16 @@ public class RangeExtractor
 							+ expression.toDefaultString(),
 					e);
 		}
+
+		return rv;
+	}
+
+	private static Map<String, Interval> doubleMapToIntervalMap(Map<String, Double> constantMap)
+	{
+		HashMap<String, Interval> rv = new HashMap<String, Interval>();
+
+		for (Entry<String, Double> e : constantMap.entrySet())
+			rv.put(e.getKey(), new Interval(e.getValue()));
 
 		return rv;
 	}
@@ -279,9 +336,6 @@ public class RangeExtractor
 	 * @param vars
 	 *            a set of variables we are interested in. if null then get all
 	 *            variables
-	 * @param constantMap
-	 *            a map of variableName -> value for all constants in the
-	 *            original expression
 	 * @param ignoreUnsupported
 	 *            should we ignore unsupported expressions, or raise an
 	 *            exception?
@@ -293,8 +347,8 @@ public class RangeExtractor
 	 *             desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression,
-			Map<String, Interval> ranges, Collection<String> vars, Map<String, Double> constantMap,
-			boolean ignoreUnsupported) throws EmptyRangeException, UnsupportedConditionException
+			Map<String, Interval> ranges, Collection<String> vars, boolean ignoreUnsupported)
+			throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();
 
@@ -309,8 +363,8 @@ public class RangeExtractor
 				TreeMap<String, Interval> left = new TreeMap<String, Interval>();
 				TreeMap<String, Interval> right = new TreeMap<String, Interval>();
 
-				getVariableRangesRecursive(leftExp, ranges, vars, constantMap, ignoreUnsupported);
-				getVariableRangesRecursive(rightExp, ranges, vars, constantMap, ignoreUnsupported);
+				getVariableRangesRecursive(leftExp, ranges, vars, ignoreUnsupported);
+				getVariableRangesRecursive(rightExp, ranges, vars, ignoreUnsupported);
 
 				ranges = mergeTreeRanges(left, right);
 			}
@@ -343,52 +397,24 @@ public class RangeExtractor
 				}
 				else if (leftExp instanceof Variable && rightExp instanceof Variable)
 				{
-					// one of them might be an expression constant, which are
-					// given by constMap
 
-					String leftName = ((Variable) leftExp).name;
-					Double constVal = constantMap.get(leftName);
-
-					if (constVal != null)
-					{
-						varName = ((Variable) rightExp).name;
-						val = constVal.doubleValue();
-						yodaConstraint = true;
-					}
+					// both are variables. This is only allowed it it's
+					// an alias assignment, which
+					// we detect by checking if the operator is '=='
+					if (op == Operator.EQUAL)
+						shouldSkip = true;
 					else
 					{
-						String rightName = ((Variable) rightExp).name;
-						constVal = constantMap.get(rightName);
-
-						if (constVal != null)
-						{
-							varName = ((Variable) leftExp).name;
-							val = constVal.doubleValue();
-
-							yodaConstraint = false;
-						}
+						if (ignoreUnsupported)
+							shouldSkip = true;
 						else
 						{
-							// both are variables. This is only allowed it it's
-							// an alias assignment, which
-							// we detect by checking if the operator is '=='
-							if (op == Operator.EQUAL)
-								shouldSkip = true;
-							else
-							{
-								if (ignoreUnsupported)
-									shouldSkip = true;
-								else
-								{
-									String message = "Unsupported condition for range extraction (one side should be variable, the "
-											+ "other side a constant): "
-											+ expression.toDefaultString()
-											+ ". If one side is a constant, you can try running the substitute constants transformation "
-											+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+							String message = "Unsupported condition for range extraction (one side should be variable, the "
+									+ "other side a constant): " + expression.toDefaultString()
+									+ ". If one side is a constant, you can try running the substitute constants transformation "
+									+ "pass by adding '-pass_sub_constants \"\"' to the command line";
 
-									throw new UnsupportedConditionException(message);
-								}
-							}
+							throw new UnsupportedConditionException(message);
 						}
 					}
 				}
@@ -400,7 +426,7 @@ public class RangeExtractor
 					{
 						String message = "Unsupported condition for range extraction (one side should be variable, the "
 								+ "other side a constant): " + expression.toDefaultString()
-								+ ". If one side is a constant, you can try running the substitute constants transformation "
+								+ ". If one side is a named constant, you can try running the substitute constants transformation "
 								+ "pass by adding '-pass_sub_constants \"\"' to the command line";
 
 						throw new UnsupportedConditionException(message);

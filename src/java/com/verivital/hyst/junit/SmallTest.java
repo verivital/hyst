@@ -531,9 +531,10 @@ public class SmallTest
 		Expression e = FormulaParser.parseInvariant(sampleInv);
 		try
 		{
-			RangeExtractor.getVariableRange(e, "x");
+			Interval i = RangeExtractor.getVariableRange(e, "x");
 
-			Assert.fail("didn't raise unsupported exception");
+			Assert.assertEquals(0, i.min, 1e-9);
+			Assert.assertEquals(2 * 3.14, i.max, 1e-9);
 		}
 		catch (EmptyRangeException ex)
 		{
@@ -545,7 +546,7 @@ public class SmallTest
 		}
 		catch (UnsupportedConditionException condExp)
 		{
-			// expected
+			Assert.fail("raised unsupported exception");
 		}
 	}
 

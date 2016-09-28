@@ -855,9 +855,34 @@ public class SpaceExXMLReader
 						// remove comments from value string
 						int commentPos = value.indexOf("#");
 						if (commentPos > 0)
-						{
 							value = value.substring(0, commentPos - 1);
+
+						int quoteIndex = value.indexOf("\"");
+
+						// there was an open quote... but no end quote
+						if (quoteIndex != -1 && value.indexOf("\"", quoteIndex + 1) == -1)
+						{
+							// keep reading lines until the end quote
+							while ((line = br.readLine()) != null)
+							{
+								commentPos = line.indexOf("#"); // trim comments
+								if (commentPos > 0)
+									line = line.substring(0, commentPos - 1);
+
+								value += " " + line;
+
+								quoteIndex = line.indexOf("\"");
+
+								if (quoteIndex != -1)
+									break;
+							}
+
+							if (quoteIndex == -1)
+								throw new AutomatonExportException(
+										"Quoted multi-line property in .cfg file did not have "
+												+ "end quote: " + property);
 						}
+
 						value = value.trim().replace("\"", "");
 
 						if (property.equals("system"))

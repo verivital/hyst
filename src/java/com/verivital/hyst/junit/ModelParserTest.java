@@ -1346,4 +1346,18 @@ public class ModelParserTest
 			// expected
 		}
 	}
+
+	@Test
+	public void testTte()
+	{
+		// Test tte benchmark from ARCH16
+
+		String cfgPath = UNIT_BASEDIR + "tte/tte5.cfg";
+		String xmlPath = UNIT_BASEDIR + "tte/tte5.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+
+		com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+	}
 }
