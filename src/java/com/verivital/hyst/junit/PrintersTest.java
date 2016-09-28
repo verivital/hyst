@@ -20,6 +20,7 @@ import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
 import com.verivital.hyst.internalpasses.ConvertToStandardForm;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -580,5 +581,98 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 		Assert.assertTrue("output should not contain constant 'input'", !out.contains("input"));
+	}
+
+	@Test
+	public void testOuterConditionsFlowstarInvalid()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		// test printing a model with two modes, and initial states in one where
+		// x <= -1 and the other x >= 1
+
+		String[][] dynamics = { { "x", "1", "0" }, { "y", "1", "0" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+
+		BaseComponent ha = ((BaseComponent) c.root);
+
+		AutomatonMode off = ha.createMode("off");
+		off.flowDynamics.put("x", new ExpressionInterval(1));
+		off.flowDynamics.put("y", new ExpressionInterval(2));
+		off.invariant = FormulaParser.parseInvariant("1 <= x <= 2");
+
+		AutomatonMode on = ha.modes.get("on");
+		on.invariant = FormulaParser.parseInvariant("-2 <= x <= -1");
+
+		// manually set initial state
+		c.init.put("on", FormulaParser.parseInitialForbidden("x ==  -1 * y*y & 1.0 <= y <= 1.1"));
+		c.init.put("off", FormulaParser.parseInitialForbidden("x == 1.5 & y == 1"));
+
+		c.validate();
+
+		Assert.assertEquals("two modes", 2, ha.modes.size());
+		Assert.assertEquals("two initial states", 2, c.init.size());
+
+		// try to print to Flow*
+		FlowstarPrinter fp = new FlowstarPrinter();
+
+		fp.setOutputNone();
+
+		try
+		{
+			fp.print(c, "", "filename.xml");
+
+			Assert.fail("expected exception from range extraction");
+		}
+		catch (AutomatonExportException e)
+		{
+			Assert.assertTrue(
+					e.toString().contains("Could not determine constant upper/lower bounds"));
+		}
+	}
+
+	@Test
+	public void testOuterConditionsFlowstarValid()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		// test printing a model with two modes, and initial states in one where
+		// x <= -1 and the other x >= 1
+
+		String[][] dynamics = { { "x", "1", "0" }, { "y", "1", "0" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+
+		BaseComponent ha = ((BaseComponent) c.root);
+
+		AutomatonMode off = ha.createMode("off");
+		off.flowDynamics.put("x", new ExpressionInterval(1));
+		off.flowDynamics.put("y", new ExpressionInterval(2));
+		off.invariant = FormulaParser.parseInvariant("1 <= x <= 2");
+
+		AutomatonMode on = ha.modes.get("on");
+		on.invariant = FormulaParser.parseInvariant("-2 <= x <= -1");
+
+		// manually set initial state
+		c.init.put("on", FormulaParser
+				.parseInitialForbidden("-2 <= x <= -1.5 & x == -1 * y*y & 1.0 <= y <= 1.1"));
+		c.init.put("off", FormulaParser.parseInitialForbidden("x == 1.5 & y == 1"));
+
+		c.validate();
+
+		Assert.assertEquals("two modes", 2, ha.modes.size());
+		Assert.assertEquals("two initial states", 2, c.init.size());
+
+		// try to print to Flow*
+		FlowstarPrinter fp = new FlowstarPrinter();
+
+		fp.setOutputString();
+
+		fp.print(c, "", "filename.xml");
+
+		Assert.assertTrue("init has both mode's x range limits: x in [-2, 1.5]",
+				fp.outputString.toString().contains("x in [-2, 1.5]"));
+
 	}
 }

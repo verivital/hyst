@@ -660,15 +660,12 @@ public class FlowstarPrinter extends ToolPrinter
 
 	public static void convertInitialStatesToUrgent(Configuration config)
 	{
-		Collection<Expression> allInitExpressions = new ArrayList<Expression>();
-
-		allInitExpressions.addAll(config.init.values());
-
-		config.init.values();
+		LinkedHashMap<String, Expression> initCopy = new LinkedHashMap<String, Expression>();
+		initCopy.putAll(config.init);
 
 		ConvertToStandardForm.convertInit(config);
 
-		updateInitCondition(config, allInitExpressions);
+		updateInitCondition(config, initCopy);
 	}
 
 	/**
@@ -676,23 +673,42 @@ public class FlowstarPrinter extends ToolPrinter
 	 * 
 	 * @param config
 	 *            the config object
-	 * @param initExpressions
+	 * @param init2
 	 *            the list of all the initial expressions in all the modes
 	 */
 	private static void updateInitCondition(Configuration config,
-			Collection<Expression> initExpressions)
+			LinkedHashMap<String, Expression> initMap)
 	{
 		Map<String, Interval> weakVarBounds = new HashMap<String, Interval>();
 
 		// get weak bounds for each variable over all the initial states
-		for (Expression e : initExpressions)
+		for (Entry<String, Expression> entry : initMap.entrySet())
 		{
+			Expression e = entry.getValue();
 			Map<String, Interval> bounds = getExpressionWeakVariableRanges(e);
+
+			// add variables that weren't found
+			for (String var : config.root.variables)
+			{
+				if (!bounds.containsKey(var))
+					throw new AutomatonExportException(
+							"Could not determine constant upper/lower bounds on variable '" + var
+									+ "' in mode '" + entry.getKey() + "'");
+			}
 
 			for (Entry<String, Interval> boundsEntry : bounds.entrySet())
 			{
 				String var = boundsEntry.getKey();
 				Interval i = boundsEntry.getValue();
+
+				if (i.min == -Double.MAX_VALUE)
+					throw new AutomatonExportException(
+							"Could not determine constant lower bound on variable '" + var
+									+ "' in mode '" + entry.getKey() + "'");
+				else if (i.max == Double.MAX_VALUE)
+					throw new AutomatonExportException(
+							"Could not determine constant upper bound on variable '" + var
+									+ "' in mode '" + entry.getKey() + "'");
 
 				// merge i into the existing interval bounds
 				Interval cur = weakVarBounds.get(var);
@@ -741,18 +757,7 @@ public class FlowstarPrinter extends ToolPrinter
 	{
 		HashMap<String, Interval> ranges = new HashMap<String, Interval>();
 
-		try
-		{
-			RangeExtractor.getWeakVariableRanges(ex, ranges);
-		}
-		catch (EmptyRangeException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		catch (ConstantMismatchException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
+		RangeExtractor.getWeakVariableRanges(ex, ranges);
 
 		return ranges;
 	}

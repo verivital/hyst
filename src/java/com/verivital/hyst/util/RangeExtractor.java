@@ -71,28 +71,32 @@ public class RangeExtractor
 	}
 
 	/**
-	 * Get ranges for variables in a logical expression, ignores unsupported
-	 * expressions
+	 * Get weak ranges (outer approximations) for variables in a logical
+	 * expression. This doesn't simplify or handle conditions that aren't simple
+	 * comparisons with constants.
 	 * 
 	 * @param expression
 	 *            the expression to parse
 	 * @param ranges
 	 *            where to store the ranges for the variables we encounter
-	 * @throws EmptyRangeException
-	 *             if expression is Constant.FALSE or otherwise unsatisfiable
-	 *             for any variable in 'variables'
-	 * @throws ConstantMismatchException
-	 *             if there are conflicting assignments to constants
 	 */
 	public static void getWeakVariableRanges(Expression expression, Map<String, Interval> ranges)
-			throws EmptyRangeException, ConstantMismatchException
 	{
 		if (expression == null)
 			throw new NullPointerException("null expression passed into getVariableRanges()");
 
 		try
 		{
-			Map<String, Double> constantMap = getConstants(expression);
+			Map<String, Double> constantMap = new HashMap<String, Double>();
+
+			try
+			{
+				constantMap = getConstants(expression);
+			}
+			catch (ConstantMismatchException e)
+			{
+				// ignore
+			}
 
 			// add all constants
 			for (Entry<String, Double> e : constantMap.entrySet())
@@ -107,7 +111,9 @@ public class RangeExtractor
 			expression = SubstituteConstantsPass
 					.substituteConstantsIntoExpression(constantIntervalMap, expression);
 
-			expression = SimplifyExpressionsPass.simplifyExpression(expression);
+			// this is weak range extraction, so do not do simplification
+			// expression =
+			// SimplifyExpressionsPass.simplifyExpression(expression);
 
 			getVariableRangesRecursive(expression, ranges, null, true);
 		}
@@ -119,6 +125,11 @@ public class RangeExtractor
 		catch (UnsupportedConditionException e)
 		{
 			throw new AutomatonExportException("Unsupported expression during weak"
+					+ "range extraction (should never happen): " + expression.toDefaultString(), e);
+		}
+		catch (EmptyRangeException e)
+		{
+			throw new AutomatonExportException("Empty ragnge during weak"
 					+ "range extraction (should never happen): " + expression.toDefaultString(), e);
 		}
 	}
@@ -336,9 +347,10 @@ public class RangeExtractor
 	 * @param vars
 	 *            a set of variables we are interested in. if null then get all
 	 *            variables
-	 * @param ignoreUnsupported
-	 *            should we ignore unsupported expressions, or raise an
-	 *            exception?
+	 * @param extractWeakRanges
+	 *            are we just extracting an overapproximation of the range? This
+	 *            will ignore certain types of errors (like unsupported
+	 *            comparisons)
 	 * @throws EmptyRangeException
 	 *             if expression is Constant.FALSE or otherwise unsatisfiable
 	 *             for the selected variables
@@ -347,7 +359,7 @@ public class RangeExtractor
 	 *             desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression,
-			Map<String, Interval> ranges, Collection<String> vars, boolean ignoreUnsupported)
+			Map<String, Interval> ranges, Collection<String> vars, boolean extractWeakRanges)
 			throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();
@@ -363,8 +375,8 @@ public class RangeExtractor
 				TreeMap<String, Interval> left = new TreeMap<String, Interval>();
 				TreeMap<String, Interval> right = new TreeMap<String, Interval>();
 
-				getVariableRangesRecursive(leftExp, ranges, vars, ignoreUnsupported);
-				getVariableRangesRecursive(rightExp, ranges, vars, ignoreUnsupported);
+				getVariableRangesRecursive(leftExp, ranges, vars, extractWeakRanges);
+				getVariableRangesRecursive(rightExp, ranges, vars, extractWeakRanges);
 
 				ranges = mergeTreeRanges(left, right);
 			}
@@ -405,7 +417,7 @@ public class RangeExtractor
 						shouldSkip = true;
 					else
 					{
-						if (ignoreUnsupported)
+						if (extractWeakRanges)
 							shouldSkip = true;
 						else
 						{
@@ -420,7 +432,7 @@ public class RangeExtractor
 				}
 				else
 				{
-					if (ignoreUnsupported)
+					if (extractWeakRanges)
 						shouldSkip = true;
 					else
 					{
@@ -474,7 +486,7 @@ public class RangeExtractor
 					}
 					else
 					{
-						if (!ignoreUnsupported)
+						if (!extractWeakRanges)
 							throw new UnsupportedConditionException(
 									"Unsupported expression during range extraction: "
 											+ expression.toDefaultString());
@@ -507,7 +519,7 @@ public class RangeExtractor
 			throw new EmptyRangeException("expression contains FALSE");
 		else if (expression != Constant.TRUE && expressionContainsVariables(expression, vars))
 		{
-			if (!ignoreUnsupported)
+			if (!extractWeakRanges)
 				throw new UnsupportedConditionException(
 						"Unsupported expression during range extraction: "
 								+ expression.toDefaultString());
