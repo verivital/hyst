@@ -36,6 +36,9 @@ public class HylaaPrinter extends ToolPrinter
 			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
 	public boolean pythonSimplify = false;
 
+	@Option(name = "-plot", aliases = { "-p" }, usage = "plot during computation")
+	public boolean plotFlag = false;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -266,29 +269,48 @@ public class HylaaPrinter extends ToolPrinter
 
 		printLine(PySimPrinter.automatonToString(config, new HylaaExtraPrintFuncs()));
 
-		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
-
-		printLine("def main():");
+		printLine("def define_settings():");
 		increaseIndentation();
-		printLine("'runs hylaa on the model'");
+		printSettings();
+		decreaseIndentation();
+		printNewline();
+
+		printLine("def run_hylaa(settings):");
+		increaseIndentation();
+		printLine(
+				"'Runs hylaa with the given settings, returning the post-computation engine object.'");
 		printLine("ha = define_ha()");
 		printLine("init = define_init_states(ha)");
 		printNewline();
+		printLine("engine = HylaaEngine(ha, settings)");
+		printLine("engine.run(init)");
+		printNewline();
+		printLine("return engine");
+		decreaseIndentation();
+		printNewline();
 
-		/*
-		 * plot_settings = PlotSettings()
-		 * 
-		 * plot_settings.plot_mode = PlotSettings.PLOT_FULL plot_settings.xdim = 0
-		 * plot_settings.ydim = 1
-		 * 
-		 * settings = HylaaSettings(step=0.25, max_time=10.0, plot_settings=plot_settings)
-		 * 
-		 * engine = HylaaEngine(ha, settings) engine.run(init)
-		 */
+		printLine("if __name__ == '__main__':");
+		increaseIndentation();
+		printLine("settings = define_settings()");
+		printLine("run_hylaa(settings)");
+		decreaseIndentation();
+		printNewline();
+	}
 
+	private void printSettings()
+	{
+		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
+		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
+
+		printLine("'get the hylaa settings object'");
 		printLine("plot_settings = PlotSettings()");
-		printLine("plot_settings.plot_mode = PlotSettings.PLOT_FULL");
+
+		String plotMode = "PLOT_NONE";
+
+		if (plotFlag)
+			plotMode = "PLOT_FULL";
+
+		printLine("plot_settings.plot_mode = PlotSettings." + plotMode);
 		printLine("plot_settings.xdim = " + xDim);
 		printLine("plot_settings.ydim = " + yDim);
 		printNewline();
@@ -296,20 +318,8 @@ public class HylaaPrinter extends ToolPrinter
 		double step = config.settings.spaceExConfig.samplingTime;
 		double maxTime = config.settings.spaceExConfig.timeHorizon;
 
-		printLine("settings = HylaaSettings(step=" + step + ", max_time=" + maxTime
+		printLine("return HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
-		printNewline();
-
-		printLine("engine = HylaaEngine(ha, settings)");
-		printLine("engine.run(init)");
-		decreaseIndentation();
-		printNewline();
-
-		printLine("if __name__ == '__main__':");
-		increaseIndentation();
-		printLine("main()");
-		decreaseIndentation();
-		printNewline();
 	}
 
 	@Override

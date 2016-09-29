@@ -230,6 +230,12 @@ public class PySimPrinter extends ToolPrinter
 
 		printLine(automatonToString(config));
 
+		printLine("def define_settings():");
+		increaseIndentation();
+		printLine("'''defines the automaton / plot settings'''");
+		printSettings(config);
+		printNewline();
+
 		printLine("def simulate(init_states, settings):");
 		increaseIndentation();
 		printLine("'''simulate the automaton from each initial rect'''");
@@ -390,22 +396,17 @@ public class PySimPrinter extends ToolPrinter
 		appendInit(rv, config);
 		appendNewline(rv);
 
-		appendLine(rv, "def define_settings():");
-		appendIndentedLine(rv, "'''defines the automaton / plot settings'''");
-		appendSettings(rv, config);
-		appendNewline(rv);
-
 		// restore expressionPrinter
 		Expression.expressionPrinter = savedPrinter;
 
 		return rv.toString();
 	}
 
-	public static void appendSettings(StringBuilder rv, Configuration config)
+	public void printSettings(Configuration config)
 	{
-		appendIndentedLine(rv, "s = PySimSettings()");
-		appendIndentedLine(rv, "s.max_time = " + config.settings.spaceExConfig.timeHorizon);
-		appendIndentedLine(rv, "s.step = " + config.settings.spaceExConfig.samplingTime);
+		printLine("s = PySimSettings()");
+		printLine("s.max_time = " + config.settings.spaceExConfig.timeHorizon);
+		printLine("s.step = " + config.settings.spaceExConfig.samplingTime);
 
 		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
 
@@ -419,11 +420,11 @@ public class PySimPrinter extends ToolPrinter
 			throw new AutomatonExportException(
 					"Cannot find y dim in automaton: " + config.settings.plotVariableNames[1]);
 
-		appendIndentedLine(rv, "s.x_dim = " + xDim);
-		appendIndentedLine(rv, "s.y_dim = " + yDim);
+		printLine("s.x_dim = " + xDim);
+		printLine("s.y_dim = " + yDim);
 
-		appendNewline(rv);
-		appendIndentedLine(rv, "return s");
+		printNewline();
+		printLine("return s");
 	}
 
 	private static String quotedVarList(BaseComponent c)
