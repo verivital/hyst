@@ -2,7 +2,6 @@ package com.verivital.hyst.ir.base;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -257,7 +256,10 @@ public class BaseComponent extends Component
 		ArrayList<String> rv = new ArrayList<String>(variables.size());
 
 		for (String v : variables)
-			rv.add(getFullyQualifiedVariableName(v));
+		{
+			String fullName = getFullyQualifiedVariableName(v);
+			rv.add(fullName);
+		}
 
 		return rv;
 	}
@@ -288,7 +290,7 @@ public class BaseComponent extends Component
 	 */
 	public Collection<String> getAllNames()
 	{
-		Collection<String> rv = new HashSet<String>();
+		Collection<String> rv = new ArrayList<String>();
 
 		rv.addAll(variables);
 		rv.addAll(constants.keySet());

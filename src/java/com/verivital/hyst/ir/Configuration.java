@@ -55,6 +55,11 @@ public class Configuration
 		if (!Configuration.DO_VALIDATION)
 			return;
 
+		if (root == null)
+			throw new AutomatonValidationException("root component cannot be null");
+
+		root.validate();
+
 		Collection<String> validVarNames = root.getAllVariables();
 		validVarNames.addAll(root.getAllConstants().keySet());
 
@@ -66,9 +71,6 @@ public class Configuration
 			throw new AutomatonValidationException("settings cannot be null");
 
 		settings.validate();
-
-		if (root == null)
-			throw new AutomatonValidationException("root component cannot be null");
 
 		// only root has a null parent and no instance name
 		if (root.instanceName != null)
@@ -108,8 +110,6 @@ public class Configuration
 			if (e == null)
 				throw new AutomatonValidationException("Forbidden states contain null expression");
 		}
-
-		root.validate();
 	}
 
 	private void validateMap(LinkedHashMap<String, Expression> map, String name,

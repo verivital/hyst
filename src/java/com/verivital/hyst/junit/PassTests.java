@@ -2,6 +2,7 @@ package com.verivital.hyst.junit;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -11,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
@@ -26,8 +28,10 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
+import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -139,5 +143,54 @@ public class PassTests
 
 		new SubstituteConstantsPass().runTransformationPass(config, null);
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
+	}
+
+	/**
+	 * Replicate a component instance
+	 */
+	@Test
+	public void testCopyInstancePass()
+	{
+		String path = UNIT_BASEDIR + "heli_large/";
+		String spaceExFile = path + "heli_large.xml";
+		String configFile = path + "heli_large.cfg";
+
+		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(configFile, spaceExFile);
+
+		Map<String, Component> componentTemplates = TemplateImporter
+				.createComponentTemplates(spaceExDoc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
+
+		new CopyInstancePass().runTransformationPass(config, "-name Controlled_Heli_1 -num 3");
+		NetworkComponent root = (NetworkComponent) config.root;
+
+		Assert.assertEquals("four instances after copy pass", 4, root.children.size());
+
+		for (String instance : new String[] { "Controlled_Heli_1", "clock_1",
+				"copy2_Controlled_Heli_1", "copy3_Controlled_Heli_1" })
+			Assert.assertTrue("child instance named '" + instance + "' exists",
+					root.children.containsKey(instance));
+
+		ComponentInstance copy3 = root.children.get("copy3_Controlled_Heli_1");
+
+		for (ComponentMapping mapping : copy3.varMapping)
+		{
+			Assert.assertEquals("variable was correctly renamed in copy3",
+					"copy3_" + mapping.childParam, mapping.parentParam);
+		}
+
+		// check initial states
+		Expression initExp = config.init.values().iterator().next();
+
+		HashMap<String, Interval> ranges = FlowstarPrinter.getExpressionVariableRanges(initExp);
+
+		for (ComponentMapping mapping : copy3.varMapping)
+		{
+			Interval range1 = ranges.get(mapping.childParam);
+			Interval range2 = ranges.get(mapping.parentParam);
+
+			Assert.assertTrue("initial range for " + mapping.childParam + " and "
+					+ mapping.childParam + " were not equal", range1.equals(range2, 1e-9));
+		}
 	}
 }

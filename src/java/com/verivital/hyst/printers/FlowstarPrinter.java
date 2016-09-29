@@ -504,7 +504,7 @@ public class FlowstarPrinter extends ToolPrinter
 		}
 	}
 
-	private static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
+	public static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
 	{
 		HashMap<String, Interval> ranges = new HashMap<String, Interval>();
 

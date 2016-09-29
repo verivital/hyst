@@ -1,10 +1,10 @@
 package com.verivital.hyst.ir.network;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -58,10 +58,16 @@ public class NetworkComponent extends Component
 	@Override
 	public Collection<String> getAllVariables()
 	{
-		HashSet<String> vars = new HashSet<String>();
+		TreeSet<String> vars = new TreeSet<String>();
 
-		for (ComponentInstance ci : children.values())
-			vars.addAll(ci.child.getAllVariables());
+		for (Entry<String, ComponentInstance> entry : children.entrySet())
+		{
+			ComponentInstance ci = entry.getValue();
+
+			Collection<String> childVars = ci.child.getAllVariables();
+
+			vars.addAll(childVars);
+		}
 
 		return vars;
 	}

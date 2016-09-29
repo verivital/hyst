@@ -351,6 +351,10 @@ public abstract class Component
 			boolean found = false;
 			ComponentInstance ci = parent.children.get(instanceName);
 
+			if (ci == null)
+				throw new AutomatonExportException(
+						"Error getting instance named '" + instanceName + "' in parent automaton.");
+
 			for (ComponentMapping mapping : ci.varMapping)
 			{
 				if (mapping.childParam.equals(var))

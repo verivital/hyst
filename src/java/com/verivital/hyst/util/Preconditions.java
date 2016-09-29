@@ -11,6 +11,7 @@ import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.internalpasses.ConvertToStandardForm;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -222,6 +223,19 @@ public class Preconditions
 						"forbidden states has unsupported disjunction; "
 								+ "automatic convertion requires flat automaton.");
 		}
+
+		// check
+		byte classification = 0;
+
+		for (Expression e : c.init.values())
+			classification |= AutomatonUtil.classifyExpressionOps(e);
+
+		for (Expression e : c.forbidden.values())
+			classification |= AutomatonUtil.classifyExpressionOps(e);
+
+		if ((classification & AutomatonUtil.OPS_DISJUNCTION) != 0)
+			throw new AutomatonExportException(
+					"Conversion of disjunctive initial / forbidden failed");
 	}
 
 	/**
