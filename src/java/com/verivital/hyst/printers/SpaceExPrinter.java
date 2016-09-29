@@ -75,6 +75,9 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-directions", usage = "support function directions", metaVar = "VAL")
 	String directions = "auto";
 
+	@Option(name = "-skiptol", usage = "skip printing error tolerances")
+	boolean skipTol = false;
+
 	private String cfgFilename = null;
 	private BaseComponent ha;
 
@@ -156,7 +159,7 @@ public class SpaceExPrinter extends ToolPrinter
 			try
 			{
 				Writer w = new BufferedWriter(new FileWriter(new File(cfgFilename)));
-				w.write(spaceex_printer.getCFGString());
+				w.write(spaceex_printer.getCFGString(skipTol));
 				w.close();
 			}
 			catch (IOException e)
@@ -167,7 +170,7 @@ public class SpaceExPrinter extends ToolPrinter
 		else
 		{
 			// it will get printed to stdout
-			printLine("\n" + spaceex_printer.getCFGString());
+			printLine("\n" + spaceex_printer.getCFGString(skipTol));
 		}
 
 	}
@@ -196,6 +199,9 @@ public class SpaceExPrinter extends ToolPrinter
 
 		String dirs = getParam(directions, config.settings.spaceExConfig.directions);
 		sed.setDirections(dirs);
+
+		String agg = getParam(directions, config.settings.spaceExConfig.aggregation);
+		sed.setAggregation(agg);
 
 		String scenario = getParam(this.scenario, config.settings.spaceExConfig.scenario);
 		sed.setScenario(scenario);

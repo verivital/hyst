@@ -161,6 +161,11 @@ public class SpaceExDocument
 		mConfig.directions = dirs;
 	}
 
+	public void setAggregation(String dirs)
+	{
+		mConfig.aggregation = dirs;
+	}
+
 	public String toString()
 	{
 		StringBuilder rv = new StringBuilder();

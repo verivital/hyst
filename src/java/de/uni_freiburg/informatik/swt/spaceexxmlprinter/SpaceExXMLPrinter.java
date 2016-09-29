@@ -647,7 +647,7 @@ public class SpaceExXMLPrinter
 	 * 
 	 * @param filename
 	 */
-	public String getCFGString()
+	public String getCFGString(boolean skipTol)
 	{
 		StringBuffer rv = new StringBuffer();
 
@@ -656,14 +656,18 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "system", config.systemID);
 		appendCfgString(rv, "scenario", config.scenario); // was supp
 		appendCfgString(rv, "directions", config.directions);
+		appendCfgString(rv, "set-aggregation", config.aggregation);
 		appendCfgString(rv, "sampling-time", new Double(config.samplingTime).toString());
 		appendCfgString(rv, "time-horizon", Double.toString(config.timeHorizon));
 		appendCfgString(rv, "iter-max", Integer.toString(config.maxIterations));
 		appendCfgString(rv, "output-format", config.outputFormat);
-		appendCfgString(rv, "rel-err", "1.0e-12");
-		appendCfgString(rv, "abs-err", "1.0e-13");
-		appendCfgString(rv, "flowpipe-tolerance", "0.001");
-		appendCfgString(rv, "set-aggregation", "chull");
+
+		if (!skipTol)
+		{
+			appendCfgString(rv, "rel-err", "1.0e-12");
+			appendCfgString(rv, "abs-err", "1.0e-13");
+			appendCfgString(rv, "flowpipe-tolerance", "0.001");
+		}
 
 		if (config.timeTriggered)
 			appendCfgString(rv, "map-zero-duration-jump-sets", "true");
