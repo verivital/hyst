@@ -34,24 +34,21 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
- * This is the simulation-based mixed-triggered hybridization pass. Its
- * implementation matches with the HSCC paper. It uses simulation to derive the
- * hybridization parameters. After which, it calls the HybridizeMTRawPass to
- * actually do the hybridization.
+ * This is the simulation-based mixed-triggered hybridization pass. Its implementation matches with
+ * the HSCC paper. It uses simulation to derive the hybridization parameters. After which, it calls
+ * the HybridizeMTRawPass to actually do the hybridization.
  * 
  * The parameters of the pass are:
  * 
  * The maximum time, T
  * 
- * The simulation strategy, S, one of
- * {center|star|corners|starcorners|rand10|rand#}
+ * The simulation strategy, S, one of {center|star|corners|starcorners|rand10|rand#}
  * 
  * The time-triggered timestep, delta_tt
  * 
  * The number of space-triggered transitions, n_pi
  * 
- * The maximum simulation time before giving up on a space-triggered step,
- * delta_pi
+ * The maximum simulation time before giving up on a space-triggered step, delta_pi
  * 
  * The bloating term, epsilon
  * 
@@ -380,8 +377,7 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * Actually run the simulation. This is the high-level algorithm described
-	 * in the paper
+	 * Actually run the simulation. This is the high-level algorithm described in the paper
 	 */
 	private void runSimulation(ArrayList<SymbolicStatePoint> simPoints)
 	{
@@ -431,18 +427,16 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * Add a space-triggered mode using an auxiliary hyperplane
-	 * (pseudo-invariant). There is no guarantee of time elapsing in the
-	 * constructed mode. This should be called after the simPoints have already
-	 * advanced onto the plane. The first simPoint is the one used to construct
-	 * the hyperplane.
+	 * Add a space-triggered mode using an auxiliary hyperplane (pseudo-invariant). There is no
+	 * guarantee of time elapsing in the constructed mode. This should be called after the simPoints
+	 * have already advanced onto the plane. The first simPoint is the one used to construct the
+	 * hyperplane.
 	 * 
 	 * @param startBox
-	 *            the bloated box surrounding the simPoints before they were
-	 *            advanced (the incoming set)
+	 *            the bloated box surrounding the simPoints before they were advanced (the incoming
+	 *            set)
 	 * @param simPoints
-	 *            the (already-advanced) simulation points. First is center
-	 *            point
+	 *            the (already-advanced) simulation points. First is center point
 	 */
 	private void stepSpaceTrigger(HyperRectangle startBox, ArrayList<SymbolicStatePoint> simPoints)
 	{
@@ -462,10 +456,9 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * A space triggered-transition (pseudo-invariant) is being constructed.
-	 * Advance the center point until all the corners of the start box are all
-	 * one side. This can fail if the trajectory never meets this condition
-	 * (piMaxTime is exceeded)
+	 * A space triggered-transition (pseudo-invariant) is being constructed. Advance the center
+	 * point until all the corners of the start box are all one side. This can fail if the
+	 * trajectory never meets this condition (piMaxTime is exceeded)
 	 * 
 	 * @param startBox
 	 *            the start box
@@ -500,16 +493,15 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * Advance the simulated points for a pseudo-invariant step. This can fail
-	 * if if the center point's simulation cannot go to a point where the
-	 * constructed auxiliary hyperplane would be entirely in front of the
-	 * startBox (within time piMaxTime), or if some of the simulated points
+	 * Advance the simulated points for a pseudo-invariant step. This can fail if if the center
+	 * point's simulation cannot go to a point where the constructed auxiliary hyperplane would be
+	 * entirely in front of the startBox (within time piMaxTime), or if some of the simulated points
 	 * never reach the decided-upon hyperplane (within time piMaxTime).
 	 * 
 	 * @param startBox
 	 *            the incoming set of states
-	 * @return true if succeeded (and simPoints is advanced in place), false
-	 *         otherwise (simPoints is unmodified)
+	 * @return true if succeeded (and simPoints is advanced in place), false otherwise (simPoints is
+	 *         unmodified)
 	 */
 	private boolean advanceSimulationToPseudoInvariant(HyperRectangle startBox,
 			ArrayList<SymbolicStatePoint> simPoints)
@@ -617,9 +609,8 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * create one time-triggered mode. This advances the simulation points in
-	 * the passed-in array, as well as updating the global splitelements and
-	 * domains
+	 * create one time-triggered mode. This advances the simulation points in the passed-in array,
+	 * as well as updating the global splitelements and domains
 	 * 
 	 * @param simPoints
 	 * @return
@@ -847,8 +838,8 @@ public class HybridizeMixedTriggeredPass extends TransformationPass
 	}
 
 	/**
-	 * Test if all the points of box are on one side of a hyperplane derived
-	 * from the given simulation point
+	 * Test if all the points of box are on one side of a hyperplane derived from the given
+	 * simulation point
 	 * 
 	 * @param simPoint
 	 *            the simulation point

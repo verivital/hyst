@@ -21,7 +21,7 @@ from hybridpy.tool_hylaa import HylaaTool
 
 # tools for which models can be generated
 TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), 'spaceex':SpaceExTool(), 
-         'dreach':DReachTool(), 'pysim':PySimTool(), 'hylaa':HylaaTool()}
+         'dreach':DReachTool(), 'pysim':PySimTool()}
 
 EXIT_CODE_TERM = 143
 

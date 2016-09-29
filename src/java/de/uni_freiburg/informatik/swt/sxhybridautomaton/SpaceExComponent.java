@@ -6,8 +6,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import java.util.ArrayList;
 
 /**
- * A Component consists of - Locations with Transitions (Base Component) or -
- * other Components (Network Component)
+ * A Component consists of - Locations with Transitions (Base Component) or - other Components
+ * (Network Component)
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -123,8 +123,7 @@ public abstract class SpaceExComponent
 	 * 
 	 * @param id
 	 *            The Param's name.
-	 * @return The requested Param OR null if there is no Param with the wanted
-	 *         name.
+	 * @return The requested Param OR null if there is no Param with the wanted name.
 	 */
 	public Param getParam(String name)
 	{

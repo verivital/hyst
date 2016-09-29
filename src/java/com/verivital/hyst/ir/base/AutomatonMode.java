@@ -16,15 +16,13 @@ import com.verivital.hyst.util.AutomatonUtil;
 /**
  * A mode of a hybrid automaton.
  * 
- * name, automaton and invariant are nonnull name is a valid c identifier
- * invariant is not null or false flowDynamics can only be null if urgent==true;
- * flow may not be defined for every variable (some variables may be omitted,
- * for example havoc dynamics or dynamics defined in another automaton). if
- * nonnull, every variable defined in flowDynamics must exist in the
- * BaseComponent.
+ * name, automaton and invariant are nonnull name is a valid c identifier invariant is not null or
+ * false flowDynamics can only be null if urgent==true; flow may not be defined for every variable
+ * (some variables may be omitted, for example havoc dynamics or dynamics defined in another
+ * automaton). if nonnull, every variable defined in flowDynamics must exist in the BaseComponent.
  * 
- * After flattening, every variable must have a defined flowDyanmics (this is
- * one of the guarantees provided by the flatten pass).
+ * After flattening, every variable must have a defined flowDyanmics (this is one of the guarantees
+ * provided by the flatten pass).
  * 
  * @author Stanley Bak (stanleybak@gmail.com)
  *
@@ -38,9 +36,8 @@ public class AutomatonMode
 	public LinkedHashMap<String, ExpressionInterval> flowDynamics;
 
 	/**
-	 * The correct way to create a new automaton mode is using
-	 * HybridAutomaton.createMode(name), which will manage the internal state of
-	 * the automaton
+	 * The correct way to create a new automaton mode is using HybridAutomaton.createMode(name),
+	 * which will manage the internal state of the automaton
 	 * 
 	 * @param ha
 	 *            the hybrid automaton
@@ -59,8 +56,8 @@ public class AutomatonMode
 	}
 
 	/**
-	 * Check if the guarantees expected of this class are met. This is run prior
-	 * to any printing procedures.
+	 * Check if the guarantees expected of this class are met. This is run prior to any printing
+	 * procedures.
 	 * 
 	 * @throws AutomatonValidationException
 	 *             if guarantees are violated
@@ -133,9 +130,8 @@ public class AutomatonMode
 	}
 
 	/**
-	 * Duplicate (deep copy) the mode, and add link the new one with this one's
-	 * parent automaton. This does not copy any transitions. The automaton link
-	 * is shallow-copied
+	 * Duplicate (deep copy) the mode, and add link the new one with this one's parent automaton.
+	 * This does not copy any transitions. The automaton link is shallow-copied
 	 * 
 	 * @param the
 	 *            parent of the new component
@@ -162,9 +158,8 @@ public class AutomatonMode
 	}
 
 	/**
-	 * Duplicate (deep copy) the mode, and add link the new one with this one's
-	 * parent automaton. This does not copy any transitions. The automaton link
-	 * is shallow-copied
+	 * Duplicate (deep copy) the mode, and add link the new one with this one's parent automaton.
+	 * This does not copy any transitions. The automaton link is shallow-copied
 	 * 
 	 * @param newName
 	 *            an automaton-unique name for the new mode

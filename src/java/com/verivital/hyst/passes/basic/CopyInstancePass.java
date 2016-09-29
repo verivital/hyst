@@ -22,8 +22,7 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.PreconditionsFlag;
 
 /**
- * A model transformation pass which copies a base-component instance in a
- * network model
+ * A model transformation pass which copies a base-component instance in a network model
  * 
  * @author Stanley Bak (September 2015)
  *

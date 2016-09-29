@@ -16,8 +16,8 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
- * This pass removes modes and associated transitions from the automata which
- * have invariants that are unsatisfiable.
+ * This pass removes modes and associated transitions from the automata which have invariants that
+ * are unsatisfiable.
  * 
  * @author Stanley Bak (Feb 2015)
  *
@@ -40,8 +40,8 @@ public class RemoveSimpleUnsatInvariantsPass extends TransformationPass
 	}
 
 	/**
-	 * Check if the given expression is unsatisfiable using simple range checks
-	 * on all the variables.
+	 * Check if the given expression is unsatisfiable using simple range checks on all the
+	 * variables.
 	 * 
 	 * @param e
 	 *            the expression to check

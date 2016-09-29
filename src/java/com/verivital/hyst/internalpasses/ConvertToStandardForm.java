@@ -13,15 +13,13 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
- * This pass converts a hybrid automaton to standard form. A standard form
- * automaton is flat, and has a single initial state named _init, which is
- * urgent. It has a single forbidden state named _error, with no condition on
- * the real variables.
+ * This pass converts a hybrid automaton to standard form. A standard form automaton is flat, and
+ * has a single initial state named _init, which is urgent. It has a single forbidden state named
+ * _error, with no condition on the real variables.
  * 
  * @author Stanley Bak
  */

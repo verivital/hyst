@@ -30,15 +30,13 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 /**
- * Takes a set of template automata, and can instantiate them into
- * configurations.
+ * Takes a set of template automata, and can instantiate them into configurations.
  *
  */
 public class ConfigurationMaker
 {
 	/**
-	 * Create a Configuration from a SpaceEx doc and a template list of all the
-	 * base components
+	 * Create a Configuration from a SpaceEx doc and a template list of all the base components
 	 * 
 	 * @param doc
 	 *            the SpaceEx doc
@@ -143,10 +141,9 @@ public class ConfigurationMaker
 	}
 
 	/**
-	 * Create the initial states in the configuration based on the init
-	 * expression in the config file. This may require doing range extraction
-	 * from the init expression. If the initial value is a range (parameter),
-	 * rather than a constant, a variable is inserted with dynamics equal to
+	 * Create the initial states in the configuration based on the init expression in the config
+	 * file. This may require doing range extraction from the init expression. If the initial value
+	 * is a range (parameter), rather than a constant, a variable is inserted with dynamics equal to
 	 * zero and initial value equal to that range.
 	 * 
 	 * @param c
@@ -237,8 +234,8 @@ public class ConfigurationMaker
 	}
 
 	/**
-	 * Get the (dotted) name of the first mode in this component. Maybe have to
-	 * look at subcomponents.
+	 * Get the (dotted) name of the first mode in this component. Maybe have to look at
+	 * subcomponents.
 	 * 
 	 * @param c
 	 * @return
@@ -264,8 +261,8 @@ public class ConfigurationMaker
 	}
 
 	/**
-	 * Create the forbidden states in the configuration based on the forbidden
-	 * expression in the config file.
+	 * Create the forbidden states in the configuration based on the forbidden expression in the
+	 * config file.
 	 * 
 	 * @param c
 	 *            the configuration to assign to
@@ -296,8 +293,7 @@ public class ConfigurationMaker
 	}
 
 	/**
-	 * Parse the passed in expression into a location-map (initial or forbidden
-	 * states)
+	 * Parse the passed in expression into a location-map (initial or forbidden states)
 	 * 
 	 * @param e
 	 *            the expression to parse
@@ -306,8 +302,7 @@ public class ConfigurationMaker
 	 * @param map
 	 *            [out] the place to store the result
 	 * @param disc
-	 *            a text description of the set of states being parsed (like
-	 *            "initial states")
+	 *            a text description of the set of states being parsed (like "initial states")
 	 */
 	private static void insertIntoLocMap(Expression e, Component root,
 			LinkedHashMap<String, Expression> map, String desc)

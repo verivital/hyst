@@ -14,8 +14,7 @@ import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingE
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.TimeSplittingElement;
 
 /**
- * An args4j optionhanlder for splitting elements, which are either (time) or
- * (pt;gradient)
+ * An args4j optionhanlder for splitting elements, which are either (time) or (pt;gradient)
  *
  * @author Stanley Bak
  */

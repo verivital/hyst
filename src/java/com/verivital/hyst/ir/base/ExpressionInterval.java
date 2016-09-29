@@ -10,12 +10,11 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * An ExpressionInterval an expression plus an Interval. It is used, for
- * example, to specify nondeterministic flows such as "x' = 2*y + [3, 4]". In
- * this case, the Expression would be 2*y and the interval would be [3, 4].
+ * An ExpressionInterval an expression plus an Interval. It is used, for example, to specify
+ * nondeterministic flows such as "x' = 2*y + [3, 4]". In this case, the Expression would be 2*y and
+ * the interval would be [3, 4].
  * 
- * ExpressionIntervals always have a defined expression, but the interval may e
- * null
+ * ExpressionIntervals always have a defined expression, but the interval may e null
  * 
  * @author Stanley Bak
  *
@@ -99,9 +98,8 @@ public class ExpressionInterval
 	}
 
 	/**
-	 * Get the Expression which equals this ExpressionInterval exactly. This is
-	 * only valid if min==max==0, otherwise an AutomatonExportException is
-	 * raised.
+	 * Get the Expression which equals this ExpressionInterval exactly. This is only valid if
+	 * min==max==0, otherwise an AutomatonExportException is raised.
 	 * 
 	 * @return the Expression
 	 * @throws AutomatonExportException
@@ -130,8 +128,8 @@ public class ExpressionInterval
 	}
 
 	/**
-	 * Default printing. If you want something different you'll need to manually
-	 * write it externally as this type is not part of ExpressionPrinter
+	 * Default printing. If you want something different you'll need to manually write it externally
+	 * as this type is not part of ExpressionPrinter
 	 */
 	public String toString()
 	{
@@ -139,8 +137,8 @@ public class ExpressionInterval
 	}
 
 	/**
-	 * Add a range to the range defined in this ExpresionInterval. This has the
-	 * effect of min = left.min + right.min, max = left.max + right.max;
+	 * Add a range to the range defined in this ExpresionInterval. This has the effect of min =
+	 * left.min + right.min, max = left.max + right.max;
 	 * 
 	 * @param range
 	 */

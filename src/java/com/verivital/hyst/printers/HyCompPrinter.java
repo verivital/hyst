@@ -26,8 +26,7 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a HyDI
- * (HyComp).
+ * Takes a hybrid automaton from the internal model format and outputs a HyDI (HyComp).
  * 
  * @author Taylor Johnson (7-2015)
  *
@@ -40,8 +39,7 @@ public class HyCompPrinter extends ToolPrinter
 	private BaseComponent ha;
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
 
@@ -52,8 +50,8 @@ public class HyCompPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	protected void printDocument(String originalFilename)
 	{
@@ -113,8 +111,7 @@ public class HyCompPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -156,17 +153,14 @@ public class HyCompPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print constants as FROZENVARS. Although there is also something called
-	 * DEFINE, so...
+	 * Print constants as FROZENVARS. Although there is also something called DEFINE, so...
 	 * 
-	 * This is more efficient than printing them as part of initial condition,
-	 * since if we do that, we'd have to declare them as variables, which will
-	 * increase the state space size
+	 * This is more efficient than printing them as part of initial condition, since if we do that,
+	 * we'd have to declare them as variables, which will increase the state space size
 	 * 
-	 * Note: in general, we may not always be able to just use #defines, for
-	 * instance, if we have a nondeterministic range in which case, we would
-	 * need to introduce another variable and add e.g. 0 <= A <= 5.2 as an
-	 * initial condition constraint
+	 * Note: in general, we may not always be able to just use #defines, for instance, if we have a
+	 * nondeterministic range in which case, we would need to introduce another variable and add
+	 * e.g. 0 <= A <= 5.2 as an initial condition constraint
 	 */
 	private void printConstants()
 	{
@@ -245,8 +239,8 @@ public class HyCompPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{
@@ -473,14 +467,12 @@ public class HyCompPrinter extends ToolPrinter
 		 * 
 		 * Operator op = o.op;
 		 * 
-		 * // hycomp expects a mix of infix and prefix switch (op) { case
-		 * MULTIPLY : case DIVIDE : case ADD : case SUBTRACT : case POW: //
-		 * default rv = super.printOperation(o); break; case EQUAL : case LESS :
-		 * case GREATER : case LESSEQUAL : case GREATEREQUAL : case NOTEQUAL :
-		 * // infix rv = "(" + print(o.getLeft()) + " " + opNames.get(op) + " "
-		 * + print(o.getRight()) + ")"; break; case NEGATIVE: rv = "-" +
-		 * print(o.children.get(0)); break; default : // prefix rv = "(" +
-		 * opNames.get(op);
+		 * // hycomp expects a mix of infix and prefix switch (op) { case MULTIPLY : case DIVIDE :
+		 * case ADD : case SUBTRACT : case POW: // default rv = super.printOperation(o); break; case
+		 * EQUAL : case LESS : case GREATER : case LESSEQUAL : case GREATEREQUAL : case NOTEQUAL :
+		 * // infix rv = "(" + print(o.getLeft()) + " " + opNames.get(op) + " " +
+		 * print(o.getRight()) + ")"; break; case NEGATIVE: rv = "-" + print(o.children.get(0));
+		 * break; default : // prefix rv = "(" + opNames.get(op);
 		 * 
 		 * for (Expression e : o.children) rv += " " + print(e);
 		 * 

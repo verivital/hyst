@@ -10,14 +10,13 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * A configuration is a hybrid automaton (network or base component) plus the
- * settings (init states and such)
+ * A configuration is a hybrid automaton (network or base component) plus the settings (init states
+ * and such)
  * 
- * Class validation guarantees: settings is not null root is not null init is
- * not null and size > 0, each String is a mode in the automaton; expression may
- * be null (these can be rejected in ToolPrinter) forbidden is not null and if
- * size > 0, each String is a mode in the automaton; expression may be null
- * (these can be rejected in ToolPrinter)
+ * Class validation guarantees: settings is not null root is not null init is not null and size > 0,
+ * each String is a mode in the automaton; expression may be null (these can be rejected in
+ * ToolPrinter) forbidden is not null and if size > 0, each String is a mode in the automaton;
+ * expression may be null (these can be rejected in ToolPrinter)
  *
  */
 public class Configuration
@@ -155,8 +154,7 @@ public class Configuration
 	 *            the missing variable
 	 * @param validVarNames
 	 *            the valid variable names
-	 * @return a string (may be empty) describing the best guess, for the error
-	 *         message
+	 * @return a string (may be empty) describing the best guess, for the error message
 	 */
 	private String getBestVariableGuess(String var, Collection<String> validVarNames)
 	{

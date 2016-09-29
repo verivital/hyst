@@ -24,8 +24,8 @@ import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
- * A generic tool printer class. Printers for individual tools will override
- * this abstract class. The model is printed by using printConfiguration().
+ * A generic tool printer class. Printers for individual tools will override this abstract class.
+ * The model is printed by using printConfiguration().
  */
 public abstract class ToolPrinter
 {
@@ -324,8 +324,7 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Get a string representation of the name of the tool, such as "SpaceEx" or
-	 * "Flow*"
+	 * Get a string representation of the name of the tool, such as "SpaceEx" or "Flow*"
 	 * 
 	 * @return the name of the tool
 	 */
@@ -346,8 +345,7 @@ public abstract class ToolPrinter
 	protected abstract String getCommentPrefix();
 
 	/**
-	 * Should this tool be considered release-quality, which will make it show
-	 * up in the GUI
+	 * Should this tool be considered release-quality, which will make it show up in the GUI
 	 * 
 	 * @return
 	 */
@@ -391,9 +389,9 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Print the automaton. The configuration is stored in the global config
-	 * variable. checkPreconditions() is called before this method, which
-	 * enforces printer assumptions (for example, that the model is flat).
+	 * Print the automaton. The configuration is stored in the global config variable.
+	 * checkPreconditions() is called before this method, which enforces printer assumptions (for
+	 * example, that the model is flat).
 	 */
 	protected abstract void printAutomaton();
 }

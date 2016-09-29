@@ -111,8 +111,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -124,8 +124,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Simplify an expression by substituting constants and then doing math
-	 * simplification
+	 * Simplify an expression by substituting constants and then doing math simplification
 	 * 
 	 * @param e
 	 *            the original expression
@@ -277,8 +276,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -369,8 +367,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{
@@ -754,8 +752,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Gets the weak ranges for the given expression. Only interval ranges are
-	 * extracted... other ranges are ignored.
+	 * Gets the weak ranges for the given expression. Only interval ranges are extracted... other
+	 * ranges are ignored.
 	 * 
 	 * @param ex
 	 *            the input expression
@@ -825,8 +823,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Test if each initial mode can be defined just using intervals over the
-	 * variables
+	 * Test if each initial mode can be defined just using intervals over the variables
 	 * 
 	 * @param c
 	 *            the configuration

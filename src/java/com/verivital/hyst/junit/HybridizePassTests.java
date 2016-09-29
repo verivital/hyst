@@ -64,8 +64,7 @@ public class HybridizePassTests
 	}
 
 	/**
-	 * An ExpresssionPrinter which prints constants to a certain number of
-	 * digits after the decimel
+	 * An ExpresssionPrinter which prints constants to a certain number of digits after the decimel
 	 *
 	 */
 	private class RoundPrinter extends DefaultExpressionPrinter
@@ -78,8 +77,7 @@ public class HybridizePassTests
 	}
 
 	/**
-	 * make a sample base configuration with a single mode named "on", with x'
-	 * == 1, and y' == 1
+	 * make a sample base configuration with a single mode named "on", with x' == 1, and y' == 1
 	 * 
 	 * @return the constructed Configuration
 	 */
@@ -91,8 +89,7 @@ public class HybridizePassTests
 	}
 
 	/**
-	 * Check two expressions for equality, raising an assertion exception if
-	 * there are errors
+	 * Check two expressions for equality, raising an assertion exception if there are errors
 	 */
 	void assertExpressionsEqual(String message, Expression expected, Expression actual)
 	{
@@ -564,13 +561,12 @@ public class HybridizePassTests
 	}
 
 	/**
-	 * Test the raw hybridization (time-triggered) pass. This uses the quadradic
-	 * example from the soundness argument ppt. x' == x^2, x(0) = [.24, .26]
-	 * time-triggered split at 0.5 domain contraction (DC) #1 using x = [0.2,
-	 * 0.336], then DC #2 using [0.236, 0.383]
+	 * Test the raw hybridization (time-triggered) pass. This uses the quadradic example from the
+	 * soundness argument ppt. x' == x^2, x(0) = [.24, .26] time-triggered split at 0.5 domain
+	 * contraction (DC) #1 using x = [0.2, 0.336], then DC #2 using [0.236, 0.383]
 	 * 
-	 * expected affine dynamics: x'_1 = .536*x – 0.0718 + [0, 0.0046] x'_2 =
-	 * .619*x – 0.0958+ [0, 0.0055]
+	 * expected affine dynamics: x'_1 = .536*x – 0.0718 + [0, 0.0046] x'_2 = .619*x – 0.0958+ [0,
+	 * 0.0055]
 	 */
 	@Test
 	public void testHybridMixedTriggeredRawPassTimeTrig()
@@ -661,9 +657,8 @@ public class HybridizePassTests
 	}
 
 	/**
-	 * Test the raw hybridization (space-triggered) pass. This uses the
-	 * quadradic example from the soundness argument ppt. x' == x^2, x(0) =
-	 * [.24, .26] space-triggered split at x = 0.3
+	 * Test the raw hybridization (space-triggered) pass. This uses the quadradic example from the
+	 * soundness argument ppt. x' == x^2, x(0) = [.24, .26] space-triggered split at x = 0.3
 	 */
 	@Test
 	public void testHybridMixedTriggeredRawPassSpaceTrig()

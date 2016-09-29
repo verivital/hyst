@@ -42,8 +42,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 /**
- * Small tests dealing with the expression parser or range extractor. Things
- * that don't require loading a whole model.
+ * Small tests dealing with the expression parser or range extractor. Things that don't require
+ * loading a whole model.
  * 
  * @author Stanley Bak
  *
@@ -773,16 +773,14 @@ public class SmallTest
 	}
 
 	/*
-	 * @Test public void testFlowstarLinearDetection() { String exp =
-	 * "(1.0 - x * x) * y - x";
+	 * @Test public void testFlowstarLinearDetection() { String exp = "(1.0 - x * x) * y - x";
 	 * 
 	 * Expression e = FormulaParser.parseValue(exp);
 	 * 
-	 * if (FlowPrinter.isLinearExpression(e)) Assert.fail(
-	 * "expression was detected as linear: " + exp); }
+	 * if (FlowPrinter.isLinearExpression(e)) Assert.fail( "expression was detected as linear: " +
+	 * exp); }
 	 * 
-	 * /** Make sure usage can be printed in Hyst (will also check for class
-	 * loading issues)
+	 * /** Make sure usage can be printed in Hyst (will also check for class loading issues)
 	 */
 	@Test
 	public void testPrintUsage()
@@ -907,9 +905,8 @@ public class SmallTest
 
 	@Test
 	/**
-	 * Ensure a bind cannot have multiple parameters added with the same names
-	 * (SpaceEx will not accept these if done and had an error where a model was
-	 * created with multiple binds)
+	 * Ensure a bind cannot have multiple parameters added with the same names (SpaceEx will not
+	 * accept these if done and had an error where a model was created with multiple binds)
 	 */
 	public void testSpaceExNetworkComponentDuplicateBind()
 	{

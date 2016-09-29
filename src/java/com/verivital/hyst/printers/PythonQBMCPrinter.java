@@ -23,8 +23,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a python
- * QBMC model. Based on DReach printer.
+ * Takes a hybrid automaton from the internal model format and outputs a python QBMC model. Based on
+ * DReach printer.
  * 
  * @author Stanley Bak (8-2014)
  * @author Taylor Johnson (9-2014)
@@ -36,8 +36,7 @@ public class PythonQBMCPrinter extends ToolPrinter
 	private BaseComponent ha;
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> ModeNamesToIds = new TreeMap<String, Integer>();
 
@@ -71,8 +70,8 @@ public class PythonQBMCPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -118,8 +117,7 @@ public class PythonQBMCPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -147,9 +145,8 @@ public class PythonQBMCPrinter extends ToolPrinter
 		for (String v : ha.variables)
 		{
 			/*
-			 * if (v.equals("t")) { String vNew = "clock"; // TODO: add
-			 * replacement for clock if it exists swapNames.put(v, vNew); v =
-			 * vNew; }
+			 * if (v.equals("t")) { String vNew = "clock"; // TODO: add replacement for clock if it
+			 * exists swapNames.put(v, vNew); v = vNew; }
 			 */
 			printLine(v + " = []");
 			printLine("cur_" + v + " = Real(\'cur_" + v + "\')");
@@ -248,8 +245,8 @@ public class PythonQBMCPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{
@@ -518,36 +515,29 @@ public class PythonQBMCPrinter extends ToolPrinter
 	}
 
 	/*
-	 * TODO Stan removed this because it was for the old internal format private
-	 * String printFlowRangeConditions(Expression ex, boolean isAssignment,
-	 * boolean isInitAssignment, boolean endLine) { // HACK: drop spaceex
-	 * location constraints from expressions (e.g., goal/init) if
-	 * (ex.toString().startsWith("loc(")) { return "True"; }
+	 * TODO Stan removed this because it was for the old internal format private String
+	 * printFlowRangeConditions(Expression ex, boolean isAssignment, boolean isInitAssignment,
+	 * boolean endLine) { // HACK: drop spaceex location constraints from expressions (e.g.,
+	 * goal/init) if (ex.toString().startsWith("loc(")) { return "True"; }
 	 * 
 	 * if (ex instanceof Operation) { Operation o = (Operation)ex;
 	 * 
-	 * // stupid mix of infix and prefix switch (o.op) { case MULTIPLY : case
-	 * DIVIDE : case ADD : case SUBTRACT : case EQUAL : case LESS : case GREATER
-	 * : case LESSEQUAL : case GREATEREQUAL : case NOTEQUAL : return
-	 * printFlowRangeConditions(o.getLeft(), isAssignment, isInitAssignment,
-	 * endLine) + " " + operatorToString(op) + " " +
-	 * printFlowRangeConditions(o.getRight(), isAssignment, isInitAssignment,
-	 * endLine); case AND : case OR : default : return operatorToString(op) +
-	 * "(" + " " + printFlowRangeConditions(o.getLeft(), isAssignment,
-	 * isInitAssignment, endLine) + ", " +
-	 * printFlowRangeConditions(o.getRight(), isAssignment, isInitAssignment,
-	 * endLine) + ")"; } } else if (ex instanceof Variable) { // swap illegal
-	 * variable names String varName = ex.toString(); if (varName == null ||
-	 * varName.equals("null")) { throw new AutomatonExportException(
-	 * "Bad variable name: " + varName + " vs. " + ex); }
+	 * // stupid mix of infix and prefix switch (o.op) { case MULTIPLY : case DIVIDE : case ADD :
+	 * case SUBTRACT : case EQUAL : case LESS : case GREATER : case LESSEQUAL : case GREATEREQUAL :
+	 * case NOTEQUAL : return printFlowRangeConditions(o.getLeft(), isAssignment, isInitAssignment,
+	 * endLine) + " " + operatorToString(op) + " " + printFlowRangeConditions(o.getRight(),
+	 * isAssignment, isInitAssignment, endLine); case AND : case OR : default : return
+	 * operatorToString(op) + "(" + " " + printFlowRangeConditions(o.getLeft(), isAssignment,
+	 * isInitAssignment, endLine) + ", " + printFlowRangeConditions(o.getRight(), isAssignment,
+	 * isInitAssignment, endLine) + ")"; } } else if (ex instanceof Variable) { // swap illegal
+	 * variable names String varName = ex.toString(); if (varName == null || varName.equals("null"))
+	 * { throw new AutomatonExportException( "Bad variable name: " + varName + " vs. " + ex); }
 	 * 
-	 * if (this.swapNames.containsKey(varName)) { return
-	 * this.swapNames.get(varName); } else { if
+	 * if (this.swapNames.containsKey(varName)) { return this.swapNames.get(varName); } else { if
 	 * (((Variable)ex).toString().equals("true")) return "True"; else if
-	 * (((Variable)ex).toString().equals("false")) return "False"; else if
-	 * (isInitAssignment) return ((Variable)ex).toString()+"[0]"; else return
-	 * "cur_"+((Variable)ex).toString(); } } else if (ex instanceof Constant) {
-	 * return ex.toString(); } else { throw new AutomatonExportException(
+	 * (((Variable)ex).toString().equals("false")) return "False"; else if (isInitAssignment) return
+	 * ((Variable)ex).toString()+"[0]"; else return "cur_"+((Variable)ex).toString(); } } else if
+	 * (ex instanceof Constant) { return ex.toString(); } else { throw new AutomatonExportException(
 	 * "Bad expression printing: " + ex); } }
 	 */
 
@@ -602,10 +592,8 @@ public class PythonQBMCPrinter extends ToolPrinter
 
 			/*
 			 * Expression reset = transition.reset; if (reset != null) {
-			 * outStream.print(getAssignments(reset)); } else { throw new
-			 * AutomatonExportException(
-			 * "Identity resets was null, but it should not be null: " + reset);
-			 * }
+			 * outStream.print(getAssignments(reset)); } else { throw new AutomatonExportException(
+			 * "Identity resets was null, but it should not be null: " + reset); }
 			 */
 
 			text += "next_mode == BitVecVal(" + this.ModeNamesToIds.get(toName)
@@ -617,37 +605,31 @@ public class PythonQBMCPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print resets recursively. These should be be of the form x' = x + 1 && y'
-	 * = x + y
+	 * Print resets recursively. These should be be of the form x' = x + 1 && y' = x + y
 	 * 
 	 * @param e
 	 *            the expression to print
 	 */
 	/*
 	 * TODO: Stan removed this since it's for the old format private String
-	 * getAssignments(Expression e) { String result = ""; if (e instanceof
-	 * Operation) { Operation o = (Operation)e;
+	 * getAssignments(Expression e) { String result = ""; if (e instanceof Operation) { Operation o
+	 * = (Operation)e;
 	 * 
-	 * if (o.getOperator() == Operator.AND) { result +=
-	 * getAssignments(o.getLeft()) + getAssignments(o.getRight()); } else if
-	 * (o.getOperator() == Operator.EQUAL) { // should be x' := EXPR if
-	 * (o.getLeft() instanceof Variable){ // note: already primed Variable var =
-	 * ((Variable)o.getLeft()); var.setPrimed(false); String stringOfRightSide =
-	 * ""+o.getRight(); if (!var.toString().equals(stringOfRightSide)) { //
-	 * variables in the expression need to be modified to include the cur_
-	 * prefix // I do this by splitting up the expression and modifying each
-	 * variable one at a time String[] tokens; tokens =
-	 * stringOfRightSide.split("((?<=[^A-Za-z0-9_])|(?=[^A-Za-z0-9_]))"); for
-	 * (int k = 0; k < tokens.length; k++) { for (String v : ha.variableNames) {
-	 * if (tokens[k].equals(v)) { tokens[k] = "cur_"+v; break; } } }
-	 * StringBuilder sb = new StringBuilder(); for(String str : tokens)
-	 * sb.append(str); result += ("next_"+o.getLeft() + " == " + sb.toString())
-	 * + ", "; } else { result += ("True") + ", "; } }else throw new
-	 * AutomatonExportException(
-	 * "Assignments should be of the form \"next_<variable> = <expression>\": "
-	 * + e); } else { throw new AutomatonExportException(
-	 * "Assignments should only have ANDs: " + e); } } else { throw new
-	 * AutomatonExportException("Not an operation: " + e); } return result; }
+	 * if (o.getOperator() == Operator.AND) { result += getAssignments(o.getLeft()) +
+	 * getAssignments(o.getRight()); } else if (o.getOperator() == Operator.EQUAL) { // should be x'
+	 * := EXPR if (o.getLeft() instanceof Variable){ // note: already primed Variable var =
+	 * ((Variable)o.getLeft()); var.setPrimed(false); String stringOfRightSide = ""+o.getRight(); if
+	 * (!var.toString().equals(stringOfRightSide)) { // variables in the expression need to be
+	 * modified to include the cur_ prefix // I do this by splitting up the expression and modifying
+	 * each variable one at a time String[] tokens; tokens =
+	 * stringOfRightSide.split("((?<=[^A-Za-z0-9_])|(?=[^A-Za-z0-9_]))"); for (int k = 0; k <
+	 * tokens.length; k++) { for (String v : ha.variableNames) { if (tokens[k].equals(v)) {
+	 * tokens[k] = "cur_"+v; break; } } } StringBuilder sb = new StringBuilder(); for(String str :
+	 * tokens) sb.append(str); result += ("next_"+o.getLeft() + " == " + sb.toString()) + ", "; }
+	 * else { result += ("True") + ", "; } }else throw new AutomatonExportException(
+	 * "Assignments should be of the form \"next_<variable> = <expression>\": " + e); } else { throw
+	 * new AutomatonExportException( "Assignments should only have ANDs: " + e); } } else { throw
+	 * new AutomatonExportException("Not an operation: " + e); } return result; }
 	 */
 
 	/**
@@ -657,27 +639,23 @@ public class PythonQBMCPrinter extends ToolPrinter
 	 */
 	// TODO Stan removed this since it assumed the old internal representation
 	/*
-	 * private void printFlowAssignments(Expression expression) { if (expression
-	 * != null) { if (expression instanceof Operation) { Operation op =
-	 * (Operation) expression;
+	 * private void printFlowAssignments(Expression expression) { if (expression != null) { if
+	 * (expression instanceof Operation) { Operation op = (Operation) expression;
 	 * 
-	 * if (op.getOperator() == Operator.EQUAL) { Expression left = op.getLeft();
-	 * Expression right = op.getRight();
+	 * if (op.getOperator() == Operator.EQUAL) { Expression left = op.getLeft(); Expression right =
+	 * op.getRight();
 	 * 
 	 * if (left instanceof Variable) { String varName = ((Variable) left).get();
 	 * 
-	 * if (this.swapNames.containsKey(varName)) { varName =
-	 * this.swapNames.get(varName); }
+	 * if (this.swapNames.containsKey(varName)) { varName = this.swapNames.get(varName); }
 	 * 
 	 * printLine("d/dt[" + varName + "] = " + right + ";"); } else throw new
-	 * AutomatonExportException(
-	 * "Flow (derivative) left-hand-side is not a variable: " + expression); }
-	 * else if (op.getOperator() == Operator.AND) {
-	 * printFlowAssignments(op.getLeft()); printFlowAssignments(op.getRight());
-	 * } else throw new AutomatonExportException(
-	 * "Flows (derivatives) may only containt ANDs: " + expression); } else
-	 * throw new AutomatonExportException(
-	 * "Flows (derivatives) must be expressions: " + expression); } }
+	 * AutomatonExportException( "Flow (derivative) left-hand-side is not a variable: " +
+	 * expression); } else if (op.getOperator() == Operator.AND) {
+	 * printFlowAssignments(op.getLeft()); printFlowAssignments(op.getRight()); } else throw new
+	 * AutomatonExportException( "Flows (derivatives) may only containt ANDs: " + expression); }
+	 * else throw new AutomatonExportException( "Flows (derivatives) must be expressions: " +
+	 * expression); } }
 	 */
 
 	class CurExpressionPrinter extends DefaultExpressionPrinter

@@ -7,15 +7,15 @@ def main():
     '''main entry point'''
 
     nav_fig1b_matrix = [[-1.2, 0.1], [0.1, -1.2]]
-    nav_fig1b_list = [2, 2, 'A', 4, 3, 4, 'B', 2, 4]
+    nav_fig1b_list = ['B', 2, 4, 4, 3, 4, 2, 2, 'A']
     gen_nav("nav_fig1b", nav_fig1b_matrix, nav_fig1b_list, width=3, start_point=(0.5, 1.5), time=5, noise=0.1)
 
     nav_fig2a_matrix = [[-0.8, -0.2], [-0.1, -0.8]]
-    nav_fig2a_list = [2, 'A', 0, 0, 0, 2, 4, 6, 6, 6, 2, 4, 'B', 3, 4, 2, 4, 7, 7, 4, 2, 4, 6, 6, 6]
+    nav_fig2a_list = [2, 4, 6, 6, 6, 2, 4, 7, 7, 4, 2, 4, 'B', 3, 4, 2, 4, 6, 6, 6, 2, 'A', 0, 0, 0]
     gen_nav("nav_fig2a", nav_fig2a_matrix, nav_fig2a_list, width=5, start_point=(3.5, 3.5), time=10, noise=0.1)
 
     nav_fig2b_matrix = [[-1.2, 0.1], [0.2, -1.2]]
-    nav_fig2b_list = [3, 0, 0, 6, 6, 3, 0, 0, 'B', 4, 4, 2, 1, 1, 4, 4, 'A', 1, 1, 4, 4, 6, 6, 6, 4]
+    nav_fig2b_list = [4, 6, 6, 6, 4, 4, 'A', 1, 1, 4, 4, 2, 1, 1, 4, 3, 0, 0, 'B', 4, 3, 0, 0, 6, 6]
     gen_nav("nav_fig2b", nav_fig2b_matrix, nav_fig2b_list, width=5, start_point=(3.5, 3.5), time=20, noise=0.1)
 
 # -generate nav "-matrix -1.2 0.1 0.1 -1.2 -i_list 2 2 A 4 3 4 B 2 4 -width 3 -startx 0.5 
@@ -45,7 +45,7 @@ def gen_nav(name, a_matrix, i_list, width, start_point, time, noise):
     res = e.run()
 
     if res['code'] != hypy.Engine.SUCCESS:
-        raise RuntimeError('Error in ' + name + ': ' + str(code))
+        raise RuntimeError('Error in ' + name + ': ' + str(res['code']))
 
 if __name__ == '__main__':
     main()

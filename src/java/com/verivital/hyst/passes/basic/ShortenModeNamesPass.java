@@ -12,9 +12,8 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.TransformationPass;
 
 /**
- * A model transformation pass which shortens mode names. They will be renamed
- * to mode_#, and the mapping will be printed using Hyst.log() (use -v for
- * verbose printing)
+ * A model transformation pass which shortens mode names. They will be renamed to mode_#, and the
+ * mapping will be printed using Hyst.log() (use -v for verbose printing)
  * 
  * @author Stanley Bak (March 2015)
  *

@@ -9,8 +9,8 @@ import com.verivital.hyst.main.Hyst;
 public class FileOperations
 {
 	/**
-	 * Locate an executable by looking through all directories on first an
-	 * environment variable, and second on PATH.
+	 * Locate an executable by looking through all directories on first an environment variable, and
+	 * second on PATH.
 	 * 
 	 * This never returns null.
 	 * 
@@ -19,8 +19,7 @@ public class FileOperations
 	 * @param englishName
 	 *            the name for error / success displays
 	 * @param envVarName
-	 *            the name of the environment variable to check before checking
-	 *            PATH
+	 *            the name of the environment variable to check before checking PATH
 	 * @return the path of the found executable
 	 * @throws FileNotFoundException
 	 *             if the executable can not be found

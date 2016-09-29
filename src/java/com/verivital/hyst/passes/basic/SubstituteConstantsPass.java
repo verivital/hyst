@@ -20,8 +20,8 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.ValueSubstituter;
 
 /**
- * This pass substitutes constants in expressions for their values (assumes all
- * constants are not intervals).
+ * This pass substitutes constants in expressions for their values (assumes all constants are not
+ * intervals).
  *
  */
 public class SubstituteConstantsPass extends TransformationPass

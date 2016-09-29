@@ -30,14 +30,13 @@ public class Classification
 	/**
 	 * type of automaton
 	 *
-	 * HACK: we are also going to use these to classify locations for now as
-	 * well, e.g., a given automaton could have a location that has linear
-	 * dynamics, and another that has nonlinear; we may want to use some
-	 * analysis methods in different locations based on this
+	 * HACK: we are also going to use these to classify locations for now as well, e.g., a given
+	 * automaton could have a location that has linear dynamics, and another that has nonlinear; we
+	 * may want to use some analysis methods in different locations based on this
 	 *
-	 * TODO: this is probably going to be simpler if we use OO features to set
-	 * up a hierarchy of automaton types, as e.g., hybrid, nonlinear,
-	 * nondeterministic is probably the most general class
+	 * TODO: this is probably going to be simpler if we use OO features to set up a hierarchy of
+	 * automaton types, as e.g., hybrid, nonlinear, nondeterministic is probably the most general
+	 * class
 	 *
 	 * @author tjohnson
 	 *
@@ -100,9 +99,8 @@ public class Classification
 	 * @return
 	 */
 	/*
-	 * // TODO: can add something like this later, will for now just iterate
-	 * over network in matlab public static List<AutomatonType>
-	 * classifyNetwork(NetworkComponent n) { for (Entry<String,
+	 * // TODO: can add something like this later, will for now just iterate over network in matlab
+	 * public static List<AutomatonType> classifyNetwork(NetworkComponent n) { for (Entry<String,
 	 * ComponentInstance> c : n.children.entrySet()) {
 	 * 
 	 * } }
@@ -161,12 +159,11 @@ public class Classification
 			Expression r = o.getRight();
 
 			/*
-			 * if (l instanceof Variable && r instanceof Constant) { rv =
-			 * AutomatonType.LINEAR; }
+			 * if (l instanceof Variable && r instanceof Constant) { rv = AutomatonType.LINEAR; }
 			 * 
-			 * else if (l instanceof Variable && r instanceof Variable) { if
-			 * (o.op == Operator.ADD | o.op == Operator.SUBTRACT) { rv =
-			 * AutomatonType.LINEAR; } else rv = AutomatonType.NONLINEAR;
+			 * else if (l instanceof Variable && r instanceof Variable) { if (o.op == Operator.ADD |
+			 * o.op == Operator.SUBTRACT) { rv = AutomatonType.LINEAR; } else rv =
+			 * AutomatonType.NONLINEAR;
 			 * 
 			 * }
 			 */
@@ -248,8 +245,8 @@ public class Classification
 	}
 
 	/**
-	 * Recursively count the number of variables. only recurse if we have
-	 * multiplication, or negation, otherwise return Integer.MAX_VALUE
+	 * Recursively count the number of variables. only recurse if we have multiplication, or
+	 * negation, otherwise return Integer.MAX_VALUE
 	 *
 	 * @param e
 	 *            the expression
@@ -332,8 +329,7 @@ public class Classification
 	}
 
 	/**
-	 * find coefficients for all variables and constants of the linear
-	 * expressions
+	 * find coefficients for all variables and constants of the linear expressions
 	 */
 	private void findCoefficient(int i, Expression e)
 	{

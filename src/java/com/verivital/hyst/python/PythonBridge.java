@@ -15,20 +15,17 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.util.FileOperations;
 
 /**
- * This class is java <-> python interface using stdin / stdout and python
- * interactive mode
+ * This class is java <-> python interface using stdin / stdout and python interactive mode
  * 
- * It is a singleton, use getInstance() to get an instance of the bridge. The
- * bridge is reused for any passes or printers which use it, so don't put it
- * into an inconsistent state.
+ * It is a singleton, use getInstance() to get an instance of the bridge. The bridge is reused for
+ * any passes or printers which use it, so don't put it into an inconsistent state.
  * 
- * Overhead: In performance tests, I measured around 15000 function calls per
- * second using this bridge In native python, I measured 5.5 million function
- * calls per second
+ * Overhead: In performance tests, I measured around 15000 function calls per second using this
+ * bridge In native python, I measured 5.5 million function calls per second
  * 
- * You can reduce overhead by passing all of your data to python at once (or as
- * much as is possible), and then having python do an extended computation (even
- * in parallel) and only then printing back the result.
+ * You can reduce overhead by passing all of your data to python at once (or as much as is
+ * possible), and then having python do an extended computation (even in parallel) and only then
+ * printing back the result.
  * 
  * @author Stanley Bak (May 2015)
  *
@@ -59,8 +56,8 @@ public class PythonBridge
 	private static Status pythonStatus = Status.UNKNOWN;
 
 	/**
-	 * This sets whether python should be blocked (pretend it doesn't exist).
-	 * This is useful for unit testing.
+	 * This sets whether python should be blocked (pretend it doesn't exist). This is useful for
+	 * unit testing.
 	 * 
 	 * @param isBlocked
 	 */
@@ -346,8 +343,7 @@ public class PythonBridge
 	}
 
 	/**
-	 * Read the python preamble off of stderr. It ends when the prompy '>>> ' is
-	 * detected.
+	 * Read the python preamble off of stderr. It ends when the prompy '>>> ' is detected.
 	 * 
 	 * @return the preamble read from stderr
 	 */
@@ -422,8 +418,7 @@ public class PythonBridge
 	 * Read stdout until the prompt '>>> ' is given on stderr
 	 * 
 	 * @param quitOnStderr
-	 *            should we raise an exception if stderr output is detected
-	 *            other than the prompt?
+	 *            should we raise an exception if stderr output is detected other than the prompt?
 	 * @return output the received stdout / stderr strings
 	 */
 	private String readUntilPrompt()
@@ -563,14 +558,12 @@ public class PythonBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * 
 	 * @param cmd
-	 *            the command to send (without the trailing newline, which is
-	 *            automatically added)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (without the trailing newline, which is automatically added)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	private String sendAndWait(String s)
 	{
@@ -610,14 +603,12 @@ public class PythonBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * 
 	 * @param cmd
-	 *            the command to send (without the trailing newline, which is
-	 *            automatically added)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (without the trailing newline, which is automatically added)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	public String send(String s)
 	{
@@ -638,17 +629,16 @@ public class PythonBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout.
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout.
 	 * 
-	 * This version allows the string to end with a newline, which is typically
-	 * an error, but may be necessary for things like function declarations
+	 * This version allows the string to end with a newline, which is typically an error, but may be
+	 * necessary for things like function declarations
 	 * 
 	 * @param cmd
-	 *            the command to send (trailing newline is automatically added,
-	 *            so that your string will have two trailing newlines)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (trailing newline is automatically added, so that your string
+	 *            will have two trailing newlines)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	public String sendWithTrailingNewline(String s)
 	{

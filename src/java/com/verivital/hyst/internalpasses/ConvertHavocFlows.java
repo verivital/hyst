@@ -25,19 +25,18 @@ import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
 import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
  * @author Stanley Bak
  */
 public class ConvertHavocFlows
 {
 	/**
-	 * This pass converts interval havoc flows (variables with no differential
-	 * equation defined, only invariants), into ones where there's an incoming
-	 * (nondeterministic) reset, and dynamics of var' == 0.
+	 * This pass converts interval havoc flows (variables with no differential equation defined,
+	 * only invariants), into ones where there's an incoming (nondeterministic) reset, and dynamics
+	 * of var' == 0.
 	 */
 	public static void run(Configuration config)
 	{

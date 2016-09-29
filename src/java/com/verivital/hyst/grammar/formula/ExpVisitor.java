@@ -433,8 +433,8 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 	}
 
 	/**
-	 * Create a lookup table expression from a function context. Luts expect
-	 * three arguments: 1. var list, 2. table, and 3. breakpoints
+	 * Create a lookup table expression from a function context. Luts expect three arguments: 1. var
+	 * list, 2. table, and 3. breakpoints
 	 * 
 	 * @param ctx
 	 *            the function context

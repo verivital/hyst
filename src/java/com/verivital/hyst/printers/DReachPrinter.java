@@ -28,8 +28,8 @@ import com.verivital.hyst.passes.basic.AddIdentityResetPass;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a dReach
- * 2.0 model. Based on Chris' Boogie printer.
+ * Takes a hybrid automaton from the internal model format and outputs a dReach 2.0 model. Based on
+ * Chris' Boogie printer.
  * 
  * @author Stanley Bak (8-2014)
  * @author Taylor Johnson (9-2014)
@@ -43,8 +43,7 @@ public class DReachPrinter extends ToolPrinter
 	private BaseComponent ha;
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
 
@@ -55,8 +54,8 @@ public class DReachPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	protected void printDocument(String originalFilename)
 	{
@@ -109,8 +108,7 @@ public class DReachPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -132,16 +130,14 @@ public class DReachPrinter extends ToolPrinter
 	/**
 	 * Print constants using #defines
 	 * 
-	 * This is more efficient than printing them as part of initial condition,
-	 * since if we do that, we'd have to declare them as variables, which will
-	 * increase the state space size
+	 * This is more efficient than printing them as part of initial condition, since if we do that,
+	 * we'd have to declare them as variables, which will increase the state space size
 	 * 
 	 * As #defines, the pre-processor will just replace them as numbers
 	 * 
-	 * Note: in general, we may not always be able to just use #defines, for
-	 * instance, if we have a nondeterministic range in which case, we would
-	 * need to introduce another variable and add e.g. 0 <= A <= 5.2 as an
-	 * initial condition constraint
+	 * Note: in general, we may not always be able to just use #defines, for instance, if we have a
+	 * nondeterministic range in which case, we would need to introduce another variable and add
+	 * e.g. 0 <= A <= 5.2 as an initial condition constraint
 	 */
 	private void printConstants()
 	{
@@ -187,8 +183,8 @@ public class DReachPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{

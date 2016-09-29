@@ -48,8 +48,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.Transition;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.VariableParam;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a SpaceEx
- * model. Based on Chris' Boogie printer.
+ * Takes a hybrid automaton from the internal model format and outputs a SpaceEx model. Based on
+ * Chris' Boogie printer.
  * 
  * @author Stanley Bak (8-2014)
  * @author Taylor Johnson (11-2014)
@@ -104,8 +104,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
 
@@ -125,8 +124,8 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -174,8 +173,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Convert hybrid automaton in Hyst internal representation to SpaceEx
-	 * representation
+	 * Convert hybrid automaton in Hyst internal representation to SpaceEx representation
 	 * 
 	 * @param ha
 	 * @return
@@ -417,13 +415,11 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Get the interval parts of the flows for each variable. May return a map
-	 * of size 0.
+	 * Get the interval parts of the flows for each variable. May return a map of size 0.
 	 * 
 	 * @param flowDynamics
 	 *            the flow dynamics to check
-	 * @return a mapping of variable name -> interval part of flow for all
-	 *         nondeterministic flows
+	 * @return a mapping of variable name -> interval part of flow for all nondeterministic flows
 	 */
 	private Map<String, Interval> getVariableIntervals(
 			LinkedHashMap<String, ExpressionInterval> flowDynamics)
@@ -445,8 +441,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Get the name of the associated interval variable (for nondeterministic
-	 * flows)
+	 * Get the name of the associated interval variable (for nondeterministic flows)
 	 * 
 	 * @param varName
 	 *            the variable name
@@ -458,8 +453,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Convert the reset dictionary to a single expression using primed
-	 * variables
+	 * Convert the reset dictionary to a single expression using primed variables
 	 * 
 	 * @return
 	 */

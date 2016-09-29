@@ -6,8 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
- * A Hyperrectangle is an n-dimensional rectangle representing a portion of the
- * state space
+ * A Hyperrectangle is an n-dimensional rectangle representing a portion of the state space
  * 
  * @author Stanley Bak (sbak2@illinois.edu) 6-2011
  */
@@ -103,14 +102,14 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Creates a hyperrectangle with one additional dimension using a shallow
-	 * copy of the passed-in one
+	 * Creates a hyperrectangle with one additional dimension using a shallow copy of the passed-in
+	 * one
 	 * 
 	 * @param hr
 	 *            the orignal hyperrectangle
 	 * @param time
-	 *            the constant value for the last dimension (usually the time in
-	 *            an Hrt format hyperrectangle)
+	 *            the constant value for the last dimension (usually the time in an Hrt format
+	 *            hyperrectangle)
 	 */
 	public HyperRectangle(HyperRectangle hr, double time)
 	{
@@ -255,8 +254,8 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Convert this hyper rectangle to a hyper point. An exception is thrown if
-	 * it is not a point (if min != max for all dimensions)
+	 * Convert this hyper rectangle to a hyper point. An exception is thrown if it is not a point
+	 * (if min != max for all dimensions)
 	 * 
 	 * @return a HyperPoint object representing this HyperRectangle
 	 */
@@ -294,8 +293,7 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	 * bloat a hyperrectangle by some factor
 	 * 
 	 * @param factor
-	 *            the factor to bloat by. 1.0 means will return the same
-	 *            rectangle
+	 *            the factor to bloat by. 1.0 means will return the same rectangle
 	 */
 	public static HyperRectangle bloatMultiplicative(HyperRectangle rect, double factor)
 	{
@@ -319,8 +317,7 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	 * bloat this hyperrectangle by some additive amount
 	 * 
 	 * @param factor
-	 *            the factor to bloat by. 0.0 means will return the same
-	 *            rectangle
+	 *            the factor to bloat by. 0.0 means will return the same rectangle
 	 */
 	public static HyperRectangle bloatAdditive(HyperRectangle rect, double amount)
 	{
@@ -362,8 +359,7 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Assign the values in this rectangles dims array to the values in the
-	 * passed in rect
+	 * Assign the values in this rectangles dims array to the values in the passed in rect
 	 * 
 	 * @param rect
 	 *            the values to copy
@@ -400,8 +396,7 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Make sure this is a valid hyperrectangle. Throw runtimeException if
-	 * ranges are invalid
+	 * Make sure this is a valid hyperrectangle. Throw runtimeException if ranges are invalid
 	 */
 	public void validate()
 	{
@@ -427,10 +422,9 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	public void enumerateCorners(HyperRectangleCornerEnumerator e)
 	{
 		/*
-		 * We do this by considering an integer as a bit array of true/false
-		 * values, where 0=false means min, and 1=true means max. The length of
-		 * the bit array is the number of dimensions. If we iterate from 0 to
-		 * 2^dim, we will have iterated all the possibilities.
+		 * We do this by considering an integer as a bit array of true/false values, where 0=false
+		 * means min, and 1=true means max. The length of the bit array is the number of dimensions.
+		 * If we iterate from 0 to 2^dim, we will have iterated all the possibilities.
 		 */
 
 		// first construct the maximum (2^dim)
@@ -472,10 +466,9 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	public void enumerateCornersUnique(HyperRectangleCornerEnumerator e)
 	{
 		/*
-		 * We do this by considering an integer as a bit array of true/false
-		 * values, where 0=false means min, and 1=true means max. The length of
-		 * the bit array is the number of dimensions. If we iterate from 0 to
-		 * 2^dim, we will have iterated all the possibilities.
+		 * We do this by considering an integer as a bit array of true/false values, where 0=false
+		 * means min, and 1=true means max. The length of the bit array is the number of dimensions.
+		 * If we iterate from 0 to 2^dim, we will have iterated all the possibilities.
 		 */
 
 		// first construct the maximum (2^dim)
@@ -548,8 +541,7 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Compute the bounding box of the union of the HyperRectangles, and return
-	 * it
+	 * Compute the bounding box of the union of the HyperRectangles, and return it
 	 * 
 	 * @param r
 	 *            the other box
@@ -597,10 +589,9 @@ public class HyperRectangle implements Comparable<HyperRectangle>
 	}
 
 	/**
-	 * Get the unique star points from this HyperRectangle. Star points are ones
-	 * where, from the center point, a single coordinate is modified to be at a
-	 * face. There are at most 2*d star points, where d is the number of
-	 * dimensions
+	 * Get the unique star points from this HyperRectangle. Star points are ones where, from the
+	 * center point, a single coordinate is modified to be at a face. There are at most 2*d star
+	 * points, where d is the number of dimensions
 	 * 
 	 * @return the collection of HyperPoints
 	 */

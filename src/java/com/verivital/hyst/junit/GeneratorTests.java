@@ -12,10 +12,16 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 import com.verivital.hyst.generators.IntegralChainGenerator;
+import com.verivital.hyst.generators.NamedNavigationGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
+import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.ir.Configuration;
+import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
+import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.printers.FlowstarPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
@@ -77,9 +83,88 @@ public class GeneratorTests
 		Entry<String, Expression> entry = c.init.entrySet().iterator().next();
 
 		Assert.assertEquals("mode_0_1", entry.getKey());
-		Assert.assertEquals("x = 0.5 & y = 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
+		Assert.assertEquals(
+				"0.5 <= x & x <= 0.5 & 1.5 <= y & y <= 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
 				entry.getValue().toDefaultString());
 
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testNamedNav()
+	{
+		NamedNavigationGenerator gen = new NamedNavigationGenerator();
+
+		String param = "-name nav02";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("four variables", 4, c.root.variables.size());
+
+		Assert.assertEquals("one inital state", 1, c.init.entrySet().size());
+
+		Entry<String, Expression> entry = c.init.entrySet().iterator().next();
+
+		// x0 = new Interval[] { new Interval(2, 3), new Interval(1, 2) };
+		// v0 = new Interval[] { new Interval(-0.3, 0.3), new Interval(-0.3, 0.3) };
+
+		Assert.assertEquals("mode_2_1", entry.getKey());
+		Assert.assertEquals(
+				"2 <= x & x <= 3 & 1 <= y & y <= 2 & -0.3 <= xvel & xvel <= 0.3 & -0.3 <= yvel & yvel <= 0.3",
+				entry.getValue().toDefaultString());
+
+		BaseComponent ha = (BaseComponent) c.root;
+
+		AutomatonMode am = ha.modes.get("mode_1_0");
+		Expression e = am.flowDynamics.get("xvel").asExpression();
+		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0)", e.toDefaultString());
+
+		// check dynamics in mode 'A'
+		am = ha.modes.get("mode_2_0");
+		e = am.flowDynamics.get("xvel").asExpression();
+		Assert.assertEquals("0", e.toDefaultString());
+
+		// check dynamics in mode 'B'
+		am = ha.modes.get("mode_0_2");
+		e = am.flowDynamics.get("xvel").asExpression();
+		Assert.assertEquals("0", e.toDefaultString());
+
+		// check condition from mode_2_1 to mode_2_0 is y <= 1
+		for (AutomatonTransition at : ha.transitions)
+		{
+			if (at.from.name.equals("mode_2_1") && at.to.name.equals("mode_2_0"))
+				Assert.assertEquals(at.guard.toDefaultString(), "y <= 1");
+		}
+
+		// make sure it simplifies to an easy linear expression
+		if (PythonBridge.hasPython())
+		{
+			// test printing to Hylaa
+			ToolPrinter printer = new HylaaPrinter();
+			printer.setOutputString();
+			printer.print(c, "", "model.xml");
+
+			String out = printer.outputString.toString();
+
+			// System.out.println(out);
+			Assert.assertTrue("some output exists", out.length() > 10);
+		}
+	}
+
+	@Test
+	public void testSwitchedOscillator()
+	{
+		SwitchedOscillatorGenerator gen = new SwitchedOscillatorGenerator();
+
+		String param = "-dims 2";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("four variables", 4, c.root.variables.size());
 		ToolPrinter printer = new FlowstarPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");

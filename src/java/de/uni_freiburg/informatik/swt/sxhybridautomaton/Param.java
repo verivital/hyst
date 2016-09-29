@@ -3,8 +3,7 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import com.verivital.hyst.ir.AutomatonExportException;
 
 /**
- * Params are like variables of automatons which are connected to values by
- * Binds of a Component.
+ * Params are like variables of automatons which are connected to values by Binds of a Component.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *

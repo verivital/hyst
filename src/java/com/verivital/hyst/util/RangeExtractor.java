@@ -28,13 +28,12 @@ public class RangeExtractor
 	 * @param ranges
 	 *            where to store the ranges for the variables we encounter
 	 * @throws EmptyRangeException
-	 *             if expression is Constant.FALSE or otherwise unsatisfiable
-	 *             for any variable in 'variables'
+	 *             if expression is Constant.FALSE or otherwise unsatisfiable for any variable in
+	 *             'variables'
 	 * @throws ConstantMismatchException
 	 *             if there are conflicting assignments to constants
 	 * @throws UnsupportedConditionException
-	 *             if the expression contains non-interval operations on the
-	 *             desired variable
+	 *             if the expression contains non-interval operations on the desired variable
 	 * 
 	 */
 	public static void getVariableRanges(Expression expression, Map<String, Interval> ranges)
@@ -71,9 +70,8 @@ public class RangeExtractor
 	}
 
 	/**
-	 * Get weak ranges (outer approximations) for variables in a logical
-	 * expression. This doesn't simplify or handle conditions that aren't simple
-	 * comparisons with constants.
+	 * Get weak ranges (outer approximations) for variables in a logical expression. This doesn't
+	 * simplify or handle conditions that aren't simple comparisons with constants.
 	 * 
 	 * @param expression
 	 *            the expression to parse
@@ -219,6 +217,23 @@ public class RangeExtractor
 		}
 	}
 
+	/**
+	 * Get the range for a specific variable in an expression. May be null if the range is not
+	 * defined. If only one side of the range is defined, then the min may be -Double.MAX_VALUE, and
+	 * the max may be Double.MAX_VALUE
+	 * 
+	 * @param expression
+	 *            the expression to parse
+	 * @param variable
+	 *            the name of the variable
+	 * @throws EmptyRangeException
+	 *             if expression is Constant.FALSE or otherwise unsatisfiable for any variable in
+	 *             'variables'
+	 * @throws ConstantMismatchException
+	 *             is there are constants which contradict each other
+	 * @throws UnsupportedConditionException
+	 *             if there are conditions not suited for interval range extraction
+	 */
 	public static Interval getVariableRange(Expression expression, String variable)
 			throws EmptyRangeException, ConstantMismatchException, UnsupportedConditionException
 	{
@@ -345,18 +360,22 @@ public class RangeExtractor
 	 * @param ranges
 	 *            the place to store them
 	 * @param vars
-	 *            a set of variables we are interested in. if null then get all
+	 *            <<<<<<< HEAD a set of variables we are interested in. if null then get all
 	 *            variables
 	 * @param extractWeakRanges
-	 *            are we just extracting an overapproximation of the range? This
-	 *            will ignore certain types of errors (like unsupported
-	 *            comparisons)
+	 *            are we just extracting an overapproximation of the range? This will ignore certain
+	 *            types of errors (like unsupported comparisons) ======= a set of variables we are
+	 *            interested in. if null then get all variables
+	 * @param constantMap
+	 *            a map of variableName -> value for all constants in the original expression
+	 * @param ignoreUnsupported
+	 *            should we ignore unsupported expressions, or raise an exception? >>>>>>>
+	 *            hylaa-printer
 	 * @throws EmptyRangeException
-	 *             if expression is Constant.FALSE or otherwise unsatisfiable
-	 *             for the selected variables
+	 *             if expression is Constant.FALSE or otherwise unsatisfiable for the selected
+	 *             variables
 	 * @throws UnsupportedConditionException
-	 *             if the expression contains non-interval operations on the
-	 *             desired variable
+	 *             if the expression contains non-interval operations on the desired variable
 	 */
 	private static void getVariableRangesRecursive(Expression expression,
 			Map<String, Interval> ranges, Collection<String> vars, boolean extractWeakRanges)
@@ -558,8 +577,7 @@ public class RangeExtractor
 	}
 
 	/**
-	 * Check if an expresssion contains a variable. If variable is null, then
-	 * the result is true.
+	 * Check if an expresssion contains a variable. If variable is null, then the result is true.
 	 * 
 	 * @param expression
 	 *            the expression to check
@@ -578,14 +596,12 @@ public class RangeExtractor
 	}
 
 	/**
-	 * Merge the two ranges. For example [-5, 4] and [2, 10] will merge to be
-	 * [2, 4].
+	 * Merge the two ranges. For example [-5, 4] and [2, 10] will merge to be [2, 4].
 	 * 
 	 * @param left
 	 *            a range for each variable
 	 * @param right
-	 *            the other range for each variable, may include more or less
-	 *            variables as well
+	 *            the other range for each variable, may include more or less variables as well
 	 * @return the merged set of constraints
 	 * @throws EmptyRangeException
 	 *             if the ranges don't overlap
@@ -687,8 +703,7 @@ public class RangeExtractor
 	}
 
 	/**
-	 * get the variable ranges from an expression, throwing an
-	 * AutomatonExportException on error
+	 * get the variable ranges from an expression, throwing an AutomatonExportException on error
 	 * 
 	 * @param e
 	 *            the expression

@@ -6,9 +6,8 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import java.util.ArrayList;
 
 /**
- * Maps a VariableParam of the bound Component to a value. The value consists of
- * multiple REAL or INT values matching the number of fields of the
- * VariableParam, as in D1*D2.
+ * Maps a VariableParam of the bound Component to a value. The value consists of multiple REAL or
+ * INT values matching the number of fields of the VariableParam, as in D1*D2.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *

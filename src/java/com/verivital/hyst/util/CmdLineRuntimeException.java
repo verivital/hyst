@@ -1,8 +1,7 @@
 package com.verivital.hyst.util;
 
 /**
- * Similar to CmdLineException, but extends from RuntimeException rather than
- * Exception
+ * Similar to CmdLineException, but extends from RuntimeException rather than Exception
  * 
  * @author stan
  *

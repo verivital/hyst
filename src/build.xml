@@ -134,6 +134,7 @@
 	
 	<target name="reformat-haseclipse" if="eclipse.present">
 		<echo message="Eclipse is present. Performing code reformatting." />
+		
 		<exec executable="eclipse" failonerror="true">
 			<arg line="-nosplash -application org.eclipse.jdt.core.JavaCodeFormatter -verbose -config .settings/org.eclipse.jdt.core.prefs java" />
 		</exec>

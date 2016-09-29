@@ -2,10 +2,20 @@
 Simulation logic for Hybrid Automata
 '''
 
-from scipy.integrate import ode # pylint false positive
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import random
+from scipy.integrate import ode # pylint false positive
+
+class PySimSettings(object):
+    'A pysim settings containts'
+
+    def __init__(self):
+        self.max_time = 1.0
+        self.step = 1.0
+        self.dim_x = 0
+        self.dim_y = 1
+        self.filename = "plot.png"
 
 class SimulationException(Exception):
     'An error which stops the simulation from progressing'
@@ -148,11 +158,11 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
 
         # resets to None are identity resets
         for dim in xrange(len(post_state)):
-            if post_state[dim] == None:
+            if post_state[dim] is None:
                 post_state[dim] = solver.y[dim]
 
         rv_post_jump_q = (t.to_mode, post_state)
-    elif mode.inv(solver.y) == False:
+    elif not mode.inv(solver.y): # don't use 'is False'
         raise SimulationException('Invariant became false')
     else:
         # continuous post
@@ -167,16 +177,26 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
         if solver.t > max_time:
             solver_over_max_time(solver, max_time, init_time, init_state)
 
-        # limit the size of the step if certain events occur
-        is_invariant_false = lambda state: mode.inv(state) == False
+        # note: don't use 'is False', since the result is a numpy._bool
+        is_invariant_false = lambda state: not mode.inv(state)
         is_transition_enabled = lambda state: len(get_active_transitions(mode, state)) > 0
     
         for event_func in is_invariant_false, is_transition_enabled:
+
             if event_func(solver.y):
                 step_size = solver.t - init_time
 
                 find_event_bisection(solver, event_func, init_state, init_time, 
-                        step_size, solver.y, tol=jump_error_tol)
+                                     step_size, solver.y, tol=jump_error_tol)
+
+        # check for unbounded state
+        bounds = 1e15
+        state = solver.y
+
+        for val in state:
+            if abs(val) > bounds:
+                raise SimulationException("Continuous post reached unreasonably large state; " + 
+                                          "may cause floating-point issues.")
 
     return rv_post_jump_q
 
@@ -201,7 +221,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
     a list of symbolic states (tuple of AutomatonMode, point, where point is [x_0, ..., x_n]) 
     using the provided sample strategy
     center / star / corners are different possible sample strategies
-    rand=# will do that many random samples per init state
+    rand=# will do that many random samples per init state (where invariant is true)
     '''
 
     rv = []
@@ -224,14 +244,30 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
         if rand > 0:
             random.seed()
 
-            for _ in xrange(rand):
+            max_rand_attempts = 100 * rand
+            num_added = 0
+
+            for _ in xrange(max_rand_attempts):
                 point = []
 
                 for dim in rect.dims:
                     val = dim[0] + random.random() * (dim[1] - dim[0])
                     point.append(val)
 
+                # only accept points inside the invariant
+                if not mode.inv(point): # don't use 'is False'
+                    continue
+
                 rv.append((mode, point))
+                num_added += 1
+
+                if num_added >= rand:
+                    break
+
+            if num_added != rand:
+                raise RuntimeError("Could not generate {} points inside the invariant of mode {} after {} attempts".
+                                   format(rand, mode.name, max_rand_attempts))
+                
 
     if check_unique:
         # ensure elements are unique
@@ -273,6 +309,42 @@ def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='
 
     return rv
 
+def get_ordered_plot_colors():
+    'return a list of valid colors, in order'
+
+    rv = []
+
+    # remove any colors with 'white' or 'yellow in the name
+    skip_colors_substrings = ['white', 'yellow']
+    skip_colors_exact = ['black', 'red', 'blue']
+
+    for col in colors.cnames:
+        skip = False
+
+        for col_substring in skip_colors_substrings:
+            if col_substring in col:
+                skip = True
+                break
+
+        if not skip and not col in skip_colors_exact:
+            rv.append(col)
+
+    # we'll re-add these later; remove them before shuffling
+    first_colors = ['lime', 'cyan', 'magenta', 'orange', 'green'] 
+
+    for col in first_colors:
+        rv.remove(col)
+
+    # deterministic shuffle of all remaining colors
+    random.seed(0)
+    random.shuffle(rv)
+
+    # prepend first_colors so they get used first
+    rv = first_colors + rv
+
+    return rv
+
+
 def mode_name_to_color(mode_to_color, mode_name):
     '''get the color string from a mode name. 
     There is better (manual) color selection early on.
@@ -285,17 +357,11 @@ def mode_name_to_color(mode_to_color, mode_name):
 
     rv = mode_to_color.get(mode_name)
 
-    if rv == None:
+    if rv is None:
         if len(mode_to_color) < len(first_colors):
             rv = first_colors[len(mode_to_color)]
         else:
-            # use the hash-based approach
-            all_colors = []
-            all_colors += colors.cnames.keys()
-
-            # these are hard to see, remove them
-            for white in ['white', 'whitesmoke', 'floralwhite', 'antiquewhite', 'ghostwhite', 'navajowhite', 'yellow']:
-                all_colors.remove(white)
+            all_colors = get_ordered_plot_colors()
 
             index = hash(mode_name) % len(all_colors)
             rv = all_colors[index]
@@ -324,7 +390,7 @@ def simulate_one_time(q, time, max_jumps=500, solver_name='vode'):
     return (mode, point)
 
 def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=None, 
-                    reraise_errors=False, max_step=None, print_log=False):
+                 reraise_errors=False, max_step=None, print_log=False):
     '''
     Simulate the hybrid automaton from a single initial point 
     q - a symbolic state: (AutomatonMode, point), where point is [x_0, ..., x_n]
@@ -367,7 +433,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     times.append(solver.t)
     traces.append(ModeSim(mode.name, points, times))
 
-    if mode == None:
+    if mode is None:
         raise RuntimeError("Initial mode was not set.")
 
     events.append(SimulationEvent('Init', solver.y))
@@ -412,7 +478,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
 
         if reraise_errors:
             raise e
-        else:
+        elif print_log:
             print "Warning: {} (SimulationException) in mode {} at state {}".format(
                 str(e), mode.name, solver.y)
 

@@ -85,8 +85,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Model has a 'const' value which is actually an interval in the initial
-	 * conditions
+	 * Model has a 'const' value which is actually an interval in the initial conditions
 	 */
 	@Test
 	public void testParseRangedConstant()
@@ -114,8 +113,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Model has a 'const' value which is defined in the model and not in the
-	 * initial conditions
+	 * Model has a 'const' value which is defined in the model and not in the initial conditions
 	 */
 	@Test
 	public void testParseModelConstants()
@@ -456,8 +454,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * For Flow*, models require at least one variable. Thus, printing such
-	 * models with a tool like Flow* should raise a precondition error
+	 * For Flow*, models require at least one variable. Thus, printing such models with a tool like
+	 * Flow* should raise a precondition error
 	 */
 	@Test
 	public void testModelNoVars()
@@ -503,8 +501,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Models with blank forbidden states should be allowed (spaceex includes
-	 * examples of these, like heli)
+	 * Models with blank forbidden states should be allowed (spaceex includes examples of these,
+	 * like heli)
 	 */
 	@Test
 	public void testModelBlankForbidden()
@@ -521,8 +519,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Test base component with a missing component name in loc(component)=
-	 * assignment for initial states This should be an error
+	 * Test base component with a missing component name in loc(component)= assignment for initial
+	 * states This should be an error
 	 */
 	@Test
 	public void testMissingBaseComponent()
@@ -542,8 +540,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Test base component with blank component name in loc()= assignment for
-	 * initial states
+	 * Test base component with blank component name in loc()= assignment for initial states
 	 */
 	@Test
 	public void testModelBaseTwoComponent()
@@ -1366,8 +1363,8 @@ public class ModelParserTest
 		/*
 		 * We need a network printer for this:
 		 * 
-		 * ToolPrinter printer = new SpaceExPrinter();
-		 * printer.setOutputString(); printer.print(config, "", "model.xml");
+		 * ToolPrinter printer = new SpaceExPrinter(); printer.setOutputString();
+		 * printer.print(config, "", "model.xml");
 		 * 
 		 * System.out.println(printer.outputString.toString());
 		 */

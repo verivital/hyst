@@ -17,11 +17,11 @@ import com.verivital.hyst.util.AutomatonUtil;
 /**
  * Main (flattened) hybrid automaton class for the internal representation.
  * 
- * After parsing a model into the intermediate representation, the following
- * guarantees are provided: name is not null
+ * After parsing a model into the intermediate representation, the following guarantees are
+ * provided: name is not null
  * 
- * modes is not null, and there is at least one mode in modes transitions is not
- * null, but may be empty
+ * modes is not null, and there is at least one mode in modes transitions is not null, but may be
+ * empty
  * 
  * labels (exported labels) must match at least one label in a transition
  * 
@@ -36,10 +36,9 @@ public class BaseComponent extends Component
 	public ArrayList<AutomatonTransition> transitions = new ArrayList<AutomatonTransition>();
 
 	/**
-	 * Create a new mode in this hybrid automaton. By default the invariant is
-	 * null (must be manually set) and the flows are x'=null for all x (these
-	 * must be assigned), or flows can be set to null and the mode's urgent flag
-	 * enabled
+	 * Create a new mode in this hybrid automaton. By default the invariant is null (must be
+	 * manually set) and the flows are x'=null for all x (these must be assigned), or flows can be
+	 * set to null and the mode's urgent flag enabled
 	 * 
 	 * @param name
 	 *            a name for the mode (must be unique)
@@ -58,8 +57,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Create a new mode in this hybrid automaton. By default the invariant is
-	 * null (must be manually set) and the flows are x'=<allDynamics>
+	 * Create a new mode in this hybrid automaton. By default the invariant is null (must be
+	 * manually set) and the flows are x'=<allDynamics>
 	 * 
 	 * @param name
 	 *            a name for the mode (must be unique)
@@ -109,8 +108,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Create a new transition in this hybrid automaton. Guard is initially
-	 * null; be sure to assign it or validation will fail.
+	 * Create a new transition in this hybrid automaton. Guard is initially null; be sure to assign
+	 * it or validation will fail.
 	 * 
 	 * @param from
 	 *            the source
@@ -132,8 +131,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Check if the guarantees expected of this class are met. This is run prior
-	 * to any printing procedures.
+	 * Check if the guarantees expected of this class are met. This is run prior to any printing
+	 * procedures.
 	 * 
 	 * @throws AutomatonValidationException
 	 *             if guarantees are violated
@@ -306,8 +305,7 @@ public class BaseComponent extends Component
 	 *            the mode from
 	 * @param to
 	 *            the mode to
-	 * @return the first transition between modes named 'from' and 'to', or null
-	 *         if not found
+	 * @return the first transition between modes named 'from' and 'to', or null if not found
 	 */
 	public AutomatonTransition findTransition(String from, String to)
 	{

@@ -21,10 +21,9 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
  * @author Stanley Bak
  */
@@ -119,8 +118,7 @@ public class ConvertConstToVariable
 	}
 
 	/**
-	 * Set the dynamics for a variable. If c is a network, it set in the first
-	 * child component.
+	 * Set the dynamics for a variable. If c is a network, it set in the first child component.
 	 * 
 	 * @param c
 	 *            the component where to set the variable
