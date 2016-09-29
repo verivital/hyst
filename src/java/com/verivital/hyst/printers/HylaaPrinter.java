@@ -277,8 +277,7 @@ public class HylaaPrinter extends ToolPrinter
 
 		printLine("def run_hylaa(settings):");
 		increaseIndentation();
-		printLine(
-				"'Runs hylaa with the given settings, returning the post-computation engine object.'");
+		printLine("'Runs hylaa with the given settings, returning the HylaaResult object.'");
 		printLine("ha = define_ha()");
 		printLine("init = define_init_states(ha)");
 		printNewline();
