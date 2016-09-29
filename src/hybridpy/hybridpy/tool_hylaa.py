@@ -16,8 +16,6 @@ class HylaaTool(HybridTool):
         self._run_hylaa = None
         self._result = None
     
-        print "!! init, result is None"
-
         python_path = sys.executable
         HybridTool.__init__(self, 'pysim', '.py', python_path)
 
@@ -34,8 +32,6 @@ class HylaaTool(HybridTool):
 
         self._settings = define_settings()
         self._result = self._run_hylaa(self._settings)
-
-        print "!! run_hylaa result is {}".format(self._result)
 
         return rv
 
@@ -54,7 +50,8 @@ class HylaaTool(HybridTool):
         For hylaa, this is the hylaa engine object of the most recent run.
         '''
 
-        print "!! parse_output returning {}".format(self._result)
+        raise RuntimeError('this fails because a new python instance is run. You cant save result like this ' + 
+                           'between function calls; add a test for this + pysim when you fix it')
 
         return self._result
                 
