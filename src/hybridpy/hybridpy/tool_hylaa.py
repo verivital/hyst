@@ -15,6 +15,8 @@ class HylaaTool(HybridTool):
         self._settings = None
         self._run_hylaa = None
         self._result = None
+    
+        print "!! init, result is None"
 
         python_path = sys.executable
         HybridTool.__init__(self, 'pysim', '.py', python_path)
@@ -33,12 +35,14 @@ class HylaaTool(HybridTool):
         self._settings = define_settings()
         self._result = self._run_hylaa(self._settings)
 
+        print "!! run_hylaa result is {}".format(self._result)
+
         return rv
 
     def _make_image(self):
         '''make an image'''
 
-        print "Warnning: hylaa.make_image unimplemented"
+        print "Warning: hylaa.make_image unimplemented"
         #self._settings.plot_settings.plot_mode = PlotSettings.PLOT_NONE
         #self._result = self._run_hylaa(self._settings)
 
@@ -49,6 +53,8 @@ class HylaaTool(HybridTool):
 
         For hylaa, this is the hylaa engine object of the most recent run.
         '''
+
+        print "!! parse_output returning {}".format(self._result)
 
         return self._result
                 

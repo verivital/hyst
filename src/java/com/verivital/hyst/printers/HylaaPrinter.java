@@ -285,7 +285,7 @@ public class HylaaPrinter extends ToolPrinter
 		printLine("engine = HylaaEngine(ha, settings)");
 		printLine("engine.run(init)");
 		printNewline();
-		printLine("return engine");
+		printLine("return engine.result");
 		decreaseIndentation();
 		printNewline();
 
