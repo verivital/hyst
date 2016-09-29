@@ -5,6 +5,8 @@ package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
@@ -30,6 +32,10 @@ import com.verivital.hyst.util.StringOperations;
  */
 public class HylaaPrinter extends ToolPrinter
 {
+	@Option(name = "-python_simplify", aliases = { "-simplify",
+			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
+	public boolean pythonSimplify = false;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -245,8 +251,14 @@ public class HylaaPrinter extends ToolPrinter
 		new SimplifyExpressionsPass().runVanillaPass(config, "");
 
 		// simplify all the expressions using python
-		if (PythonBridge.hasPython())
+		if (pythonSimplify)
+		{
+			if (!PythonBridge.hasPython())
+				throw new AutomatonExportException(
+						"python-simplify flag was set, but python is not enabled");
+
 			ExpressionModifier.modifyBaseComponent((BaseComponent) config.root, em);
+		}
 
 		this.printCommentHeader();
 

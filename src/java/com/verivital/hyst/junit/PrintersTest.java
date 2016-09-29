@@ -716,4 +716,10 @@ public class PrintersTest
 					e.toString().contains("doesn't support operator"));
 		}
 	}
+
+	@Test
+	public void testPrintHeli()
+	{
+		runAllPrintersOnModel("heli_large");
+	}
 }
