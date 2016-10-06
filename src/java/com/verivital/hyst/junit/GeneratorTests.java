@@ -145,7 +145,8 @@ public class GeneratorTests
 		if (PythonBridge.hasPython())
 		{
 			// test printing to Hylaa
-			ToolPrinter printer = new HylaaPrinter();
+			HylaaPrinter printer = new HylaaPrinter();
+			printer.pythonSimplify = true;
 			printer.setOutputString();
 			printer.print(c, "", "model.xml");
 
