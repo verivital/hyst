@@ -183,7 +183,8 @@ public class NamedNavigationGenerator extends ModelGenerator
 		}
 		else if (name.toUpperCase().equals("NAV17"))
 		{
-			map = "0 1 2 3 4 5 0 0 0 0 1 2 3 4 5 6 -2 2 0 1 2 3 4 5 4 4 4 3 3 3 3 3 3 3 4 5 2 2 2 2 2 2 3 4 5 0 0 3 3 3 2 3 4 6 0 0 3 3 3 3 3 A 6 1 1 2 2 3 3 3 0 0 1 1 2 2 2 2 2 0 0";
+			// there was a '-2' in this one which I converted to a 'B'
+			map = "0 1 2 3 4 5 0 0 0 0 1 2 3 4 5 6 B 2 0 1 2 3 4 5 4 4 4 3 3 3 3 3 3 3 4 5 2 2 2 2 2 2 3 4 5 0 0 3 3 3 2 3 4 6 0 0 3 3 3 3 3 A 6 1 1 2 2 3 3 3 0 0 1 1 2 2 2 2 2 0 0";
 			matA = "-1.5 -0.2 -0.5 -1.2";
 			x0 = "0.5 1.5 0.5 1.5";
 			v0 = "0 0.5 0 0.5";

@@ -60,7 +60,7 @@ public class NavigationGenerator extends ModelGenerator
 	@Option(name = "-startyvel", usage = "y start velocity range", metaVar = "MIN (MAX)", handler = DoubleArrayOptionHandler.class)
 	private List<Double> yVelInit = new ArrayList<Double>();
 
-	String startModeName = null;
+	ArrayList<String> startModeNames = null;
 
 	@Option(name = "-noise", usage = "amount of input noise [-val,val] to add to xvel and yel", metaVar = "VAL")
 	private double noise = 0.0;
@@ -179,7 +179,7 @@ public class NavigationGenerator extends ModelGenerator
 			throw new AutomatonExportException(
 					"Expected 1 or 2 initial y vel values, got: " + yVelInit);
 
-		startModeName = findStartModeName();
+		startModeNames = findStartModeNames();
 	}
 
 	/**
@@ -199,16 +199,15 @@ public class NavigationGenerator extends ModelGenerator
 		iListProcessed = newList;
 	}
 
-	private String findStartModeName()
+	private ArrayList<String> findStartModeNames()
 	{
+		ArrayList<String> rv = new ArrayList<String>();
+
 		int startX = (int) Math.floor(xInit.get(0));
 		int startY = (int) Math.floor(yInit.get(0));
 
 		int endX = (int) Math.floor(xInit.get(1) - 1e-9);
 		int endY = (int) Math.floor(yInit.get(1) - 1e-9);
-
-		if (startX != endX || startY != endY)
-			throw new AutomatonExportException("Initial states span more than one mode");
 
 		height = iListProcessed.size() / width;
 
@@ -222,7 +221,11 @@ public class NavigationGenerator extends ModelGenerator
 		else if (startY >= height)
 			startY = height - 1;
 
-		return modePrefix + startX + "_" + startY;
+		for (int y = startY; y <= endY; ++y)
+			for (int x = startX; x <= endX; ++x)
+				rv.add(modePrefix + x + "_" + y);
+
+		return rv;
 	}
 
 	@Override
@@ -261,7 +264,9 @@ public class NavigationGenerator extends ModelGenerator
 				xInit.get(0) + " <= x <= " + xInit.get(1) + " && " + yInit.get(0) + " <= y <= "
 						+ yInit.get(1) + " & " + xVelInit.get(0) + " <= xvel <= " + xVelInit.get(1)
 						+ " & " + yVelInit.get(0) + " <= yvel <= " + yVelInit.get(1));
-		c.init.put(startModeName, initExp);
+
+		for (String mode : startModeNames)
+			c.init.put(mode, initExp);
 
 		// assign plot variables
 		c.settings.plotVariableNames[0] = "x";

@@ -158,6 +158,16 @@ public class GeneratorTests
 	}
 
 	@Test
+	public void testNav17()
+	{
+		// was giving a '-2 unknown param' error
+		NamedNavigationGenerator gen = new NamedNavigationGenerator();
+
+		String param = "-name nav17";
+		Configuration c = gen.generate(param);
+	}
+
+	@Test
 	public void testSwitchedOscillator()
 	{
 		SwitchedOscillatorGenerator gen = new SwitchedOscillatorGenerator();
