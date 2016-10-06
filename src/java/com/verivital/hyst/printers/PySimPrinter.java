@@ -234,6 +234,7 @@ public class PySimPrinter extends ToolPrinter
 		increaseIndentation();
 		printLine("'''defines the automaton / plot settings'''");
 		printSettings(config);
+		decreaseIndentation();
 		printNewline();
 
 		printLine("def simulate(init_states, settings):");
