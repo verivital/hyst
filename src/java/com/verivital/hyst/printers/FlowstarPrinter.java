@@ -68,6 +68,9 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-cutoff", usage = "taylor model cutoff", metaVar = "VAL")
 	String cutoff = "1e-15";
 
+	@Option(name = "-ode", usage = "ode integration mode (like 'poly ode 1')", metaVar = "VAL")
+	String ode = "auto";
+
 	@Option(name = "-precision", usage = "numerical precision", metaVar = "VAL")
 	String precision = "53";
 
@@ -410,16 +413,24 @@ public class FlowstarPrinter extends ToolPrinter
 			}
 
 			// then classify
-			if (isNonLinearDynamics(mode.flowDynamics))
-				printLine("nonpoly ode");
-			else if (Classification.isLinearDynamics(mode.flowDynamics))
-				printLine("linear ode");
-			else if (ha.variables.size() <= 3)
-				printLine("poly ode 1");
-			else if (ha.variables.size() <= 6)
-				printLine("poly ode 2");
+			if (ode.equals("auto"))
+			{
+				if (isNonLinearDynamics(mode.flowDynamics))
+					printLine("nonpoly ode");
+				else if (Classification.isLinearDynamics(mode.flowDynamics))
+					printLine("linear ode");
+				else if (ha.variables.size() <= 3)
+					printLine("poly ode 1");
+				else if (ha.variables.size() <= 6)
+					printLine("poly ode 2");
+				else
+					printLine("poly ode 3");
+			}
 			else
-				printLine("poly ode 3");
+			{
+				// force ode line
+				printLine(ode);
+			}
 
 			// then print
 			printLine("{");
