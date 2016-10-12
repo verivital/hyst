@@ -938,7 +938,7 @@ public class SpaceExXMLReader
 						}
 						else if (property.equals("set-aggregation"))
 						{
-							mTarget.setDirections(value);
+							mTarget.setAggregation(value);
 						}
 					}
 				}
