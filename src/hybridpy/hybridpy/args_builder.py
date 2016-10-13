@@ -106,7 +106,7 @@ class BuildGenArgsBuilder(object):
         self.mode_args.append(invariant)
         self.mode_args += der_list
 
-    def add_transition(self, from_name, to_name, guard, reset_list):
+    def add_transition(self, from_name, to_name, guard, reset_list=None):
         'add a transition'
 
         assert str(from_name) == from_name, "source mode name must be a string: {}".format(from_name)

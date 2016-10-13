@@ -136,10 +136,12 @@ public class DynamicsUtil
 				else if (leftRv != null)
 					rv = leftRv;
 				else if (rightRv != null)
-					rv = rightRv;
-
-				if (rv != null && op == Operator.SUBTRACT)
-					rv = new Operation(Operator.NEGATIVE, rv);
+				{
+					if (op == Operator.SUBTRACT)
+						rv = new Operation(Operator.NEGATIVE, rightRv);
+					else
+						rv = rightRv;
+				}
 			}
 			else
 				throw new AutomatonExportException(
