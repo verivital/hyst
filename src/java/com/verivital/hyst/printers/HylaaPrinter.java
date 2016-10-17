@@ -121,9 +121,10 @@ public class HylaaPrinter extends ToolPrinter
 			try
 			{
 				rv.add(am.name + ".a_matrix = np.array("
-						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am)) + ")");
+						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am))
+						+ ", dtype=float)");
 				rv.add(am.name + ".b_vector = np.array("
-						+ toPythonList(DynamicsUtil.extractDynamicsVectorB(am)) + ")");
+						+ toPythonList(DynamicsUtil.extractDynamicsVectorB(am)) + ", dtype=float)");
 
 				// invariant
 				// loc1.inv_list = [inv1]
