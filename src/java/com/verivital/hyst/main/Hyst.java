@@ -19,6 +19,7 @@ import org.kohsuke.args4j.Localizable;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.generators.BuildGenerator;
+import com.verivital.hyst.generators.DrivetrainGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
 import com.verivital.hyst.generators.NamedNavigationGenerator;
@@ -94,7 +95,7 @@ public class Hyst
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
 			new NavigationGenerator(), new NamedNavigationGenerator(),
-			new SwitchedOscillatorGenerator(), new BuildGenerator() };
+			new SwitchedOscillatorGenerator(), new BuildGenerator(), new DrivetrainGenerator() };
 
 	public static String TOOL_NAME = "Hyst v1.3";
 

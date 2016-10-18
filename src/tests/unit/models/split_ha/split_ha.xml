@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="x_der">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="on" x="402.0" y="249.0" width="142.0" height="124.0">
+      <flow>x' == y</flow>
+    </location>
+  </component>
+  <component id="y_der">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <location id="1" name="on" x="231.0" y="121.0">
+      <flow>y' == -x</flow>
+    </location>
+  </component>
+  <component id="system">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" x="458.0" y="151.0" />
+    <param name="y" type="real" d1="1" d2="1" local="false" dynamics="any" controlled="true" x="165.0" y="119.0" />
+    <bind component="y_der" as="y_der_inst" x="628.0" y="165.0" width="170.0" height="102.0">
+      <map key="x">x</map>
+      <map key="y">
+        y
+        <link>756.0,80.0</link>
+      </map>
+    </bind>
+    <bind component="x_der" as="x_der_inst" x="294.0" y="165.0" width="150.0" height="106.0">
+      <map key="x">x</map>
+      <map key="y">y</map>
+    </bind>
+  </component>
+</sspaceex>
+

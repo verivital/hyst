@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.generators.DrivetrainGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.NamedNavigationGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
@@ -22,6 +23,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
@@ -164,7 +166,7 @@ public class GeneratorTests
 		NamedNavigationGenerator gen = new NamedNavigationGenerator();
 
 		String param = "-name nav17";
-		Configuration c = gen.generate(param);
+		gen.generate(param);
 	}
 
 	@Test
@@ -177,6 +179,24 @@ public class GeneratorTests
 
 		Assert.assertEquals("four variables", 4, c.root.variables.size());
 		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	@Test
+	public void testMatthiasDrivetrain()
+	{
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 2";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("12 variables", 12, c.root.variables.size());
+		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 

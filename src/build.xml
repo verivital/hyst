@@ -257,6 +257,9 @@
 		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
 		    <arg line="plot.py" />
 		</exec>
+		<exec dir="${doc.path}/model_generators/drivetrain" executable="python" failonerror="true">
+		    <arg line="plot.py" />
+		</exec>
 		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python" failonerror="true">
 			<arg line="plot.py" />
 		</exec>

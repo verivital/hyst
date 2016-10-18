@@ -1369,4 +1369,29 @@ public class ModelParserTest
 		 * System.out.println(printer.outputString.toString());
 		 */
 	}
+
+	@Test
+	public void testModelWithUncontrolledVars()
+	{
+		// split harmonic oscialltor, x' = y, y' = -x
+		// Model with two base components and two variables, they each control one of them, but use
+		// the other
+
+		String cfgPath = UNIT_BASEDIR + "split_ha/split_ha.cfg";
+		String xmlPath = UNIT_BASEDIR + "split_ha/split_ha.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
 }

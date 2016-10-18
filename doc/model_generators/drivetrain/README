@@ -1,0 +1,7 @@
+This folder contains the drivetrain benchmark from: Matthias Althoff, Bruce H. Krogh: "Avoiding geometric intersection operations in reachability analysis of hybrid systems" in HSCC 2012
+
+It originally defines a 7 + 2*theta dimensional system, where theta >= 0 is a user parameter.
+
+There is also a control input u , which is set by a benchmark maneuver to: -5 when time is in [0, 0.2], and +5 when time is in [0.2, 2]. To handle this, we add a dimension 't' and a guard when t = 0.2, giving us a 8 + 2*theta dimensional system with 6 modes (3 before time 0.2, and 3 after time 0.2)
+
+
