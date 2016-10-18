@@ -8,18 +8,14 @@ import java.util.ArrayList;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.grammar.formula.Constant;
-import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
-import com.verivital.hyst.python.PythonBridge;
-import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.StringOperations;
@@ -240,29 +236,12 @@ public class HylaaPrinter extends ToolPrinter
 		}
 	}
 
-	private static ExpressionModifier em = new ExpressionModifier()
-	{
-		@Override
-		public Expression modifyExpression(Expression e)
-		{
-			return PythonUtil.pythonSimplifyExpressionChop(e, 1e-9);
-		}
-	};
-
 	@Override
 	protected void printAutomaton()
 	{
-		new SimplifyExpressionsPass().runVanillaPass(config, "");
+		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
 
-		// simplify all the expressions using python
-		if (pythonSimplify)
-		{
-			if (!PythonBridge.hasPython())
-				throw new AutomatonExportException(
-						"python-simplify flag was set, but python is not enabled");
-
-			ExpressionModifier.modifyBaseComponent((BaseComponent) config.root, em);
-		}
+		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
 		this.printCommentHeader();
 

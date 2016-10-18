@@ -122,6 +122,23 @@ public class DynamicsUtil
 					throw new AutomatonExportException(
 							"Unsupported term in linear derivative: '" + o.toDefaultString() + "'");
 			}
+			else if (op == Operator.DIVIDE)
+			{
+				// only support variable / constant
+
+				Expression left = o.getLeft();
+				Expression right = o.getRight();
+
+				if (left instanceof Variable && right instanceof Constant
+						&& ((Constant) right).getVal() != 0)
+				{
+					if (((Variable) left).name.equals(varName))
+						rv = new Constant(1.0 / ((Constant) right).getVal());
+				}
+				else
+					throw new AutomatonExportException(
+							"Unsupported term in linear derivative: '" + o.toDefaultString() + "'");
+			}
 			else if (op == Operator.ADD || op == Operator.SUBTRACT)
 			{
 				Expression left = o.getLeft();
@@ -145,7 +162,7 @@ public class DynamicsUtil
 			}
 			else
 				throw new AutomatonExportException(
-						"Unsupported operation in linear derivative (expecting +/-/*): '"
+						"Unsupported operation in linear derivative (expecting '+', '-', '*', or'/'): '"
 								+ o.toDefaultString());
 		}
 		else if (summation instanceof Constant)

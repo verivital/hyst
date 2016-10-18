@@ -7,8 +7,11 @@ def main():
     '''main entry point'''
 
     theta = 2
-    gen_drivetrain(theta)
-    
+
+    print "todo: remove hylaa gen here"
+    #gen_drivetrain(theta)
+    gen_drivetrain_hylaa(theta)   
+ 
 def gen_drivetrain(theta):
     'generate a drivetrain benchmark instance and plot a simulation'
 
@@ -17,7 +20,7 @@ def gen_drivetrain(theta):
     output_path = "generated_drivetrain{}.py".format(theta)
     gen_param = '-theta {}'.format(theta)
     
-    tool_param = "-rand 10 -title {}".format(title)
+    tool_param = "-rand 10 -title \"{}\"".format(title)
 
     e = hypy.Engine('pysim', tool_param)
     e.set_generator('drivetrain', gen_param)
@@ -25,6 +28,25 @@ def gen_drivetrain(theta):
     
     print 'Running ' + title
     e.run(print_stdout=True, image_path=image_path)
+    print 'Finished ' + title
+    res = e.run()
+
+    if res['code'] != hypy.Engine.SUCCESS:
+        raise RuntimeError('Error in ' + title + ': ' + str(res['code']))
+
+def gen_drivetrain_hylaa(theta):
+    'generate a drivetrain benchmark instance for hylaa'
+
+    title = "Drivetrain (Theta={})".format(theta)
+    gen_param = '-theta {}'.format(theta)
+    
+    e = hypy.Engine('hylaa')
+    e.set_generator('drivetrain', gen_param)
+    e.set_output('hylaa_drivetrain2.py')
+    e.set_verbose(True)
+    
+    print 'Running ' + title
+    e.run(print_stdout=True, run_tool=False)
     print 'Finished ' + title
     res = e.run()
 

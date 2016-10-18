@@ -1,5 +1,7 @@
 package com.verivital.hyst.passes.basic;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
@@ -11,6 +13,8 @@ import com.verivital.hyst.ir.base.ExpressionModifier;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.python.PythonUtil;
 import com.verivital.hyst.util.Preconditions;
 
 /**
@@ -22,14 +26,35 @@ import com.verivital.hyst.util.Preconditions;
  */
 public class SimplifyExpressionsPass extends TransformationPass
 {
-	private static ExpressionModifier em = new ExpressionModifier()
+	@Option(name = "-python_simplify", aliases = { "-python",
+			"-p" }, usage = "simplify all expressions using python's sympy (slow for large models)")
+	public boolean pythonSimplify = false;
+
+	private ExpressionModifier em = new ExpressionModifier()
 	{
 		@Override
 		public Expression modifyExpression(Expression e)
 		{
-			return simplifyExpression(e);
+			Expression rv;
+
+			if (!pythonSimplify)
+				rv = simplifyExpression(e);
+			else
+				rv = PythonUtil.pythonSimplifyExpressionChop(e, 1e-9);
+
+			return rv;
 		}
 	};
+
+	public static String makeParam(boolean usePython)
+	{
+		String rv = "";
+
+		if (usePython)
+			rv = "-python_simplify";
+
+		return rv;
+	}
 
 	public SimplifyExpressionsPass()
 	{
@@ -39,6 +64,14 @@ public class SimplifyExpressionsPass extends TransformationPass
 	@Override
 	protected void runPass()
 	{
+		// simplify all the expressions using python
+		if (pythonSimplify)
+		{
+			if (!PythonBridge.hasPython())
+				throw new AutomatonExportException(
+						"python-simplify flag was set, but python is not enabled within Hyst.");
+		}
+
 		runRec(config.root);
 
 		ExpressionModifier.modifyInitForbidden(config, em);

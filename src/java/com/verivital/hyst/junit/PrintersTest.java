@@ -12,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.generators.DrivetrainGenerator;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -721,5 +722,29 @@ public class PrintersTest
 	public void testPrintHeli()
 	{
 		runAllPrintersOnModel("heli_large");
+	}
+
+	/**
+	 * Hylaa should be able to print the drivetrain model, after python simplification
+	 */
+	@Test
+	public void testHylaaPrintDrivetrain()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 2";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("12 variables", 12, c.root.variables.size());
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "-python_simplify", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }
