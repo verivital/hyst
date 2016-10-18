@@ -122,13 +122,14 @@ public class DrivetrainGenerator extends ModelGenerator
 	private BaseComponent makeDrivetrainAutomaton()
 	{
 		BaseComponent rv = new BaseComponent(); // input generator
-		rv.variables.add("t");
 
 		for (Entry<String, Double> e : constants.entrySet())
 			rv.constants.put(e.getKey(), new Interval(e.getValue()));
 
 		for (int d = 1; d <= 7 + 2 * theta; ++d)
 			rv.variables.add("x" + d);
+
+		rv.variables.add("t");
 
 		// modes under input 1
 		AutomatonMode loc1_u1 = rv.createMode("loc1_u1");

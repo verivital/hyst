@@ -40,10 +40,9 @@ def gen_drivetrain_hylaa(theta):
     title = "Drivetrain (Theta={})".format(theta)
     gen_param = '-theta {}'.format(theta)
     
-    e = hypy.Engine('hylaa')
+    e = hypy.Engine('hylaa', '-python_simplify')
     e.set_generator('drivetrain', gen_param)
     e.set_output('hylaa_drivetrain2.py')
-    e.set_verbose(True)
     
     print 'Running ' + title
     e.run(print_stdout=True, run_tool=False)
