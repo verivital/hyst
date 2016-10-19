@@ -192,10 +192,10 @@ public class GeneratorTests
 	{
 		DrivetrainGenerator gen = new DrivetrainGenerator();
 
-		String param = "-theta 2";
+		String param = "-theta 1";
 		Configuration c = gen.generate(param);
 
-		Assert.assertEquals("12 variables", 12, c.root.variables.size());
+		Assert.assertEquals("10 variables", 10, c.root.variables.size());
 		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");

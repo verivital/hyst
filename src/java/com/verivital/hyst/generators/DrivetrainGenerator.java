@@ -48,7 +48,9 @@ public class DrivetrainGenerator extends ModelGenerator
 		constants.put("alpha", 0.03); // backlash size (half gap) [rad]
 		constants.put("tau_eng", 0.1); // time constant of the engine [s]
 		constants.put("b_l", 5.6); // viscous friction of wheels [Nm/(rad/s)]
-		constants.put("b_m", 0.02); // viscous friction of engine [Nm/(rad/s)]
+		constants.put("b_m", 0.0); // viscous friction of engine [Nm/(rad/s)]
+									// NOTE: b_m is 0.02 in CORA (but formulas are modified),
+									// is is 0 in the paper and SpaceEx models
 		constants.put("b_i", 1.0); // viscous friction of additional inertias [Nm/(rad/s)]
 		constants.put("i", 12.0); // transmission ratio, Theta_m/Theta_1 [rad/rad]
 		constants.put("k", 10e3); // shaft stiffness [Nm/rad]
@@ -194,16 +196,23 @@ public class DrivetrainGenerator extends ModelGenerator
 				loc.flowDynamics.put("x3", new ExpressionInterval("x4"));
 				loc.flowDynamics.put("x4", new ExpressionInterval(u_value));
 				loc.flowDynamics.put("x5", new ExpressionInterval("x6"));
+
+				String xBeforeLast = "x" + (7 + 2 * theta - 1);
+
 				loc.flowDynamics.put("x6",
-						new ExpressionInterval("1/J_l*(k_i*(x10 - x5) - b_l*x6)"));
+						new ExpressionInterval("1/J_l*(k_i*(" + xBeforeLast + " - x5) - b_l*x6)"));
+
 				loc.flowDynamics.put("x7", new ExpressionInterval(
 						"1/J_m*(x2 - 1/i*" + k + "*(x1 - " + alpha + ") - b_m*x7)"));
 
 				if (theta >= 1)
 				{
 					loc.flowDynamics.put("x8", new ExpressionInterval("x9"));
+
+					String nextOne = theta > 1 ? "x10" : "x5";
+
 					loc.flowDynamics.put("x9", new ExpressionInterval(
-							"J_i*(" + k + "*(x1 - " + alpha + ") - k_i*(x8 - x10))"));
+							"J_i*(" + k + "*(x1 - " + alpha + ") - k_i*(x8 - " + nextOne + "))"));
 				}
 
 				if (theta >= 2)
@@ -214,8 +223,14 @@ public class DrivetrainGenerator extends ModelGenerator
 
 						loc.flowDynamics.put("x" + index,
 								new ExpressionInterval("x" + (index + 1)));
-						loc.flowDynamics.put("x" + (index + 1), new ExpressionInterval("J_i*(k_i*(x"
-								+ (index - 2) + " - x" + index + ") - k_i*(x" + index + " - x5))"));
+
+						String nextOne = theta > t ? "x" + (index + 2) : "x5";
+
+						loc.flowDynamics
+								.put("x" + (index + 1),
+										new ExpressionInterval("J_i*(k_i*(x" + (index - 2) + " - x"
+												+ index + ") - k_i*(x" + index + " - " + nextOne
+												+ "))"));
 
 						// loc1.flowDynamics.put("x10", new ExpressionInterval("x11"));
 						// loc1.flowDynamics.put("x11",

@@ -8,6 +8,8 @@ import java.util.Set;
 
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
@@ -221,6 +223,49 @@ public class BaseComponent extends Component
 							+ firstModeFlows + ") differ from mode '" + name + "' (" + flows + ")");
 				}
 			}
+
+			for (Entry<String, ExpressionInterval> entry : am.flowDynamics.entrySet())
+			{
+				Expression exp = entry.getValue().getExpression();
+
+				try
+				{
+					checkExpression(exp);
+				}
+				catch (AutomatonValidationException ave)
+				{
+					throw new AutomatonValidationException("BaseComponent "
+							+ getPrintableInstanceName() + ": Flow in mode '" + am.name
+							+ "' for variable '" + entry.getKey() + "'='" + exp.toDefaultString()
+							+ "' uses a variable/constant not in the component. "
+							+ ave.getMessage());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Checks that Variables in an Expression are defined in the component.
+	 * 
+	 * @param e
+	 *            the expression to check
+	 */
+	private void checkExpression(Expression e)
+	{
+		if (e instanceof Variable)
+		{
+			Variable v = (Variable) e;
+
+			if (!variables.contains(v.name) && !constants.containsKey(v.name))
+				throw new AutomatonValidationException(
+						"Variable/constant not in automaton: '" + v.name + "'");
+		}
+		else if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			for (Expression child : o.children)
+				checkExpression(child);
 		}
 	}
 

@@ -6,7 +6,7 @@ import hybridpy.hypy as hypy
 def main():
     '''main entry point'''
 
-    theta = 2
+    theta = 1
 
     print "todo: remove hylaa gen here"
     #gen_drivetrain(theta)
@@ -42,7 +42,7 @@ def gen_drivetrain_hylaa(theta):
     
     e = hypy.Engine('hylaa', '-python_simplify')
     e.set_generator('drivetrain', gen_param)
-    e.set_output('hylaa_drivetrain2.py')
+    e.set_output('hylaa_drivetrain{}.py'.format(theta))
     
     print 'Running ' + title
     e.run(print_stdout=True, run_tool=False)
