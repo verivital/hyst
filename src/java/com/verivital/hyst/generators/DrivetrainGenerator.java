@@ -98,7 +98,7 @@ public class DrivetrainGenerator extends ModelGenerator
 		Expression initExp = Constant.TRUE;
 
 		if (!forceHighInput)
-			FormulaParser.parseInitialForbidden("t == 0");
+			initExp = FormulaParser.parseInitialForbidden("t == 0");
 
 		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
 

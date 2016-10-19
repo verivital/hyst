@@ -18,7 +18,7 @@ def gen_drivetrain(theta):
     title = "Drivetrain (Theta={})".format(theta)
     image_path = "drivetrain_theta{}.png".format(theta)
     output_path = "pysim_drivetrain{}.py".format(theta)
-    gen_param = '-theta {}'.format(theta)
+    gen_param = '-theta {} -highinput'.format(theta)
     
     tool_param = "-rand 10 -title \"{}\"".format(title)
 
