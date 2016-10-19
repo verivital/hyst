@@ -9,15 +9,15 @@ def main():
     theta = 1
 
     print "todo: remove hylaa gen here"
-    #gen_drivetrain(theta)
-    gen_drivetrain_hylaa(theta)   
+    gen_drivetrain(theta)
+    #gen_drivetrain_hylaa(theta)   
  
 def gen_drivetrain(theta):
     'generate a drivetrain benchmark instance and plot a simulation'
 
     title = "Drivetrain (Theta={})".format(theta)
     image_path = "drivetrain_theta{}.png".format(theta)
-    output_path = "generated_drivetrain{}.py".format(theta)
+    output_path = "pysim_drivetrain{}.py".format(theta)
     gen_param = '-theta {}'.format(theta)
     
     tool_param = "-rand 10 -title \"{}\"".format(title)

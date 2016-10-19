@@ -32,8 +32,11 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
  */
 public class DrivetrainGenerator extends ModelGenerator
 {
-	@Option(name = "-theta", required = true, usage = "number of additional rotating masses (dims = 9 + 2*theta)", metaVar = "NUM")
+	@Option(name = "-theta", usage = "number of additional rotating masses (dims = 9 + 2*theta)", metaVar = "NUM")
 	private int theta = 1;
+
+	@Option(name = "-highinput", usage = "force the high input for the entire time interval")
+	private boolean forceHighInput = false;
 
 	////////////// parameters ////////////////
 	final static double switchTime = 0.2;
@@ -92,24 +95,30 @@ public class DrivetrainGenerator extends ModelGenerator
 		Configuration c = new Configuration(ha);
 
 		// init
-		Expression initExp = FormulaParser.parseInitialForbidden("t == 0");
+		Expression initExp = Constant.TRUE;
 
-		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.0013, 30 };
+		if (!forceHighInput)
+			FormulaParser.parseInitialForbidden("t == 0");
 
-		for (int d = 1; d <= 7 + 2 * theta; ++d)
+		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
+
+		for (int d = 0; d < 7 + 2 * theta; ++d)
 		{
 			double val;
 
 			if (d < center.length)
 				val = center[d];
 			else
-				val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8
+				val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8, 11 goes to 7
 
 			initExp = Expression.and(initExp,
-					FormulaParser.parseInitialForbidden("x" + d + " = " + val));
+					FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val));
 		}
 
-		c.init.put("loc1_u1", initExp);
+		if (!forceHighInput)
+			c.init.put("loc1_u1", initExp);
+		else
+			c.init.put("loc1_u2", initExp);
 
 		// settings
 		c.settings.plotVariableNames[0] = "x1";
@@ -131,39 +140,57 @@ public class DrivetrainGenerator extends ModelGenerator
 		for (int d = 1; d <= 7 + 2 * theta; ++d)
 			rv.variables.add("x" + d);
 
-		rv.variables.add("t");
+		if (!forceHighInput)
+			rv.variables.add("t");
+
+		AutomatonMode[][] allLocs;
 
 		// modes under input 1
-		AutomatonMode loc1_u1 = rv.createMode("loc1_u1");
-		AutomatonMode loc2_u1 = rv.createMode("loc2_u1");
-		AutomatonMode loc3_u1 = rv.createMode("loc3_u1");
+		AutomatonMode loc1_u1, loc2_u1, loc3_u1;
 
 		// modes under input 2
 		AutomatonMode loc1_u2 = rv.createMode("loc1_u2");
 		AutomatonMode loc2_u2 = rv.createMode("loc2_u2");
 		AutomatonMode loc3_u2 = rv.createMode("loc3_u2");
 
-		AutomatonMode[][] allLocs = { { loc1_u1, loc2_u1, loc3_u1 },
-				{ loc1_u2, loc2_u2, loc3_u2 } };
+		loc1_u2.invariant = Constant.TRUE;
+		loc2_u2.invariant = Constant.TRUE;
+		loc3_u2.invariant = Constant.TRUE;
 
-		// create input transitions when the time reaches 0.2
-		for (int mi = 0; mi < 3; ++mi)
+		if (!forceHighInput)
 		{
-			AutomatonMode pre = allLocs[0][mi];
-			AutomatonMode post = allLocs[1][mi];
+			loc1_u1 = rv.createMode("loc1_u1");
+			loc2_u1 = rv.createMode("loc2_u1");
+			loc3_u1 = rv.createMode("loc3_u1");
 
-			rv.createTransition(pre, post).guard = FormulaParser.parseGuard("t >= " + switchTime);
+			allLocs = new AutomatonMode[][] { { loc1_u1, loc2_u1, loc3_u1 },
+					{ loc1_u2, loc2_u2, loc3_u2 } };
 
-			pre.invariant = FormulaParser.parseInvariant("t <= " + switchTime);
-			post.invariant = Constant.TRUE;
+			// create input transitions when the time reaches 0.2
+			for (int mi = 0; mi < 3; ++mi)
+			{
+				AutomatonMode pre = allLocs[0][mi];
+				AutomatonMode post = allLocs[1][mi];
+
+				rv.createTransition(pre, post).guard = FormulaParser
+						.parseGuard("t >= " + switchTime);
+
+				pre.invariant = FormulaParser.parseInvariant("t <= " + switchTime);
+			}
 		}
+		else
+			allLocs = new AutomatonMode[][] { { loc1_u2, loc2_u2, loc3_u2 } };
 
-		for (int ui = 0; ui < 2; ++ui)
+		for (int ui = 0; ui < allLocs.length; ++ui)
 		{
 			AutomatonMode loc1 = allLocs[ui][0];
 			AutomatonMode loc2 = allLocs[ui][1];
 			AutomatonMode loc3 = allLocs[ui][2];
+
 			double u_value = inputs[ui];
+
+			if (forceHighInput)
+				u_value = inputs[1];
 
 			loc1.invariant = Expression.and(loc1.invariant,
 					FormulaParser.parseInvariant("x1 <= -alpha"));
@@ -189,7 +216,8 @@ public class DrivetrainGenerator extends ModelGenerator
 				String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k
 						+ "*(x1 - " + alpha + ") - b_m*x7)) + k_KI*(i*x3 - i*(x1+ x8))";
 
-				loc.flowDynamics.put("t", new ExpressionInterval(1));
+				if (!forceHighInput)
+					loc.flowDynamics.put("t", new ExpressionInterval(1));
 
 				loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - x9"));
 				loc.flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));

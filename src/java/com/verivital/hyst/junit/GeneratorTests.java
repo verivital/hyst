@@ -204,4 +204,22 @@ public class GeneratorTests
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 	}
+
+	@Test
+	public void testDrivetrainHighInput()
+	{
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 1 -highinput";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("9 variables", 9, c.root.variables.size());
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
 }
