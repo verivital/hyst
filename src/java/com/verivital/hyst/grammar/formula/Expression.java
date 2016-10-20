@@ -98,6 +98,25 @@ public abstract class Expression
 		return rv;
 	}
 
+	public static Expression or(Expression i, Expression j)
+	{
+		Expression rv;
+
+		if (i == null || j == null)
+			throw new RuntimeException("parameter to Expression.or() was null");
+
+		if (i == Constant.TRUE || j == Constant.TRUE)
+			rv = Constant.TRUE;
+		else if (i == Constant.FALSE)
+			rv = j;
+		else if (j == Constant.FALSE)
+			rv = i;
+		else
+			rv = new Operation(Operator.OR, i, j);
+
+		return rv;
+	}
+
 	public String toDefaultString()
 	{
 		return DefaultExpressionPrinter.instance.print(this);

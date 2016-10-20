@@ -16,6 +16,7 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
+import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -25,6 +26,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
+import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
@@ -78,6 +80,10 @@ public class PySimPrinter extends ToolPrinter
 	{
 		preconditions.skip(PreconditionsFlag.NO_URGENT); // skip the 'no urgent
 															// modes' check
+
+		preconditions.skip(PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN); // skip the
+																					// dijunction
+		// conversion
 	}
 
 	@Override
@@ -352,16 +358,19 @@ public class PySimPrinter extends ToolPrinter
 
 				try
 				{
-					rv.add(initToHyperRectangle(exp, ha.variables));
+					for (Operation o : DynamicsUtil.splitDisjunction(exp))
+					{
+						String str = "rv.append((ha.modes['" + modeName + "'],";
+						str += initToHyperRectangle(o, ha.variables) + ")";
+
+						rv.add(str);
+					}
 				}
 				catch (AutomatonExportException exception)
 				{
 					throw new AutomatonExportException("Error printing initial states in mode "
 							+ modeName + ":" + exception.getLocalizedMessage(), exception);
 				}
-
-				rv.add("rv.append((ha.modes['" + modeName + "'], r))");
-				rv.add("");
 			}
 
 			rv.add("return rv");
@@ -372,7 +381,7 @@ public class PySimPrinter extends ToolPrinter
 		public static String initToHyperRectangle(Expression exp, List<String> variableOrder)
 		{
 			// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
-			StringBuilder sb = new StringBuilder("r = HyperRectangle([");
+			StringBuilder sb = new StringBuilder("HyperRectangle([");
 
 			TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
 

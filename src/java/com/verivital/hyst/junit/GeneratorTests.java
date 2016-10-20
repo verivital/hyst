@@ -289,6 +289,12 @@ public class GeneratorTests
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
+		Assert.assertEquals("1 init state", 1, c.init.size());
+
+		String init = c.init.values().iterator().next().toDefaultString();
+
+		Assert.assertTrue("init contains disjunction", init.contains("|"));
+
 		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "in.xml");

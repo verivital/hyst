@@ -40,7 +40,7 @@ def gen_drivetrain_hylaa(theta):
     'generate a drivetrain benchmark instance for hylaa'
 
     title = "Drivetrain (Theta={})".format(theta)
-    gen_param = '-theta {}'.format(theta) # -error_guard x3>=85
+    gen_param = '-theta {} -high_input'.format(theta) # -error_guard x3>=85
     
     e = hypy.Engine('hylaa', '-python_simplify -plot_full -xdim x1 -ydim x2 -max_shown_polys 0 -step 5e-3 -noaggregation')
     e.set_generator('drivetrain', gen_param)

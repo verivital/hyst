@@ -83,6 +83,40 @@ public class DynamicsUtil
 		return rv;
 	}
 
+	/**
+	 * Split a disjunction into its suboperators
+	 * 
+	 * @param conj
+	 *            the input expression
+	 * @return a list of sub-operators which are part of a conjunction that forms conj
+	 */
+	public static ArrayList<Operation> splitDisjunction(Expression disj)
+	{
+		ArrayList<Operation> rv = new ArrayList<Operation>();
+
+		if (disj instanceof Operation)
+		{
+			Operation o = disj.asOperation();
+			Operator op = o.op;
+
+			if (op == Operator.OR)
+			{
+				rv.addAll(splitDisjunction(o.getLeft()));
+				rv.addAll(splitDisjunction(o.getRight()));
+			}
+			else if (op == Operator.LOGICAL_NOT)
+				throw new AutomatonExportException("Unsupported top-level operator: '"
+						+ op.toDefaultString() + "' in " + disj.toDefaultString());
+			else
+				rv.add(o);
+		}
+		else
+			throw new AutomatonExportException(
+					"Unsupported non-operator condition: " + disj.toDefaultString());
+
+		return rv;
+	}
+
 	private static Expression findMultiplier(String varName, Expression summation)
 	{
 		Expression rv = null;

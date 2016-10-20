@@ -112,8 +112,12 @@ public class DrivetrainGenerator extends ModelGenerator
 		if (forceHighInput)
 			initMode = "negAngle";
 
+		Expression disjunction = Constant.FALSE;
+
 		for (Expression e : initExps)
-			c.init.put(initMode, e);
+			disjunction = Expression.or(disjunction, e);
+
+		c.init.put(initMode, disjunction);
 
 		if (errorGuard != null)
 			c.forbidden.put("error", Constant.TRUE);
