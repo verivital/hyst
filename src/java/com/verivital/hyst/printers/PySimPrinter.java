@@ -361,7 +361,7 @@ public class PySimPrinter extends ToolPrinter
 					for (Operation o : DynamicsUtil.splitDisjunction(exp))
 					{
 						String str = "rv.append((ha.modes['" + modeName + "'],";
-						str += initToHyperRectangle(o, ha.variables) + ")";
+						str += initToHyperRectangle(o, ha.variables) + "))";
 
 						rv.add(str);
 					}
