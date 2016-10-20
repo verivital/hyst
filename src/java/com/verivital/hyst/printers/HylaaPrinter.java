@@ -50,6 +50,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-ydim", usage = "y axis variable name")
 	public String ydim;
 
+	@Option(name = "-step", usage = "step size")
+	public double step;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -388,6 +391,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		double step = config.settings.spaceExConfig.samplingTime;
 		double maxTime = config.settings.spaceExConfig.timeHorizon;
+
+		if (this.step > 0)
+			step = this.step;
 
 		printLine("settings =  HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
