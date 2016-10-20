@@ -348,6 +348,57 @@ public class PythonUtil
 		return rv;
 	}
 
+	public static Expression pythonSimplifyNumber(Expression e)
+	{
+		PythonBridge pb = PythonBridge.getInstance();
+		StringBuilder s = new StringBuilder();
+
+		String symbols = makeExpressionVariableSymbols(e);
+
+		if (symbols.length() > 0)
+			s.append(symbols);
+
+		s.append("from sympy import S;");
+		s.append("sympy.simplify(sympy.factor(");
+		s.append(pySympyPrinter.print(e));
+		s.append("))");
+
+		String result = pb.send(s.toString());
+
+		// substitute back
+		result = result.replace("**", "^");
+		return FormulaParser.parseValue(result);
+	}
+
+	public static Expression pythonSimplifyRecursively(Expression e)
+	{
+		Expression rv = e;
+
+		if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			if (Operator.isBooleanOperator(o.op))
+			{
+				// split!
+				Operation rvOp = new Operation(o.op);
+				rv = rvOp;
+
+				for (Expression child : o.children)
+				{
+					Expression newE = pythonSimplifyRecursively(child);
+					rvOp.children.add(newE);
+				}
+			}
+			else if (o.op == Operator.LOC)
+				; // skip
+			else
+				rv = pythonSimplifyNumber(e);
+		}
+
+		return rv;
+	}
+
 	/**
 	 * Use python-sympy to simplify an expression.
 	 * 
@@ -366,26 +417,11 @@ public class PythonUtil
 
 		// optimization: only simplify if it's an operation
 		if (e instanceof Operation && AutomatonUtil.expressionContainsOnlyAllowedOps(e,
-				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
+				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR, AutomatonUtil.OPS_BOOLEAN,
+				AutomatonUtil.OPS_LOC))
 		{
-			PythonBridge pb = PythonBridge.getInstance();
-			StringBuilder s = new StringBuilder();
-
-			String symbols = makeExpressionVariableSymbols(e);
-
-			if (symbols.length() > 0)
-				s.append(symbols);
-
-			s.append("from sympy import S;");
-			s.append("sympy.simplify(sympy.factor(");
-			s.append(pySympyPrinter.print(e));
-			s.append("))");
-
-			String result = pb.send(s.toString());
-
-			// substitute back
-			result = result.replace("**", "^");
-			rv = FormulaParser.parseValue(result);
+			// split conjunctions recursively
+			rv = pythonSimplifyRecursively(e);
 		}
 
 		return rv;

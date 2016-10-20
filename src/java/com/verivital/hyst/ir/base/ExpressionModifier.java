@@ -40,7 +40,8 @@ public abstract class ExpressionModifier
 		for (Entry<String, Expression> e : c.init.entrySet())
 		{
 			Expression exp = e.getValue();
-			newInit.put(e.getKey(), em.modifyExpression(exp));
+			Expression newExp = em.modifyExpression(exp);
+			newInit.put(e.getKey(), newExp);
 		}
 
 		c.init = newInit;

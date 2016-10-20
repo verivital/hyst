@@ -458,7 +458,7 @@ public class RangeExtractor
 						String message = "Unsupported condition for range extraction (one side should be variable, the "
 								+ "other side a constant): " + expression.toDefaultString()
 								+ ". If one side is a named constant, you can try running the substitute constants transformation "
-								+ "pass by adding '-pass_sub_constants \"\"' to the command line";
+								+ "pass by adding '-pass sub_constants \"\"' to the command line";
 
 						throw new UnsupportedConditionException(message);
 					}

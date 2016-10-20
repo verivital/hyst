@@ -4,13 +4,16 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
+import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.grammar.formula.Constant;
+import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
@@ -231,6 +234,62 @@ public class HylaaPrinter extends ToolPrinter
 			// add the symbolic guard
 			// String s = rrtSymbolicPyinter.print(at.guard);
 			// rv.add("t.guard_strings = [" + s + "]");
+
+			return rv;
+		}
+
+		@Override
+		public ArrayList<String> getInitLines(Configuration c)
+		{
+			// Hylaa initial states can be linear constraint stars
+
+			ArrayList<String> rv = new ArrayList<String>();
+			rv.add("'''returns a list of (mode, list(LinearConstraint])'''");
+
+			BaseComponent ha = (BaseComponent) c.root;
+
+			rv.add(COMMENT_CHAR + " Variable ordering: " + ha.variables);
+			rv.add("rv = []");
+			rv.add("");
+
+			for (Entry<String, Expression> e : c.init.entrySet())
+			{
+				String modeName = e.getKey();
+				Expression exp = e.getValue();
+
+				rv.add("constraints = []");
+
+				try
+				{
+					ArrayList<Operation> parts = DynamicsUtil.splitConjunction(exp);
+
+					for (Operation o : parts)
+					{
+						ArrayList<String> conds = toLinearConstraints(o, ha.variables);
+
+						for (int i = 0; i < conds.size(); ++i)
+						{
+							String line = "constraints.append(" + conds.get(i) + ") # "
+									+ o.toDefaultString();
+							rv.add(line);
+
+							// System.out.println(line);
+						}
+					}
+				}
+				catch (AutomatonExportException exception)
+				{
+					throw new AutomatonExportException("Error printing initial states in mode "
+							+ modeName + ":" + exception.getLocalizedMessage(), exception);
+				}
+
+				// rv.add(initToHyperRectangle(exp, ha.variables));
+
+				rv.add("rv.append((ha.modes['" + modeName + "'], constraints))");
+				rv.add("");
+			}
+
+			rv.add("return rv");
 
 			return rv;
 		}

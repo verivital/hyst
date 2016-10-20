@@ -192,7 +192,7 @@ public class GeneratorTests
 	{
 		DrivetrainGenerator gen = new DrivetrainGenerator();
 
-		String param = "-theta 1";
+		String param = "-theta 1 -init_scale 0";
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("10 variables", 10, c.root.variables.size());
@@ -206,17 +206,47 @@ public class GeneratorTests
 	}
 
 	@Test
-	public void testDrivetrainHighInput()
+	public void testDrivetrainHighInputPysim()
 	{
+		if (!PythonBridge.hasPython())
+			return;
+
 		DrivetrainGenerator gen = new DrivetrainGenerator();
 
-		String param = "-theta 1 -highinput";
+		String param = "-theta 1 -high_input -init_scale 0";
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
 		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
 		printer.print(c, "", "in.xml");
+
+		String out = printer.outputString.toString();
+
+		// System.out.println(out);
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		// shouldn't be doing integet division
+		Assert.assertFalse("Pysim printer shouldn't be using integer division",
+				out.contains("1 / 12"));
+	}
+
+	@Test
+	public void testDrivetrainHighInputHylaa()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 1 -high_input";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("9 variables", 9, c.root.variables.size());
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "-s", "in.xml");
 
 		String out = printer.outputString.toString();
 

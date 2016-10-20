@@ -35,7 +35,10 @@ public class DrivetrainGenerator extends ModelGenerator
 	@Option(name = "-theta", usage = "number of additional rotating masses (dims = 9 + 2*theta)", metaVar = "NUM")
 	private int theta = 1;
 
-	@Option(name = "-highinput", usage = "force the high input for the entire time interval")
+	@Option(name = "-init_scale", usage = "multiplier for the initial states (1 = 100%, 0.05 = 5%)")
+	private double initScale = 1.0;
+
+	@Option(name = "-high_input", usage = "force the high input for the entire time interval")
 	private boolean forceHighInput = false;
 
 	////////////// parameters ////////////////
@@ -100,20 +103,7 @@ public class DrivetrainGenerator extends ModelGenerator
 		if (!forceHighInput)
 			initExp = FormulaParser.parseInitialForbidden("t == 0");
 
-		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
-
-		for (int d = 0; d < 7 + 2 * theta; ++d)
-		{
-			double val;
-
-			if (d < center.length)
-				val = center[d];
-			else
-				val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8, 11 goes to 7
-
-			initExp = Expression.and(initExp,
-					FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val));
-		}
+		initExp = Expression.and(initExp, makeInitExpression());
 
 		if (!forceHighInput)
 			c.init.put("negAngleInit", initExp);
@@ -254,6 +244,83 @@ public class DrivetrainGenerator extends ModelGenerator
 	{
 		if (theta < 0)
 			throw new AutomatonExportException("theta must be nonnegative: " + theta);
+
+		if (initScale < 0)
+			throw new AutomatonExportException("init_scale must be nonnegative: " + theta);
 	}
 
+	private Expression makeInitExpression()
+	{
+		Expression rv = Constant.TRUE;
+
+		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
+		double[] generator = { 0.0056, 4.67, 0, 10, 0, 10, 120, 0.0006, 10 };
+
+		if (initScale == 0)
+		{
+			for (int d = 0; d < 7 + 2 * theta; ++d)
+			{
+				double val;
+
+				if (d < center.length)
+					val = center[d];
+				else
+					val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8, 11 goes to 7
+
+				rv = Expression.and(rv,
+						FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val));
+			}
+		}
+		else
+		{
+			// create n-1 inequalities to define the initial line
+			// formula: y-y1 = (y2-y1) / (x2-x1) * (x-x1)
+
+			// use the difference in x3 for the denominator
+			// dim 3 was chosen because x2-x1 is 20, so the generator scales won't be multiplied or
+			// divided too much (20 is close to 1... in terms of floating point error)
+			int denominatorDimIndex = 3;
+			double x1 = center[denominatorDimIndex] - generator[denominatorDimIndex];
+			double x2 = center[denominatorDimIndex] + generator[denominatorDimIndex];
+			String denVar = "x" + (denominatorDimIndex + 1);
+
+			for (int d = 0; d < 7 + 2 * theta; ++d)
+			{
+				if (d == denominatorDimIndex) // skip denominator variable
+					continue;
+
+				double c;
+				double g;
+
+				if (d < center.length)
+				{
+					c = center[d];
+					g = generator[d];
+				}
+
+				else
+				{
+					int index = 7 + (d + 1) % 2; // 9 goes to 7, 10 goes to 8, 11 goes to 7
+					c = center[index];
+					g = generator[index];
+				}
+
+				double y1 = c - g;
+				double y2 = c + g;
+
+				// formula: y-y1 = (y2-y1) / (x2-x1) * (x-x1)
+				String curVar = "x" + (d + 1);
+				String exp = curVar + " - (" + y1 + ") = " + (y2 - y1) / (x2 - x1) + " * (" + denVar
+						+ " - (" + x1 + "))";
+
+				rv = Expression.and(rv, FormulaParser.parseInitialForbidden(exp));
+			}
+
+			// finally: add two bounds on denVar for the sides
+			String exp = x1 + " <= " + denVar + " <= " + x2;
+			rv = Expression.and(rv, FormulaParser.parseInitialForbidden(exp));
+		}
+
+		return rv;
+	}
 }

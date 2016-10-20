@@ -5,6 +5,7 @@ package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
@@ -332,6 +333,84 @@ public class PySimPrinter extends ToolPrinter
 
 			return rv;
 		}
+
+		public ArrayList<String> getInitLines(Configuration c)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+			rv.add("'''returns a list of (mode, HyperRectangle)'''");
+
+			BaseComponent ha = (BaseComponent) c.root;
+
+			rv.add(COMMENT_CHAR + " Variable ordering: " + ha.variables);
+			rv.add("rv = []");
+			rv.add("");
+
+			for (Entry<String, Expression> e : c.init.entrySet())
+			{
+				String modeName = e.getKey();
+				Expression exp = e.getValue();
+
+				try
+				{
+					rv.add(initToHyperRectangle(exp, ha.variables));
+				}
+				catch (AutomatonExportException exception)
+				{
+					throw new AutomatonExportException("Error printing initial states in mode "
+							+ modeName + ":" + exception.getLocalizedMessage(), exception);
+				}
+
+				rv.add("rv.append((ha.modes['" + modeName + "'], r))");
+				rv.add("");
+			}
+
+			rv.add("return rv");
+
+			return rv;
+		}
+
+		public static String initToHyperRectangle(Expression exp, List<String> variableOrder)
+		{
+			// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
+			StringBuilder sb = new StringBuilder("r = HyperRectangle([");
+
+			TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
+
+			try
+			{
+				RangeExtractor.getVariableRanges(exp, ranges);
+			}
+			catch (EmptyRangeException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
+			catch (ConstantMismatchException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
+			catch (UnsupportedConditionException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
+
+			for (String s : variableOrder)
+			{
+				if (s != variableOrder.get(0))
+					sb.append(", ");
+
+				Interval i = ranges.get(s);
+
+				if (i == null)
+					throw new AutomatonExportException("Initial range for variable " + s
+							+ " was not defined in" + " expression: " + exp.toDefaultString());
+
+				sb.append("(" + doubleToString(i.min) + ", " + doubleToString(i.max) + ")");
+			}
+
+			sb.append("])");
+
+			return sb.toString();
+		}
 	}
 
 	/**
@@ -393,8 +472,10 @@ public class PySimPrinter extends ToolPrinter
 		appendNewline(rv);
 
 		appendLine(rv, "def define_init_states(ha):");
-		appendIndentedLine(rv, "'''returns a list of (mode, HyperRectangle)'''");
-		appendInit(rv, config);
+
+		for (String line : custom.getInitLines(config))
+			appendIndentedLine(rv, line);
+
 		appendNewline(rv);
 
 		// restore expressionPrinter
@@ -456,89 +537,6 @@ public class PySimPrinter extends ToolPrinter
 	private static void appendIndentedLine(StringBuilder rv, String string)
 	{
 		rv.append("    " + string + "\n");
-	}
-
-	private static void appendInit(StringBuilder rv, Configuration config)
-	{
-		/*
-		 * # Variable ordering: [x, t, tglobal] rv = []
-		 * 
-		 * r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)]) rv.append((ha.modes['loc1'], r))
-		 * 
-		 * r = HyperRectangle([(7.5, 8.5), (0.0, 0.0), (0.0, 0.0)]) rv.append((ha.modes['loc2'], r))
-		 * 
-		 * return rv
-		 */
-		BaseComponent ha = (BaseComponent) config.root;
-
-		appendIndentedLine(rv, COMMENT_CHAR + " Variable ordering: " + ha.variables);
-		appendIndentedLine(rv, "rv = []");
-		appendNewline(rv);
-
-		for (Entry<String, Expression> e : config.init.entrySet())
-		{
-			String modeName = e.getKey();
-			Expression exp = e.getValue();
-
-			try
-			{
-				appendHyperRectangleFromInitExpression(rv, exp, ha);
-			}
-			catch (AutomatonExportException exception)
-			{
-				throw new AutomatonExportException("Error printing initial states in mode "
-						+ modeName + ":" + exception.getLocalizedMessage(), exception);
-			}
-
-			appendIndentedLine(rv, "rv.append((ha.modes['" + modeName + "'], r))");
-			appendNewline(rv);
-		}
-
-		appendIndentedLine(rv, "return rv");
-	}
-
-	private static void appendHyperRectangleFromInitExpression(StringBuilder rv, Expression exp,
-			BaseComponent ha)
-	{
-		// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
-		StringBuilder sb = new StringBuilder("r = HyperRectangle([");
-
-		TreeMap<String, Interval> ranges = new TreeMap<String, Interval>();
-
-		try
-		{
-			RangeExtractor.getVariableRanges(exp, ranges);
-		}
-		catch (EmptyRangeException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		catch (ConstantMismatchException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-		catch (UnsupportedConditionException e)
-		{
-			throw new AutomatonExportException(e.getLocalizedMessage(), e);
-		}
-
-		for (String s : ha.variables)
-		{
-			if (s != ha.variables.get(0))
-				sb.append(", ");
-
-			Interval i = ranges.get(s);
-
-			if (i == null)
-				throw new AutomatonExportException("Initial range for variable " + s
-						+ " was not defined in" + " expression: " + exp.toDefaultString());
-
-			sb.append("(" + doubleToString(i.min) + ", " + doubleToString(i.max) + ")");
-		}
-
-		sb.append("])");
-
-		appendIndentedLine(rv, sb.toString());
 	}
 
 	private void printSimulate()
