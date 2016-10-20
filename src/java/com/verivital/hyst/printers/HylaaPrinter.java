@@ -41,6 +41,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-num_angles", usage = "set Hylaa's num_angles plot setting")
 	public int numAngles;
 
+	@Option(name = "-max_shown_polys", usage = "set Hylaa's max_shown_polys plot setting")
+	public int max_shown_polys = -1;
+
 	@Option(name = "-nodeaggregation", usage = "disable deaggregation")
 	public boolean noDeaggregation = false;
 
@@ -386,6 +389,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		if (numAngles > 0)
 			printLine("plot_settings.numAngles = " + numAngles);
+
+		if (max_shown_polys >= 0)
+			printLine("plot_settings.max_shown_polys = " + max_shown_polys);
 
 		printNewline();
 
