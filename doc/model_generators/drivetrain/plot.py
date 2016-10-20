@@ -42,7 +42,7 @@ def gen_drivetrain_hylaa(theta):
     title = "Drivetrain (Theta={})".format(theta)
     gen_param = '-theta {} -high_input'.format(theta)
     
-    e = hypy.Engine('hylaa', '-python_simplify')
+    e = hypy.Engine('hylaa', '-python_simplify -num_angles 16 -plot_full -nodeaggregation')
     e.set_generator('drivetrain', gen_param)
     e.set_output('hylaa_drivetrain{}.py'.format(theta))
     

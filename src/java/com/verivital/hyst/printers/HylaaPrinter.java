@@ -35,8 +35,14 @@ public class HylaaPrinter extends ToolPrinter
 			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
 	public boolean pythonSimplify = false;
 
-	@Option(name = "-plot", aliases = { "-p" }, usage = "plot during computation")
-	public boolean plotFlag = false;
+	@Option(name = "-plot_full", usage = "use plot_full plotting mode")
+	public boolean plotFull = false;
+
+	@Option(name = "-num_angles", usage = "set Hylaa's num_angles plot setting")
+	public int numAngles = 0;
+
+	@Option(name = "-nodeaggregation", usage = "disable deaggregation")
+	public boolean noDeaggregation = false;
 
 	private static final String COMMENT_CHAR = "#";
 
@@ -343,19 +349,29 @@ public class HylaaPrinter extends ToolPrinter
 
 		String plotMode = "PLOT_NONE";
 
-		if (plotFlag)
+		if (plotFull)
 			plotMode = "PLOT_FULL";
 
 		printLine("plot_settings.plot_mode = PlotSettings." + plotMode);
 		printLine("plot_settings.xdim = " + xDim);
 		printLine("plot_settings.ydim = " + yDim);
+
+		if (numAngles > 0)
+			printLine("plot_settings.numAngles = " + numAngles);
+
 		printNewline();
 
 		double step = config.settings.spaceExConfig.samplingTime;
 		double maxTime = config.settings.spaceExConfig.timeHorizon;
 
-		printLine("return HylaaSettings(step=" + step + ", max_time=" + maxTime
+		printLine("settings =  HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
+
+		if (noDeaggregation)
+			printLine("settings.deaggregation = False");
+
+		printNewline();
+		printLine("return settings");
 	}
 
 	@Override
