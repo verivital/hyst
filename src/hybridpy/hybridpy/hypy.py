@@ -231,8 +231,6 @@ class Engine(object):
         'output' - tool-specific processed output object, only returned if successful and parse_output == True
         '''
 
-        #image_path = os.path.splitext(filename)[0] + ".png" if filename is not None else "generated.png"
-
         start_time = time.time()
         tool = TOOLS.get(self.printer[0])
 
@@ -280,7 +278,6 @@ class Engine(object):
                 rv['hyst_stdout'] = hyst_out.lines
 
         if rv['code'] == Engine.SUCCESS and run_tool:
-
             temp_dir = None
 
             if parse_output:

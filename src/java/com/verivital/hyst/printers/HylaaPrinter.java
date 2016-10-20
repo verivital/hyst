@@ -272,8 +272,6 @@ public class HylaaPrinter extends ToolPrinter
 							String line = "constraints.append(" + conds.get(i) + ") # "
 									+ o.toDefaultString();
 							rv.add(line);
-
-							// System.out.println(line);
 						}
 					}
 				}

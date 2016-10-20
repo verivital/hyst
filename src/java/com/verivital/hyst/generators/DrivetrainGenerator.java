@@ -305,8 +305,8 @@ public class DrivetrainGenerator extends ModelGenerator
 					g = generator[index];
 				}
 
-				double y1 = c - g;
-				double y2 = c + g;
+				double y1 = c - initScale * g;
+				double y2 = c + initScale * g;
 
 				// formula: y-y1 = (y2-y1) / (x2-x1) * (x-x1)
 				String curVar = "x" + (d + 1);

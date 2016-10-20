@@ -8,7 +8,6 @@ def main():
 
     theta = 1
 
-    print "todo: remove hylaa gen here"
     #gen_drivetrain_pysim(theta)
     gen_drivetrain_hylaa(theta)   
  
@@ -31,9 +30,8 @@ def gen_drivetrain_pysim(theta):
     #e.add_pass("simplify", "-p")
     
     print 'Running ' + title
-    e.run(print_stdout=True, image_path=image_path)
+    res = e.run(print_stdout=True, image_path=image_path)
     print 'Finished ' + title
-    res = e.run()
 
     if res['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError('Error in ' + title + ': ' + str(res['code']))
@@ -49,9 +47,8 @@ def gen_drivetrain_hylaa(theta):
     e.set_output('hylaa_drivetrain{}.py'.format(theta))
     
     print 'Running ' + title
-    e.run(print_stdout=True, run_tool=False)
+    res = e.run(print_stdout=True, run_tool=False)
     print 'Finished ' + title
-    res = e.run()
 
     if res['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError('Error in ' + title + ': ' + str(res['code']))
