@@ -291,6 +291,9 @@ public class DrivetrainGenerator extends ModelGenerator
 		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
 		double[] generator = { 0.0056, 4.67, 0, 10, 0, 10, 120, 0.0006, 10 };
 
+		for (int i = 0; i < generator.length; ++i)
+			generator[i] *= initScale;
+
 		if (initScale == 0 || initPoints == 1) // single point init
 		{
 			for (int d = 0; d < 7 + 2 * theta; ++d)
@@ -386,8 +389,8 @@ public class DrivetrainGenerator extends ModelGenerator
 					g = generator[index];
 				}
 
-				double y1 = c - initScale * g;
-				double y2 = c + initScale * g;
+				double y1 = c - g;
+				double y2 = c + g;
 
 				// formula: y-y1 = (y2-y1) / (x2-x1) * (x-x1)
 				String curVar = "x" + (d + 1);
