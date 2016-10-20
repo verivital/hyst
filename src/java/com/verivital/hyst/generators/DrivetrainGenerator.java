@@ -1,6 +1,7 @@
 package com.verivital.hyst.generators;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
@@ -40,6 +41,9 @@ public class DrivetrainGenerator extends ModelGenerator
 
 	@Option(name = "-high_input", usage = "force the high input for the entire time interval")
 	private boolean forceHighInput = false;
+
+	@Option(name = "-error_guard", usage = "add a guard to an error mode with the given condition")
+	private String errorGuard;
 
 	////////////// parameters ////////////////
 	final static double switchTime = 0.2;
@@ -109,6 +113,9 @@ public class DrivetrainGenerator extends ModelGenerator
 			c.init.put("negAngleInit", initExp);
 		else
 			c.init.put("negAngle", initExp);
+
+		if (errorGuard != null)
+			c.forbidden.put("error", Constant.TRUE);
 
 		// settings
 		c.settings.plotVariableNames[0] = "x1";
@@ -180,6 +187,21 @@ public class DrivetrainGenerator extends ModelGenerator
 		{
 			AutomatonMode loc = transitionLocs[i];
 			makeDynamics(loc, alphas[i], ks[i], inputs[1]);
+		}
+
+		if (errorGuard != null)
+		{
+			AutomatonMode am = rv.createMode("error");
+			am.invariant = Constant.TRUE;
+			am.flowDynamics = new LinkedHashMap<String, ExpressionInterval>();
+
+			for (int d = 1; d <= 7 + 2 * theta; ++d)
+				am.flowDynamics.put("x" + d, new ExpressionInterval(0));
+
+			if (!forceHighInput)
+				am.flowDynamics.put("t", new ExpressionInterval(0));
+
+			rv.createTransition(loc3_u2, am).guard = FormulaParser.parseGuard(errorGuard);
 		}
 
 		rv.validate();

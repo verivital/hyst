@@ -192,7 +192,7 @@ public class GeneratorTests
 	{
 		DrivetrainGenerator gen = new DrivetrainGenerator();
 
-		String param = "-theta 1 -init_scale 0";
+		String param = "-theta 1 -init_scale 0 -error_guard x3>=85";
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("10 variables", 10, c.root.variables.size());

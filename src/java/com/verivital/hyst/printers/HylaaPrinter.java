@@ -39,10 +39,16 @@ public class HylaaPrinter extends ToolPrinter
 	public boolean plotFull = false;
 
 	@Option(name = "-num_angles", usage = "set Hylaa's num_angles plot setting")
-	public int numAngles = 0;
+	public int numAngles;
 
 	@Option(name = "-nodeaggregation", usage = "disable deaggregation")
 	public boolean noDeaggregation = false;
+
+	@Option(name = "-xdim", usage = "x axis variable name")
+	public String xdim;
+
+	@Option(name = "-ydim", usage = "y axis variable name")
+	public String ydim;
 
 	private static final String COMMENT_CHAR = "#";
 
@@ -343,6 +349,25 @@ public class HylaaPrinter extends ToolPrinter
 	{
 		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
 		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
+
+		if (this.xdim != null)
+		{
+			int index = config.root.variables.indexOf(xdim);
+
+			if (index == 0)
+				throw new AutomatonExportException(
+						"X dim variable " + xdim + " not found in automaton.");
+			else
+				xDim = index;
+
+			index = config.root.variables.indexOf(ydim);
+
+			if (index == 0)
+				throw new AutomatonExportException(
+						"Y dim variable " + ydim + " not found in automaton.");
+			else
+				yDim = index;
+		}
 
 		printLine("'get the hylaa settings object'");
 		printLine("plot_settings = PlotSettings()");
