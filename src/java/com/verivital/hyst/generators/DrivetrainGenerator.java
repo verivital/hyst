@@ -1,5 +1,6 @@
 package com.verivital.hyst.generators;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
@@ -44,6 +45,9 @@ public class DrivetrainGenerator extends ModelGenerator
 
 	@Option(name = "-error_guard", usage = "add a guard to an error mode with the given condition")
 	private String errorGuard;
+
+	@Option(name = "-init_points", usage = "instead of an initial set, initialize with equidistant points")
+	private int initPoints;
 
 	////////////// parameters ////////////////
 	final static double switchTime = 0.2;
@@ -102,17 +106,14 @@ public class DrivetrainGenerator extends ModelGenerator
 		Configuration c = new Configuration(ha);
 
 		// init
-		Expression initExp = Constant.TRUE;
+		ArrayList<Expression> initExps = makeInitExpressions();
+		String initMode = "negAngleInit";
 
-		if (!forceHighInput)
-			initExp = FormulaParser.parseInitialForbidden("t == 0");
+		if (forceHighInput)
+			initMode = "negAngle";
 
-		initExp = Expression.and(initExp, makeInitExpression());
-
-		if (!forceHighInput)
-			c.init.put("negAngleInit", initExp);
-		else
-			c.init.put("negAngle", initExp);
+		for (Expression e : initExps)
+			c.init.put(initMode, e);
 
 		if (errorGuard != null)
 			c.forbidden.put("error", Constant.TRUE);
@@ -180,7 +181,10 @@ public class DrivetrainGenerator extends ModelGenerator
 				FormulaParser.parseInvariant("alpha <= x1"));
 
 		rv.createTransition(loc1, loc2).guard = FormulaParser.parseGuard("x1 >= -alpha");
+		rv.createTransition(loc2, loc1).guard = FormulaParser.parseGuard("x1 <= -alpha");
+
 		rv.createTransition(loc2, loc3).guard = FormulaParser.parseGuard("x1 >= alpha");
+		rv.createTransition(loc3, loc2).guard = FormulaParser.parseGuard("x1 <= alpha");
 
 		// dynamics
 		for (int i = 0; i < 3; ++i)
@@ -211,13 +215,22 @@ public class DrivetrainGenerator extends ModelGenerator
 
 	private void makeDynamics(AutomatonMode loc, String alpha, String k, double u_value)
 	{
-		String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k + "*(x1 - ("
-				+ alpha + ")) - b_m*x7)) + k_KI*(i*x3 - i*(x1+ x8))";
+		String firstGearAngVel = "x9";
+		String firstGear = "x8";
+
+		if (theta == 0)
+		{
+			firstGearAngVel = "x6";
+			firstGear = "x5";
+		}
 
 		if (!forceHighInput)
 			loc.flowDynamics.put("t", new ExpressionInterval(1));
 
-		loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - x9"));
+		String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k + "*(x1 - ("
+				+ alpha + ")) - b_m*x7)) + k_KI*(i*x3 - i*(x1 + " + firstGear + "))";
+
+		loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - " + firstGearAngVel));
 		loc.flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));
 		loc.flowDynamics.put("x3", new ExpressionInterval("x4"));
 		loc.flowDynamics.put("x4", new ExpressionInterval(u_value));
@@ -271,14 +284,14 @@ public class DrivetrainGenerator extends ModelGenerator
 			throw new AutomatonExportException("init_scale must be nonnegative: " + theta);
 	}
 
-	private Expression makeInitExpression()
+	private ArrayList<Expression> makeInitExpressions()
 	{
-		Expression rv = Constant.TRUE;
+		ArrayList<Expression> initList = new ArrayList<Expression>();
 
 		double[] center = { -0.0432, -11, 0, 30, 0, 30, 360, -0.00132, 30 };
 		double[] generator = { 0.0056, 4.67, 0, 10, 0, 10, 120, 0.0006, 10 };
 
-		if (initScale == 0)
+		if (initScale == 0 || initPoints == 1) // single point init
 		{
 			for (int d = 0; d < 7 + 2 * theta; ++d)
 			{
@@ -289,11 +302,57 @@ public class DrivetrainGenerator extends ModelGenerator
 				else
 					val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8, 11 goes to 7
 
-				rv = Expression.and(rv,
-						FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val));
+				Expression rv = FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val);
+
+				if (!forceHighInput)
+					rv = Expression.and(rv, FormulaParser.parseInitialForbidden("t == 0"));
+
+				initList.add(rv);
 			}
 		}
-		else
+		else if (initPoints > 1) // multi-point init
+		{
+			// start = center - generator
+			// step = 2 * generator / (initPoints - 1)
+
+			for (int p = 0; p < initPoints; ++p)
+			{
+				Expression e = Constant.TRUE;
+
+				for (int d = 0; d < 7 + 2 * theta; ++d)
+				{
+					double c;
+					double g;
+
+					if (d < center.length)
+					{
+						c = center[d];
+						g = generator[d];
+					}
+					else
+					{
+						int index = 7 + (d + 1) % 2; // 9 goes to 7, 10 goes to 8, 11 goes to 7
+						c = center[index];
+						g = generator[index];
+					}
+
+					double start = c - g;
+					double step = 2 * g / (initPoints - 1);
+
+					double cur = start + d * step;
+					String varName = "x" + (d + 1);
+
+					e = Expression.and(e,
+							FormulaParser.parseInitialForbidden(varName + " = " + cur));
+				}
+
+				if (!forceHighInput)
+					e = Expression.and(e, FormulaParser.parseInitialForbidden("t == 0"));
+
+				initList.add(e);
+			}
+		}
+		else // zonotope (single-line) init
 		{
 			// create n-1 inequalities to define the initial line
 			// formula: y-y1 = (y2-y1) / (x2-x1) * (x-x1)
@@ -305,6 +364,7 @@ public class DrivetrainGenerator extends ModelGenerator
 			double x1 = center[denominatorDimIndex] - generator[denominatorDimIndex];
 			double x2 = center[denominatorDimIndex] + generator[denominatorDimIndex];
 			String denVar = "x" + (denominatorDimIndex + 1);
+			Expression rv = Constant.TRUE;
 
 			for (int d = 0; d < 7 + 2 * theta; ++d)
 			{
@@ -319,7 +379,6 @@ public class DrivetrainGenerator extends ModelGenerator
 					c = center[d];
 					g = generator[d];
 				}
-
 				else
 				{
 					int index = 7 + (d + 1) % 2; // 9 goes to 7, 10 goes to 8, 11 goes to 7
@@ -341,8 +400,15 @@ public class DrivetrainGenerator extends ModelGenerator
 			// finally: add two bounds on denVar for the sides
 			String exp = x1 + " <= " + denVar + " <= " + x2;
 			rv = Expression.and(rv, FormulaParser.parseInitialForbidden(exp));
+
+			if (!forceHighInput)
+				rv = Expression.and(rv, FormulaParser.parseInitialForbidden("t == 0"));
+
+			initList.add(rv);
 		}
 
-		return rv;
+		// init
+
+		return initList;
 	}
 }

@@ -6,7 +6,7 @@ import hybridpy.hypy as hypy
 def main():
     '''main entry point'''
 
-    theta = 1
+    theta = 0
 
     #gen_drivetrain_pysim(theta)
     gen_drivetrain_hylaa(theta)   
