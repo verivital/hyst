@@ -344,9 +344,9 @@ public class DrivetrainGenerator extends ModelGenerator
 					}
 
 					double start = c - g;
-					double step = 2 * g / (initPoints - 1);
+					double step = 2.0 * g / (initPoints - 1.0);
 
-					double cur = start + d * step;
+					double cur = start + p * step;
 					String varName = "x" + (d + 1);
 
 					e = Expression.and(e,
