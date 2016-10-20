@@ -216,10 +216,16 @@ public class GeneratorTests
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
 		ToolPrinter printer = new PySimPrinter();
 		printer.setOutputString();
-		printer.print(c, "", "model.xml");
+		printer.print(c, "", "in.xml");
 
 		String out = printer.outputString.toString();
 
+		// System.out.println(out);
+
 		Assert.assertTrue("some output exists", out.length() > 10);
+
+		// shouldn't be doing integet division
+		Assert.assertFalse("Pysim printer shouldn't be using integer division",
+				out.contains("1 / 12"));
 	}
 }

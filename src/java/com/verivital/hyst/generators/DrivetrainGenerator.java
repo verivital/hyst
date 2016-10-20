@@ -116,9 +116,9 @@ public class DrivetrainGenerator extends ModelGenerator
 		}
 
 		if (!forceHighInput)
-			c.init.put("loc1_u1", initExp);
+			c.init.put("negAngleInit", initExp);
 		else
-			c.init.put("loc1_u2", initExp);
+			c.init.put("negAngle", initExp);
 
 		// settings
 		c.settings.plotVariableNames[0] = "x1";
@@ -143,15 +143,14 @@ public class DrivetrainGenerator extends ModelGenerator
 		if (!forceHighInput)
 			rv.variables.add("t");
 
-		AutomatonMode[][] allLocs;
-
-		// modes under input 1
-		AutomatonMode loc1_u1, loc2_u1, loc3_u1;
+		String[] alphas = new String[] { "-alpha", "-alpha", "alpha" };
+		String[] ks = new String[] { "k", "0", "k" };
 
 		// modes under input 2
-		AutomatonMode loc1_u2 = rv.createMode("loc1_u2");
-		AutomatonMode loc2_u2 = rv.createMode("loc2_u2");
-		AutomatonMode loc3_u2 = rv.createMode("loc3_u2");
+		AutomatonMode loc1_u2 = rv.createMode("negAngle");
+		AutomatonMode loc2_u2 = rv.createMode("deadzone");
+		AutomatonMode loc3_u2 = rv.createMode("posAngle");
+		AutomatonMode[] transitionLocs = new AutomatonMode[] { loc1_u2, loc2_u2, loc3_u2 };
 
 		loc1_u2.invariant = Constant.TRUE;
 		loc2_u2.invariant = Constant.TRUE;
@@ -159,118 +158,96 @@ public class DrivetrainGenerator extends ModelGenerator
 
 		if (!forceHighInput)
 		{
-			loc1_u1 = rv.createMode("loc1_u1");
-			loc2_u1 = rv.createMode("loc2_u1");
-			loc3_u1 = rv.createMode("loc3_u1");
-
-			allLocs = new AutomatonMode[][] { { loc1_u1, loc2_u1, loc3_u1 },
-					{ loc1_u2, loc2_u2, loc3_u2 } };
+			AutomatonMode loc1_u1 = rv.createMode("negAngleInit");
 
 			// create input transitions when the time reaches 0.2
-			for (int mi = 0; mi < 3; ++mi)
-			{
-				AutomatonMode pre = allLocs[0][mi];
-				AutomatonMode post = allLocs[1][mi];
+			AutomatonMode pre = loc1_u1;
+			AutomatonMode post = loc1_u2;
 
-				rv.createTransition(pre, post).guard = FormulaParser
-						.parseGuard("t >= " + switchTime);
+			rv.createTransition(pre, post).guard = FormulaParser.parseGuard("t >= " + switchTime);
 
-				pre.invariant = FormulaParser.parseInvariant("t <= " + switchTime);
-			}
+			pre.invariant = FormulaParser.parseInvariant("t <= " + switchTime);
+
+			makeDynamics(loc1_u1, alphas[0], ks[0], inputs[0]);
 		}
-		else
-			allLocs = new AutomatonMode[][] { { loc1_u2, loc2_u2, loc3_u2 } };
 
-		for (int ui = 0; ui < allLocs.length; ++ui)
+		AutomatonMode loc1 = transitionLocs[0];
+		AutomatonMode loc2 = transitionLocs[1];
+		AutomatonMode loc3 = transitionLocs[2];
+
+		loc1.invariant = Expression.and(loc1.invariant,
+				FormulaParser.parseInvariant("x1 <= -alpha"));
+		loc2.invariant = Expression.and(loc2.invariant,
+				FormulaParser.parseInvariant("-alpha <= x1 <= alpha"));
+		loc3.invariant = Expression.and(loc3.invariant,
+				FormulaParser.parseInvariant("alpha <= x1"));
+
+		rv.createTransition(loc1, loc2).guard = FormulaParser.parseGuard("x1 >= -alpha");
+		rv.createTransition(loc2, loc3).guard = FormulaParser.parseGuard("x1 >= alpha");
+
+		// dynamics
+		for (int i = 0; i < 3; ++i)
 		{
-			AutomatonMode loc1 = allLocs[ui][0];
-			AutomatonMode loc2 = allLocs[ui][1];
-			AutomatonMode loc3 = allLocs[ui][2];
-
-			double u_value = inputs[ui];
-
-			if (forceHighInput)
-				u_value = inputs[1];
-
-			loc1.invariant = Expression.and(loc1.invariant,
-					FormulaParser.parseInvariant("x1 <= -alpha"));
-			loc2.invariant = Expression.and(loc2.invariant,
-					FormulaParser.parseInvariant("-alpha <= x1 <= alpha"));
-			loc3.invariant = Expression.and(loc3.invariant,
-					FormulaParser.parseInvariant("alpha <= x1"));
-
-			rv.createTransition(loc1, loc2).guard = FormulaParser.parseGuard("x1 >= -alpha");
-			rv.createTransition(loc2, loc3).guard = FormulaParser.parseGuard("x1 >= alpha");
-
-			// dynamics
-			String[] alphas = new String[] { "alpha", "alpha", "-alpha" };
-			String[] ks = new String[] { "k", "0", "k" };
-			AutomatonMode[] locs = new AutomatonMode[] { loc1, loc2, loc3 };
-
-			for (int locIndex = 0; locIndex < 3; ++locIndex)
-			{
-				AutomatonMode loc = locs[locIndex];
-				String alpha = alphas[locIndex];
-				String k = ks[locIndex];
-
-				String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k
-						+ "*(x1 - " + alpha + ") - b_m*x7)) + k_KI*(i*x3 - i*(x1+ x8))";
-
-				if (!forceHighInput)
-					loc.flowDynamics.put("t", new ExpressionInterval(1));
-
-				loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - x9"));
-				loc.flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));
-				loc.flowDynamics.put("x3", new ExpressionInterval("x4"));
-				loc.flowDynamics.put("x4", new ExpressionInterval(u_value));
-				loc.flowDynamics.put("x5", new ExpressionInterval("x6"));
-
-				String xBeforeLast = "x" + (7 + 2 * theta - 1);
-
-				loc.flowDynamics.put("x6",
-						new ExpressionInterval("1/J_l*(k_i*(" + xBeforeLast + " - x5) - b_l*x6)"));
-
-				loc.flowDynamics.put("x7", new ExpressionInterval(
-						"1/J_m*(x2 - 1/i*" + k + "*(x1 - " + alpha + ") - b_m*x7)"));
-
-				if (theta >= 1)
-				{
-					loc.flowDynamics.put("x8", new ExpressionInterval("x9"));
-
-					String nextOne = theta > 1 ? "x10" : "x5";
-
-					loc.flowDynamics.put("x9", new ExpressionInterval(
-							"J_i*(" + k + "*(x1 - " + alpha + ") - k_i*(x8 - " + nextOne + "))"));
-				}
-
-				if (theta >= 2)
-				{
-					for (int t = 2; t <= theta; ++t)
-					{
-						int index = 7 + 2 * t - 1;
-
-						loc.flowDynamics.put("x" + index,
-								new ExpressionInterval("x" + (index + 1)));
-
-						String nextOne = theta > t ? "x" + (index + 2) : "x5";
-
-						loc.flowDynamics
-								.put("x" + (index + 1),
-										new ExpressionInterval("J_i*(k_i*(x" + (index - 2) + " - x"
-												+ index + ") - k_i*(x" + index + " - " + nextOne
-												+ "))"));
-
-						// loc1.flowDynamics.put("x10", new ExpressionInterval("x11"));
-						// loc1.flowDynamics.put("x11",
-						// new ExpressionInterval("J_i*(k_i*(x8 - x10) - k_i*(x10 - x5))"));
-					}
-				}
-			}
+			AutomatonMode loc = transitionLocs[i];
+			makeDynamics(loc, alphas[i], ks[i], inputs[1]);
 		}
 
 		rv.validate();
 
 		return rv;
+	}
+
+	private void makeDynamics(AutomatonMode loc, String alpha, String k, double u_value)
+	{
+		String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k + "*(x1 - ("
+				+ alpha + ")) - b_m*x7)) + k_KI*(i*x3 - i*(x1+ x8))";
+
+		if (!forceHighInput)
+			loc.flowDynamics.put("t", new ExpressionInterval(1));
+
+		loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - x9"));
+		loc.flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));
+		loc.flowDynamics.put("x3", new ExpressionInterval("x4"));
+		loc.flowDynamics.put("x4", new ExpressionInterval(u_value));
+		loc.flowDynamics.put("x5", new ExpressionInterval("x6"));
+
+		String xBeforeLast = "x" + (7 + 2 * theta - 1);
+
+		loc.flowDynamics.put("x6",
+				new ExpressionInterval("1/J_l*(k_i*(" + xBeforeLast + " - x5) - b_l*x6)"));
+
+		loc.flowDynamics.put("x7", new ExpressionInterval(
+				"1/J_m*(x2 - 1/i*" + k + "*(x1 - (" + alpha + ")) - b_m*x7)"));
+
+		if (theta >= 1)
+		{
+			loc.flowDynamics.put("x8", new ExpressionInterval("x9"));
+
+			String nextOne = theta > 1 ? "x10" : "x5";
+
+			loc.flowDynamics.put("x9", new ExpressionInterval(
+					"J_i*(" + k + "*(x1 - (" + alpha + ")) - k_i*(x8 - " + nextOne + "))"));
+		}
+
+		if (theta >= 2)
+		{
+			for (int t = 2; t <= theta; ++t)
+			{
+				int index = 7 + 2 * t - 1;
+
+				loc.flowDynamics.put("x" + index, new ExpressionInterval("x" + (index + 1)));
+
+				String nextOne = theta > t ? "x" + (index + 2) : "x5";
+
+				loc.flowDynamics.put("x" + (index + 1),
+						new ExpressionInterval("J_i*(k_i*(x" + (index - 2) + " - x" + index
+								+ ") - k_i*(x" + index + " - " + nextOne + "))"));
+
+				// loc1.flowDynamics.put("x10", new ExpressionInterval("x11"));
+				// loc1.flowDynamics.put("x11",
+				// new ExpressionInterval("J_i*(k_i*(x8 - x10) - k_i*(x10 - x5))"));
+			}
+		}
 	}
 
 	private void checkParams()

@@ -23,7 +23,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 	{
 		constFormatter = new DecimalFormat("", new DecimalFormatSymbols(Locale.ENGLISH));
 		constFormatter.setGroupingUsed(false);
-		// constFormatter.setMinimumFractionDigits(1);
+		constFormatter.setMinimumFractionDigits(1);
 		constFormatter.setMinimumIntegerDigits(1);
 
 		for (Operator o : Operator.values())
