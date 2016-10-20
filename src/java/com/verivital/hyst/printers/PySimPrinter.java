@@ -511,8 +511,8 @@ public class PySimPrinter extends ToolPrinter
 			throw new AutomatonExportException(
 					"Cannot find y dim in automaton: " + config.settings.plotVariableNames[1]);
 
-		printLine("s.x_dim = " + xDim);
-		printLine("s.y_dim = " + yDim);
+		printLine("s.dim_x = " + xDim);
+		printLine("s.dim_y = " + yDim);
 
 		printNewline();
 		printLine("return s");
