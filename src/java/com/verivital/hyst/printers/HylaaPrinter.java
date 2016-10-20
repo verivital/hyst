@@ -354,7 +354,7 @@ public class HylaaPrinter extends ToolPrinter
 		{
 			int index = config.root.variables.indexOf(xdim);
 
-			if (index == 0)
+			if (index == -1)
 				throw new AutomatonExportException(
 						"X dim variable " + xdim + " not found in automaton.");
 			else
@@ -362,7 +362,7 @@ public class HylaaPrinter extends ToolPrinter
 
 			index = config.root.variables.indexOf(ydim);
 
-			if (index == 0)
+			if (index == -1)
 				throw new AutomatonExportException(
 						"Y dim variable " + ydim + " not found in automaton.");
 			else
