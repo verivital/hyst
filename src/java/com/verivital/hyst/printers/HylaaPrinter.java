@@ -47,6 +47,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-nodeaggregation", usage = "disable deaggregation")
 	public boolean noDeaggregation = false;
 
+	@Option(name = "-noaggregation", usage = "disable aggregation")
+	public boolean noAggregation = false;
+
 	@Option(name = "-xdim", usage = "x axis variable name")
 	public String xdim;
 
@@ -406,6 +409,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		if (noDeaggregation)
 			printLine("settings.deaggregation = False");
+
+		if (noAggregation)
+			printLine("settings.aggregation = False");
 
 		printNewline();
 		printLine("return settings");
