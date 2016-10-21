@@ -71,6 +71,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-extra_lines", usage = "set Hylaa's extra_lines parameter")
 	public String extraLines;
 
+	@Option(name = "-extend_plot_range_ratio", usage = "set Hylaa's extend_plot_range_ratio parameter")
+	public double extendPlot;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -447,6 +450,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		if (extraLines != null)
 			printLine("plot_settings.extra_lines = " + extraLines);
+
+		if (extendPlot != 0)
+			printLine("plot_settings.extend_plot_range_ratio = " + extendPlot);
 
 		printNewline();
 
