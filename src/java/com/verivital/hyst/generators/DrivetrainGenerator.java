@@ -119,7 +119,7 @@ public class DrivetrainGenerator extends ModelGenerator
 		c.init.put(initMode, disjunction);
 
 		if (errorGuard != null)
-			c.forbidden.put(initMode, FormulaParser.parseGuard(errorGuard));
+			c.forbidden.put("posAngle", FormulaParser.parseGuard(errorGuard));
 
 		// settings
 		c.settings.plotVariableNames[0] = "x1";
