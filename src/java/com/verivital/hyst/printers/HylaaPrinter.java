@@ -327,6 +327,8 @@ public class HylaaPrinter extends ToolPrinter
 	@Override
 	protected void printAutomaton()
 	{
+		BaseComponent ha2 = (BaseComponent) config.root;
+
 		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
 
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);

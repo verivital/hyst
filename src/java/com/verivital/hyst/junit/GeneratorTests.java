@@ -251,15 +251,18 @@ public class GeneratorTests
 	}
 
 	@Test
-	public void testDrivetrainHighInputHylaa()
+	public void testDrivetrainHighInputErrorConditionHylaa()
 	{
 		if (!PythonBridge.hasPython())
 			return;
 
 		DrivetrainGenerator gen = new DrivetrainGenerator();
 
-		String param = "-theta 1 -high_input";
+		String param = "-theta 1 -high_input -error_guard x3>=85&x1<=0.11";
 		Configuration c = gen.generate(param);
+
+		// should have an error mode
+		Assert.assertEquals(c.forbidden.size(), 1);
 
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
 		ToolPrinter printer = new HylaaPrinter();
@@ -271,10 +274,6 @@ public class GeneratorTests
 		// System.out.println(out);
 
 		Assert.assertTrue("some output exists", out.length() > 10);
-
-		// shouldn't be doing integet division
-		Assert.assertFalse("Pysim printer shouldn't be using integer division",
-				out.contains("1 / 12"));
 	}
 
 	@Test
