@@ -4,6 +4,7 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
@@ -17,10 +18,12 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.StringOperations;
 
 /**
@@ -59,10 +62,14 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-step", usage = "step size")
 	public double step;
 
+	@Option(name = "-sim_tol", usage = "simulation tolerance (accuracy)")
+	public double simTol;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
 	{
+		this.preconditions.skip(PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN);
 	}
 
 	@Override
@@ -321,6 +328,8 @@ public class HylaaPrinter extends ToolPrinter
 
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
+		addErrorMode(config);
+
 		this.printCommentHeader();
 
 		printNewline();
@@ -352,6 +361,33 @@ public class HylaaPrinter extends ToolPrinter
 		printLine("run_hylaa(settings)");
 		decreaseIndentation();
 		printNewline();
+	}
+
+	private void addErrorMode(Configuration config)
+	{
+		if (config.forbidden.size() > 0)
+		{
+			BaseComponent ha = (BaseComponent) config.root;
+			AutomatonMode errorMode = ha.createMode("error");
+			errorMode.invariant = Constant.TRUE;
+			errorMode.flowDynamics = new LinkedHashMap<String, ExpressionInterval>();
+
+			for (String v : ha.variables)
+				errorMode.flowDynamics.put(v, new ExpressionInterval(0));
+
+			for (Entry<String, Expression> entry : config.forbidden.entrySet())
+			{
+				AutomatonMode preMode = ha.modes.get(entry.getKey());
+
+				for (Expression e : DynamicsUtil.splitDisjunction(entry.getValue()))
+				{
+					AutomatonTransition at = ha.createTransition(preMode, errorMode);
+					at.guard = e;
+				}
+			}
+
+			config.validate();
+		}
 	}
 
 	private void printSettings()
@@ -406,6 +442,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		printLine("settings =  HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
+
+		if (simTol > 0)
+			printLine("settings.sim_tol = " + simTol);
 
 		if (noDeaggregation)
 			printLine("settings.deaggregation = False");

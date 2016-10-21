@@ -206,7 +206,8 @@ public class SpaceExPrinter extends ToolPrinter
 		String dirs = getParam(directions, config.settings.spaceExConfig.directions);
 		sed.setDirections(dirs);
 
-		String flowpipeTol = getParam(this.flowpipeTol, config.settings.spaceExConfig.flowpipeTol);
+		double flowpipeTol = Double
+				.parseDouble(getParam(this.flowpipeTol, config.settings.spaceExConfig.flowpipeTol));
 		sed.setFlowpipeTolerance(flowpipeTol);
 
 		String agg = getParam(aggregation, config.settings.spaceExConfig.aggregation);
@@ -568,11 +569,18 @@ public class SpaceExPrinter extends ToolPrinter
 
 		for (Entry<String, Expression> entry : fromMap.entrySet())
 		{
-			Expression e = new Operation(Operator.LOC, new Variable(baseName));
-			e = new Operation(Operator.EQUAL, e, new Variable(entry.getKey()));
+			Expression e;
 
-			if (entry.getValue() != null && entry.getValue() != Constant.TRUE)
-				e = new Operation(Operator.AND, e, entry.getValue());
+			if (ha.modes.size() > 1)
+			{
+				e = new Operation(Operator.LOC, new Variable(baseName));
+				e = new Operation(Operator.EQUAL, e, new Variable(entry.getKey()));
+
+				if (entry.getValue() != null && entry.getValue() != Constant.TRUE)
+					e = new Operation(Operator.AND, e, entry.getValue());
+			}
+			else
+				e = entry.getValue();
 
 			if (rv == null)
 				rv = e;

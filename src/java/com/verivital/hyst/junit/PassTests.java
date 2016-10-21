@@ -32,6 +32,8 @@ import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
@@ -156,6 +158,7 @@ public class PassTests
 		String configFile = path + "heli_large.cfg";
 
 		SpaceExDocument spaceExDoc = SpaceExImporter.importModels(configFile, spaceExFile);
+		spaceExDoc.setForbiddenStateConditions(FormulaParser.parseInitialForbidden("x8 >= 0.5"));
 
 		Map<String, Component> componentTemplates = TemplateImporter
 				.createComponentTemplates(spaceExDoc);
@@ -192,5 +195,11 @@ public class PassTests
 			Assert.assertTrue("initial range for " + mapping.childParam + " and "
 					+ mapping.childParam + " were not equal", range1.equals(range2, 1e-9));
 		}
+
+		// print to hylaa
+		ToolPrinter tp = new HylaaPrinter();
+		tp.setOutputNone();
+
+		tp.print(config, "", "input.xml");
 	}
 }

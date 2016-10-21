@@ -100,11 +100,13 @@ public class FlattenAutomatonPass extends TransformationPass
 	public void runPass()
 	{
 		FlattenRenameUtils.convertToFullyQualifiedParams(config.root);
-		FlattenRenameUtils.convertSettingsSeparator(config);
+
 		config.root = flatten(config.root);
 
 		if (!(config.root instanceof BaseComponent))
 			throw new AutomatonExportException("Flatten failed (root is not BaseComponent)");
+
+		FlattenRenameUtils.convertSettingsSeparator(config);
 	}
 
 	private BaseComponent flatten(Component c)
