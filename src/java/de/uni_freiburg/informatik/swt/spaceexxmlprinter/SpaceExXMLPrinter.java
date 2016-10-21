@@ -667,7 +667,6 @@ public class SpaceExXMLPrinter
 		{
 			appendCfgString(rv, "rel-err", "1.0e-12");
 			appendCfgString(rv, "abs-err", "1.0e-13");
-			appendCfgString(rv, "flowpipe-tolerance", "0.001");
 		}
 
 		if (config.timeTriggered)

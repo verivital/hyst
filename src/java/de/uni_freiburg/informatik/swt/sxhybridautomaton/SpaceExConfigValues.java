@@ -13,7 +13,7 @@ public class SpaceExConfigValues
 	public String scenario = "stc";
 	public String directions = "oct";
 	public String aggregation = "chull";
-	public double flowpipeTol = 0.1;
+	public double flowpipeTol = 0.01;
 	public boolean timeTriggered = false; // time-triggered support using
 											// "--map-zero-duration-jump-sets
 											// true"
