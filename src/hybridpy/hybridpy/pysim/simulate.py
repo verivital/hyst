@@ -330,7 +330,7 @@ def get_ordered_plot_colors():
             rv.append(col)
 
     # we'll re-add these later; remove them before shuffling
-    first_colors = ['lime', 'cyan', 'magenta', 'orange', 'green'] 
+    first_colors = ['lime', 'cyan', 'orange', 'magenta', 'green']
 
     for col in first_colors:
         rv.remove(col)
@@ -353,7 +353,7 @@ def mode_name_to_color(mode_to_color, mode_name):
     '''
     rv = None
 
-    first_colors = ['lime', 'blue', 'red', 'cyan', 'magenta', 'black'] 
+    first_colors = ['lime', 'cyan', 'orange', 'magenta', 'green'] 
 
     rv = mode_to_color.get(mode_name)
 
