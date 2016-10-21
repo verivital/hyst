@@ -65,6 +65,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-sim_tol", usage = "simulation tolerance (accuracy)")
 	public double simTol;
 
+	@Option(name = "-solver", usage = "lp solver (cvxopt_glpk or glpk_multi)")
+	public String solver;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -456,6 +459,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		if (noAggregation)
 			printLine("settings.aggregation = False");
+
+		if (solver != null)
+			printLine("settings.solver = \"" + solver + "\"");
 
 		printNewline();
 		printLine("return settings");
