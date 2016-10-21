@@ -68,6 +68,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-solver", usage = "lp solver (cvxopt_glpk or glpk_multi)")
 	public String solver;
 
+	@Option(name = "-extra_lines", usage = "set Hylaa's extra_lines parameter")
+	public String extraLines;
+
 	private static final String COMMENT_CHAR = "#";
 
 	public HylaaPrinter()
@@ -441,6 +444,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		if (max_shown_polys >= 0)
 			printLine("plot_settings.max_shown_polys = " + max_shown_polys);
+
+		if (extraLines != null)
+			printLine("plot_settings.extra_lines = " + extraLines);
 
 		printNewline();
 
