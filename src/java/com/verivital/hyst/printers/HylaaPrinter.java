@@ -328,7 +328,7 @@ public class HylaaPrinter extends ToolPrinter
 
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
-		addErrorMode(config);
+		convertErrorModes(config);
 
 		this.printCommentHeader();
 
@@ -363,7 +363,12 @@ public class HylaaPrinter extends ToolPrinter
 		printNewline();
 	}
 
-	private void addErrorMode(Configuration config)
+	/**
+	 * Convert error modes to guard transitions to a new mode 'error'
+	 * 
+	 * @param config
+	 */
+	public static void convertErrorModes(Configuration config)
 	{
 		if (config.forbidden.size() > 0)
 		{

@@ -196,10 +196,9 @@ public class PassTests
 					+ mapping.childParam + " were not equal", range1.equals(range2, 1e-9));
 		}
 
-		// print to hylaa
 		ToolPrinter tp = new HylaaPrinter();
 		tp.setOutputNone();
 
-		tp.print(config, "", "input.xml");
+		tp.print(config, "", "out.xml");
 	}
 }
