@@ -896,6 +896,12 @@ public class SpaceExXMLReader
 
 							mTarget.setSamplingTime(st);
 						}
+						else if (property.equals("flowpipe-tolerance"))
+						{
+							double tol = Double.parseDouble(value);
+
+							mTarget.setFlowpipeTolerance(tol);
+						}
 						else if (property.equals("iter-max"))
 						{
 							int im = Integer.parseInt(value);

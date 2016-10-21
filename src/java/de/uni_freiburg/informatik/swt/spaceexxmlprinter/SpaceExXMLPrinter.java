@@ -657,7 +657,8 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "scenario", config.scenario); // was supp
 		appendCfgString(rv, "directions", config.directions);
 		appendCfgString(rv, "set-aggregation", config.aggregation);
-		appendCfgString(rv, "sampling-time", new Double(config.samplingTime).toString());
+		appendCfgString(rv, "flowpipe-tolerance", Double.toString(config.flowpipeTol));
+		appendCfgString(rv, "sampling-time", Double.toString(config.samplingTime).toString());
 		appendCfgString(rv, "time-horizon", Double.toString(config.timeHorizon));
 		appendCfgString(rv, "iter-max", Integer.toString(config.maxIterations));
 		appendCfgString(rv, "output-format", config.outputFormat);

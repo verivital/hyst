@@ -161,9 +161,14 @@ public class SpaceExDocument
 		mConfig.directions = dirs;
 	}
 
-	public void setAggregation(String dirs)
+	public void setAggregation(String agg)
 	{
-		mConfig.aggregation = dirs;
+		mConfig.aggregation = agg;
+	}
+
+	public void setFlowpipeTolerance(double tol)
+	{
+		mConfig.flowpipeTol = tol;
 	}
 
 	public String toString()

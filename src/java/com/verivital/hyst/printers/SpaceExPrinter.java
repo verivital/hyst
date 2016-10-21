@@ -75,6 +75,12 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-directions", usage = "support function directions", metaVar = "VAL")
 	String directions = "auto";
 
+	@Option(name = "-aggregation", usage = "aggregation parameter", metaVar = "VAL")
+	String aggregation = "auto";
+
+	@Option(name = "-flowpipe_tol", usage = "flowpipe-tolerance parameter", metaVar = "VAL")
+	String flowpipeTol = "auto";
+
 	@Option(name = "-skiptol", usage = "skip printing error tolerances")
 	boolean skipTol = false;
 
@@ -200,7 +206,10 @@ public class SpaceExPrinter extends ToolPrinter
 		String dirs = getParam(directions, config.settings.spaceExConfig.directions);
 		sed.setDirections(dirs);
 
-		String agg = getParam(directions, config.settings.spaceExConfig.aggregation);
+		String flowpipeTol = getParam(this.flowpipeTol, config.settings.spaceExConfig.flowpipeTol);
+		sed.setFlowpipeTolerance(flowpipeTol);
+
+		String agg = getParam(aggregation, config.settings.spaceExConfig.aggregation);
 		sed.setAggregation(agg);
 
 		String scenario = getParam(this.scenario, config.settings.spaceExConfig.scenario);

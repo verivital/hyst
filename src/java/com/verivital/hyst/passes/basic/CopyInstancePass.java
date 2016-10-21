@@ -89,8 +89,10 @@ public class CopyInstancePass extends TransformationPass
 			throw new PreconditionsFailedException(
 					"Must have single initial mode. Count was: " + c.init.size());
 
-		if (c.forbidden.size() != 0)
-			throw new PreconditionsFailedException("Forbidden modes not currently supported.");
+		if (c.forbidden.size() > 1)
+		{
+			throw new PreconditionsFailedException("Max single forbidden mode.");
+		}
 	}
 
 	@Override
@@ -259,6 +261,32 @@ public class CopyInstancePass extends TransformationPass
 
 		config.init.clear();
 		config.init.put(newInitMode.toString(), newInit);
+
+		// create a custom error
+		if (config.forbidden.size() == 1)
+		{
+			Expression errorGuardExp = config.forbidden.values().iterator().next();
+			Expression combinedError = errorGuardExp.copy();
+
+			for (int i = 2; i <= num; ++i)
+			{
+				Expression copyError = errorGuardExp.copy();
+
+				// replace every variable by the new variable name
+				for (ComponentMapping varMapping : ci.varMapping)
+				{
+					String oldVar = varMapping.parentParam;
+					String newVar = baseName + i + "_" + oldVar;
+
+					copyError = replaceVariables(copyError, oldVar, newVar);
+				}
+
+				combinedError = Expression.or(combinedError, copyError);
+			}
+
+			config.forbidden.clear();
+			config.forbidden.put(newInitMode.toString(), combinedError);
+		}
 	}
 
 	private Expression replaceVariables(Expression e, String oldVar, String newVar)
