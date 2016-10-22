@@ -42,6 +42,9 @@ public class DrivetrainGenerator extends ModelGenerator
 	@Option(name = "-high_input", usage = "force the high input for the entire time interval")
 	private boolean forceHighInput = false;
 
+	@Option(name = "-switch_time", usage = "set the time when the input change occurs")
+	private double switchTime = 0.2;
+
 	@Option(name = "-error_guard", usage = "add a guard to an error mode with the given condition")
 	private String errorGuard;
 
@@ -49,7 +52,6 @@ public class DrivetrainGenerator extends ModelGenerator
 	private int initPoints;
 
 	////////////// parameters ////////////////
-	final static double switchTime = 0.2;
 	final static double[] inputs = new double[] { -5, 5 };
 
 	final static HashMap<String, Double> constants = new HashMap<String, Double>();
