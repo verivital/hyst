@@ -129,8 +129,8 @@ public class LutMatrixTest
 	@Test
 	public void testPrintMatrix()
 	{
-		String[] strs = { "[1, 2, -5, 10]", "[1, 2 ; 10, 20 ; 100, 200]",
-				"reshape([1, 2, 3, 11, 12, 13, 101, 102, 103, 111, 112, 113], 3, 2, 2)" };
+		String[] strs = { "[1.0, 2.0, -5.0, 10.0]", "[1.0, 2.0 ; 10.0, 20.0 ; 100.0, 200.0]",
+				"reshape([1.0, 2.0, 3.0, 11.0, 12.0, 13.0, 101.0, 102.0, 103.0, 111.0, 112.0, 113.0], 3, 2, 2)" };
 
 		for (String str : strs)
 		{
@@ -342,7 +342,7 @@ public class LutMatrixTest
 
 		// 15 -> 1.75
 		String[] names = { "on_0", "on_1", "on_2" };
-		String[] invariants = { "t <= 10", "t >= 10 & t <= 30", "t >= 30" };
+		String[] invariants = { "t <= 10.0", "t >= 10.0 & t <= 30.0", "t >= 30.0" };
 		String[] flows = { "1 + 1 / 10 * (t - 0)", "2 + -1 * (t - 10) / 20",
 				"1 + 1 * (t - 30) / 10" };
 
@@ -371,12 +371,12 @@ public class LutMatrixTest
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
 		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
 		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect",
-				"t >= 10 & 1 >= 0", at.guard.toDefaultString());
+				"t >= 10.0 & 1.0 >= 0.0", at.guard.toDefaultString());
 
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
 		at = ha.findTransition(names[2], names[1]);
 		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect",
-				"t <= 30 & 1 <= 0", at.guard.toDefaultString());
+				"t <= 30.0 & 1.0 <= 0.0", at.guard.toDefaultString());
 	}
 
 	/**
@@ -418,7 +418,7 @@ public class LutMatrixTest
 
 		// check the invariant at 1_1
 		String name = "on_1_1";
-		String invariant = "a >= 1 & b >= 10";
+		String invariant = "a >= 1.0 & b >= 10.0";
 
 		AutomatonMode am = ha.modes.get(name);
 		Assert.assertNotEquals("mode " + name + " is not supposed to be null", null, am);
@@ -444,7 +444,7 @@ public class LutMatrixTest
 		int[] indexList = new int[] { 0 };
 		Interval[] rangeList = new Interval[] { new Interval(0, 10) };
 
-		Expression expected = FormulaParser.parseValue("1 + 1 / 10 * (t - 0)");
+		Expression expected = FormulaParser.parseValue("1.0 + 1.0 / 10.0 * (t - 0)");
 		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
 
 		String msg = AutomatonUtil.areExpressionsEqual(expected, got);
@@ -608,6 +608,7 @@ public class LutMatrixTest
 		String[][] dynamics = { { "t", "1", "0" }, { "x", "v", "0" }, { "v", lutStr, "0" } };
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent) c.root;
+		ha.variables.add("input");
 
 		new ConvertLutFlowsPass().runTransformationPass(c, null);
 

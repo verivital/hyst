@@ -426,7 +426,7 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 				throw new AutomatonExportException(
 						"width arguments in function 'reshape' must be integer constants");
 
-			vals[a - 1] = Integer.parseInt(e.toDefaultString());
+			vals[a - 1] = (int) Math.round(Double.parseDouble(e.toDefaultString()));
 		}
 
 		return new MatrixExpression(expressions, vals);
