@@ -647,4 +647,14 @@ public class LutMatrixTest
 
 		Assert.assertTrue("output doesn't contain 'lut('", !out.contains("lut("));
 	}
+
+	@Test
+	public void testLutGenerated()
+	{
+		String lutStr = "[-1:0.5:1]";
+
+		Expression e = FormulaParser.parseValue(lutStr);
+
+		Assert.assertEquals("[-1.0, -0.5, 0.0, 0.5, 1.0]", e.toDefaultString());
+	}
 }

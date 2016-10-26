@@ -4,11 +4,13 @@
 package com.verivital.hyst.grammar.formula;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 
 /**
  * A matrix expression is one defined using matlab-like syntax: [1, 2; 3 4]
@@ -409,6 +411,56 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 
 			return rv;
 		}
+	}
 
+	public static Expression fromRange(Expression startExp, Expression stepExp, Expression stopExp)
+	{
+		Expression start = SimplifyExpressionsPass.simplifyExpression(startExp);
+		Expression step = SimplifyExpressionsPass.simplifyExpression(stepExp);
+		Expression stop = SimplifyExpressionsPass.simplifyExpression(stopExp);
+
+		if (!(start instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got start = "
+							+ startExp.toDefaultString());
+
+		if (!(step instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got step = "
+							+ stepExp.toDefaultString());
+
+		if (!(stop instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got stop = "
+							+ stopExp.toDefaultString());
+
+		double min = ((Constant) start).getVal();
+		double max = ((Constant) stop).getVal();
+		double delta = ((Constant) step).getVal();
+
+		if (max < min)
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should have stop >= start");
+
+		if (delta <= 0)
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should have step > 0");
+
+		ArrayList<Double> values = new ArrayList<Double>();
+
+		double tol = 1e-9;
+
+		if (delta < tol)
+			tol = delta / 2.0;
+
+		for (double d = min; d < max + tol; d += delta)
+			values.add(d);
+
+		double[] vals = new double[values.size()];
+
+		for (int i = 0; i < values.size(); ++i)
+			vals[i] = values.get(i);
+
+		return new MatrixExpression(vals);
 	}
 }

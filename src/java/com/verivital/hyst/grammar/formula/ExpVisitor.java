@@ -472,7 +472,20 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 	}
 
 	@Override
-	public Expression visitMatrix(@NotNull HystExpressionParser.MatrixContext ctx)
+	public Expression visitMatrixRangeExp(@NotNull HystExpressionParser.MatrixRangeExpContext ctx)
+	{
+		return MatrixExpression.fromRange(visit(ctx.addSub(0)), visit(ctx.addSub(1)),
+				visit(ctx.addSub(2)));
+	}
+
+	@Override
+	public Expression visitMatrixGenerated(@NotNull HystExpressionParser.MatrixGeneratedContext ctx)
+	{
+		return visit(ctx.matrixRange());
+	}
+
+	@Override
+	public Expression visitMatrixExplicit(@NotNull HystExpressionParser.MatrixExplicitContext ctx)
 	{
 		int len = ctx.matrixRow().size();
 
