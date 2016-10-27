@@ -86,7 +86,7 @@ public class GeneratorTests
 
 		Assert.assertEquals("mode_0_1", entry.getKey());
 		Assert.assertEquals(
-				"0.5 <= x & x <= 0.5 & 1.5 <= y & y <= 1.5 & -1 <= xvel & xvel <= 1 & -1 <= yvel & yvel <= 1",
+				"0.5 <= x & x <= 0.5 & 1.5 <= y & y <= 1.5 & -1.0 <= xvel & xvel <= 1.0 & -1.0 <= yvel & yvel <= 1.0",
 				entry.getValue().toDefaultString());
 
 		ToolPrinter printer = new FlowstarPrinter();
@@ -117,14 +117,14 @@ public class GeneratorTests
 
 		Assert.assertEquals("mode_2_1", entry.getKey());
 		Assert.assertEquals(
-				"2 <= x & x <= 3 & 1 <= y & y <= 2 & -0.3 <= xvel & xvel <= 0.3 & -0.3 <= yvel & yvel <= 0.3",
+				"2.0 <= x & x <= 3.0 & 1.0 <= y & y <= 2.0 & -0.3 <= xvel & xvel <= 0.3 & -0.3 <= yvel & yvel <= 0.3",
 				entry.getValue().toDefaultString());
 
 		BaseComponent ha = (BaseComponent) c.root;
 
 		AutomatonMode am = ha.modes.get("mode_1_0");
 		Expression e = am.flowDynamics.get("xvel").asExpression();
-		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0)", e.toDefaultString());
+		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0.0)", e.toDefaultString());
 
 		// check dynamics in mode 'A'
 		am = ha.modes.get("mode_2_0");
