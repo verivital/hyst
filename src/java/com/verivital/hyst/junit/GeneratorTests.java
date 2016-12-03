@@ -124,23 +124,23 @@ public class GeneratorTests
 
 		AutomatonMode am = ha.modes.get("mode_1_0");
 		Expression e = am.flowDynamics.get("xvel").asExpression();
-		Assert.assertEquals("-1.2 * (xvel - 1) + 0.1 * (yvel - 0.0)", e.toDefaultString());
+		Assert.assertEquals("-1.2 * (xvel - 1.0) + 0.1 * (yvel - 0.0)", e.toDefaultString());
 
 		// check dynamics in mode 'A'
 		am = ha.modes.get("mode_2_0");
 		e = am.flowDynamics.get("xvel").asExpression();
-		Assert.assertEquals("0", e.toDefaultString());
+		Assert.assertEquals("0.0", e.toDefaultString());
 
 		// check dynamics in mode 'B'
 		am = ha.modes.get("mode_0_2");
 		e = am.flowDynamics.get("xvel").asExpression();
-		Assert.assertEquals("0", e.toDefaultString());
+		Assert.assertEquals("0.0", e.toDefaultString());
 
 		// check condition from mode_2_1 to mode_2_0 is y <= 1
 		for (AutomatonTransition at : ha.transitions)
 		{
 			if (at.from.name.equals("mode_2_1") && at.to.name.equals("mode_2_0"))
-				Assert.assertEquals(at.guard.toDefaultString(), "y <= 1");
+				Assert.assertEquals(at.guard.toDefaultString(), "y <= 1.0");
 		}
 
 		// make sure it simplifies to an easy linear expression

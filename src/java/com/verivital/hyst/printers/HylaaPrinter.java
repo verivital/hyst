@@ -4,7 +4,6 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
@@ -18,7 +17,6 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.util.DynamicsUtil;
@@ -79,6 +77,7 @@ public class HylaaPrinter extends ToolPrinter
 	public HylaaPrinter()
 	{
 		this.preconditions.skip(PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN);
+		this.preconditions.skip(PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED);
 	}
 
 	@Override
@@ -156,11 +155,12 @@ public class HylaaPrinter extends ToolPrinter
 
 			try
 			{
-				rv.add(am.name + ".a_matrix = np.array("
+				rv.add("a_matrix = np.array("
 						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am))
 						+ ", dtype=float)");
-				rv.add(am.name + ".b_vector = np.array("
+				rv.add("c_vector = np.array("
 						+ toPythonList(DynamicsUtil.extractDynamicsVectorB(am)) + ", dtype=float)");
+				rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
 
 				// invariant
 				// loc1.inv_list = [inv1]
@@ -333,13 +333,9 @@ public class HylaaPrinter extends ToolPrinter
 	@Override
 	protected void printAutomaton()
 	{
-		BaseComponent ha2 = (BaseComponent) config.root;
-
 		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
 
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
-
-		convertErrorModes(config);
 
 		this.printCommentHeader();
 
@@ -372,38 +368,6 @@ public class HylaaPrinter extends ToolPrinter
 		printLine("run_hylaa(settings)");
 		decreaseIndentation();
 		printNewline();
-	}
-
-	/**
-	 * Convert error modes to guard transitions to a new mode 'error'
-	 * 
-	 * @param config
-	 */
-	public static void convertErrorModes(Configuration config)
-	{
-		if (config.forbidden.size() > 0)
-		{
-			BaseComponent ha = (BaseComponent) config.root;
-			AutomatonMode errorMode = ha.createMode("error");
-			errorMode.invariant = Constant.TRUE;
-			errorMode.flowDynamics = new LinkedHashMap<String, ExpressionInterval>();
-
-			for (String v : ha.variables)
-				errorMode.flowDynamics.put(v, new ExpressionInterval(0));
-
-			for (Entry<String, Expression> entry : config.forbidden.entrySet())
-			{
-				AutomatonMode preMode = ha.modes.get(entry.getKey());
-
-				for (Expression e : DynamicsUtil.splitDisjunction(entry.getValue()))
-				{
-					AutomatonTransition at = ha.createTransition(preMode, errorMode);
-					at.guard = e;
-				}
-			}
-
-			config.validate();
-		}
 	}
 
 	private void printSettings()
