@@ -13,18 +13,19 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 public class DynamicsUtil
 {
 	/**
-	 * Get the dynamics A matrix
+	 * Get the dynamics A matrix in x' = Ax + Bu + c
 	 * 
 	 */
 	public static ArrayList<ArrayList<Double>> extractDynamicsMatrixA(AutomatonMode am)
 	{
 		ArrayList<ArrayList<Double>> rv = new ArrayList<ArrayList<Double>>();
+		ArrayList<String> nonInputVars = getNonInputVariables(am, am.automaton.variables);
 
-		for (String row : am.automaton.variables)
+		for (String row : nonInputVars)
 		{
 			Expression der = am.flowDynamics.get(row).asExpression();
 
-			ArrayList<Double> line = extractLinearVector(der, am.automaton.variables);
+			ArrayList<Double> line = extractLinearVector(der, nonInputVars);
 
 			rv.add(line);
 		}
@@ -33,14 +34,62 @@ public class DynamicsUtil
 	}
 
 	/**
-	 * Get the dynamics B vector
+	 * Get the dynamics B matrix in x' = Ax + Bu + c
+	 * 
 	 */
-	public static ArrayList<Double> extractDynamicsVectorB(AutomatonMode am)
+	public static ArrayList<ArrayList<Double>> extractDynamicsMatrixB(AutomatonMode am)
 	{
-		ArrayList<Double> rv = new ArrayList<Double>();
+		ArrayList<ArrayList<Double>> rv = new ArrayList<ArrayList<Double>>();
+		ArrayList<String> nonInputVars = getNonInputVariables(am, am.automaton.variables);
+
+		ArrayList<String> inputVars = new ArrayList<String>();
+
+		for (String var : am.automaton.variables)
+		{
+			if (!nonInputVars.contains(var))
+				inputVars.add(var);
+		}
+
+		for (String row : nonInputVars)
+		{
+			Expression der = am.flowDynamics.get(row).asExpression();
+
+			ArrayList<Double> line = extractLinearVector(der, inputVars);
+
+			rv.add(line);
+		}
+
+		return rv;
+	}
+
+	public static ArrayList<String> getNonInputVariables(AutomatonMode am,
+			ArrayList<String> variables)
+	{
+		ArrayList<String> rv = new ArrayList<String>();
 
 		for (String row : am.automaton.variables)
 		{
+			if (am.flowDynamics.get(row) != null)
+				rv.add(row);
+		}
+
+		return rv;
+	}
+
+	/**
+	 * Get the dynamics C vector in x' = Ax + Bu + c
+	 */
+	public static ArrayList<Double> extractDynamicsVectorC(AutomatonMode am)
+	{
+		ArrayList<Double> rv = new ArrayList<Double>();
+		ArrayList<String> allVars = getNonInputVariables(am, am.automaton.variables);
+
+		for (String row : allVars)
+		{
+			// skip urgent variables
+			if (am.flowDynamics.get(row) == null)
+				continue;
+
 			Expression der = am.flowDynamics.get(row).asExpression();
 
 			rv.add(extractLinearValue(der));

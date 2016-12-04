@@ -347,7 +347,11 @@ public class PySimPrinter extends ToolPrinter
 
 			BaseComponent ha = (BaseComponent) c.root;
 
-			rv.add(COMMENT_CHAR + " Variable ordering: " + ha.variables);
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			rv.add(COMMENT_CHAR + " Variable ordering: " + nonInputVars);
 			rv.add("rv = []");
 			rv.add("");
 
@@ -361,7 +365,7 @@ public class PySimPrinter extends ToolPrinter
 					for (Operation o : DynamicsUtil.splitDisjunction(exp))
 					{
 						String str = "rv.append((ha.modes['" + modeName + "'],";
-						str += initToHyperRectangle(o, ha.variables) + "))";
+						str += initToHyperRectangle(o, nonInputVars) + "))";
 
 						rv.add(str);
 					}
@@ -458,6 +462,9 @@ public class PySimPrinter extends ToolPrinter
 
 		BaseComponent ha = (BaseComponent) config.root;
 
+		AutomatonMode someMode = ha.modes.values().iterator().next();
+		ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode, ha.variables);
+
 		if (custom != null)
 			for (String line : custom.getImportLines(ha))
 				appendLine(rv, line);
@@ -468,7 +475,7 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendNewline(rv);
 		appendIndentedLine(rv, "ha = " + custom.automatonObjectName + "()");
-		appendIndentedLine(rv, "ha.variables = " + quotedVarList(ha));
+		appendIndentedLine(rv, "ha.variables = " + quotedVarList(nonInputVars));
 		appendNewline(rv);
 
 		for (String line : custom.getExtraDeclarationPrintLines(ha))
@@ -518,11 +525,11 @@ public class PySimPrinter extends ToolPrinter
 		printLine("return s");
 	}
 
-	private static String quotedVarList(BaseComponent c)
+	public static String quotedVarList(ArrayList<String> vars)
 	{
 		StringBuilder rv = new StringBuilder();
 
-		for (String v : c.variables)
+		for (String v : vars)
 		{
 			if (rv.length() > 0)
 				rv.append(", ");

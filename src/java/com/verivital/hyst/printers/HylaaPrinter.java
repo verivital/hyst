@@ -19,6 +19,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
+import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.PreconditionsFlag;
@@ -106,7 +107,7 @@ public class HylaaPrinter extends ToolPrinter
 
 			rv.add("import numpy as np");
 
-			rv.add("from hylaa.hybrid_automaton import LinearHybridAutomaton, LinearConstraint, HyperRectangle");
+			rv.add("from hylaa.hybrid_automaton import LinearHybridAutomaton, LinearConstraint");
 			rv.add("from hylaa.engine import HylaaSettings");
 			rv.add("from hylaa.engine import HylaaEngine");
 			rv.add("from hylaa.plotutil import PlotSettings");
@@ -130,7 +131,7 @@ public class HylaaPrinter extends ToolPrinter
 
 				for (Operation o : parts)
 				{
-					ArrayList<String> conds = toLinearConstraints(o, at.parent.variables);
+					ArrayList<String> conds = toLinearConstraintStrings(o, at.parent);
 
 					for (int i = 0; i < conds.size(); ++i)
 					{
@@ -151,6 +152,9 @@ public class HylaaPrinter extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(am,
+					am.automaton.variables);
+
 			rv.add(am.name + " = ha.new_mode('" + am.name + "')");
 
 			try
@@ -159,7 +163,7 @@ public class HylaaPrinter extends ToolPrinter
 						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am))
 						+ ", dtype=float)");
 				rv.add("c_vector = np.array("
-						+ toPythonList(DynamicsUtil.extractDynamicsVectorB(am)) + ", dtype=float)");
+						+ toPythonList(DynamicsUtil.extractDynamicsVectorC(am)) + ", dtype=float)");
 				rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
 
 				// invariant
@@ -168,16 +172,15 @@ public class HylaaPrinter extends ToolPrinter
 				{
 					ArrayList<Operation> parts = DynamicsUtil.splitConjunction(am.invariant);
 
-					for (Operation o : parts)
-					{
-						ArrayList<String> invs = toLinearConstraints(o, am.automaton.variables);
+					if (nonInputVars.size() != am.automaton.variables.size())
+						printInputs(am, rv, am.automaton, parts);
 
-						for (int i = 0; i < invs.size(); ++i)
-						{
-							rv.add(am.name + ".inv_list.append(" + invs.get(i) + ") # "
-									+ o.toDefaultString());
-						}
-					}
+					printInvariantConstraints(am, rv, am.automaton, parts);
+				}
+				else if (nonInputVars.size() != am.automaton.variables.size())
+				{
+					throw new AutomatonExportException(
+							"invariant was 'true', but input variables exist");
 				}
 			}
 			catch (AutomatonExportException e)
@@ -188,21 +191,145 @@ public class HylaaPrinter extends ToolPrinter
 			return rv;
 		}
 
-		/**
-		 * Convert a conditions to a list of 'LinearConstraint()' initialization strings
-		 * 
-		 * @param condition
-		 *            a basic condition
-		 * @param vars
-		 *            the variables
-		 * 
-		 * @return a list of 'LinearConstraint()' strings (one constraints may produce multiple
-		 *         linear constraints)
-		 */
-		private ArrayList<String> toLinearConstraints(Operation o, ArrayList<String> vars)
+		public ArrayList<String> getExtraDeclarationPrintLines(BaseComponent ha)
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			if (nonInputVars.size() != ha.variables.size())
+			{
+
+				ArrayList<String> inputVars = new ArrayList<String>();
+
+				for (String var : ha.variables)
+				{
+					if (!nonInputVars.contains(var))
+						inputVars.add(var);
+				}
+
+				rv.add("# input variable order: " + inputVars);
+			}
+
+			return rv;
+		}
+
+		private void printInvariantConstraints(AutomatonMode am, ArrayList<String> rv,
+				BaseComponent ha, ArrayList<Operation> parts)
+		{
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			for (Operation o : parts)
+			{
+				// only consider invariant constraints which contain input variables
+				boolean containsInputVariables = false;
+
+				for (String var : AutomatonUtil.getVariablesInExpression(o))
+				{
+					if (!nonInputVars.contains(var))
+					{
+						containsInputVariables = true;
+						break;
+					}
+				}
+
+				if (containsInputVariables)
+					continue;
+
+				// ok, Operation 'o' was an non-input constraint
+				ArrayList<String> invs = toLinearConstraintStrings(o, ha);
+
+				for (int i = 0; i < invs.size(); ++i)
+				{
+					rv.add(am.name + ".inv_list.append(" + invs.get(i) + ") # "
+							+ o.toDefaultString());
+				}
+			}
+		}
+
+		private void printInputs(AutomatonMode am, ArrayList<String> rv, BaseComponent ha,
+				ArrayList<Operation> parts)
+		{
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			ArrayList<String> inputVars = new ArrayList<String>();
+
+			for (String var : am.automaton.variables)
+			{
+				if (!nonInputVars.contains(var))
+					inputVars.add(var);
+			}
+
+			// for every input variable, we need to extract the B matrix, as well
+			// as the constraints from the invariant
+
+			// constraints are extracted from the invariant
+			ArrayList<ArrayList<Double>> conditions = new ArrayList<ArrayList<Double>>();
+			ArrayList<Double> vals = new ArrayList<Double>();
+
+			ArrayList<String> inputConditions = new ArrayList<String>();
+
+			for (Operation o : parts)
+			{
+				// skip invariant constraints which contain input variables
+				boolean containsInputVariables = false;
+
+				for (String var : AutomatonUtil.getVariablesInExpression(o))
+				{
+					if (!nonInputVars.contains(var))
+					{
+						containsInputVariables = true;
+						break;
+					}
+				}
+
+				if (!containsInputVariables)
+					continue;
+
+				extractLinearConstraints(conditions, vals, o, inputVars);
+				inputConditions.add(o.toDefaultString());
+			}
+
+			rv.add("");
+
+			// add conditions in comments
+			for (String condition : inputConditions)
+				rv.add("# " + condition);
+
+			rv.add("u_constraints_a = np.array(" + toPythonListList(conditions) + ", dtype=float)");
+			rv.add("u_constraints_b = np.array(" + toPythonList(vals) + ", dtype=float)");
+
+			// b matrix is extracted from the dynamics
+			rv.add("b_matrix = np.array("
+					+ toPythonListList(DynamicsUtil.extractDynamicsMatrixB(am)) + ", dtype=float)");
+
+			// loc1.set_inputs(u_constraints_a, u_constraints_b, b_matrix)
+			rv.add(am.name + ".set_inputs(u_constraints_a, u_constraints_b, b_matrix)");
+		}
+
+		/**
+		 * Extract linear conditions from an operation, and store them in storeConditions and
+		 * storeVals. A single operation can cause multiple constraints to be added (for example, an
+		 * equality constraints adds two conditions).
+		 * 
+		 * @param storeConditions
+		 *            condition 'a' vectors, such that a * x <= b
+		 * @param storeVals
+		 *            condition 'b' values, such that a * x <= b
+		 * @param o
+		 *            the operation to extract from
+		 * @param vars
+		 *            the automaton where to extract the the list of variables 'x' in a * x <= b
+		 */
+		private void extractLinearConstraints(ArrayList<ArrayList<Double>> storeConditions,
+				ArrayList<Double> storeVals, Operation o, ArrayList<String> vars)
+		{
 			Operator op = o.op;
 
 			// extract the variable vector on the left and right hand sides
@@ -221,29 +348,63 @@ public class HylaaPrinter extends ToolPrinter
 
 			if (op == Operator.LESS || op == Operator.LESSEQUAL || op == Operator.EQUAL)
 			{
-				StringBuilder str = new StringBuilder("LinearConstraint(");
-				str.append(toPythonList(leftVec));
-				str.append(", " + ToolPrinter.doubleToString(rightVal));
-				str.append(")");
-				rv.add(str.toString());
+				storeConditions.add(leftVec);
+				storeVals.add(rightVal);
 			}
 
 			if (op == Operator.GREATER || op == Operator.GREATEREQUAL || op == Operator.EQUAL)
 			{
-				for (int i = 0; i < leftVec.size(); ++i)
-					leftVec.set(i, -leftVec.get(i));
+				ArrayList<Double> leftVecInverse = new ArrayList<Double>();
 
-				StringBuilder str = new StringBuilder("LinearConstraint(");
-				str.append(toPythonList(leftVec));
-				str.append(", " + ToolPrinter.doubleToString(-rightVal));
-				str.append(")");
-				rv.add(str.toString());
+				for (double d : leftVec)
+					leftVecInverse.add(-d);
+
+				storeConditions.add(leftVecInverse);
+				storeVals.add(-rightVal);
 			}
 
 			if (op != Operator.EQUAL && op != Operator.LESS && op != Operator.LESSEQUAL
 					&& op != Operator.GREATER && op != Operator.GREATEREQUAL)
 				throw new AutomatonExportException(
 						"Not a linear condition: " + o.toDefaultString());
+		}
+
+		/**
+		 * Convert a conditions to a list of 'LinearConstraint()' initialization strings, for use
+		 * when printing invariants.
+		 * 
+		 * @param condition
+		 *            a basic condition
+		 * @param vars
+		 *            the variables
+		 * 
+		 * @return a list of 'LinearConstraint()' strings (one operation may produce multiple linear
+		 *         constraints)
+		 */
+		private ArrayList<String> toLinearConstraintStrings(Operation o, BaseComponent ha)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			AutomatonMode anyMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(anyMode,
+					ha.variables);
+
+			ArrayList<ArrayList<Double>> conditions = new ArrayList<ArrayList<Double>>();
+			ArrayList<Double> vals = new ArrayList<Double>();
+
+			extractLinearConstraints(conditions, vals, o, nonInputVars);
+
+			for (int i = 0; i < vals.size(); ++i)
+			{
+				ArrayList<Double> leftVec = conditions.get(i);
+				double rightVal = vals.get(i);
+
+				StringBuilder str = new StringBuilder("LinearConstraint(");
+				str.append(toPythonList(leftVec));
+				str.append(", " + ToolPrinter.doubleToString(rightVal));
+				str.append(")");
+				rv.add(str.toString());
+			}
 
 			return rv;
 		}
@@ -285,7 +446,11 @@ public class HylaaPrinter extends ToolPrinter
 
 			BaseComponent ha = (BaseComponent) c.root;
 
-			rv.add(COMMENT_CHAR + " Variable ordering: " + ha.variables);
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			rv.add(COMMENT_CHAR + " Variable ordering: " + nonInputVars);
 			rv.add("rv = []");
 			rv.add("");
 
@@ -302,7 +467,7 @@ public class HylaaPrinter extends ToolPrinter
 
 					for (Operation o : parts)
 					{
-						ArrayList<String> conds = toLinearConstraints(o, ha.variables);
+						ArrayList<String> conds = toLinearConstraintStrings(o, ha);
 
 						for (int i = 0; i < conds.size(); ++i)
 						{
@@ -364,8 +529,7 @@ public class HylaaPrinter extends ToolPrinter
 
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("settings = define_settings()");
-		printLine("run_hylaa(settings)");
+		printLine("run_hylaa(define_settings())");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -426,7 +590,7 @@ public class HylaaPrinter extends ToolPrinter
 		if (this.step > 0)
 			step = this.step;
 
-		printLine("settings =  HylaaSettings(step=" + step + ", max_time=" + maxTime
+		printLine("settings = HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
 
 		if (simTol > 0)
