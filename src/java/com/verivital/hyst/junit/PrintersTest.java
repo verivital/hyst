@@ -754,15 +754,6 @@ public class PrintersTest
 	@Test
 	public void testHylaaPrintInputOscillator()
 	{
-
-	}
-
-	/**
-	 * Hylaa should be able to print the motor w/input model
-	 */
-	@Test
-	public void testHylaaPrintMotor()
-	{
 		String path = UNIT_BASEDIR + "input_oscillator/input_oscillator";
 
 		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
@@ -775,6 +766,28 @@ public class PrintersTest
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	/**
+	 * Hylaa should be able to print the motor w/input model
+	 */
+	@Test
+	public void testHylaaPrintMotor()
+	{
+		String path = UNIT_BASEDIR + "motor/mcs_8";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		Assert.assertTrue("has error mode in outout", out.contains("error"));
 
 		System.out.println("printerstest result:");
 		System.out.println(out);
