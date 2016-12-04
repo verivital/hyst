@@ -787,9 +787,10 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 
-		Assert.assertTrue("has error mode in outout", out.contains("error"));
-
 		System.out.println("printerstest result:");
 		System.out.println(out);
+
+		Assert.assertTrue("has error mode in outout", out.contains("error"));
+		Assert.assertTrue("has input information in outout", out.contains("set_inputs"));
 	}
 }

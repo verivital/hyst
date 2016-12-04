@@ -843,16 +843,17 @@ public class SpaceExXMLReader
 			{
 				while ((line = br.readLine()) != null)
 				{
+					// remove comments from string
+					int commentPos = line.indexOf("#");
+					if (commentPos != -1)
+						line = line.substring(0, commentPos);
+
 					int eqPos = line.indexOf("=");
 					if (eqPos > 0)
 					{
-						String property = line.substring(0, eqPos - 1).trim().toLowerCase();
+						String property = line.substring(0, eqPos).trim().toLowerCase();
 
 						String value = line.substring(eqPos + 1);
-						// remove comments from value string
-						int commentPos = value.indexOf("#");
-						if (commentPos > 0)
-							value = value.substring(0, commentPos - 1);
 
 						int quoteIndex = value.indexOf("\"");
 

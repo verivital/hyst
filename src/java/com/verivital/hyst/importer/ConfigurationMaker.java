@@ -58,9 +58,13 @@ public class ConfigurationMaker
 		init = SimplifyExpressionsPass.simplifyExpression(init);
 		convertInitialStates(rv, init);
 
-		Expression forbidden = doc.getInitialStateConditions();
-		forbidden = SimplifyExpressionsPass.simplifyExpression(forbidden);
-		convertForbiddenStates(rv, doc.getForbiddenStateConditions());
+		Expression forbidden = doc.getForbiddenStateConditions();
+
+		if (forbidden != null)
+		{
+			forbidden = SimplifyExpressionsPass.simplifyExpression(forbidden);
+			convertForbiddenStates(rv, forbidden);
+		}
 
 		convertPlotSettings(rv, doc);
 		rv.settings.spaceExConfig = doc.getConfig();
