@@ -102,8 +102,15 @@ public class ConvertToStandardForm
 		AutomatonMode error = ha.createMode(ERROR_MODE_NAME);
 		error.invariant = Constant.TRUE;
 
+		AutomatonMode someMode = ha.modes.values().iterator().next();
+
 		for (String var : ha.variables)
-			error.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+		{
+			if (someMode.flowDynamics.get(var) != null)
+				error.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+			else
+				error.flowDynamics.remove(var);
+		}
 
 		for (Entry<String, Expression> e : config.forbidden.entrySet())
 		{

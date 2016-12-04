@@ -18,8 +18,12 @@ public abstract class ExpressionModifier
 		for (Entry<String, ExpressionInterval> e : m.entrySet())
 		{
 			ExpressionInterval ei = e.getValue();
-			rv.put(e.getKey(), new ExpressionInterval(em.modifyExpression(ei.getExpression()),
-					ei.getInterval()));
+
+			if (ei != null)
+				rv.put(e.getKey(), new ExpressionInterval(em.modifyExpression(ei.getExpression()),
+						ei.getInterval()));
+			else
+				rv.put(e.getKey(), null);
 		}
 
 		return rv;

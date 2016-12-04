@@ -12,6 +12,7 @@ import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
+import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -157,35 +158,44 @@ public class HylaaPrinter extends ToolPrinter
 
 			rv.add(am.name + " = ha.new_mode('" + am.name + "')");
 
-			try
+			if (ConvertToStandardForm.getErrorMode(am.automaton) == am)
 			{
-				rv.add("a_matrix = np.array("
-						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am))
-						+ ", dtype=float)");
-				rv.add("c_vector = np.array("
-						+ toPythonList(DynamicsUtil.extractDynamicsVectorC(am)) + ", dtype=float)");
-				rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
-
-				// invariant
-				// loc1.inv_list = [inv1]
-				if (am.invariant != Constant.TRUE)
-				{
-					ArrayList<Operation> parts = DynamicsUtil.splitConjunction(am.invariant);
-
-					if (nonInputVars.size() != am.automaton.variables.size())
-						printInputs(am, rv, am.automaton, parts);
-
-					printInvariantConstraints(am, rv, am.automaton, parts);
-				}
-				else if (nonInputVars.size() != am.automaton.variables.size())
-				{
-					throw new AutomatonExportException(
-							"invariant was 'true', but input variables exist");
-				}
+				rv.add(am.name + ".is_error = True");
 			}
-			catch (AutomatonExportException e)
+			else
 			{
-				throw new PreconditionsFailedException(e.toString(), e);
+
+				try
+				{
+					rv.add("a_matrix = np.array("
+							+ toPythonListList(DynamicsUtil.extractDynamicsMatrixA(am))
+							+ ", dtype=float)");
+					rv.add("c_vector = np.array("
+							+ toPythonList(DynamicsUtil.extractDynamicsVectorC(am))
+							+ ", dtype=float)");
+					rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
+
+					// invariant
+					// loc1.inv_list = [inv1]
+					if (am.invariant != Constant.TRUE)
+					{
+						ArrayList<Operation> parts = DynamicsUtil.splitConjunction(am.invariant);
+
+						if (nonInputVars.size() != am.automaton.variables.size())
+							printInputs(am, rv, am.automaton, parts);
+
+						printInvariantConstraints(am, rv, am.automaton, parts);
+					}
+					else if (nonInputVars.size() != am.automaton.variables.size())
+					{
+						throw new AutomatonExportException(
+								"invariant was 'true', but input variables exist");
+					}
+				}
+				catch (AutomatonExportException e)
+				{
+					throw new PreconditionsFailedException(e.toString(), e);
+				}
 			}
 
 			return rv;
@@ -501,6 +511,9 @@ public class HylaaPrinter extends ToolPrinter
 		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
 
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
+
+		if (config.forbidden.size() > 0)
+			ConvertToStandardForm.convertForbidden(config);
 
 		this.printCommentHeader();
 
