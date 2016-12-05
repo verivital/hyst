@@ -25,10 +25,7 @@ if sys.platform == "win32":
 MODELS_PATH = get_script_path(__file__) + "/models"
 
 # a list of tools to run: each element is (tool_name, tool_param)
-#TOOLS = [(hypy_tool_name, None) for hypy_tool_name in hypy.TOOLS]
-print "debug override tools in integration tests"
-TOOLS = [('hylaa', None)]
-NUM_THREADS = 1
+TOOLS = [(hypy_tool_name, None) for hypy_tool_name in hypy.TOOLS]
 
 # extra tools (manual)
 #TOOLS.append({'name':'hycreate', 'param':'sim-only=1'})
