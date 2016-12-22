@@ -766,6 +766,13 @@ public class PrintersTest
 		String out = printer.outputString.toString();
 
 		Assert.assertTrue("some output exists", out.length() > 10);
+
+		// two error conditions
+		String cond1 = "trans.guard_list.append(LinearConstraint([-1, -0], -6.5)) # x >= 6.5";
+		String cond2 = "trans.guard_list.append(LinearConstraint([1, 0], -10)) # x <= -10.0";
+
+		Assert.assertTrue("first error condition exists", out.contains(cond1));
+		Assert.assertTrue("second error condition exists", out.contains(cond2));
 	}
 
 	/**

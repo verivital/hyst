@@ -505,7 +505,11 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
     state = event.point
     color = event.color
     x = state[dim_x]
-    y = state[dim_y]
+
+    if isinstance(dim_y, int):
+        y = state[dim_y]
+    else:
+        y = dim_y(state)
 
     location = locs[loc_index]
     loc_x = location[0]
@@ -529,26 +533,27 @@ def _annotate(event, dim_x, dim_y, loc_index=0):
 
 def plot_init_states(init_states, mode_to_color, dim_x, dim_y):
     'plot the initial rectangles'
-    
-    for (mode, hr) in init_states:
-        color = mode_name_to_color(mode_to_color, mode.name)
 
-        xs = []
-        ys = []
+    if isinstance(dim_y, int):
+        for (mode, hr) in init_states:
+            color = mode_name_to_color(mode_to_color, mode.name)
 
-        xs.append(hr.dims[dim_x][0])
-        xs.append(hr.dims[dim_x][0])
-        xs.append(hr.dims[dim_x][1])
-        xs.append(hr.dims[dim_x][1])
-        xs.append(hr.dims[dim_x][0])
+            xs = []
+            ys = []
 
-        ys.append(hr.dims[dim_y][0])
-        ys.append(hr.dims[dim_y][1])
-        ys.append(hr.dims[dim_y][1])
-        ys.append(hr.dims[dim_y][0])
-        ys.append(hr.dims[dim_y][0])
+            xs.append(hr.dims[dim_x][0])
+            xs.append(hr.dims[dim_x][0])
+            xs.append(hr.dims[dim_x][1])
+            xs.append(hr.dims[dim_x][1])
+            xs.append(hr.dims[dim_x][0])
 
-        plt.plot(xs, ys, color=color)
+            ys.append(hr.dims[dim_y][0])
+            ys.append(hr.dims[dim_y][1])
+            ys.append(hr.dims[dim_y][1])
+            ys.append(hr.dims[dim_y][0])
+            ys.append(hr.dims[dim_y][0])
+
+            plt.plot(xs, ys, color=color)
 
 def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None, 
                           draw_events=True, axis_range=None, draw_func=None, legend=True, 
@@ -599,7 +604,7 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
     '''plot a simulation result to a file
     result - result object from simulate_one() call
     dim_x - the x dimension index
-    dim_y - the y dimension index
+    dim_y - the y dimension index, or a function to call on the state which produces a y value
     draw_events - should events (with labels) be drawn on the plot? (default True)
     mode_to_color - a map of modes to colors
     '''
@@ -613,13 +618,18 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
     num_dims = len(traces[0].points[0])
 
     if dim_x < 0 or dim_x >= num_dims:
-        raise RuntimeError('X dimension out of bounds: ' + str(dim_x) + ', should be [0, ' + num_dims + ")")
-    elif dim_y < 0 or dim_y >= num_dims:
-        raise RuntimeError('Y dimension out of bounds: ' + str(dim_y) + ', shold be [0, ' + num_dims + ")")
+        raise RuntimeError('X dimension out of bounds: ' + str(dim_x) + ', should be [0, ' + str(num_dims) + ")")
+    elif isinstance(dim_y, int) and (dim_y < 0 or dim_y >= num_dims):
+        raise RuntimeError('Y dimension out of bounds: ' + str(dim_y) + ', shold be [0, ' + str(num_dims) + ")")
 
     for mode_sim in traces:
         x = [val[dim_x] for val in mode_sim.points]
-        y = [val[dim_y] for val in mode_sim.points]
+
+        if isinstance(dim_y, int):
+            y = [val[dim_y] for val in mode_sim.points]
+        else:
+            y = [dim_y(state) for state in mode_sim.points]
+
         color = mode_name_to_color(mode_to_color, mode_sim.mode_name)
 
         plt.plot(x, y, color=color, label=mode_sim.mode_name)
@@ -635,7 +645,11 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
             # draw a red 'x'
             state = event.point
             x = [state[dim_x]]
-            y = [state[dim_y]]
+            
+            if isinstance(dim_y, int):
+                y = [state[dim_y]]
+            else:
+                y = [dim_y(state)]
 
             plt.plot(x, y, 'xr')
 

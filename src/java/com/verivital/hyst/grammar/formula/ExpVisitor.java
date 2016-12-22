@@ -142,13 +142,34 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 		return new Operation(Operator.OR, visit(left), visit(right));
 	}
 
+	private Expression balancedAnd(List<NotContext> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = visit(children.get(0));
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, balancedAnd(children.subList(0, middleIndex)),
+					balancedAnd(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
 	@Override
 	public Expression visitAndExpression(@NotNull HystExpressionParser.AndExpressionContext ctx)
 	{
-		NotContext left = ctx.not();
-		AndContext right = ctx.and();
+		// (not AND)* not # AndExpression
 
-		return new Operation(Operator.AND, visit(left), visit(right));
+		List<NotContext> children = ctx.not();
+
+		// construct a balanced tree of expressions
+		Expression root = balancedAnd(children);
+
+		return root;
 	}
 
 	@Override

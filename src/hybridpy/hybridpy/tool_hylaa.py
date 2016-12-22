@@ -44,17 +44,21 @@ class HylaaTool(HybridTool):
 
         return True
 
-    def parse_output(self, dummy_directory, dummy_lines, dummy_hypy_out):
+    def parse_output(self, dummy_directory, lines, dummy_hypy_out):
         '''returns the parsed output object
 
         For hylaa, this is the hylaa engine object of the most recent run.
         '''
+        rv = {'safe':None}
 
-        raise RuntimeError('this fails because a new python instance is run. You cant save result like this ' + 
-                           'between function calls; add a test for this + pysim when you fix it')
+        for line in reversed(lines):
+            if 'Result: Error modes are NOT reachable.' in line:
+                rv['safe'] = True
+            elif 'Result: Error modes are reachable.' in line:
+                rv['safe'] = False
 
-        return self._result
-                
+        return rv
+
 if __name__ == "__main__":
     tool_main(HylaaTool())
 

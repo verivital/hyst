@@ -95,8 +95,7 @@ or
     ;
 
 and
-    : not AND and # AndExpression
-    | not 	      # ToNot
+    : (not AND)* not # AndExpression
 	;
 
 not

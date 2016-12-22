@@ -5,12 +5,14 @@ import java.util.Map.Entry;
 
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.util.DynamicsUtil;
 
 /**
  * Internal passes are similar to transformation passes, but instead are called programmatically.
@@ -115,10 +117,15 @@ public class ConvertToStandardForm
 		for (Entry<String, Expression> e : config.forbidden.entrySet())
 		{
 			Expression forbiddenCondition = e.getValue();
-			AutomatonMode m = ha.modes.get(e.getKey());
-			AutomatonTransition at = ha.createTransition(m, error);
+			ArrayList<Operation> conds = DynamicsUtil.splitDisjunction(forbiddenCondition);
 
-			at.guard = forbiddenCondition;
+			for (Operation cond : conds)
+			{
+				AutomatonMode m = ha.modes.get(e.getKey());
+				AutomatonTransition at = ha.createTransition(m, error);
+
+				at.guard = cond;
+			}
 		}
 
 		config.forbidden.clear();

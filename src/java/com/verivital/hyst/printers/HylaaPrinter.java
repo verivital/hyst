@@ -4,6 +4,7 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
@@ -18,6 +19,7 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.util.AutomatonUtil;
@@ -513,7 +515,9 @@ public class HylaaPrinter extends ToolPrinter
 		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
 		if (config.forbidden.size() > 0)
+		{
 			ConvertToStandardForm.convertForbidden(config);
+		}
 
 		this.printCommentHeader();
 
@@ -547,10 +551,35 @@ public class HylaaPrinter extends ToolPrinter
 		printNewline();
 	}
 
+	private int getVariableIndex(String name)
+	{
+		// get the variable's index (omits inputs)
+		int rv = -1;
+		int index = 0;
+		Map<String, ExpressionInterval> flows = ((BaseComponent) config.root).modes.values()
+				.iterator().next().flowDynamics;
+
+		for (String var : config.root.variables)
+		{
+			if (flows.get(var) == null)
+				continue;
+
+			if (var.equals(name))
+			{
+				rv = index;
+				break;
+			}
+
+			++index;
+		}
+
+		return rv;
+	}
+
 	private void printSettings()
 	{
-		int xDim = config.root.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yDim = config.root.variables.indexOf(config.settings.plotVariableNames[1]);
+		int xDim = getVariableIndex(config.settings.plotVariableNames[0]);
+		int yDim = getVariableIndex(config.settings.plotVariableNames[1]);
 
 		if (this.xdim != null)
 		{

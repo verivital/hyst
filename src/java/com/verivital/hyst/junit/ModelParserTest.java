@@ -1297,7 +1297,7 @@ public class ModelParserTest
 		String loc3 = config.forbidden.get("loc3").toDefaultString();
 		Assert.assertTrue(loc1.contains("x >= 5"));
 		Assert.assertTrue(loc1.contains("t >= 5"));
-		Assert.assertEquals(loc3, "t <= 5");
+		Assert.assertEquals(loc3, "t <= 5.0");
 	}
 
 	@Test

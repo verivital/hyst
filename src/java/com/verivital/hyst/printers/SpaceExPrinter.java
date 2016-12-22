@@ -78,7 +78,7 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-aggregation", usage = "aggregation parameter", metaVar = "VAL")
 	String aggregation = "auto";
 
-	@Option(name = "-flowpipe_tol", usage = "flowpipe-tolerance parameter", metaVar = "VAL")
+	@Option(name = "-flowpipe_tol", usage = "flowpipe-tolerance parameter (0 = skip)", metaVar = "VAL")
 	String flowpipeTol = "auto";
 
 	@Option(name = "-skiptol", usage = "skip printing error tolerances")
