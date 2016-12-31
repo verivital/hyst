@@ -13,24 +13,18 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 public class DynamicsUtil
 {
 	/**
-	 * Get the dynamics A matrix in x' = Ax + Bu + c
+	 * Get a row of the dynamics A matrix in x' = Ax + Bu + c
 	 * 
 	 */
-	public static ArrayList<ArrayList<Double>> extractDynamicsMatrixA(AutomatonMode am)
+	public static ArrayList<Double> extractDynamicsMatrixARow(AutomatonMode am, int index)
 	{
-		ArrayList<ArrayList<Double>> rv = new ArrayList<ArrayList<Double>>();
 		ArrayList<String> nonInputVars = getNonInputVariables(am, am.automaton.variables);
 
-		for (String row : nonInputVars)
-		{
-			Expression der = am.flowDynamics.get(row).asExpression();
+		String row = nonInputVars.get(index);
 
-			ArrayList<Double> line = extractLinearVector(der, nonInputVars);
+		Expression der = am.flowDynamics.get(row).asExpression();
 
-			rv.add(line);
-		}
-
-		return rv;
+		return extractLinearVector(der, nonInputVars);
 	}
 
 	/**
