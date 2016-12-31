@@ -227,7 +227,6 @@ public class SymbolicStateExpression
 
 			if (o.op == Operator.AND && o.children.size() > 2)
 			{
-				System.out.println(".symbolicState more than 2 children: " + o.children.size());
 				rv = makeBalancedAnd(o.children);
 			}
 
