@@ -95,10 +95,28 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 		return visit(child);
 	}
 
+	private Expression balancedFlow(List<Expression> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = children.get(0);
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, balancedFlow(children.subList(0, middleIndex)),
+					balancedFlow(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
 	@Override
 	public Expression visitFlow(@NotNull HystExpressionParser.FlowContext ctx)
 	{
 		Expression rv = null;
+		List<Expression> terms = new ArrayList<Expression>();
 
 		for (int i = 0; i < ctx.VAR().size(); ++i)
 		{
@@ -106,13 +124,12 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 			Expression rhs = visit(ctx.addSub(i));
 			Expression term = new Operation(Operator.EQUAL, v, rhs);
 
-			if (rv == null)
-				rv = term;
-			else
-				rv = new Operation(Operator.AND, rv, term);
+			terms.add(term);
 		}
 
-		return rv;
+		Expression flow = balancedFlow(terms);
+
+		return flow;
 	}
 
 	@Override
@@ -124,7 +141,9 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 	@Override
 	public Expression visitLocExp(@NotNull HystExpressionParser.LocExpContext ctx)
 	{
-		return visit(ctx.or());
+		Expression rv = visit(ctx.or());
+
+		return rv;
 	}
 
 	@Override

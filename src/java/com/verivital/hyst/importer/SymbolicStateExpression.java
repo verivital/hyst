@@ -12,12 +12,12 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExBaseComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Location;
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExBaseComponent;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 /**
  * This is a container class used when importing. Basically, it stores a set of discrete modes and
@@ -116,6 +116,8 @@ public class SymbolicStateExpression
 
 		if (contStates == Constant.TRUE)
 			contStates = e;
+		else if (contStates instanceof Operation && contStates.asOperation().op == Operator.AND)
+			contStates.asOperation().children.add(e); // big and expression
 		else
 			contStates = new Operation(Operator.AND, contStates, e);
 	}
@@ -185,6 +187,8 @@ public class SymbolicStateExpression
 	{
 		ArrayList<String> discFlat = getFlatDiscreteStatesRec(0, new StringBuffer(""));
 
+		contStates = splitLargeConjunctions(contStates);
+
 		for (String s : discFlat)
 		{
 			Expression e = map.get(s);
@@ -194,6 +198,42 @@ public class SymbolicStateExpression
 			else
 				map.put(s, new Operation(Operator.OR, e, contStates));
 		}
+	}
+
+	Expression makeBalancedAnd(List<Expression> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = children.get(0);
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, makeBalancedAnd(children.subList(0, middleIndex)),
+					makeBalancedAnd(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
+	Expression splitLargeConjunctions(Expression e)
+	{
+		Expression rv = e;
+
+		if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			if (o.op == Operator.AND && o.children.size() > 2)
+			{
+				System.out.println(".symbolicState more than 2 children: " + o.children.size());
+				rv = makeBalancedAnd(o.children);
+			}
+
+		}
+
+		return rv;
 	}
 
 	/**
