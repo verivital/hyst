@@ -166,20 +166,13 @@ public class HylaaPrinter extends ToolPrinter
 			}
 			else
 			{
-
 				try
 				{
-					rv.add("a_matrix = np.array([ \\");
+					if (nonInputVars.size() > 100)
+						rv.addAll(getSparseDynamicsLines(am, nonInputVars));
+					else
+						rv.addAll(getDenseDynamicsLines(am, nonInputVars));
 
-					for (int i = 0; i < nonInputVars.size(); ++i)
-						rv.add("    " + toPythonList(DynamicsUtil.extractDynamicsMatrixARow(am, i))
-								+ ", \\");
-
-					rv.add("    ], dtype=float)");
-
-					rv.add("c_vector = np.array("
-							+ toPythonList(DynamicsUtil.extractDynamicsVectorC(am))
-							+ ", dtype=float)");
 					rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
 
 					// invariant
@@ -204,6 +197,63 @@ public class HylaaPrinter extends ToolPrinter
 					throw new PreconditionsFailedException(e.toString(), e);
 				}
 			}
+
+			return rv;
+		}
+
+		private ArrayList<String> getSparseDynamicsLines(AutomatonMode am,
+				ArrayList<String> nonInputVars)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			int size = nonInputVars.size();
+
+			rv.add("a_matrix = np.zeros([" + size + ", " + size + "])");
+
+			for (int i = 0; i < nonInputVars.size(); ++i)
+			{
+				ArrayList<Double> row = DynamicsUtil.extractDynamicsMatrixARow(am, i);
+
+				for (int x = 0; x < row.size(); ++x)
+				{
+					double val = row.get(x);
+
+					if (val != 0) // exact comparison here is okay since it never changes
+						rv.add("a_matrix[" + i + ", " + x + "] = "
+								+ ToolPrinter.doubleToString(val));
+				}
+			}
+
+			rv.add("c_vector = np.zeros([" + size + "])");
+
+			ArrayList<Double> row = DynamicsUtil.extractDynamicsVectorC(am);
+
+			for (int x = 0; x < row.size(); ++x)
+			{
+				double val = row.get(x);
+
+				if (val != 0) // exact comparison here is okay since it never changes
+					rv.add("c_vector[" + x + "] = " + ToolPrinter.doubleToString(val));
+			}
+
+			return rv;
+		}
+
+		private ArrayList<String> getDenseDynamicsLines(AutomatonMode am,
+				ArrayList<String> nonInputVars)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			rv.add("a_matrix = np.array([ \\");
+
+			for (int i = 0; i < nonInputVars.size(); ++i)
+				rv.add("    " + toPythonList(DynamicsUtil.extractDynamicsMatrixARow(am, i))
+						+ ", \\");
+
+			rv.add("    ], dtype=float)");
+
+			rv.add("c_vector = np.array(" + toPythonList(DynamicsUtil.extractDynamicsVectorC(am))
+					+ ", dtype=float)");
 
 			return rv;
 		}
@@ -323,11 +373,45 @@ public class HylaaPrinter extends ToolPrinter
 			rv.add("u_constraints_b = np.array(" + toPythonList(vals) + ", dtype=float)");
 
 			// b matrix is extracted from the dynamics
-			rv.add("b_matrix = np.array("
-					+ toPythonListList(DynamicsUtil.extractDynamicsMatrixB(am)) + ", dtype=float)");
+			if (nonInputVars.size() > 100)
+				rv.addAll(getSparseInputLines(am, nonInputVars));
+			else
+			{
+				// dense definition
+
+				rv.add("b_matrix = np.array("
+						+ toPythonListList(DynamicsUtil.extractDynamicsMatrixB(am))
+						+ ", dtype=float)");
+			}
 
 			// loc1.set_inputs(u_constraints_a, u_constraints_b, b_matrix)
 			rv.add(am.name + ".set_inputs(u_constraints_a, u_constraints_b, b_matrix)");
+		}
+
+		private ArrayList<String> getSparseInputLines(AutomatonMode am,
+				ArrayList<String> nonInputVars)
+		{
+			ArrayList<String> rv = new ArrayList<String>();
+
+			ArrayList<ArrayList<Double>> bMatrix = DynamicsUtil.extractDynamicsMatrixB(am);
+			int h = bMatrix.size();
+			int w = bMatrix.get(0).size();
+
+			rv.add("b_matrix = np.zeros([" + h + ", " + w + "])");
+
+			for (int y = 0; y < h; ++y)
+			{
+				for (int x = 0; x < w; ++x)
+				{
+					double val = bMatrix.get(y).get(x);
+
+					if (val != 0) // exact comparison here is okay since it never changes
+						rv.add("b_matrix[" + y + ", " + x + "] = "
+								+ ToolPrinter.doubleToString(val));
+				}
+			}
+
+			return rv;
 		}
 
 		/**
