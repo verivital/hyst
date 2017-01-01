@@ -208,9 +208,10 @@ public class HylaaPrinter extends ToolPrinter
 
 			int size = nonInputVars.size();
 
-			rv.add("a_matrix = np.zeros([" + size + ", " + size + "])");
+			ArrayList<Double> data = new ArrayList<Double>();
+			ArrayList<Integer> indices = new ArrayList<Integer>();
 
-			for (int i = 0; i < nonInputVars.size(); ++i)
+			for (int i = 0; i < size; ++i)
 			{
 				ArrayList<Double> row = DynamicsUtil.extractDynamicsMatrixARow(am, i);
 
@@ -219,22 +220,46 @@ public class HylaaPrinter extends ToolPrinter
 					double val = row.get(x);
 
 					if (val != 0) // exact comparison here is okay since it never changes
-						rv.add("a_matrix[" + i + ", " + x + "] = "
-								+ ToolPrinter.doubleToString(val));
+					{
+						indices.add(i * nonInputVars.size() + x);
+						data.add(val);
+					}
 				}
 			}
 
-			rv.add("c_vector = np.zeros([" + size + "])");
+			rv.add("a_inds = np.array(" + toPythonListInt(indices) + ")");
+			rv.add("a_data = np.array(" + toPythonList(data) + ")");
 
 			ArrayList<Double> row = DynamicsUtil.extractDynamicsVectorC(am);
+			data.clear();
+			indices.clear();
 
 			for (int x = 0; x < row.size(); ++x)
 			{
 				double val = row.get(x);
 
 				if (val != 0) // exact comparison here is okay since it never changes
-					rv.add("c_vector[" + x + "] = " + ToolPrinter.doubleToString(val));
+				{
+					indices.add(x);
+					data.add(val);
+				}
 			}
+
+			rv.add("");
+			rv.add("c_inds = np.array(" + toPythonListInt(indices) + ")");
+			rv.add("c_data = np.array(" + toPythonList(data) + ")");
+			rv.add("");
+			rv.add("a_matrix = np.zeros([" + size + ", " + size + "])");
+			rv.add("c_vector = np.zeros([" + size + "])");
+			rv.add("");
+			rv.add("for i in xrange(len(a_inds)):");
+			rv.add("    row = a_inds[i] / " + size);
+			rv.add("    col = a_inds[i] % " + size);
+			rv.add("    a_matrix[row, col] = a_data[i]");
+			rv.add("");
+			rv.add("for i in xrange(len(c_inds)):");
+			rv.add("    c_vector[c_inds[i]] = c_data[i]");
+			rv.add("");
 
 			return rv;
 		}
@@ -397,7 +422,8 @@ public class HylaaPrinter extends ToolPrinter
 			int h = bMatrix.size();
 			int w = bMatrix.get(0).size();
 
-			rv.add("b_matrix = np.zeros([" + h + ", " + w + "])");
+			ArrayList<Double> data = new ArrayList<Double>();
+			ArrayList<Integer> indices = new ArrayList<Integer>();
 
 			for (int y = 0; y < h; ++y)
 			{
@@ -406,10 +432,22 @@ public class HylaaPrinter extends ToolPrinter
 					double val = bMatrix.get(y).get(x);
 
 					if (val != 0) // exact comparison here is okay since it never changes
-						rv.add("b_matrix[" + y + ", " + x + "] = "
-								+ ToolPrinter.doubleToString(val));
+					{
+						indices.add(y * w + x);
+						data.add(val);
+					}
 				}
 			}
+
+			rv.add("b_inds = np.array(" + toPythonListInt(indices) + ")");
+			rv.add("b_data = np.array(" + toPythonList(data) + ")");
+			rv.add("");
+			rv.add("b_matrix = np.zeros([" + h + ", " + w + "])");
+			rv.add("for i in xrange(len(b_inds)):");
+			rv.add("    row = b_inds[i] / " + w);
+			rv.add("    col = b_inds[i] % " + w);
+			rv.add("    b_matrix[row, col] = b_data[i]");
+			rv.add("");
 
 			return rv;
 		}
@@ -501,7 +539,12 @@ public class HylaaPrinter extends ToolPrinter
 				double rightVal = vals.get(i);
 
 				StringBuilder str = new StringBuilder("LinearConstraint(");
-				str.append(toPythonList(leftVec));
+
+				if (nonInputVars.size() <= 100)
+					str.append(toPythonList(leftVec));
+				else
+					str.append(toSparsePythonList(leftVec));
+
 				str.append(", " + ToolPrinter.doubleToString(rightVal));
 				str.append(")");
 				rv.add(str.toString());
@@ -510,9 +553,51 @@ public class HylaaPrinter extends ToolPrinter
 			return rv;
 		}
 
+		private String toSparsePythonList(ArrayList<Double> list)
+		{
+			String rv = null;
+			int size = list.size();
+			int nonzeros = 0;
+			double tol = 1e-13;
+
+			for (double d : list)
+			{
+				if (Math.abs(d) > tol)
+					++nonzeros;
+			}
+
+			// use dense if more than 20% nonzero
+			if (nonzeros > size / 5)
+				rv = toPythonList(list); // use dense list
+			else
+			{
+				// ok use sparse list
+				StringBuilder sb = new StringBuilder();
+				sb.append("[");
+
+				for (int i = 0; i < size; ++i)
+				{
+					double d = list.get(i);
+
+					if (Math.abs(d) > tol)
+						sb.append(ToolPrinter.doubleToString(d) + " if i == " + i + " else ");
+				}
+
+				sb.append("0.0 for i in xrange(" + size + ")]");
+				rv = sb.toString();
+			}
+
+			return rv;
+		}
+
 		private String toPythonList(ArrayList<Double> list)
 		{
 			return "[" + StringOperations.join(", ", list.toArray(new Double[] {})) + "]";
+		}
+
+		private String toPythonListInt(ArrayList<Integer> list)
+		{
+			return "[" + StringOperations.join(", ", list.toArray(new Integer[] {})) + "]";
 		}
 
 		private String toPythonListList(ArrayList<ArrayList<Double>> matrix)
