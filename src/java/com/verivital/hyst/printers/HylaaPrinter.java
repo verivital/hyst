@@ -4,10 +4,12 @@
 package com.verivital.hyst.printers;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -36,25 +38,6 @@ import com.verivital.hyst.util.StringOperations;
  */
 public class HylaaPrinter extends ToolPrinter
 {
-	@Option(name = "-python_simplify", aliases = { "-simplify",
-			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
-	public boolean pythonSimplify = false;
-
-	@Option(name = "-plot_full", usage = "use plot_full plotting mode")
-	public boolean plotFull = false;
-
-	@Option(name = "-num_angles", usage = "set Hylaa's num_angles plot setting")
-	public int numAngles;
-
-	@Option(name = "-max_shown_polys", usage = "set Hylaa's max_shown_polys plot setting")
-	public int max_shown_polys = -1;
-
-	@Option(name = "-nodeaggregation", usage = "disable deaggregation")
-	public boolean noDeaggregation = false;
-
-	@Option(name = "-noaggregation", usage = "disable aggregation")
-	public boolean noAggregation = false;
-
 	@Option(name = "-xdim", usage = "x axis variable name")
 	public String xdim;
 
@@ -64,17 +47,14 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-step", usage = "step size")
 	public double step;
 
-	@Option(name = "-sim_tol", usage = "simulation tolerance (accuracy)")
-	public double simTol;
+	@Option(name = "-python_simplify", aliases = { "-simplify",
+			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
+	public boolean pythonSimplify = false;
 
-	@Option(name = "-solver", usage = "lp solver (cvxopt_glpk or glpk_multi)")
-	public String solver;
-
-	@Option(name = "-extra_lines", usage = "set Hylaa's extra_lines parameter")
-	public String extraLines;
-
-	@Option(name = "-extend_plot_range_ratio", usage = "set Hylaa's extend_plot_range_ratio parameter")
-	public double extendPlot;
+	@Option(name = "-settings", usage = "space-separated hylaa settings initialization. For example, "
+			+ "'-settings plot_settings.plot_mode=PlotSettings.PLOT_FULL "
+			+ "settings.deaggregation=False'", handler = StringArrayOptionHandler.class)
+	public List<String> settings;
 
 	private static final String COMMENT_CHAR = "#";
 
@@ -779,24 +759,9 @@ public class HylaaPrinter extends ToolPrinter
 
 		String plotMode = "PLOT_NONE";
 
-		if (plotFull)
-			plotMode = "PLOT_FULL";
-
 		printLine("plot_settings.plot_mode = PlotSettings." + plotMode);
 		printLine("plot_settings.xdim = " + xDim);
 		printLine("plot_settings.ydim = " + yDim);
-
-		if (numAngles > 0)
-			printLine("plot_settings.numAngles = " + numAngles);
-
-		if (max_shown_polys >= 0)
-			printLine("plot_settings.max_shown_polys = " + max_shown_polys);
-
-		if (extraLines != null)
-			printLine("plot_settings.extra_lines = " + extraLines);
-
-		if (extendPlot != 0)
-			printLine("plot_settings.extend_plot_range_ratio = " + extendPlot);
 
 		printNewline();
 
@@ -809,17 +774,13 @@ public class HylaaPrinter extends ToolPrinter
 		printLine("settings = HylaaSettings(step=" + step + ", max_time=" + maxTime
 				+ ", plot_settings=plot_settings)");
 
-		if (simTol > 0)
-			printLine("settings.sim_tol = " + simTol);
+		if (settings.size() > 0)
+		{
+			printNewline();
 
-		if (noDeaggregation)
-			printLine("settings.deaggregation = False");
-
-		if (noAggregation)
-			printLine("settings.aggregation = False");
-
-		if (solver != null)
-			printLine("settings.solver = \"" + solver + "\"");
+			for (String line : settings)
+				printLine(line);
+		}
 
 		printNewline();
 		printLine("return settings");

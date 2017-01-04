@@ -119,6 +119,7 @@ public abstract class ToolPrinter
 
 		setBaseName(originalFilename);
 
+		argument = argument.trim();
 		String[] args = AutomatonUtil.extractArgs(argument);
 
 		try
