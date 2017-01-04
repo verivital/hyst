@@ -1020,7 +1020,7 @@ public class SmallTest
 		Assert.assertNotEquals(e, null);
 	}
 
-	@Test
+/*	@Test
 	public void testExtractDynamicsMatrixA()
 	{
 		String test = "-100 * x - 4 * v - 9.81";
@@ -1037,5 +1037,5 @@ public class SmallTest
 
 		Assert.assertEquals(-100.0, (double) matrix.get(1).get(0), 1e-9);
 		Assert.assertEquals(-4.0, (double) matrix.get(1).get(1), 1e-9);
-	}
+	}*/
 }
