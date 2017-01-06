@@ -54,7 +54,7 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-settings", usage = "space-separated hylaa settings initialization. For example, "
 			+ "'-settings plot_settings.plot_mode=PlotSettings.PLOT_FULL "
 			+ "settings.deaggregation=False'", handler = StringArrayOptionHandler.class)
-	public List<String> settings;
+	public List<String> settings = new ArrayList<String>();
 
 	private static final String COMMENT_CHAR = "#";
 
