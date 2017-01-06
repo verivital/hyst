@@ -19,8 +19,6 @@ import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
-import com.verivital.hyst.ir.Configuration;
-import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
@@ -33,7 +31,6 @@ import com.verivital.hyst.printers.SimulinkStateflowPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.Classification;
-import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
@@ -1020,22 +1017,20 @@ public class SmallTest
 		Assert.assertNotEquals(e, null);
 	}
 
-/*	@Test
-	public void testExtractDynamicsMatrixA()
-	{
-		String test = "-100 * x - 4 * v - 9.81";
-
-		Configuration c = AutomatonUtil
-				.makeDebugConfiguration(new String[][] { { "x", "-v" }, { "v", test } });
-
-		AutomatonMode am = ((BaseComponent) c.root).modes.values().iterator().next();
-
-		ArrayList<ArrayList<Double>> matrix = DynamicsUtil.extractDynamicsMatrixA(am);
-
-		Assert.assertEquals(0.0, (double) matrix.get(0).get(0), 1e-9);
-		Assert.assertEquals(-1.0, (double) matrix.get(0).get(1), 1e-9);
-
-		Assert.assertEquals(-100.0, (double) matrix.get(1).get(0), 1e-9);
-		Assert.assertEquals(-4.0, (double) matrix.get(1).get(1), 1e-9);
-	}*/
+	/*
+	 * @Test public void testExtractDynamicsMatrixA() { String test = "-100 * x - 4 * v - 9.81";
+	 * 
+	 * Configuration c = AutomatonUtil .makeDebugConfiguration(new String[][] { { "x", "-v" }, {
+	 * "v", test } });
+	 * 
+	 * AutomatonMode am = ((BaseComponent) c.root).modes.values().iterator().next();
+	 * 
+	 * ArrayList<ArrayList<Double>> matrix = DynamicsUtil.extractDynamicsMatrixA(am);
+	 * 
+	 * Assert.assertEquals(0.0, (double) matrix.get(0).get(0), 1e-9); Assert.assertEquals(-1.0,
+	 * (double) matrix.get(0).get(1), 1e-9);
+	 * 
+	 * Assert.assertEquals(-100.0, (double) matrix.get(1).get(0), 1e-9); Assert.assertEquals(-4.0,
+	 * (double) matrix.get(1).get(1), 1e-9); }
+	 */
 }

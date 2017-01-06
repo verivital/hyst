@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="main">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="running" x="251.0" y="209.0" width="260.0" height="162.0">
+      <invariant>-0.5 &lt;= u1 &lt;= 0.5 &amp; 
+-0.5 &lt;= u2 &lt;= 0.5</invariant>
+      <flow>x'== y + u1 &amp;
+y'== -x + u2</flow>
+    </location>
+  </component>
+</sspaceex>
+

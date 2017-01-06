@@ -794,10 +794,31 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 
-		System.out.println("printerstest result:");
-		System.out.println(out);
-
 		Assert.assertTrue("has error mode in outout", out.contains("error"));
 		Assert.assertTrue("has input information in outout", out.contains("set_inputs"));
+	}
+
+	/**
+	 * Flow* should correctly print time-varying inputs
+	 */
+	@Test
+	public void testFlowstarInputs()
+	{
+		String path = UNIT_BASEDIR + "simple_inputs/simple_inputs";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		Assert.assertFalse("inputs in invariants were not removed",
+				out.contains("-0.5 - (u1) <= 0"));
+		Assert.assertTrue("correctly converted inputs", out.contains("x' = y + [-0.5, 0.5]"));
 	}
 }
