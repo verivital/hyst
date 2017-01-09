@@ -76,8 +76,9 @@ class FlowstarTool(HybridTool):
         The result object is an ordered dictionary, with:
         'terminated' -> True/False   <-- did errors occur during computation (was 'terminated' printed?)
         'mode_times' -> [(mode1, time1), ...]  <-- list of reach-tmes computed in each mode, in order
-        'result' -> 'UNKOWN'/'SAFE'/None  <-- if unsafe set is used and 'terminated' is false, this stores 
+        'result' -> 'UNKNOWN'/'SAFE'/None  <-- if unsafe set is used and 'terminated' is false, this stores 
                                               the text after "Result: " in stdout
+        'safe' -> True iff 'result' == 'SAFE'
         'gnuplot_oct_data' -> the octogon data in the tool's gnuplot output
         'reachable_taylor_models' -> a list of TaylorModel objects parsed from out.flow
         '''
@@ -101,6 +102,8 @@ class FlowstarTool(HybridTool):
         else:
             rv['gnuplot_oct_data'] = parse_gnuplot_data(os.path.join(directory, 'outputs', 'out.plt'))
             rv['reachable_taylor_models'] = parse_taylor_model_data(os.path.join(directory, 'outputs', 'out.flow'))
+            
+        rv['safe'] = rv['result'] == 'SAFE'
 
         # mode_times
         mode_times = []
