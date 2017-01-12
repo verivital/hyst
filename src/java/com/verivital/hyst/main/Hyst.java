@@ -411,7 +411,8 @@ public class Hyst
 		}
 
 		if (toolPrinter == null)
-			throw new AutomatonExportException("Tool printer must be set using " + FLAG_TOOL);
+			throw new CmdLineException(parser, hystLocalizable,
+					"Tool printer must be set using '" + FLAG_TOOL + "' flag.");
 
 		for (String xmlFilename : xmlFilenames)
 			if (xmlFilename != null && !new File(xmlFilename).exists())
