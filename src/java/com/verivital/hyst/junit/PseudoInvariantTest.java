@@ -20,7 +20,10 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
+import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantInitPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.FlowstarPrinter;
@@ -221,7 +224,7 @@ public class PseudoInvariantTest
 		points.add(new HyperPoint(0.75, 0));
 		dirs.add(new HyperPoint(-1, 0));
 
-		String params = PseudoInvariantPass.makeParamString(null, points, dirs);
+		String params = PseudoInvariantPass.makeParamString(null, points, dirs, false);
 
 		BaseComponent ha = (BaseComponent) c.root;
 
@@ -243,5 +246,66 @@ public class PseudoInvariantTest
 
 		fp.setOutputNone();
 		fp.print(c, "", "filename.xml");
+	}
+
+	/**
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
+	 * pass), with a single time, printing to Flow*
+	 */
+	@Test
+	public void testInitPIVanderpol()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		// make a trivial automation with x' == 1
+		String[][] dynamics = { { "x", "y", "1" }, { "y", "(1-x*x)*y-x", "0" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+
+		BaseComponent ha = (BaseComponent) c.root;
+
+		AutomatonMode on = ha.modes.get("on");
+		AutomatonMode error = ha.createMode("error");
+		error.invariant = FormulaParser.parseInvariant("true");
+		error.flowDynamics.put("x", new ExpressionInterval("0"));
+		error.flowDynamics.put("y", new ExpressionInterval("0"));
+
+		AutomatonTransition at = ha.createTransition(on, error);
+
+		at.guard = FormulaParser.parseGuard("x >= 2");
+
+		// manually set initial state
+		String initialInitCond = "x = 1 & -0.5 <= y & y <= 0.5";
+		c.init.put("on", FormulaParser.parseInitialForbidden(initialInitCond));
+
+		c.validate();
+
+		// run the pseudo-invariant pass on it
+		new PseudoInvariantInitPass().runTransformationPass(c, "");
+
+		// there should be 3 modes
+		// and running_final
+
+		Assert.assertEquals("3 modes after pass", 3, ha.modes.size());
+
+		Assert.assertEquals("3 transitions after pass", 3, ha.transitions.size());
+
+		AutomatonMode on2 = ha.modes.get("on_2");
+		Assert.assertNotNull(on2);
+		Assert.assertNotNull(ha.modes.get("on"));
+
+		Assert.assertEquals("one initial state", 1, c.init.size());
+		Assert.assertEquals("initial state is 'on_2'", "on_2", c.init.keySet().iterator().next());
+		Assert.assertEquals("initial condition is the same as beore", initialInitCond,
+				c.init.values().iterator().next().toDefaultString());
+
+		// try to print to Flow*
+		FlowstarPrinter fp = new FlowstarPrinter();
+
+		// fp.setOutputNone();
+		fp.setOutputString();
+		fp.print(c, "", "filename.xml");
+
+		// System.out.println(fp.outputString);
 	}
 }

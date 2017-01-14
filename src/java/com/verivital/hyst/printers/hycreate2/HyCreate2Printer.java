@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.kohsuke.args4j.Option;
+
 import com.stanleybak.hycreate.containers.HyCreateData;
 import com.stanleybak.hycreate.containers.ModeData;
 import com.stanleybak.hycreate.containers.ModelOptions;
@@ -45,6 +47,18 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
 
 public class HyCreate2Printer extends ToolPrinter
 {
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String time = "auto";
+
+	@Option(name = "-step", usage = "sampling time step", metaVar = "VAL")
+	String step = "auto";
+
+	@Option(name = "-plot", usage = "x and y plot dimension indicies", metaVar = "DIMX,DIMY")
+	String plot = "auto";
+
+	@Option(name = "-sim-only", usage = "only do simulation (no reachability)?", metaVar = "0/1")
+	String simOnly = "0";
+
 	private BaseComponent ha;
 	private HyCreateData data;
 
@@ -82,8 +96,8 @@ public class HyCreate2Printer extends ToolPrinter
 		ModelPlotOptions p = o.getPlotOptions();
 		ModelSimulationOptions s = o.getSimulationOptions();
 
-		o.setReachabilityTime(getParam("time", config.settings.spaceExConfig.timeHorizon));
-		o.setTimeStep(getParam("step", config.settings.spaceExConfig.samplingTime));
+		o.setReachabilityTime(getParam(time, config.settings.spaceExConfig.timeHorizon));
+		o.setTimeStep(getParam(step, config.settings.spaceExConfig.samplingTime));
 
 		if (isSimulation)
 		{
@@ -99,11 +113,10 @@ public class HyCreate2Printer extends ToolPrinter
 		p.setVisualizeAfterComputation(true);
 
 		// plot dimensions requires index
-		String plot = getParam("plot", -1);
 		int xIndex;
 		int yIndex;
 
-		if (plot.equals("-1"))
+		if (plot.equals("auto"))
 		{
 			xIndex = getPlotIndex(true);
 			yIndex = getPlotIndex(false);
@@ -610,7 +623,7 @@ public class HyCreate2Printer extends ToolPrinter
 		new SubstituteConstantsPass().runTransformationPass(config, null);
 		new SimplifyExpressionsPass().runTransformationPass(config, null);
 
-		boolean isSimulation = !getParam("sim-only", 0).equals("0");
+		boolean isSimulation = !getParam(simOnly, 0).equals("0");
 
 		doSetup(baseName, isSimulation);
 
@@ -643,14 +656,9 @@ public class HyCreate2Printer extends ToolPrinter
 		}
 	}
 
-	private String getParam(String p, double def)
+	private String getParam(String val, double defVal)
 	{
-		String value = toolParams.get(p);
-
-		if (value.equals("auto"))
-			value = doubleToString(def);
-
-		return value;
+		return val.equals("auto") ? "" + defVal : val;
 	}
 
 	@Override
@@ -662,7 +670,7 @@ public class HyCreate2Printer extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-hycreate";
+		return "hycreate";
 	}
 
 	@Override

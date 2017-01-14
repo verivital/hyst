@@ -189,7 +189,10 @@ public class ConfigurationMaker
 				Hyst.log("Using initial mode '" + modeName + " ' with initial variable assignment: "
 						+ e.toDefaultString());
 				c.init.put(modeName, e);
+				init = e;
 			}
+			else
+				throw new AutomatonExportException("No variables in model root component.");
 		}
 		else
 		{
@@ -206,17 +209,20 @@ public class ConfigurationMaker
 				catch (EmptyRangeException e)
 				{
 					throw new AutomatonExportException("Error getting initial value of constant "
-							+ var + " in init expression (empty range)" + init, e);
+							+ var + " in init expression (empty range): " + init.toDefaultString(),
+							e);
 				}
 				catch (ConstantMismatchException e)
 				{
 					throw new AutomatonExportException("Error getting initial value of constant "
-							+ var + " in init expression (contradicting constants)" + init, e);
+							+ var + " in init expression (contradicting constants): "
+							+ init.toDefaultString(), e);
 				}
 				catch (UnsupportedConditionException e)
 				{
 					throw new AutomatonExportException("Initial value of constant " + var
-							+ " in init expression is NOT an interval" + init, e);
+							+ " in init expression is NOT an interval: " + init.toDefaultString(),
+							e);
 				}
 
 				if (value == null)

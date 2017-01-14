@@ -14,6 +14,7 @@
 	<property name="readme_user.path"           value="../README.md"/>
 	<property name="batch_run_result.path" value="${batch_run.path}/result"/>
 	<property name="examples_dir.path"     value="../examples"/>
+	<property name="doc.path"     value="../doc"/>
 	<property name="slsf_dir.path"     value="src/matlab"/>
 	
 	<!-- detects if eclipse executable is on PATH environment variable -->
@@ -43,7 +44,7 @@
 		<property name="runtimejarnames.path" value="antlr-runtime-*.jar matlabcontrol*.jar args4j-*.jar" />
 		<property name="jar.path" value="Hyst.jar" />
 		<property name="reports.path" value="tmp" />
-		<property name="regression.path" value="tests/regression" />
+		<property name="integration.path" value="tests/integration" />
 	</target>
 
 	<!-- todo: this is incomplete, need to detect architecture -->
@@ -163,7 +164,7 @@
 		<delete dir="${bin.path}"/>
 	</target>
 	
-	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath,reformat-haseclipse,reformat-noeclipse" description="Make the .class files">
+	<target name ="buildbin" depends="build-config,if_windows,if_linux,classpath" description="Make the .class files">
     	<!-- <echo>Classpath: ${ant.refid:build.classpath}</echo> -->
 
 		<mkdir dir="${bin.path}"/>
@@ -176,8 +177,6 @@
 	
 	<target name ="build" depends="build-config,classpath,buildbin,buildjar,copyjar,run_jar_test" description="Make the .class files and .jar file">
 	</target>
-	
-	<!-- TODO: add a target that will run unit and regression tests using the .jar instead of the .class files so we can ensure it's up-to-date -->
 	
 	<target name ="run_jar_test" depends="build-config,copyjar" description="Test running the .jar">
 		<exec dir="${lib.path}" executable="java" failonerror="true" outputproperty="devnull">
@@ -204,8 +203,11 @@
 		 </junit>
 	</target>
 	
-	<target name ="regression_test" depends="build-config,build" description="Run the Regression Tests">
-		<exec dir="${regression.path}" executable="python" failonerror="true">
+	<target name="reformat" depends="reformat-haseclipse,reformat-noeclipse">
+	</target>
+	
+	<target name ="integration_test" depends="build-config,build" description="Run Integration Tests">
+		<exec dir="${integration.path}" executable="python" failonerror="true">
 		    <arg line="run_tests.py" />
 		</exec>
 	</target>
@@ -246,8 +248,29 @@
 	    </condition>
 	</target>
 	
-	<!-- run all tests (unit and regression) -->
-	<target name ="test" depends="run_jar_test,unit_test,regression_test,python_test" description="Run the Unit and Regression Tests">
+	<!-- run test extra passes and generators tests (may take a while) -->
+	<!-- code reformatting moved here because I want to be able to run unit tests before waiting for reformatting -->
+	<target name ="test_gen_passes" depends="reformat" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
+		<echo message="Running generator and transformation pass tests..."/>
+		 
+		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
+		    <arg line="plot.py" />
+		</exec>
+		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
+		<exec dir="${doc.path}/transformation_passes/hybridization" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
+		
+		<echo message="Running test for continuization transformation pass (may take a while)..."/>
+		<exec dir="${doc.path}/transformation_passes/continuization" executable="python" failonerror="true">
+			<arg line="plot.py" />
+		</exec>
+	</target>
+	
+	<!-- run test suite -->
+	<target name ="test" depends="run_jar_test,unit_test,integration_test,python_test,test_gen_passes" description="Run the Hyst Test Suite">
 	</target>
 	
 	<target name ="release" depends="build-config,build" description="Builds the release">

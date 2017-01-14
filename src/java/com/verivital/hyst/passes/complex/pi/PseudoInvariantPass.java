@@ -51,12 +51,17 @@ public class PseudoInvariantPass extends TransformationPass
 	@Option(name = "-dirs", required = true, handler = HyperPointArrayOptionHandler.class, usage = "directions from each point in the guard-enabling direction", metaVar = "DIR1 DIR2 ...")
 	private List<HyperPoint> dirs;
 
+	@Option(name = "-skip_urgent_init", usage = "optimization which can be set if we can assume all initial states go to the first mode")
+	private boolean skipUrgentInit = false;
+
 	private BaseComponent ha;
+	private String lastModeName = null; // the name of the last mode that was
+										// created
 
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pass_pi";
+		return "pi";
 	}
 
 	@Override
@@ -118,10 +123,13 @@ public class PseudoInvariantPass extends TransformationPass
 	 *            (may be null for single-mode automata)
 	 * @param points
 	 * @param dirs
+	 * @param skipUrgentInit
+	 *            should we omit constructing an urgent start state and assume
+	 *            all initial states go to the first mode?
 	 * @return a string you can call runPass() with
 	 */
 	public static String makeParamString(List<String> modes, List<HyperPoint> points,
-			List<HyperPoint> dirs)
+			List<HyperPoint> dirs, boolean skipUrgentInit)
 	{
 		StringBuilder rv = new StringBuilder();
 
@@ -143,6 +151,9 @@ public class PseudoInvariantPass extends TransformationPass
 		for (HyperPoint p : dirs)
 			rv.append(" " + StringOperations.join(",", p.dims));
 
+		if (skipUrgentInit)
+			rv.append(" -skip_urgent_init");
+
 		return rv.toString();
 	}
 
@@ -151,6 +162,17 @@ public class PseudoInvariantPass extends TransformationPass
 	{
 		ha = (BaseComponent) config.root;
 		checkParams();
+
+		Expression savedInitialCondition = null;
+
+		if (skipUrgentInit)
+		{
+			if (config.init.size() != 1)
+				throw new AutomatonExportException(
+						"skip urgent init option requires a single initial state");
+
+			savedInitialCondition = config.init.values().iterator().next();
+		}
 
 		ConvertToStandardForm.run(config);
 
@@ -165,11 +187,37 @@ public class PseudoInvariantPass extends TransformationPass
 		}
 
 		ConvertFromStandardForm.run(config);
+
+		// if we should revert initial states to what they were before
+		if (skipUrgentInit)
+		{
+			AutomatonMode init = ConvertToStandardForm.getInitMode(ha);
+
+			if (ha.modes.containsValue(init))
+			{
+				ha.modes.remove(init.name);
+
+				ArrayList<AutomatonTransition> toRemove = new ArrayList<AutomatonTransition>();
+
+				for (AutomatonTransition at : ha.transitions)
+				{
+					if (at.from == init || at.to == init)
+						toRemove.add(at);
+				}
+
+				ha.transitions.removeAll(toRemove);
+			}
+
+			config.init.clear();
+
+			config.init.put(lastModeName, savedInitialCondition);
+		}
 	}
 
 	private void createPseudoInvariant(AutomatonMode afterMode, HyperPoint point, HyperPoint dir)
 	{
 		String beforeName = makeModeName(afterMode);
+		this.lastModeName = beforeName;
 		Hyst.log("Creating PI mode " + beforeName + " from point " + point + " and direction "
 				+ dir);
 

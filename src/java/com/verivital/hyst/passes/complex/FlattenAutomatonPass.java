@@ -89,7 +89,7 @@ public class FlattenAutomatonPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-flatten";
+		return "flatten";
 	}
 
 	@Override

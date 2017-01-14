@@ -78,11 +78,13 @@ public class Preconditions
 																	// interval
 																	// constants
 
-		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONSTANTS.ordinal()])
+		if (!skip[PreconditionsFlag.CONVERT_INTERVAL_CONST_TO_VAR.ordinal()])
 			Preconditions.convertIntervalConstants(c);
 
-		if (!skip[PreconditionsFlag.CONVERT_CONSTANTS.ordinal()])
-			Preconditions.convertConstants(c);
+		if (!skip[PreconditionsFlag.CONVERT_CONSTANTS_TO_VALUES.ordinal()])
+		{
+			Preconditions.substituteConstants(c);
+		}
 
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
@@ -269,8 +271,22 @@ public class Preconditions
 					"Running conversion pass to make them variables, as required by the preconditions.");
 
 			ConvertIntervalConstants.run(c);
+
+			// printComponentConstants(c.root);
 		}
 	}
+
+	/*
+	 * private static void printComponentConstants(Component c) {
+	 * System.out.println( c.instanceName + " has " + c.constants.size() +
+	 * " constants: " + c.constants);
+	 * 
+	 * if (c instanceof NetworkComponent) { NetworkComponent nc =
+	 * (NetworkComponent) c;
+	 * 
+	 * for (ComponentInstance ci : nc.children.values()) {
+	 * printComponentConstants(ci.child); } } }
+	 */
 
 	private static boolean hasConstants(Component c)
 	{
@@ -300,7 +316,7 @@ public class Preconditions
 		return rv;
 	}
 
-	private static void convertConstants(Configuration c)
+	private static void substituteConstants(Configuration c)
 	{
 		if (hasConstants(c.root))
 		{
@@ -320,19 +336,16 @@ public class Preconditions
 	{
 		boolean rv = false;
 
-		if (c instanceof BaseComponent)
+		for (Interval i : c.constants.values())
 		{
-			// base case
-			for (Interval i : c.constants.values())
+			if (i != null && !i.isPoint())
 			{
-				if (i != null && !i.isPoint())
-				{
-					rv = true;
-					break;
-				}
+				rv = true;
+				break;
 			}
 		}
-		else
+
+		if (!rv && c instanceof NetworkComponent)
 		{
 			// recursive case, network component
 			NetworkComponent nc = (NetworkComponent) c;
@@ -618,5 +631,9 @@ public class Preconditions
 			super(s);
 		}
 
+		public PreconditionsFailedException(String s, RuntimeException e)
+		{
+			super(s, e);
+		}
 	}
 }

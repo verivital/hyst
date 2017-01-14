@@ -10,58 +10,81 @@ import hybridpy.hypy as hypy
 def main():
     '''main entry point for vanderpol_althoff script'''
 
-    print "\nGenerating out_vanderpol_hybridized_plot.png (~17 seconds)..."
+    pass_params = make_pass_params()
+
+    print "\nGenerating out_vanderpol_hybridized_plot.png (~13 seconds)..."
+    plot(pass_params)
+
+    print "\nChecking if domain contraction error modes are reachable (~11 seconds)..."
+    check_dcem(pass_params)
+
+def make_pass_params():
+    'make the hybridization pass parameters for hyst'
 
     simtype = 'starcorners'
     step = '0.05'
+
     maxtime = '5.5' # 5.5
     bloat = '0.05' # 0.05 
     picount = '31' # '31'
     pimaxtime = '1'
     opt = "basinhopping" # use 'kodiak' for a verified one
 
-    # skip error modes so spaceex produces a plot, disable to do DCEM check
-    skip_error_modes = True
+    pass_params = '-T ' + maxtime + \
+            ' -S ' + simtype + \
+            ' -delta_tt ' + step + \
+            ' -n_pi ' + picount + \
+            ' -delta_pi ' + pimaxtime + \
+            ' -epsilon ' + bloat + \
+            ' -opt ' + opt
+
+    return pass_params
     
-    hyst_params = ['-hybridizemt', \
-            '-T ' + maxtime + 
-            ' -S ' + simtype + 
-            ' -delta_tt ' + step + 
-            ' -n_pi ' + picount +
-            ' -delta_pi ' + pimaxtime + 
-            ' -epsilon ' + bloat + 
-            ' -opt ' + opt]
+def check_dcem(pass_params):
+    '''check for domain contraction error modes (dcem)'''
 
-    if skip_error_modes:
-        hyst_params[1] += ' -noerror'
+    e = hypy.Engine('spaceex')
 
-    print "Using Parameters: " + str(hyst_params)
-    plot_vanderpol(hyst_params)
-
-def plot_vanderpol(hyst_params):
-    '''plot widths using vanderpol althoff
-    '''
-
-    name = 'vanderpol_althoff'
-
-    e = hypy.Engine()
-
-    e.set_tool_params(hyst_params)          
-    e.set_save_model_path('out_vanderpol_hybridized_plot.xml')
-    e.set_output_image('out_vanderpol_hybridized_plot.png')
-
-    e.set_print_terminal_output(True)
-    e.set_model(name + '.xml')
-    e.set_tool('spaceex')
+    e.set_input('vanderpol_althoff.xml')
+    e.add_pass('hybridizemt', pass_params)
         
     start = time.time()
-    print 'Running computation... ',
-    code = e.run(make_image=True)
+    print 'Running DCEM checking computation... ',
+    result = e.run(parse_output=True)
+    dif = time.time() - start
+
+    print 'done. Finished in ' + str(dif) + ' seconds'
+
+    if result['output']['safe'] != True:
+        raise RuntimeError("Domain contraction error modes (DCEMs) were reachable.")
+    else:
+        print "Success: DCEMs were not reachable."
+
+    if result['code'] != hypy.Engine.SUCCESS:
+        raise RuntimeError("Hyst resturn code was: " + str(result['code']))
+
+
+def plot(pass_params):
+    'make the plot'
+
+    pass_params += ' -noerror' # skip error modes since we're plotting
+
+    e = hypy.Engine('spaceex')
+
+    e.set_input('vanderpol_althoff.xml')
+    e.set_output('out_vanderpol_hybridized_plot.xml')
+    e.add_pass('hybridizemt', pass_params)
+        
+    start = time.time()
+    print 'Running computation + plot... ',
+    code = e.run(image_path='out_vanderpol_hybridized_plot.png')['code']
     dif = time.time() - start
     print 'done. Finished in ' + str(dif) + ' seconds'
 
-    if code != hypy.RUN_CODES.SUCCESS:
-        raise RuntimeError('Error in ' + name + ': ' + str(code))
+    if code != hypy.Engine.SUCCESS:
+        raise RuntimeError('Error: ' + str(code))
+
+
         
 if __name__ == '__main__':
     main()

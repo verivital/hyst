@@ -36,7 +36,7 @@ public class OrderReductionPass extends TransformationPass
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-order_reduction";
+		return "order_reduction";
 	}
 
 	@Override

@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import org.kohsuke.args4j.Option;
+
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -36,6 +38,36 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  */
 public class PySimPrinter extends ToolPrinter
 {
+	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
+	String time = "auto";
+
+	@Option(name = "-step", usage = "simulation time step", metaVar = "VAL")
+	String step = "auto";
+
+	@Option(name = "-center", usage = "simulate from center of initial states", metaVar = "True/False")
+	String center = "True";
+
+	@Option(name = "-star", usage = "simulate from star points of initial states", metaVar = "True/False")
+	String star = "True";
+
+	@Option(name = "-corners", usage = "simulate from corners of initial states", metaVar = "True/False")
+	String corners = "False";
+
+	@Option(name = "-rand", usage = "simulate from a certain number of random initial states", metaVar = "NUM")
+	String rand = "0";
+
+	@Option(name = "-title", usage = "plot title", metaVar = "TITLE")
+	String title = "Simulation";
+
+	@Option(name = "-legend", usage = "use legend?", metaVar = "True/False")
+	String legend = "True";
+
+	@Option(name = "-xdim", usage = "plot x dim", metaVar = "DIM_INDEX")
+	int plotXDim = -1;
+
+	@Option(name = "-ydim", usage = "plot y dim", metaVar = "DIM_INDEX")
+	int plotYDim = -1;
+
 	private static PySimExpressionPrinter pySimExpressionPrinter = new PySimExpressionPrinter();
 	private static SympyPrinter sympyPyinter = new SympyPrinter();
 
@@ -91,8 +123,8 @@ public class PySimPrinter extends ToolPrinter
 
 			if (!am.urgent)
 			{
-				appendIndentedLine(rv,
-						am.name + ".der = lambda _, state: " + getMapString(am.flowDynamics, ha));
+				appendIndentedLine(rv, am.name + ".der = lambda _, state: "
+						+ getMapString("flow dynamics", am.flowDynamics, ha));
 
 				appendIndentedLine(rv, am.name + ".der_interval_list = "
 						+ getIntervalListString(am.flowDynamics, ha));
@@ -144,7 +176,8 @@ public class PySimPrinter extends ToolPrinter
 	 * @param map
 	 * @return the mapped string
 	 */
-	private static String getMapString(Map<String, ExpressionInterval> map, BaseComponent ha)
+	private static String getMapString(String desc, Map<String, ExpressionInterval> map,
+			BaseComponent ha)
 	{
 		StringBuffer rv = new StringBuffer();
 		rv.append("[");
@@ -159,7 +192,18 @@ public class PySimPrinter extends ToolPrinter
 			if (ei == null)
 				rv.append("None");
 			else
-				rv.append(ei.getExpression());
+			{
+				try
+				{
+					rv.append(ei.getExpression());
+				}
+				catch (AutomatonExportException e)
+				{
+					throw new AutomatonExportException(
+							"Error in " + desc + " mapping " + var + " -> " + ei.toDefaultString(),
+							e);
+				}
+			}
 		}
 
 		rv.append("]");
@@ -181,7 +225,8 @@ public class PySimPrinter extends ToolPrinter
 			appendIndentedLine(rv,
 					"t = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 			appendIndentedLine(rv, "t.guard = lambda state: " + at.guard);
-			appendIndentedLine(rv, "t.reset = lambda state: " + getMapString(at.reset, ha));
+			appendIndentedLine(rv,
+					"t.reset = lambda state: " + getMapString("reset assignment", at.reset, ha));
 
 			appendIndentedLine(rv, "t.guard_sympy = " + sympyPyinter.print(at.guard));
 		}
@@ -196,16 +241,20 @@ public class PySimPrinter extends ToolPrinter
 
 		printLine(automatonToString(config));
 
-		printLine("def simulate(max_time=" + getTimeParam() + "):");
+		printLine("def simulate(init_states, max_time=" + getTimeParam() + "):");
 		increaseIndentation();
 		printLine("'''simulate the automaton from each initial rect'''");
 		printSimulate();
 		decreaseIndentation();
 		printNewline();
 
-		int xDim = ha.variables.indexOf(config.settings.plotVariableNames[0]);
-		int yDim = ha.variables.indexOf(config.settings.plotVariableNames[1]);
-		printLine("def plot(result, filename='plot.png', dim_x=" + xDim + ", dim_y=" + yDim + "):");
+		int xDim = plotXDim >= 0 ? plotXDim
+				: ha.variables.indexOf(config.settings.plotVariableNames[0]);
+		int yDim = plotYDim >= 0 ? plotYDim
+				: ha.variables.indexOf(config.settings.plotVariableNames[1]);
+
+		printLine("def plot(result, init_states, filename='plot.png', dim_x=" + xDim + ", dim_y="
+				+ yDim + "):");
 		increaseIndentation();
 		printLine("'''plot a simulation result to a file'''");
 		printPlot();
@@ -215,7 +264,9 @@ public class PySimPrinter extends ToolPrinter
 		// check if main module
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("plot(simulate())");
+		printLine("ha = define_ha()");
+		printLine("init_states = define_init_states(ha)");
+		printLine("plot(simulate(init_states), init_states)");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -383,11 +434,8 @@ public class PySimPrinter extends ToolPrinter
 		 */
 
 		printNewline();
-		printLine("ha = define_ha()");
-		printLine("init_states = define_init_states(ha)");
-		printLine("q_list = init_list_to_q_list(init_states, " + "center="
-				+ toolParams.get("center") + ", star=" + toolParams.get("star") + ", corners="
-				+ toolParams.get("corners") + ", rand=" + toolParams.get("rand") + ")");
+		printLine("q_list = init_list_to_q_list(init_states, " + "center=" + center + ", star="
+				+ star + ", corners=" + corners + ", rand=" + rand + ")");
 		printLine("result = sim.simulate_multi(q_list, max_time)");
 		printNewline();
 		printLine("return result");
@@ -425,15 +473,14 @@ public class PySimPrinter extends ToolPrinter
 		printNewline();
 		printLine("draw_events = len(result) == 1");
 		printLine("shouldShow = False");
-		String title = toolParams.get("title");
 		printLine("sim.plot_sim_result_multi(result, dim_x, dim_y, filename, draw_events, "
-				+ "legend=" + toolParams.get("legend") + ", title="
-				+ (title == "None" ? "None" : "'" + title + "'") + ", show=shouldShow)");
+				+ "legend=" + legend + ", title=" + (title == "None" ? "None" : "'" + title + "'")
+				+ ", show=shouldShow, init_states=init_states)");
 	}
 
 	private String getTimeParam()
 	{
-		String value = toolParams.get("time");
+		String value = time;
 
 		if (value.equals("auto"))
 			value = doubleToString(config.settings.spaceExConfig.timeHorizon);
@@ -586,30 +633,13 @@ public class PySimPrinter extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "-pysim";
+		return "pysim";
 	}
 
 	@Override
 	public boolean isInRelease()
 	{
 		return true;
-	}
-
-	@Override
-	public Map<String, String> getDefaultParams()
-	{
-		LinkedHashMap<String, String> toolParams = new LinkedHashMap<String, String>();
-
-		toolParams.put("time", "auto");
-		toolParams.put("step", "auto");
-		toolParams.put("legend", "True");
-		toolParams.put("center", "True");
-		toolParams.put("star", "True");
-		toolParams.put("corners", "False");
-		toolParams.put("rand", "0");
-		toolParams.put("title", "Simulation");
-
-		return toolParams;
 	}
 
 	@Override

@@ -14,16 +14,15 @@ def main():
 
 def plot_discrete():
     '''run reachability on the original, discretely actuated model'''
-    hyst_param = ('di_discrete_spaceex', 'di_periodic.xml', 'spaceex', None)
+    hyst_param = ('di_discrete_spaceex', 'di_periodic.xml', 'spaceex', None, None, None)
 
     plot(hyst_param)
 
 def plot_continuized():
     '''run reachability on the continuized version of the model'''
 
-    hyst_param = ('di_continuized_flowstar_piecewise', 'di_cont.xml', 'flowstar', ['-tp', 
-                    'orders=8:aggregation=interval', '-pass_continuization', 
-                    '-var a -period 0.005 -timevar t -times 1.5 5 -bloats 4 4 -noerrormodes'])
+    hyst_param = ('di_continuized_flowstar_piecewise', 'di_cont.xml', 'flowstar', '-orders 8 -aggregation interval', 
+                    'continuization', '-var a -period 0.005 -timevar t -times 1.5 5 -bloats 4 4 -noerrormodes')
 
     plot(hyst_param)
 
@@ -32,32 +31,24 @@ def plot(plot_param):
 
     name = plot_param[0]
     model = plot_param[1]
-    tool = plot_param[2]
-    tool_params = plot_param[3]
+    tool_name = plot_param[2]
+    tool_param = plot_param[3]
+    pass_name = plot_param[4]
+    pass_param = plot_param[5]
 
-    e = hypy.Engine()
-    e.set_save_terminal_output(True)
+    e = hypy.Engine(tool_name, tool_param)
 
-    #e.set_save_model_path("out.model")
+    e.set_input(model)
 
-    e.set_model(model)
-    e.set_tool(tool)
-
-    if tool_params is not None:
-        e.set_tool_params(tool_params)
-
-    e.set_print_terminal_output(True)
-
-    e.set_output_image(name + '.png')
+    if pass_name is not None:
+        e.add_pass(pass_name, pass_param)
 
     print 'Running ' + name
-    code = e.run()
-
+    code = e.run(image_path=name + ".png", print_stdout=True)['code']
     print 'Finished ' + name
 
-    if code != hypy.RUN_CODES.SUCCESS:
-        print '\n\n-------------------\nError in ' + name + ': ' + str(code) + "; terminal output was:"
-        print e.get_terminal_output()
+    if code != hypy.Engine.SUCCESS:
+        print '\n\n-------------------\nError in ' + name + ': ' + str(code)
 
         raise RuntimeError('Error in ' + name + ': ' + str(code))
 

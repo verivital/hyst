@@ -1,17 +1,24 @@
 package com.verivital.hyst.main;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
 
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Localizable;
+import org.kohsuke.args4j.Option;
+
+import com.verivital.hyst.generators.BuildGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
@@ -34,7 +41,9 @@ import com.verivital.hyst.passes.complex.ContinuizationPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.passes.complex.OrderReductionPass;
+import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
+import com.verivital.hyst.passes.complex.pi.PseudoInvariantInitPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
@@ -47,8 +56,12 @@ import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.printers.hycreate2.HyCreate2Printer;
 import com.verivital.hyst.python.PythonBridge;
+import com.verivital.hyst.util.CmdLineRuntimeException;
+import com.verivital.hyst.util.PairStringOptionHandler;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import com.verivital.hyst.util.StringOperations;
+import com.verivital.hyst.util.StringPairsWithSpacesArrayOptionHandler;
+import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
@@ -58,98 +71,227 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
  */
 public class Hyst
 {
-	public static String TOOL_NAME = "Hyst v1.2";
-	public static String programArguments;
-
-	private static ArrayList<String> xmlFilenames = new ArrayList<String>();
-	private static String cfgFilename = null, outputFilename = null;
-	private static int printerIndex = -1; // index into printers array
-	public static boolean verboseMode = false; // flag used to toggle verbose
-												// printing with Main.log()
-	public static boolean debugMode = false; // flag used to toggle debug
-												// printing with Main.logDebug()
-	private static String toolParamsString = null; // tool parameter string set
-													// using -toolparams or -tp
-	private static int modelGenIndex = -1; // index into generators array
-	private static String modelGenParam = null; // parameter for model generator
-
-	public static boolean IS_UNIT_TEST = false; // should usage printing be
-												// omitted (for unit testing)
-	private static HystFrame guiFrame = null; // set if gui mode is being used
-
-	public final static String FLAG_HELP = "-help";
-	public final static String FLAG_GUI = "-gui";
-	public final static String FLAG_TOOLPARAMS = "-toolparams";
-	public final static String FLAG_TOOLPARAMS_SHORT = "-tp";
-	public final static String FLAG_HELP_SHORT = "-h";
-	public final static String FLAG_VERBOSE = "-verbose";
-	public final static String FLAG_VERBOSE_SHORT = "-v";
-	public final static String FLAG_DEBUG = "-debug";
-	public final static String FLAG_DEBUG_SHORT = "-d";
-	public final static String FLAG_NOVALIDATE = "-novalidate";
-	public final static String FLAG_OUTPUT = "-o";
-	public final static String FLAG_TESTPYTHON = "-testpython";
-	public final static String FLAG_GENERATE = "-generate";
-	public final static String FLAG_GENERATE_SHORT = "-gen";
-
-	// add new tool support here
-	private static final ToolPrinter[] printers = { new FlowstarPrinter(), new DReachPrinter(),
+	// list of supported tool printers (add new ones here)
+	private final ToolPrinter[] printers = { new FlowstarPrinter(), new DReachPrinter(),
 			new HyCreate2Printer(), new HyCompPrinter(), new PythonQBMCPrinter(),
 			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(), };
 
-	// passes that are run only if the user selects them
-	private static final TransformationPass[] availablePasses = { new AddIdentityResetPass(),
-			new PseudoInvariantPass(), new PseudoInvariantSimulatePass(), new TimeScalePass(),
-			new SubstituteConstantsPass(), new SimplifyExpressionsPass(),
-			new SplitDisjunctionGuardsPass(), new RemoveSimpleUnsatInvariantsPass(),
-			new ShortenModeNamesPass(), new ContinuizationPass(), new HybridizeMixedTriggeredPass(),
+	// list of supported model transformation passes (add new ones here)
+	private final TransformationPass[] passes = { new AddIdentityResetPass(),
+			new PseudoInvariantPass(), new PseudoInvariantSimulatePass(),
+			new PseudoInvariantInitPass(), new TimeScalePass(), new SubstituteConstantsPass(),
+			new SimplifyExpressionsPass(), new SplitDisjunctionGuardsPass(),
+			new RemoveSimpleUnsatInvariantsPass(), new ShortenModeNamesPass(),
+			new ContinuizationPass(), new HybridizeMixedTriggeredPass(), new HybridizeMTRawPass(),
 			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(), };
 
-	private static final ModelGenerator[] generators = { new IntegralChainGenerator(),
-			new NavigationGenerator(), };
+	// list of supported model generators (add new ones here)
+	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
+			new NavigationGenerator(), new BuildGenerator() };
+
+	public static String TOOL_NAME = "Hyst v1.3";
+
+	// all program arguments as a single string
+	public static String programArguments;
+
+	// should usage printing be omitted (for unit testing)
+	public static boolean IS_UNIT_TEST = false;
+
+	// non-null if gui mode enabled, used for logging
+	private static HystFrame guiFrame = null;
+
+	// these should be statically accessible
+	public static boolean verboseMode = false;
+	public static boolean debugMode = false;
+
+	// localizable object for use in args error reporting
+	public static Localizable hystLocalizable = new Localizable()
+	{
+		@Override
+		public String formatWithLocale(Locale locale, Object... args)
+		{
+			return format(args);
+		}
+
+		@Override
+		public String format(Object... args)
+		{
+			StringBuilder sb = new StringBuilder();
+
+			for (Object a : args)
+				sb.append(a.toString());
+
+			return sb.toString();
+		}
+	};
+
+	/////////////////////////////////////////////////////
+
+	private CmdLineParser parser = new CmdLineParser(this);
+
+	// extracted from arguments
+	private ArrayList<String> xmlFilenames = new ArrayList<String>();
+	private String cfgFilename = null;
+
+	// command line options
+	@Option(name = "-help", aliases = { "-h" }, usage = "print command-line usage")
+	boolean doHelp = false;
+
+	@Option(name = "-help_printers", usage = "print usage information on tool printers")
+	boolean doHelpTools = false;
+
+	@Option(name = "-help_passes", usage = "print usage information on transformation passes")
+	boolean doHelpPasses = false;
+
+	@Option(name = "-help_generators", usage = "print usage information on model generators")
+	boolean doHelpGenerators = false;
+
+	public static final String FLAG_INPUT = "-input";
+
+	@Option(name = FLAG_INPUT, aliases = {
+			"-i" }, usage = "input filenames", metaVar = "FILE1 FILE2 ...", handler = StringWithSpacesArrayOptionHandler.class)
+	List<String> inputArgumentList = new ArrayList<String>();
+
+	public static final String FLAG_OUTPUT = "-output";
+
+	@Option(name = FLAG_OUTPUT, aliases = { "-o" }, usage = "output filename", metaVar = "FILENAME")
+	String outputFilename = null;
+
+	// the chosen tool printer (dynamic parameter)
+	ToolPrinter toolPrinter = null;
+	String toolParamsString = null;
+
+	public static final String FLAG_TOOL = "-tool";
+
+	@Option(name = FLAG_TOOL, aliases = {
+			"-t" }, usage = "target tool and tool params", metaVar = "TOOLNAME TOOLPARAMS", handler = PairStringOptionHandler.class)
+	public void setTool(String[] params) throws CmdLineException
+	{
+		if (params.length != 2)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-tool expected exactly two follow-on arguments: TOOL_NAME TOOL_PARAMS (params can be explicit empty string). See -help_printers.");
+
+		toolParamsString = params[1];
+
+		// look through all the model generators for the right one
+		for (ToolPrinter tp : printers)
+		{
+			String flag = tp.getCommandLineFlag();
+
+			if (flag.startsWith("-"))
+				throw new RuntimeException(
+						"tool's command-line flag shouldn't start with a hyphen: " + flag);
+
+			if (flag.equalsIgnoreCase(params[0]))
+			{
+				toolPrinter = tp;
+				break;
+			}
+		}
+
+		if (toolPrinter == null)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-tool parameter '" + params[0] + "' was invalid.");
+	}
+
+	ModelGenerator modelGenerator = null;
+	String modelGenParam = null; // parameter for model generator
+
+	@Option(name = "-generate", aliases = {
+			"-gen" }, usage = "generate a model (rather than loading from a file)", metaVar = "GEN_NAME GEN_PARAMS", handler = PairStringOptionHandler.class)
+	public void setGenerate(String[] params) throws CmdLineException
+	{
+		if (params.length != 2)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-generate expected two follow-on arguments: GEN_NAME GEN_PARAMS (params can be explicit empty string). See -help_gen.");
+
+		modelGenParam = params[1];
+
+		// look through all the model generators for the right one
+		for (ModelGenerator mg : generators)
+		{
+			String flag = mg.getCommandLineFlag();
+
+			if (flag.startsWith("-"))
+				throw new RuntimeException(
+						"model generator's command-line flag shouldn't start with a hyphen: "
+								+ flag);
+
+			if (flag.equalsIgnoreCase(params[0]))
+			{
+				modelGenerator = mg;
+				break;
+			}
+		}
+
+		if (modelGenerator == null)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-generate parameter '" + params[0] + "' was invalid.");
+	}
 
 	// passes that the user has selected
-	private static ArrayList<RequestedTransformationPass> requestedPasses = new ArrayList<RequestedTransformationPass>();
+	private ArrayList<RequestedTransformationPass> requestedPasses = new ArrayList<RequestedTransformationPass>();
+
+	public static final String FLAG_PASSES = "-passes";
+
+	@Option(name = FLAG_PASSES, aliases = {
+			"-p" }, handler = StringPairsWithSpacesArrayOptionHandler.class, usage = "run a sequence of model transformation passes", metaVar = "PASS1 PARAMS1 PASS2 PARAMS2 ...")
+	List<String> passArgumentList = new ArrayList<String>();
+
+	public static final String FLAG_VERBOSE = "-verbose";
+
+	@Option(name = FLAG_VERBOSE, aliases = { "-v" }, usage = "print verbose output")
+	public boolean verboseFlag = false;
+
+	public static final String FLAG_DEBUG = "-debug";
+
+	@Option(name = FLAG_DEBUG, aliases = { "-d" }, usage = "print debug (and verbose) output")
+	public boolean debugFlag = false;
+
+	///////// hidden options ///////////////
+
+	@Option(name = "-novalidate", hidden = true, usage = "disable model validation")
+	public boolean noValidateFlag = false;
+
+	@Option(name = "-testpython", hidden = true, usage = "test if python exists on system")
+	boolean doTestPython = false;
+
+	/////////////////////////////////////////////////////
 
 	public enum ExitCode
 	{
 		SUCCESS, // 0
 		EXPORT_EXCEPTION, // 1
 		PRECONDITIONS_EXCEPTION, // 2
-		ARG_PARSE_ERROR, INTERNAL_ERROR, GUI_QUIT, EXPORT_AUTOMATON_EXCEPTION, NOPYTHON // exit
-																						// if
-																						// -checkpython
-																						// fails
+		ARG_PARSE_ERROR, // 3
+		GUI_QUIT, // 4
+		EXPORT_AUTOMATON_EXCEPTION, // 5
+		NOPYTHON // 6, exit code if -checkpython fails
 	};
 
 	public static void main(String[] args)
 	{
-		if (!checkPrintersPasses())
-			System.exit(ExitCode.INTERNAL_ERROR.ordinal());
+		final String FLAG_GUI = "-gui";
 
 		if (args.length > 0 && !args[0].equals(FLAG_GUI))
-		{
-			int code = convert(args);
-
-			System.exit(code);
-		}
+			System.exit(Hyst.runWithArguments(args));
 		else
 		{
+			// show GUI
 			final String loadFilename = (args.length >= 2) ? args[1] : null;
 
 			// use gui
-			System.out.println(
-					"Started in GUI mode. For command-line help use the " + FLAG_HELP + " flag.");
+			System.out.println("Started in GUI mode. For command-line help use the -help flag.");
 
 			fixLookAndFeel();
 
 			SwingUtilities.invokeLater(new Runnable()
 			{
-
 				@Override
 				public void run()
 				{
-					guiFrame = new HystFrame(printers, availablePasses);
+					Hyst h = new Hyst();
+					guiFrame = new HystFrame(h.printers, h.passes);
 
 					if (loadFilename != null)
 						guiFrame.guiLoad(loadFilename);
@@ -160,35 +302,298 @@ public class Hyst
 		}
 	}
 
+	public static int runWithArguments(String[] args)
+	{
+		programArguments = makeSingleArgument(args);
+
+		return new Hyst().run(args).ordinal();
+	}
+
+	private void parseInput() throws CmdLineException
+	{
+		boolean gotCfg = false;
+
+		for (String file : inputArgumentList)
+		{
+			if (file.endsWith(".xml"))
+			{
+				xmlFilenames.add(file);
+
+				if (cfgFilename == null)
+				{
+					String base = file.substring(0, file.length() - 4);
+					cfgFilename = base + ".cfg";
+				}
+			}
+			else if (file.endsWith(".cfg"))
+			{
+				if (gotCfg)
+					throw new CmdLineException(parser, hystLocalizable,
+							"Multiple .cfg input files are not allowed.");
+
+				cfgFilename = file;
+				gotCfg = true;
+			}
+			else
+				throw new CmdLineException(parser, hystLocalizable,
+						"Unrecognized input file extension (expected .cfg or .xml): '" + file
+								+ "'");
+		}
+	}
+
+	private void parsePasses() throws CmdLineException
+	{
+		if (passArgumentList.size() % 2 != 0)
+			throw new CmdLineException(parser, hystLocalizable,
+					"-passes expected multiple of two follow-on arguments: PASS_NAME PASS_PARAMS (params can be excplicit empty string). See -help_passes.");
+
+		for (int i = 0; i < passArgumentList.size(); i += 2)
+		{
+			String passName = passArgumentList.get(i);
+			String passParam = passArgumentList.get(i + 1);
+			boolean found = false;
+
+			for (TransformationPass tp : passes)
+			{
+				String flag = tp.getCommandLineFlag();
+
+				if (flag.equalsIgnoreCase(passName))
+				{
+					// create new instances here since we may use the same pass
+					// multiple times with different parmeters
+					TransformationPass instance = newTransformationPassInstance(tp);
+					requestedPasses.add(new RequestedTransformationPass(instance, passParam));
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+				throw new CmdLineException(parser, hystLocalizable,
+						"Couldn't find transformation pass with name '" + passName
+								+ "'. See -help_passes.");
+		}
+	}
+
 	/**
-	 * Main conversion thread
+	 * Check command-line arguments for inconsistancies.
+	 */
+	private void checkArguments() throws CmdLineException
+	{
+		parseInput();
+
+		parsePasses();
+
+		if (modelGenerator == null)
+		{
+			if (cfgFilename == null)
+				throw new CmdLineException(parser, hystLocalizable,
+						"No input .cfg files were provided.");
+
+			if (xmlFilenames.size() == 0)
+				throw new CmdLineException(parser, hystLocalizable,
+						"No input .xml files were provided.");
+		}
+		else
+		{
+			// model generator exists, shouldn't have xml or cfg files
+			if (cfgFilename != null || xmlFilenames.size() > 0)
+				throw new CmdLineException(parser, hystLocalizable,
+						"Cannot both use model generation and provide input cfg/xml files.");
+		}
+
+		if (toolPrinter == null)
+			throw new AutomatonExportException("Tool printer must be set using " + FLAG_TOOL);
+
+		for (String xmlFilename : xmlFilenames)
+			if (xmlFilename != null && !new File(xmlFilename).exists())
+				throw new CmdLineException(parser, hystLocalizable,
+						"Input .xml file not found: '" + cfgFilename + "'.");
+
+		if (cfgFilename != null && !new File(cfgFilename).exists())
+			throw new CmdLineException(parser, hystLocalizable,
+					"Input .cfg file not found: '" + cfgFilename + "'.");
+
+	}
+
+	private Hyst()
+	{
+	}
+
+	/**
+	 * Do a model conversion return the exitCode
 	 * 
 	 * @param args
-	 * @return the exit code
+	 *            the conversion arguments
 	 */
-	public static int convert(String[] args)
+	private ExitCode run(String[] args)
 	{
-		resetVars();
-
-		if (!parseArgs(args))
-			return ExitCode.ARG_PARSE_ERROR.ordinal();
-
-		if (debugMode)
-			log("Debug mode (even more verbose) printing enabled.\n");
-		else if (verboseMode)
-			log("Verbose mode printing enabled.\n");
-
-		programArguments = makeSingleArgument(args);
-		Expression.expressionPrinter = null; // this should be assigned by the
-												// pass / printer as needed
-
-		long startMs = System.currentTimeMillis();
-		ToolPrinter printer = newToolPrinterInstance(printers[printerIndex]);
+		ExitCode rv = ExitCode.SUCCESS;
 
 		try
 		{
+			parser.parseArgument(args);
+
+			if (doHelp)
+				showHelp();
+
+			if (doHelpTools)
+				showHelpTools();
+
+			if (doHelpPasses)
+				showHelpPasses();
+
+			if (doHelpGenerators)
+				showHelpGenerators();
+
+			if (doTestPython)
+				rv = doTestPython();
+			else if (!doHelp && !doHelpTools && !doHelpPasses && !doHelpGenerators)
+			{
+				checkArguments(); // extra checks
+				processOutputFlags();
+				rv = runCommandLine();
+			}
+		}
+		catch (CmdLineException e)
+		{
+			Hyst.logError("Error in provided top-level Hyst arguments: " + e.getMessage()
+					+ "\nUse -help for command-line options.");
+			rv = ExitCode.ARG_PARSE_ERROR;
+		}
+
+		return rv;
+	}
+
+	private void processOutputFlags()
+	{
+		if (debugFlag)
+		{
+			Hyst.debugMode = Hyst.verboseMode = true;
+			log("Debug mode (even more verbose) printing enabled.\n");
+		}
+		else if (verboseFlag)
+		{
+			Hyst.debugMode = false;
+			Hyst.verboseMode = true;
+			log("Verbose mode printing enabled.\n");
+		}
+		else
+			Hyst.debugMode = Hyst.verboseMode = false;
+
+		if (noValidateFlag)
+		{
+			Configuration.DO_VALIDATION = false;
+			Hyst.log("Internal model validatation disabled.");
+		}
+		else
+			Configuration.DO_VALIDATION = true;
+	}
+
+	private ExitCode doTestPython()
+	{
+		ExitCode rv = ExitCode.SUCCESS;
+
+		if (PythonBridge.hasPython())
+		{
+			System.out.println("Python and required packages successfully detected.");
+		}
+		else
+		{
+			System.out.println("Python and all required packages NOT detected.");
+			System.out.println(PythonBridge.getInstanceErrorString);
+			rv = ExitCode.NOPYTHON;
+		}
+
+		return rv;
+	}
+
+	private void showHelp()
+	{
+		if (!IS_UNIT_TEST)
+		{
+			System.out.println(TOOL_NAME + " General Usage:");
+			parser.printUsage(System.out);
+		}
+	}
+
+	private void showHelpTools()
+	{
+		System.out.println("Hyst Tool Help:");
+
+		System.out.print("Supported tool printer names are:");
+
+		for (ToolPrinter printer : printers)
+			System.out.print(" '" + printer.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (ToolPrinter printer : printers)
+		{
+			System.out.println("Usage for Tool Printer '" + printer.getCommandLineFlag() + "':");
+			System.out.println(printer.getParamHelp());
+		}
+	}
+
+	private void showHelpPasses()
+	{
+		System.out.println("Hyst Passes Help:");
+
+		System.out.print("Supported transformation pass names are:");
+
+		for (TransformationPass pass : passes)
+			System.out.print(" '" + pass.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (TransformationPass pass : passes)
+		{
+			System.out
+					.println("Usage for Transformation Pass '" + pass.getCommandLineFlag() + "':");
+			System.out.println(pass.getParamHelp());
+		}
+	}
+
+	private void showHelpGenerators()
+	{
+		System.out.println("Hyst Generator Help:");
+
+		System.out.print("Supported model generator names are:");
+
+		for (ModelGenerator gen : generators)
+			System.out.print(" '" + gen.getCommandLineFlag() + "'");
+
+		System.out.println("\n");
+
+		for (ModelGenerator gen : generators)
+		{
+			System.out.println("Usage for Model Generator '" + gen.getCommandLineFlag() + "':");
+			System.out.println(gen.getParamHelp());
+		}
+	}
+
+	/**
+	 * Main Hyst converter method. Assumes arguments have been correctly parsed.
+	 * 
+	 * @return the status exit code
+	 */
+	private ExitCode runCommandLine()
+	{
+		ExitCode rv = ExitCode.SUCCESS;
+		Exception ex = null;
+
+		try
+		{
+			long startMs = System.currentTimeMillis();
 			Configuration config = null;
-			if (modelGenIndex == -1)
+
+			if (modelGenerator != null)
+			{
+				Expression.expressionPrinter = null; // should be assigned in
+														// geneartor
+				config = modelGenerator.generate(modelGenParam);
+			}
+			else
 			{
 				// 1. import the SpaceExDocument
 				SpaceExDocument spaceExDoc = SpaceExImporter.importModels(cfgFilename,
@@ -204,62 +609,51 @@ public class Hyst
 				// configuration
 				config = ConfigurationMaker.fromSpaceEx(spaceExDoc, componentTemplates);
 			}
-			else
-			{
-				ModelGenerator gen = generators[modelGenIndex];
-
-				config = gen.generate(modelGenParam);
-
-			}
 
 			// 5. run passes
 			runPasses(config);
 
 			// 6. run printer
-			runPrinter(printer, config);
-		}
-		catch (AutomatonExportException aee)
-		{
-			logError("Automaton Export Exception while exporting: " + aee.getLocalizedMessage());
+			runPrinter(toolPrinter, config);
 
+			long difMs = System.currentTimeMillis() - startMs;
+
+			toolPrinter.flush();
+			Hyst.log("\nFinished converting in " + difMs + " ms");
+		}
+		catch (AutomatonExportException e)
+		{
+			logError("\nHyst error while exporting - " + e.toString() + "\n");
+			ex = e;
+			rv = ExitCode.EXPORT_AUTOMATON_EXCEPTION;
+		}
+		catch (PreconditionsFailedException e)
+		{
+			logError("Preconditions not met for exporting.");
+			ex = e;
+			rv = ExitCode.PRECONDITIONS_EXCEPTION;
+		}
+		catch (CmdLineRuntimeException e)
+		{
+			logError(e.getMessage());
+			ex = e;
+			rv = ExitCode.ARG_PARSE_ERROR;
+		}
+		catch (Exception e)
+		{
+			logError("Exception in Hyst while exporting.");
+			ex = e;
+			rv = ExitCode.EXPORT_EXCEPTION;
+		}
+
+		if (ex != null)
+		{
 			if (verboseMode)
 			{
-				log("Stack trace from exception:");
+				String message = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage()
+						: ex.toString();
 
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				aee.printStackTrace(pw);
-				log(sw.toString());
-			}
-			else
-				logError("For more information about the error, use the -verbose or -debug flag.");
-
-			return ExitCode.EXPORT_AUTOMATON_EXCEPTION.ordinal();
-		}
-		catch (PreconditionsFailedException ex)
-		{
-			logError("Preconditions not met for exporting: " + ex.getLocalizedMessage());
-
-			if (verboseMode)
-			{
-				log("Stack trace from exception:");
-
-				StringWriter sw = new StringWriter();
-				PrintWriter pw = new PrintWriter(sw);
-				ex.printStackTrace(pw);
-				log(sw.toString());
-			}
-
-			return ExitCode.PRECONDITIONS_EXCEPTION.ordinal();
-		}
-		catch (Exception ex)
-		{
-			String message = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage()
-					: ex.toString();
-			logError("Exception in Hyst while exporting: " + message);
-
-			if (verboseMode)
-			{
+				log(message);
 				log("Stack trace from exception:");
 
 				StringWriter sw = new StringWriter();
@@ -269,20 +663,15 @@ public class Hyst
 			}
 			else
 				logError("For more information about the error, use the -verbose or -debug flag.");
-
-			return ExitCode.EXPORT_EXCEPTION.ordinal();
 		}
 
-		long difMs = System.currentTimeMillis() - startMs;
-
-		printer.flush();
-		Hyst.logInfo("\nFinished converting in " + difMs + " ms");
-
-		return ExitCode.SUCCESS.ordinal();
+		return rv;
 	}
 
-	private static void runPrinter(ToolPrinter printer, Configuration config)
+	private void runPrinter(ToolPrinter printer, Configuration config)
 	{
+		Expression.expressionPrinter = null; // should be assigned in printer
+
 		String originalFilename = StringOperations.join(" ", xmlFilenames.toArray(new String[] {}));
 
 		if (outputFilename != null)
@@ -293,29 +682,18 @@ public class Hyst
 		printer.print(config, toolParamsString, originalFilename);
 	}
 
-	private static void runPasses(Configuration config)
+	private void runPasses(Configuration config)
 	{
 		for (RequestedTransformationPass rp : requestedPasses)
 		{
 			Hyst.log("Running pass " + rp.tp.getName() + " with params " + rp.params);
 
+			Expression.expressionPrinter = null; // should be assigned in pass
 			rp.tp.runTransformationPass(config, rp.params);
 
 			Hyst.logDebug("\n----------After running pass " + rp.tp.getName()
 					+ ", configuration is:\n" + config);
 		}
-	}
-
-	private static void resetVars()
-	{
-		xmlFilenames = new ArrayList<String>();
-		cfgFilename = null;
-		outputFilename = null;
-		printerIndex = -1;
-		verboseMode = false;
-		debugMode = false;
-		toolParamsString = "";
-		requestedPasses.clear();
 	}
 
 	private static void fixLookAndFeel()
@@ -346,279 +724,6 @@ public class Hyst
 			else
 				rv += s;
 		}
-
-		return rv;
-	}
-
-	/**
-	 * Parse arguments, return TRUE if they're alright, FALSE if not
-	 * 
-	 * @param args
-	 * @return
-	 */
-	private static boolean parseArgs(String[] args)
-	{
-		boolean testPython = false;
-		boolean rv = true;
-		boolean quitAfterUsage = false;
-
-		for (int i = 0; i < args.length; i++)
-		{
-			String arg = args[i];
-
-			boolean processedArg = false;
-
-			for (int pi = 0; pi < printers.length; ++pi)
-			{
-				String flag = printers[pi].getCommandLineFlag();
-
-				if (flag.equals(arg))
-				{
-					if (printerIndex != -1)
-					{
-						String other = printers[printerIndex].getCommandLineFlag();
-
-						logError("Error: multiple printers selected " + arg + " and " + other);
-						rv = false;
-					}
-					else
-					{
-						printerIndex = pi;
-						processedArg = true;
-					}
-				}
-			}
-
-			if (processedArg)
-				continue;
-
-			for (TransformationPass tp : availablePasses)
-			{
-				if (tp.getCommandLineFlag().equals(arg))
-				{
-					if (i + 1 >= args.length)
-					{
-						logError("Error: Custom pass flags always needs a subsequent argument: "
-								+ arg);
-						rv = false;
-					}
-					else
-					{
-						String passParam = args[++i];
-
-						TransformationPass instance = newTransformationPassInstance(tp);
-						requestedPasses.add(new RequestedTransformationPass(instance, passParam));
-					}
-
-					processedArg = true;
-				}
-			}
-
-			if (processedArg)
-				continue;
-
-			if (arg.equals(FLAG_HELP) || arg.equals(FLAG_HELP_SHORT) || arg.equals(FLAG_GUI))
-				quitAfterUsage = true; // ignore
-			else if (arg.equals(FLAG_VERBOSE) || arg.equals(FLAG_VERBOSE_SHORT))
-				verboseMode = true;
-			else if (arg.equals(FLAG_TESTPYTHON))
-				testPython = true;
-			else if (arg.equals(FLAG_DEBUG) || arg.equals(FLAG_DEBUG_SHORT))
-			{
-				verboseMode = true;
-				debugMode = true;
-			}
-			else if (arg.equals(FLAG_TOOLPARAMS) || arg.equals(FLAG_TOOLPARAMS_SHORT))
-			{
-				if (toolParamsString.length() > 0)
-				{
-					logError("Error: " + FLAG_TOOLPARAMS + " argument used twice.");
-					rv = false;
-				}
-				else if (i + 1 < args.length)
-				{
-					toolParamsString = args[++i];
-				}
-				else
-				{
-					logError("Error: " + FLAG_TOOLPARAMS + " argument expects parameter after");
-					rv = false;
-				}
-			}
-			else if (arg.equals(FLAG_NOVALIDATE))
-			{
-				Hyst.setModeNoValidate();
-			}
-			else if (arg.equals(FLAG_OUTPUT))
-			{
-				if (i + 1 < args.length)
-				{
-					outputFilename = args[++i];
-				}
-				else
-				{
-					logError("Error: " + FLAG_OUTPUT + " argument expects filename after");
-					rv = false;
-				}
-
-			}
-			else if (arg.equals(FLAG_GENERATE) || arg.equals(FLAG_GENERATE_SHORT))
-			{
-				if (i + 2 < args.length)
-				{
-					String genName = args[++i];
-
-					for (int index = 0; index < generators.length; ++index)
-					{
-						ModelGenerator g = generators[index];
-
-						if (g.getCommandLineFlag().equals(genName))
-						{
-							modelGenIndex = index;
-							break;
-						}
-					}
-
-					if (modelGenIndex == -1)
-					{
-						logError("Error: Model Generator with argument '" + genName
-								+ "' was not found.");
-						rv = false;
-					}
-
-					modelGenParam = args[++i];
-				}
-				else
-				{
-					logError("Error: " + FLAG_GENERATE
-							+ " argument expects <name> and <param> after.");
-					rv = false;
-				}
-			}
-			else if (arg.endsWith(".xml"))
-			{
-				xmlFilenames.add(arg);
-
-				if (cfgFilename == null)
-				{
-					String base = arg.substring(0, arg.length() - 4);
-					cfgFilename = base + ".cfg";
-				}
-			}
-			else if (arg.endsWith(".cfg"))
-				cfgFilename = arg;
-			else
-			{
-				logError("Error: Unknown argument: " + arg);
-				rv = false;
-			}
-		}
-
-		if (testPython)
-		{
-			if (PythonBridge.hasPython())
-			{
-				System.out.println("Python and required packages successfully detected.");
-				System.exit(ExitCode.SUCCESS.ordinal());
-			}
-			else
-			{
-				System.out.println("Python and all required packages NOT detected.");
-				System.out.println(PythonBridge.getInstanceErrorString);
-				System.exit(ExitCode.NOPYTHON.ordinal());
-			}
-		}
-
-		if (!rv || ((xmlFilenames.size() == 0 || cfgFilename == null) && modelGenIndex == -1)
-				|| printerIndex < 0 || printerIndex >= printers.length)
-		{
-			if (IS_UNIT_TEST)
-				return false;
-
-			// show usage
-
-			System.out.println(TOOL_NAME);
-			System.out.println("Usage:");
-			System.out.println("hyst [OutputType] (args) XMLFilename(s) " + "(CFGFilename)");
-			System.out.println();
-			System.out.println("OutputType:");
-
-			for (ToolPrinter tp : printers)
-			{
-				String arg = tp.getCommandLineFlag();
-
-				String experimental = tp.isInRelease() ? "" : "(Experimental)";
-				System.out.println(
-						"\t" + arg + " " + tp.getToolName() + " " + experimental + " format");
-
-				// also print the default params
-				Map<String, String> params = tp.getDefaultParams();
-
-				if (params != null)
-				{
-					System.out.print("\t\t" + FLAG_TOOLPARAMS + " ");
-					boolean first = true;
-
-					for (Entry<String, String> e : params.entrySet())
-					{
-						if (first)
-							first = false;
-						else
-							System.out.print(":");
-
-						System.out.print(e.getKey() + "=" + e.getValue());
-					}
-					System.out.println();
-				}
-			}
-
-			System.out.println("\nAvailable Model Transformation Passes:");
-
-			for (TransformationPass tp : availablePasses)
-			{
-				String p = tp.getParamHelp();
-
-				if (p == null)
-					p = "[no param]";
-
-				System.out.println("\t" + tp.getCommandLineFlag() + " " + tp.getName() + " " + p);
-			}
-
-			System.out.println();
-			System.out.println(FLAG_TOOLPARAMS
-					+ " name1=val1:name2=val2:... Specify printer-specific parameters");
-
-			System.out.println(FLAG_GENERATE
-					+ " [type] [generate_params] Generate a model instead of loading from a file");
-			System.out.println("\nAvailable Models:");
-
-			for (ModelGenerator mg : generators)
-			{
-				String p = mg.getParamHelp();
-
-				if (p == null)
-					p = "[no param]";
-
-				System.out.println("\t" + mg.getCommandLineFlag() + " " + mg.getName() + " " + p);
-			}
-
-			System.out.println();
-			System.out.println(FLAG_HELP + " show this command-line help text");
-			System.out.println(FLAG_GUI + " [filename] force gui mode with the given input model");
-			System.out.println(FLAG_VERBOSE + " Enable verbose printing");
-			System.out.println(FLAG_DEBUG + " Enable debug printing (even more verbose)");
-			System.out.println(FLAG_NOVALIDATE
-					+ " skip internal model validation (may result in Exceptions being thrown)");
-			System.out.println(FLAG_OUTPUT + " [filename] output to the given filename");
-			System.out
-					.println("XMLFilename: The SpaceEx XML automaton to be " + "processed (*.xml)");
-			System.out.println("CFGFilename: The automaton's config file. Will "
-					+ "be derived from the XML filename if not explicitly stated (*.cfg)");
-			rv = false;
-		}
-
-		if (quitAfterUsage) // if -help was used
-			System.exit(ExitCode.SUCCESS.ordinal());
 
 		return rv;
 	}
@@ -658,120 +763,6 @@ public class Hyst
 		}
 
 		return instance;
-	}
-
-	private static ToolPrinter newToolPrinterInstance(ToolPrinter tp)
-	{
-		// create a new instance of the transformation pass to give it fresh
-		// state
-		Class<? extends ToolPrinter> cl = tp.getClass();
-		Constructor<? extends ToolPrinter> ctor;
-		ToolPrinter instance = null;
-
-		try
-		{
-			ctor = cl.getConstructor();
-			instance = ctor.newInstance();
-		}
-		catch (NoSuchMethodException e)
-		{
-			throw new AutomatonExportException("Error instantiating TransformationPass", e);
-		}
-		catch (InstantiationException e2)
-		{
-			throw new AutomatonExportException("Error instantiating TransformationPass", e2);
-		}
-		catch (IllegalArgumentException e3)
-		{
-			throw new AutomatonExportException("Error instantiating TransformationPass", e3);
-		}
-		catch (IllegalAccessException e4)
-		{
-			throw new AutomatonExportException("Error instantiating TransformationPass", e4);
-		}
-		catch (InvocationTargetException e5)
-		{
-			throw new AutomatonExportException("Error instantiating TransformationPass", e5);
-		}
-
-		return instance;
-	}
-
-	/**
-	 * Check for internal consistency of the defined Printers and
-	 * TransformationPasses
-	 * 
-	 * @return true if they are internally consistent
-	 */
-	private static boolean checkPrintersPasses()
-	{
-		boolean rv = true;
-
-		// make sure command line flags do not collide
-		TreeMap<String, String> flags = new TreeMap<String, String>();
-
-		flags.put(FLAG_GUI, "force gui flag");
-		flags.put(FLAG_HELP, "help flag");
-		flags.put(FLAG_HELP_SHORT, "help flag (short version)");
-		flags.put(FLAG_VERBOSE, "verbose printing mode flag");
-		flags.put(FLAG_VERBOSE_SHORT, "verbose printing mode flag (short version)");
-		flags.put(FLAG_DEBUG, "debug printing mode flag");
-		flags.put(FLAG_DEBUG_SHORT, "debug printing mode flag (short version)");
-		flags.put(FLAG_NOVALIDATE, "no validation flag");
-		flags.put(FLAG_OUTPUT, "output to filename flag");
-		flags.put(FLAG_TOOLPARAMS, "tool params flag");
-		flags.put(FLAG_TOOLPARAMS_SHORT, "tool params flag (short version)");
-
-		for (ToolPrinter tp : printers)
-		{
-			String name = "tool argument for " + tp.getToolName();
-			String arg = tp.getCommandLineFlag();
-
-			if (flags.get(arg) != null)
-			{
-				logError("Error: Command-line argument " + arg + " is defined both as " + name
-						+ " as well as " + flags.get(arg));
-				rv = false;
-			}
-			else
-				flags.put(arg, name);
-		}
-
-		if (rv)
-		{
-			for (TransformationPass p : availablePasses)
-			{
-				String name = "transformation pass argument for " + p.getClass().getName();
-				String arg = p.getCommandLineFlag();
-
-				// command line argument must be defined for optionalPasses
-				if (arg == null)
-				{
-					rv = false;
-					logError(
-							"Command-line flag for " + p.getClass().getName() + " is not defined.");
-				}
-				else
-				{
-					if (flags.get(arg) != null)
-					{
-						logError("Error: Command-line argument " + arg + " is defined both as "
-								+ name + " as well as " + flags.get(arg));
-						rv = false;
-					}
-					else
-						flags.put(arg, name);
-				}
-
-				if (p.getName() == null)
-				{
-					rv = false;
-					logError("getName() for pass " + p.getClass().getName() + " is not defined.");
-				}
-			}
-		}
-
-		return rv;
 	}
 
 	/**
@@ -836,14 +827,5 @@ public class Hyst
 			guiFrame.addOutput(message);
 
 		System.err.println(message);
-	}
-
-	/**
-	 * Disable internal model validation (and removes some error checking)
-	 */
-	public static void setModeNoValidate()
-	{
-		Configuration.DO_VALIDATION = false;
-		System.err.println("Internal model validatation disabled.");
 	}
 }

@@ -1346,4 +1346,30 @@ public class ModelParserTest
 			// expected
 		}
 	}
+
+	@Test
+	public void testTte()
+	{
+		// Test tte benchmark from ARCH16
+
+		String cfgPath = UNIT_BASEDIR + "tte/tte5.cfg";
+		String xmlPath = UNIT_BASEDIR + "tte/tte5.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		Assert.assertNotNull(config);
+
+		/*
+		 * We need a network printer for this:
+		 * 
+		 * ToolPrinter printer = new SpaceExPrinter();
+		 * printer.setOutputString(); printer.print(config, "", "model.xml");
+		 * 
+		 * System.out.println(printer.outputString.toString());
+		 */
+	}
 }

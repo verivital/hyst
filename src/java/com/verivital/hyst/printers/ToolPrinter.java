@@ -4,18 +4,24 @@
 package com.verivital.hyst.printers;
 
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
-import java.util.Map;
+
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.main.HystFrame;
+import com.verivital.hyst.util.AutomatonUtil;
+import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
+import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
  * A generic tool printer class. Printers for individual tools will override
@@ -32,11 +38,6 @@ public abstract class ToolPrinter
 										// originalFilename
 	protected String outputFilename = null; // assigned in setParameters, can be
 											// null
-	private String toolParamsString = null; // assigned in setParameters
-	protected Map<String, String> toolParams = getDefaultParams(); // assigned
-																	// before
-																	// printing
-
 	// don't need to be modified
 	protected String indentation = "";
 	protected String indentationAmount = "    ";
@@ -50,11 +51,23 @@ public abstract class ToolPrinter
 																		// by
 																		// default
 
+	// command line parser for tools
+	private CmdLineParser parser = new CmdLineParser(this);
+
 	// printing
 	public enum OutputType
 	{
 		STDOUT, GUI, FILE, NONE, STRING,
 	};
+
+	public ToolPrinter()
+	{
+		String flag = getCommandLineFlag();
+
+		if (flag.startsWith("-"))
+			throw new RuntimeException(
+					"tool printer's command-line flag shouldn't start with a hyphen: " + flag);
+	}
 
 	public void setConfig(Configuration c)
 	{
@@ -93,34 +106,32 @@ public abstract class ToolPrinter
 	}
 
 	/**
-	 * Set tool param string: needed to set tool parameters for tests
-	 * 
-	 * @param s
-	 */
-	public void setToolParamsString(String s)
-	{
-		this.toolParamsString = s;
-	}
-
-	/**
 	 * Prints the networked automaton out to the given file
 	 * 
 	 * @param networkedAutomaton
 	 *            the automaton to print
 	 */
-	public void print(Configuration c, String toolParamsString, String originalFilename)
+	public void print(Configuration c, String argument, String originalFilename)
 	{
-		this.toolParamsString = toolParamsString;
 		this.originalFilename = originalFilename;
 
 		boolean shouldCloseStream = false;
 
-		if (toolParamsString == null)
-			throw new AutomatonExportException("toolsParamString was null in ToolPrinter.print()");
-
 		setBaseName(originalFilename);
 
-		populateParams();
+		String[] args = AutomatonUtil.extractArgs(argument);
+
+		try
+		{
+			parser.parseArgument(args);
+		}
+		catch (CmdLineException e)
+		{
+			String message = "Error Using Printer for " + getToolName() + ",\n Message: "
+					+ e.getMessage() + "\nArguments: '" + argument + "'\n" + getParamHelp();
+
+			throw new CmdLineRuntimeException(message, e);
+		}
 
 		try
 		{
@@ -141,8 +152,14 @@ public abstract class ToolPrinter
 				outputString = new StringBuffer();
 
 			this.config = c;
-			checkPreconditions(c);
+
+			preconditions.check(c, getToolName());
 			printAutomaton();
+		}
+		catch (PreconditionsFailedException e)
+		{
+			throw new PreconditionsFailedException(
+					"Preconditions for tool " + getToolName() + " failed", e);
 		}
 		catch (FileNotFoundException e)
 		{
@@ -355,59 +372,13 @@ public abstract class ToolPrinter
 			outputStream.flush();
 	}
 
-	/**
-	 * convert from toolParamsString to toolParams
-	 */
-	private void populateParams()
+	public String getParamHelp()
 	{
-		toolParams = getDefaultParams();
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		parser.printUsage(out);
 
-		Map<String, String> defParams = getDefaultParams();
-
-		if (defParams == null && toolParamsString.length() > 0)
-			throw new AutomatonExportException(
-					"Printer does not expect any tool-specific paramers, but some were given.");
-		else if (defParams != null)
-			toolParams.putAll(defParams);
-
-		if (toolParamsString.length() > 0 && toolParamsString.length() > 0)
-		{
-			String[] assignments = toolParamsString.split(":");
-
-			for (String assignment : assignments)
-			{
-				String[] parts = assignment.split("=");
-
-				if (parts.length != 2)
-				{
-					throw new AutomatonExportException(
-							"Tool Param must have a single '=' sign (params are separated by colons): "
-									+ assignment);
-				}
-
-				if (!toolParams.containsKey(parts[0]))
-					throw new AutomatonExportException("Invalid Tool Parameter: '" + parts[0]
-							+ "' in assignment " + assignment);
-
-				toolParams.put(parts[0], parts[1]);
-				Hyst.log("Assigned tool parameter key '" + parts[0] + "' to value '" + parts[1]
-						+ "'");
-			}
-		}
+		return out.toString();
 	}
-
-	/**
-	 * Override this method to have tool-specific parameters set through the
-	 * -toolparams flag This method returns a map ParamName -> ParamValue, for
-	 * every parameter you want to have, with the default values already set.
-	 * 
-	 * In your printer, you can get the manually-set parameters using
-	 * getToolParams()
-	 * 
-	 * @return a map of all the parameters for your printer, set to their
-	 *         default values
-	 */
-	public abstract Map<String, String> getDefaultParams();
 
 	/**
 	 * Get the default extension for model files for this printer
@@ -425,20 +396,4 @@ public abstract class ToolPrinter
 	 * enforces printer assumptions (for example, that the model is flat).
 	 */
 	protected abstract void printAutomaton();
-
-	/**
-	 * Check the preconditions for the printer (for example, the modes should
-	 * have at least 1 variable, no urgrent modes, ect) Typically, you'll change
-	 * preconditions.skip direction to indicate which checks should be skipped
-	 * Alternatively, printers can override this if they don't want to use the
-	 * PrinterPreconditions way of doing it. This should throw a
-	 * PrinterPreconditionException if assumptions about the model are violated.
-	 * 
-	 * @param c
-	 *            the configuration before passing it to the printer
-	 */
-	protected void checkPreconditions(Configuration c)
-	{
-		preconditions.check(c, this.getClass().getName());
-	}
 }
