@@ -84,6 +84,12 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-skiptol", usage = "skip printing error tolerances")
 	boolean skipTol = false;
 
+	@Option(name = "-time_triggered", usage = "sets map-zero-duration-jump-sets=true")
+	boolean isTimeTriggered = false;
+
+	@Option(name = "-output_vars", usage = "comma-separated output variables", metaVar = "VAL")
+	String outputVars = "auto";
+
 	private String cfgFilename = null;
 	private BaseComponent ha;
 
@@ -195,7 +201,7 @@ public class SpaceExPrinter extends ToolPrinter
 		SpaceExDocument sed = new SpaceExDocument();
 		sed.setVersion("0.2");
 		sed.setMathFormat("SpaceEx");
-		sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
+		sed.setTimeTriggered(isTimeTriggered || config.settings.spaceExConfig.timeTriggered);
 		// sed.setTimeHorizon(-1);
 		sed.setMaxIterations(
 				Integer.parseInt((getParam(iterMax, config.settings.spaceExConfig.maxIterations))));
@@ -389,9 +395,17 @@ public class SpaceExPrinter extends ToolPrinter
 			sed.setForbiddenStateConditions(ForbiddenState);
 		}
 
-		// add ouput variables
-		for (String v : config.settings.plotVariableNames)
-			sed.addOutputVar(v);
+		// add output variables
+		if (outputVars.equals("auto"))
+		{
+			for (String v : config.settings.plotVariableNames)
+				sed.addOutputVar(v);
+		}
+		else
+		{
+			for (String var : outputVars.split(","))
+				sed.addOutputVar(var);
+		}
 
 		return sed;
 	}

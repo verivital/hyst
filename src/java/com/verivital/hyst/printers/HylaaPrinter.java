@@ -104,7 +104,7 @@ public class HylaaPrinter extends ToolPrinter
 
 			// guard
 			// trans = ha.new_transition(loc1, loc2)
-			// trans.guard_list = [guard]
+			// trans.condition_list = [guard]
 
 			rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 
@@ -118,7 +118,7 @@ public class HylaaPrinter extends ToolPrinter
 
 					for (int i = 0; i < conds.size(); ++i)
 					{
-						rv.add("trans.guard_list.append(" + conds.get(i) + ") # "
+						rv.add("trans.condition_list.append(" + conds.get(i) + ") # "
 								+ o.toDefaultString());
 					}
 				}

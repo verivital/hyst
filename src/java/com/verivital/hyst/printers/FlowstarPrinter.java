@@ -89,7 +89,8 @@ public class FlowstarPrinter extends ToolPrinter
 	FlowstarExpressionPrinter flowstarExpressionPrinter;
 
 	@SuppressWarnings("deprecation")
-	@Option(name = "-taylor_init", usage = "override the initial states with a taylor mode", metaVar = "MODE TM", handler = PairStringOptionHandler.class)
+	@Option(name = "-taylor_init", usage = "override the initial states with a taylor model. Expects two arguments: "
+			+ "(mode name) (TM expression), where colons in the TM expression are replaced with newlines.", metaVar = "MODE TM", handler = PairStringOptionHandler.class)
 	public void setTaylorIinit(String[] params) throws CmdLineException
 	{
 		if (params.length != 2)
@@ -746,10 +747,13 @@ public class FlowstarPrinter extends ToolPrinter
 			throw new AutomatonExportException(
 					"mode named 'start' is not allowed in Flow* printer");
 
-		if (!areIntervalInitialStates(config))
-			convertInitialStatesToUrgent(config);
+		if (taylorInit.size() == 0)
+		{
+			if (!areIntervalInitialStates(config))
+				convertInitialStatesToUrgent(config);
 
-		removeUnboundedInitialStates(config);
+			removeUnboundedInitialStates(config);
+		}
 
 		AutomatonUtil.convertUrgentTransitions(ha, config);
 

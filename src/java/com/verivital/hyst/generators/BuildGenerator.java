@@ -83,9 +83,14 @@ public class BuildGenerator extends ModelGenerator
 			{
 				String der = modeParams.get(i + 2 + v).trim();
 
-				ExpressionInterval ei = derStringToExpInterval(der);
+				if (der.equals("null"))
+					am.flowDynamics.remove(vars.get(v));
+				else
+				{
+					ExpressionInterval ei = derStringToExpInterval(der);
 
-				am.flowDynamics.put(vars.get(v), ei);
+					am.flowDynamics.put(vars.get(v), ei);
+				}
 			}
 		}
 
