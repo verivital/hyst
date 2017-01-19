@@ -747,7 +747,7 @@ public class FlowstarPrinter extends ToolPrinter
 			throw new AutomatonExportException(
 					"mode named 'start' is not allowed in Flow* printer");
 
-		if (taylorInit.size() == 0)
+		if (taylorInit == null)
 		{
 			if (!areIntervalInitialStates(config))
 				convertInitialStatesToUrgent(config);
