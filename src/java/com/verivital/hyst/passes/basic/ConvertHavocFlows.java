@@ -1,4 +1,4 @@
-package com.verivital.hyst.internalpasses;
+package com.verivital.hyst.passes.basic;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,7 +18,7 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.main.Hyst;
-import com.verivital.hyst.passes.basic.RemoveDiscreteUnreachablePass;
+import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.util.RangeExtractor;
 import com.verivital.hyst.util.RangeExtractor.ConstantMismatchException;
 import com.verivital.hyst.util.RangeExtractor.EmptyRangeException;
@@ -31,14 +31,27 @@ import com.verivital.hyst.util.RangeExtractor.UnsupportedConditionException;
  * 
  * @author Stanley Bak
  */
-public class ConvertHavocFlows
+public class ConvertHavocFlows extends TransformationPass
 {
+	@Override
+	public String getName()
+	{
+		return "Convert Havoc Flows Pass";
+	}
+
+	@Override
+	public String getCommandLineFlag()
+	{
+		return "convert_havoc_flows";
+	}
+
 	/**
 	 * This pass converts interval havoc flows (variables with no differential equation defined,
 	 * only invariants), into ones where there's an incoming (nondeterministic) reset, and dynamics
 	 * of var' == 0.
 	 */
-	public static void run(Configuration config)
+	@Override
+	protected void runPass()
 	{
 		BaseComponent ha = (BaseComponent) config.root;
 		HashSet<String> havocVariables = new HashSet<String>();
@@ -109,6 +122,9 @@ public class ConvertHavocFlows
 					// set the flow for this variable to be 0, since it's an
 					// interval which doesn't change
 					am.flowDynamics.put(name, new ExpressionInterval(new Constant(0)));
+
+					// remove the variable from the invaraint
+					am.invariant = removeConditionWithVariable(am.invariant, name);
 				}
 			}
 		}
@@ -164,6 +180,36 @@ public class ConvertHavocFlows
 		}
 
 		validateDynamicsAssigned(config);
+	}
+
+	private Expression removeConditionWithVariable(Expression e, String name)
+	{
+		Expression rv = e;
+
+		if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			Expression childA = o.children.get(0);
+			Expression childB = o.children.get(1);
+
+			if (o.op == Operator.AND)
+			{
+				Expression a = removeConditionWithVariable(childA, name);
+				Expression b = removeConditionWithVariable(childB, name);
+
+				rv = Expression.and(a, b);
+			}
+			else
+			{
+				if (childA instanceof Variable && ((Variable) childA).name.equals(name))
+					rv = Constant.TRUE;
+				else if (childB instanceof Variable && ((Variable) childB).name.equals(name))
+					rv = Constant.TRUE;
+			}
+		}
+
+		return rv;
 	}
 
 	private static void validateDynamicsAssigned(Configuration config)

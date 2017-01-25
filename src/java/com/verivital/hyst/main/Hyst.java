@@ -34,6 +34,7 @@ import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.RemoveSimpleUnsatInvariantsPass;
 import com.verivital.hyst.passes.basic.ShortenModeNamesPass;
@@ -90,7 +91,7 @@ public class Hyst
 			new RemoveSimpleUnsatInvariantsPass(), new ShortenModeNamesPass(),
 			new ContinuizationPass(), new HybridizeMixedTriggeredPass(), new HybridizeMTRawPass(),
 			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(),
-			new CopyInstancePass() };
+			new CopyInstancePass(), new ConvertHavocFlows() };
 
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),

@@ -19,7 +19,6 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
-import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
@@ -31,6 +30,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
@@ -688,7 +688,7 @@ public class ModelParserTest
 
 			// it isn't run automatically during flatten since some printers
 			// (SpaceEx) can print havoc dynamics directly
-			ConvertHavocFlows.run(c);
+			new ConvertHavocFlows().runVanillaPass(c, "");
 
 			BaseComponent ha = (BaseComponent) c.root;
 

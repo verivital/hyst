@@ -8,7 +8,6 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.internalpasses.ConvertToStandardForm;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -21,6 +20,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
@@ -149,7 +149,7 @@ public class Preconditions
 				if (!am.flowDynamics.containsKey(v))
 				{
 					Hyst.log("Variable " + v + " didn't have dynamics defined in mode " + am.name
-							+ " as required in the preconditions. Attempting to convert using ConverHavocFlowsPass.");
+							+ " as required in the preconditions. Attempting to convert using ConvertHavocFlowsPass.");
 					convert = true;
 					break;
 				}
@@ -162,7 +162,7 @@ public class Preconditions
 		if (convert)
 		{
 			Hyst.log("Converting Havoc Flows");
-			ConvertHavocFlows.run(c);
+			new ConvertHavocFlows().runVanillaPass(c, "");
 		}
 	}
 
