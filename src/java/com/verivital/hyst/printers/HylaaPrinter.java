@@ -93,7 +93,7 @@ public class HylaaPrinter extends ToolPrinter
 			rv.add("from hylaa.hybrid_automaton import LinearHybridAutomaton, LinearConstraint");
 			rv.add("from hylaa.engine import HylaaSettings");
 			rv.add("from hylaa.engine import HylaaEngine");
-			rv.add("from hylaa.plotutil import PlotSettings");
+			rv.add("from hylaa.containers import PlotSettings, SimulationSettings");
 
 			return rv;
 		}
