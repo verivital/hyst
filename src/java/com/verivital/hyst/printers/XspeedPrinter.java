@@ -611,7 +611,7 @@ public class XspeedPrinter extends ToolPrinter {
 						invY[j][k] = 0;
 					invX[j] = 0;
 				}
-				for (j = 0; j < ControlVar.size(); j++) {
+				for (j = 0; j < xl; j++) {
 					for (k = 0; k < UncontrolVar.size(); k++)
 						ConUY[j][k] = 0;
 					ConUX[j] = 0;
