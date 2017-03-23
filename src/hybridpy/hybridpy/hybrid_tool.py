@@ -79,6 +79,9 @@ def tool_main(tool_obj, extra_args=None):
 
 def _kill_pg(p):
     '''kill a process' processgroup'''
+    
+    print "hypy:hybrid_tool - killing pg"
+    
     os.killpg(os.getpgid(p.pid), signal.SIGKILL)
 
 def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None):
@@ -110,6 +113,8 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
         proc = subprocess.Popen(params, stdout=subprocess.PIPE)
 
         if timeout is not None:
+            print "hypy:hybrid_tool - making threading.Timer with timeout {}".format(timeout)
+            
             timer = threading.Timer(timeout, _kill_pg, [proc])
             timer.daemon = True
             timer.start()
