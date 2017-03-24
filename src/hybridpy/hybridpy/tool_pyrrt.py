@@ -17,7 +17,7 @@ class PyRrtTool(HybridTool):
         python_path = sys.executable
         HybridTool.__init__(self, 'pyrrt', '.py', python_path)
 
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         rv = RunCode.SUCCESS
 

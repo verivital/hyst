@@ -19,7 +19,7 @@ class DReachTool(HybridTool):
         print "Skipping make image (generation of .png images is not supported in dReach)"
         return True
 
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         rv = RunCode.SUCCESS
 

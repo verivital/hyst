@@ -19,7 +19,7 @@ class HylaaTool(HybridTool):
         python_path = sys.executable
         HybridTool.__init__(self, 'pysim', '.py', python_path)
 
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         rv = RunCode.SUCCESS
 
@@ -31,16 +31,18 @@ class HylaaTool(HybridTool):
         define_settings = getattr(loaded_module, 'define_settings')
 
         self._settings = define_settings()
+        
+        if image_requested:
+            from hylaa.plotutil import PlotSettings
+            self._settings.plot.plot_mode = PlotSettings.PLOT_IMAGE
+            self._settings.plot.filename = self.image_path
+        
         self._result = self._run_hylaa(self._settings)
 
         return rv
 
     def _make_image(self):
-        '''make an image'''
-
-        print "Warning: hylaa.make_image unimplemented"
-        #self._settings.plot_settings.plot_mode = PlotSettings.PLOT_NONE
-        #self._result = self._run_hylaa(self._settings)
+        '''make an image. For Hylaa, the image will already be made during computation.'''
 
         return True
 

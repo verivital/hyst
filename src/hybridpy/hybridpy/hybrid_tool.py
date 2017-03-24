@@ -287,9 +287,10 @@ class HybridTool(object):
             self._copy_model(temp_dir)
             os.chdir(temp_dir)
 
-            rv = self._run_tool()
+            image_requested = self.image_path is not None
+            rv = self._run_tool(image_requested)
 
-            if rv == RunCode.SUCCESS and self.image_path is not None:
+            if rv == RunCode.SUCCESS and image_requested:
                 if not self._make_image():
                     rv = RunCode.ERROR
 
@@ -344,7 +345,7 @@ class HybridTool(object):
         raise RuntimeError("Tool " + self.tool_name + " did not override parse_output()")
 
     @abc.abstractmethod
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         return
 

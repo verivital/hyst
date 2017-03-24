@@ -13,7 +13,7 @@ class FlowstarTool(HybridTool):
     def __init__(self):
         HybridTool.__init__(self, 'flowstar', '.flowstar', 'flowstar')
 
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         rv = RunCode.SUCCESS
 
