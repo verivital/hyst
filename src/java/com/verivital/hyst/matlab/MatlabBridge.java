@@ -41,9 +41,6 @@ public class MatlabBridge
 
 	private MatlabProxyFactory factory;
 
-	// todo: add required package checking
-	private static final String[] REQUIRED_PACKAGES = { "sympy", "scipy" };
-
 	private static final int DEFAULT_TIMEOUT = 30000; // 30 seconds: may have to
 														// start matlab up
 	private int timeoutMs;
@@ -248,11 +245,6 @@ public class MatlabBridge
 		close();
 
 		throw new AutomatonExportException(description, e);
-	}
-
-	private void warn(String description)
-	{
-		System.err.println("Warning: " + description);
 	}
 
 	private void close()

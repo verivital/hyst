@@ -404,8 +404,8 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
-		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output",
-				out.contains("Math.pow($t, 2)"));
+		Assert.assertTrue("didn't find 'Math.pow($t, 2.0)' in HyCreate output",
+				out.contains("Math.pow($t, 2.0)"));
 	}
 
 	@Test
@@ -427,8 +427,8 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 
-		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5 | t >= 5) "
-				+ "| loc(fakeinput) == loc3 & t <= 5\"";
+		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5.0 | t >= 5.0) "
+				+ "| loc(fakeinput) == loc3 & t <= 5.0\"";
 		Assert.assertTrue("forbidden is correct (disjunction)", out.contains(expected));
 	}
 
@@ -768,8 +768,8 @@ public class PrintersTest
 		Assert.assertTrue("some output exists", out.length() > 10);
 
 		// two error conditions
-		String cond1 = "trans.guard_list.append(LinearConstraint([-1, -0], -6.5)) # x >= 6.5";
-		String cond2 = "trans.guard_list.append(LinearConstraint([1, 0], -10)) # x <= -10.0";
+		String cond1 = "trans.condition_list.append(LinearConstraint([-1, -0], -6.5)) # x >= 6.5";
+		String cond2 = "trans.condition_list.append(LinearConstraint([1, 0], -10)) # x <= -10.0";
 
 		Assert.assertTrue("first error condition exists", out.contains(cond1));
 		Assert.assertTrue("second error condition exists", out.contains(cond2));

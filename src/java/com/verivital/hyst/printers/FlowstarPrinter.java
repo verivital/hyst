@@ -393,7 +393,8 @@ public class FlowstarPrinter extends ToolPrinter
 			AutomatonMode mode = e.getValue();
 
 			// removed this
-			// flowstarExpressionPrinter.extractInputVariableRanges(mode.invariant);
+			if (flowstarExpressionPrinter.inputVariables.size() > 0)
+				flowstarExpressionPrinter.extractInputVariableRanges(mode.invariant);
 
 			if (first)
 				first = false;
