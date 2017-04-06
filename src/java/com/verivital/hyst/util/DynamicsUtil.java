@@ -61,10 +61,13 @@ public class DynamicsUtil
 	{
 		ArrayList<String> rv = new ArrayList<String>();
 
-		for (String row : am.automaton.variables)
+		if (am.flowDynamics != null)
 		{
-			if (am.flowDynamics.get(row) != null)
-				rv.add(row);
+			for (String row : am.automaton.variables)
+			{
+				if (am.flowDynamics.get(row) != null)
+					rv.add(row);
+			}
 		}
 
 		return rv;
