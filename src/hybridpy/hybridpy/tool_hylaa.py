@@ -37,8 +37,14 @@ class HylaaTool(HybridTool):
             self._settings.plot.plot_mode = PlotSettings.PLOT_IMAGE
             self._settings.plot.filename = self.image_path
         
-        self._result = self._run_hylaa(self._settings)
-
+        try:
+            self._result = self._run_hylaa(self._settings)
+        except AssertionError as e:
+            if "not yet supported" in str(e):
+                rv = RunCode.SKIP
+            else:
+                rv = RunCode.ERROR
+                
         return rv
 
     def _make_image(self):
