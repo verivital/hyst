@@ -821,4 +821,26 @@ public class PrintersTest
 				out.contains("-0.5 - (u1) <= 0"));
 		Assert.assertTrue("correctly converted inputs", out.contains("x' = y + [-0.5, 0.5]"));
 	}
+
+	@Test
+	public void testPysimPrintPdLutLinear()
+	{
+		String cfgPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.cfg";
+		String xmlPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		// make sure empty hyperrectangle is not printed
+		Assert.assertTrue("some output is printed", out.length() > 10);
+		Assert.assertFalse("empty hyperrectangle is not printed",
+				out.contains("HyperRectangle([])"));
+	}
 }

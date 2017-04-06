@@ -350,6 +350,9 @@ public class PySimPrinter extends ToolPrinter
 			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
 					ha.variables);
 
+			if (nonInputVars.size() == 0)
+				throw new AutomatonExportException("zero non-input variables in automaton");
+
 			rv.add(COMMENT_CHAR + " Variable ordering: " + nonInputVars);
 			rv.add("rv = []");
 			rv.add("");
