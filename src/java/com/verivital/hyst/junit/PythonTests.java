@@ -113,8 +113,8 @@ public class PythonTests
 
 		Interval rv = PythonUtil.intervalOptimizeBounded(eList, ranges, 0.1).get(0);
 
-		if (rv.max > 0 || rv.min < -1.1)
-			Assert.fail("bounds was too pessimistic (not inside [-1.1,0]): " + rv);
+		if (rv.max > 0.1 || rv.min < -1.1)
+			Assert.fail("bounds was too pessimistic (not inside [-1.1,0.1]): " + rv);
 	}
 
 	@Test
@@ -262,14 +262,16 @@ public class PythonTests
 		String str = "sin(x)^2 + cos(x)^2";
 		Expression e = FormulaParser.parseValue(str);
 		Expression result = PythonUtil.pythonSimplifyExpression(e);
-		Assert.assertEquals("python failed at trig simplification", "1", result.toDefaultString());
+		Assert.assertEquals("python failed at trig simplification", 1,
+				Float.parseFloat(result.toDefaultString()), 1e-9);
 
 		// try another one which doesn't simplify
-		str = "-2 ^ time / sqrt(y) + sin(2 * x) + 5";
+		str = "-2.0 ^ time / sqrt(y) + sin(2.0 * x) + 5.0";
 		e = FormulaParser.parseValue(str);
 		result = PythonUtil.pythonSimplifyExpression(e);
+		String expected = "1.0 * -2.0 ^ time / sqrt(y) + 1.0 * sin(2.0 * x) + 5.0";
 
-		Assert.assertEquals("python simplification incorrect", str, result.toDefaultString());
+		Assert.assertEquals("python simplification incorrect", result.toDefaultString(), expected);
 	}
 
 	@Test

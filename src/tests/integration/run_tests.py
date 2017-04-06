@@ -174,12 +174,12 @@ def main():
 
     if parallel_run(files):
         if not skipped_some_tool:
-            print "Done running all regression tests, success."
+            print "Done running all integration tests, success."
         else:
-            print "Regression test conversion passed, but some tools were not run."
+            print "Integration test conversion passed, but some tools were not run."
         sys.exit(0)
     else:
-        print "Error detected running regression tests."
+        print "Error detected running integration tests."
         sys.exit(1)
 
 if __name__ == "__main__":

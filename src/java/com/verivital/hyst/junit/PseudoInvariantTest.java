@@ -55,7 +55,7 @@ public class PseudoInvariantTest
 		// 0.0 * y >= 1.5
 		HyperPoint point = new HyperPoint(1.5, 1.5);
 		HyperPoint dir = new HyperPoint(-1.0, 0);
-		String expectedResult = "-1 * x <= -1.5";
+		String expectedResult = "-1.0 * x <= -1.5";
 
 		ArrayList<String> vars = new ArrayList<String>(2);
 		vars.add("x");
@@ -73,7 +73,7 @@ public class PseudoInvariantTest
 		// * y >= 0.0
 		HyperPoint point = new HyperPoint(0, 0);
 		HyperPoint dir = new HyperPoint(0, -1);
-		String expectedResult = "-1 * y <= 0";
+		String expectedResult = "-1.0 * y <= 0.0";
 
 		ArrayList<String> vars = new ArrayList<String>(2);
 		vars.add("x");
@@ -144,17 +144,19 @@ public class PseudoInvariantTest
 		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
 
 		Assert.assertEquals("first mode's invariant is x <= 2", pi0.invariant.toDefaultString(),
-				"1 * x <= 2");
+				"1.0 * x <= 2.0");
 		Assert.assertEquals("second mode's invariant is x <= 5", pi1.invariant.toDefaultString(),
-				"1 * x <= 5");
+				"1.0 * x <= 5.0");
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
 
 		// the initial state for final should contain both pi guards
 		Expression e = c.init.get("on");
 		Assert.assertNotNull("on is one of the initial states", e);
 
-		Assert.assertTrue("init(on) contains x >= 2", e.toDefaultString().contains("1 * x >= 2"));
-		Assert.assertTrue("init(on) contains x >= 5", e.toDefaultString().contains("1 * x >= 5"));
+		Assert.assertTrue("init(on) contains x >= 2",
+				e.toDefaultString().contains("1.0 * x >= 2.0"));
+		Assert.assertTrue("init(on) contains x >= 5",
+				e.toDefaultString().contains("1.0 * x >= 5.0"));
 	}
 
 	/**
@@ -188,14 +190,15 @@ public class PseudoInvariantTest
 		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
 
 		Assert.assertTrue("first mode's invariant is x <= 2",
-				pi0.invariant.toDefaultString().equals("1 * x <= 2"));
+				pi0.invariant.toDefaultString().equals("1.0 * x <= 2.0"));
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
 
 		// the initial state for final should contain both pi guards
 		Expression e = c.init.get("on");
 		Assert.assertNotNull("on is one of the initial states", e);
 
-		Assert.assertTrue("init(on) contains x >= 2", e.toDefaultString().contains("1 * x >= 2"));
+		Assert.assertTrue("init(on) contains x >= 2",
+				e.toDefaultString().contains("1.0 * x >= 2.0"));
 	}
 
 	/**
@@ -236,7 +239,7 @@ public class PseudoInvariantTest
 		Assert.assertNotNull(on2);
 		Assert.assertNotNull(ha.modes.get("on"));
 
-		Assert.assertEquals("-1 * x <= -0.75", on2.invariant.toDefaultString());
+		Assert.assertEquals("-1.0 * x <= -0.75", on2.invariant.toDefaultString());
 
 		// try to print to Flow*
 		FlowstarPrinter fp = new FlowstarPrinter();
