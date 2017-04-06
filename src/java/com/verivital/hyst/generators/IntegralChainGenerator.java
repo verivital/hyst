@@ -106,7 +106,7 @@ public class IntegralChainGenerator extends ModelGenerator
 				// var_n' == var_{n+1}
 				if (numInChain != (m - 1))
 				{
-					String nextVar = varPrefix + "_" + chainNum + "_der" + (m + 1);
+					String nextVar = varPrefix + "_" + chainNum + "_der" + (numInChain + 1);
 					mode.flowDynamics.put(varName, new ExpressionInterval(new Variable(nextVar)));
 				}
 				else

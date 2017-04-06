@@ -16,7 +16,6 @@ import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.DefaultExpressionPrinter;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.ExpressionPrinter;
-import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -362,7 +361,7 @@ public class PySimPrinter extends ToolPrinter
 
 				try
 				{
-					for (Operation o : DynamicsUtil.splitDisjunction(exp))
+					for (Expression o : DynamicsUtil.splitDisjunction(exp))
 					{
 						String str = "rv.append((ha.modes['" + modeName + "'],";
 						str += initToHyperRectangle(o, nonInputVars) + "))";

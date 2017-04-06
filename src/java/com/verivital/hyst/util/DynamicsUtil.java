@@ -133,9 +133,9 @@ public class DynamicsUtil
 	 *            the input expression
 	 * @return a list of sub-operators which are part of a conjunction that forms conj
 	 */
-	public static ArrayList<Operation> splitDisjunction(Expression disj)
+	public static ArrayList<Expression> splitDisjunction(Expression disj)
 	{
-		ArrayList<Operation> rv = new ArrayList<Operation>();
+		ArrayList<Expression> rv = new ArrayList<Expression>();
 
 		if (disj instanceof Operation)
 		{
@@ -153,6 +153,8 @@ public class DynamicsUtil
 			else
 				rv.add(o);
 		}
+		else if (disj == Constant.TRUE || disj == Constant.FALSE)
+			rv.add(disj);
 		else
 			throw new AutomatonExportException(
 					"Unsupported non-operator condition: " + disj.toDefaultString());

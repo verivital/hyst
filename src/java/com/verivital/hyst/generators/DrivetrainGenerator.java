@@ -286,6 +286,8 @@ public class DrivetrainGenerator extends ModelGenerator
 
 		if (initScale == 0 || initPoints == 1) // single point init
 		{
+			Expression init = Constant.TRUE;
+
 			for (int d = 0; d < 7 + 2 * theta; ++d)
 			{
 				double val;
@@ -295,13 +297,14 @@ public class DrivetrainGenerator extends ModelGenerator
 				else
 					val = center[7 + (d + 1) % 2]; // 9 goes to 7, 10 goes to 8, 11 goes to 7
 
-				Expression rv = FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val);
-
-				if (!forceHighInput)
-					rv = Expression.and(rv, FormulaParser.parseInitialForbidden("t == 0"));
-
-				initList.add(rv);
+				Expression e = FormulaParser.parseInitialForbidden("x" + (d + 1) + " = " + val);
+				init = Expression.and(init, e);
 			}
+
+			if (!forceHighInput)
+				init = Expression.and(init, FormulaParser.parseInitialForbidden("t == 0"));
+
+			initList.add(init);
 		}
 		else if (initPoints > 1) // multi-point init
 		{
@@ -399,8 +402,6 @@ public class DrivetrainGenerator extends ModelGenerator
 
 			initList.add(rv);
 		}
-
-		// init
 
 		return initList;
 	}

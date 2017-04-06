@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
-import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -117,9 +116,9 @@ public class ConvertToStandardForm
 		for (Entry<String, Expression> e : config.forbidden.entrySet())
 		{
 			Expression forbiddenCondition = e.getValue();
-			ArrayList<Operation> conds = DynamicsUtil.splitDisjunction(forbiddenCondition);
+			ArrayList<Expression> conds = DynamicsUtil.splitDisjunction(forbiddenCondition);
 
-			for (Operation cond : conds)
+			for (Expression cond : conds)
 			{
 				AutomatonMode m = ha.modes.get(e.getKey());
 				AutomatonTransition at = ha.createTransition(m, error);
