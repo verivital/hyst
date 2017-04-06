@@ -148,12 +148,12 @@ public class HybridizePassTests
 		// as well
 		// should be x <= 10 & _tt >= 0 & x >= 0.2 & x <= 0.3357
 		Assert.assertEquals("mode0 invariant correct",
-				"x <= 10 & _tt >= 0 & x >= 0.2 & x <= 0.3357", m0.invariant.toString());
+				"x <= 10.0 & _tt >= 0.0 & x >= 0.2 & x <= 0.3357", m0.invariant.toString());
 
 		// mode 1 invariant correct
 		// should be c <= 1 & x >= 0.2357 & x <= 0.3833
 		Assert.assertEquals("mode1 invariant correct",
-				"x <= 10 & _tt >= 0 & x >= 0.2357 & x <= 0.3833", m1.invariant.toString());
+				"x <= 10.0 & _tt >= 0.0 & x >= 0.2357 & x <= 0.3833", m1.invariant.toString());
 	}
 
 	@Test
@@ -367,7 +367,7 @@ public class HybridizePassTests
 				if (at.to == m1)
 				{
 					// 5.0 max time / 100 steps = 0.05 granularity
-					if (at.guard.toDefaultString().contains("1 * x >= 1.0500"))
+					if (at.guard.toDefaultString().contains("1.0 * x >= 1.0500"))
 						foundGuard = true;
 					else
 						Assert.fail("incorrect PI guard: " + at.guard.toDefaultString());
@@ -379,7 +379,7 @@ public class HybridizePassTests
 		Assert.assertTrue("found pi guard", foundGuard);
 
 		Assert.assertTrue("pi guard is exists",
-				m0.invariant.toDefaultString().contains("1 * x <= 1.0500"));
+				m0.invariant.toDefaultString().contains("1.0 * x <= 1.0500"));
 
 		Assert.assertTrue("second mode's invariant starts at 1.04",
 				m1.invariant.toDefaultString().contains("x >= 1.0400"));
@@ -647,12 +647,12 @@ public class HybridizePassTests
 
 		Assert.assertNotNull(at);
 
-		Assert.assertEquals(at.guard.toDefaultString(), "_tt <= 0");
+		Assert.assertEquals(at.guard.toDefaultString(), "_tt <= 0.0");
 
 		Expression inv1 = mode1.invariant;
 		Expression inv2 = mode2.invariant;
 
-		Assert.assertEquals("_tt >= 0 & x >= 0.2 & x <= 0.336", inv1.toDefaultString());
+		Assert.assertEquals("_tt >= 0.0 & x >= 0.2 & x <= 0.336", inv1.toDefaultString());
 		Assert.assertEquals("x >= 0.236 & x <= 0.383", inv2.toDefaultString());
 	}
 
@@ -726,12 +726,12 @@ public class HybridizePassTests
 
 		Assert.assertNotNull(at);
 
-		Assert.assertEquals(at.guard.toDefaultString(), "1 * x >= 0.3");
+		Assert.assertEquals(at.guard.toDefaultString(), "1.0 * x >= 0.3");
 
 		Expression inv1 = mode1.invariant;
 		Expression inv2 = mode2.invariant;
 
-		Assert.assertEquals("x >= 0.2 & x <= 0.3 & 1 * x <= 0.3", inv1.toDefaultString());
+		Assert.assertEquals("x >= 0.2 & x <= 0.3 & 1.0 * x <= 0.3", inv1.toDefaultString());
 		Assert.assertEquals("x >= 0.3 & x <= 0.5", inv2.toDefaultString());
 	}
 
