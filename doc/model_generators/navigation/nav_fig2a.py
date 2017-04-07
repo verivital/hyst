@@ -17,448 +17,448 @@ def define_ha():
 
 
     mode_0_0 = ha.new_mode('mode_0_0')
-    mode_0_0.inv = lambda state: state[0] <= 1 and state[1] <= 1
-    mode_0_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - 1) + -0.8 * (state[3] - 0)]
+    mode_0_0.inv = lambda state: state[0] <= 1.0 and state[1] <= 1.0
+    mode_0_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - 1.0) + -0.8 * (state[3] - 0.0)]
     mode_0_0.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_1_0 = ha.new_mode('mode_1_0')
-    mode_1_0.inv = lambda state: state[0] >= 1 and state[0] <= 2 and state[1] <= 1
-    mode_1_0.der = lambda _, state: [0, 0, 0, 0]
+    mode_1_0.inv = lambda state: state[0] >= 1.0 and state[0] <= 2.0 and state[1] <= 1.0
+    mode_1_0.der = lambda _, state: [0.0, 0.0, 0.0, 0.0]
     mode_1_0.der_interval_list = [[0, 0], [0, 0], [0, 0], [0, 0]]
 
     mode_2_0 = ha.new_mode('mode_2_0')
-    mode_2_0.inv = lambda state: state[0] >= 2 and state[0] <= 3 and state[1] <= 1
-    mode_2_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - 1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - 1)]
+    mode_2_0.inv = lambda state: state[0] >= 2.0 and state[0] <= 3.0 and state[1] <= 1.0
+    mode_2_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - 1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - 1.0)]
     mode_2_0.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_3_0 = ha.new_mode('mode_3_0')
-    mode_3_0.inv = lambda state: state[0] >= 3 and state[0] <= 4 and state[1] <= 1
-    mode_3_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - 1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - 1)]
+    mode_3_0.inv = lambda state: state[0] >= 3.0 and state[0] <= 4.0 and state[1] <= 1.0
+    mode_3_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - 1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - 1.0)]
     mode_3_0.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_4_0 = ha.new_mode('mode_4_0')
-    mode_4_0.inv = lambda state: state[0] >= 4 and state[1] <= 1
-    mode_4_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - 1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - 1)]
+    mode_4_0.inv = lambda state: state[0] >= 4.0 and state[1] <= 1.0
+    mode_4_0.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - 1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - 1.0)]
     mode_4_0.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_0_1 = ha.new_mode('mode_0_1')
-    mode_0_1.inv = lambda state: state[0] <= 1 and state[1] >= 1 and state[1] <= 2
-    mode_0_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - 1) + -0.8 * (state[3] - 0)]
+    mode_0_1.inv = lambda state: state[0] <= 1.0 and state[1] >= 1.0 and state[1] <= 2.0
+    mode_0_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - 1.0) + -0.8 * (state[3] - 0.0)]
     mode_0_1.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_1_1 = ha.new_mode('mode_1_1')
-    mode_1_1.inv = lambda state: state[0] >= 1 and state[0] <= 2 and state[1] >= 1 and state[1] <= 2
-    mode_1_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_1_1.inv = lambda state: state[0] >= 1.0 and state[0] <= 2.0 and state[1] >= 1.0 and state[1] <= 2.0
+    mode_1_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_1_1.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_2_1 = ha.new_mode('mode_2_1')
-    mode_2_1.inv = lambda state: state[0] >= 2 and state[0] <= 3 and state[1] >= 1 and state[1] <= 2
-    mode_2_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_2_1.inv = lambda state: state[0] >= 2.0 and state[0] <= 3.0 and state[1] >= 1.0 and state[1] <= 2.0
+    mode_2_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_2_1.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_3_1 = ha.new_mode('mode_3_1')
-    mode_3_1.inv = lambda state: state[0] >= 3 and state[0] <= 4 and state[1] >= 1 and state[1] <= 2
-    mode_3_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_3_1.inv = lambda state: state[0] >= 3.0 and state[0] <= 4.0 and state[1] >= 1.0 and state[1] <= 2.0
+    mode_3_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_3_1.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_4_1 = ha.new_mode('mode_4_1')
-    mode_4_1.inv = lambda state: state[0] >= 4 and state[1] >= 1 and state[1] <= 2
-    mode_4_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_4_1.inv = lambda state: state[0] >= 4.0 and state[1] >= 1.0 and state[1] <= 2.0
+    mode_4_1.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_4_1.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_0_2 = ha.new_mode('mode_0_2')
-    mode_0_2.inv = lambda state: state[0] <= 1 and state[1] >= 2 and state[1] <= 3
-    mode_0_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - 1) + -0.8 * (state[3] - 0)]
+    mode_0_2.inv = lambda state: state[0] <= 1.0 and state[1] >= 2.0 and state[1] <= 3.0
+    mode_0_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - 1.0) + -0.8 * (state[3] - 0.0)]
     mode_0_2.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_1_2 = ha.new_mode('mode_1_2')
-    mode_1_2.inv = lambda state: state[0] >= 1 and state[0] <= 2 and state[1] >= 2 and state[1] <= 3
-    mode_1_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_1_2.inv = lambda state: state[0] >= 1.0 and state[0] <= 2.0 and state[1] >= 2.0 and state[1] <= 3.0
+    mode_1_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_1_2.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_2_2 = ha.new_mode('mode_2_2')
-    mode_2_2.inv = lambda state: state[0] >= 2 and state[0] <= 3 and state[1] >= 2 and state[1] <= 3
-    mode_2_2.der = lambda _, state: [0, 0, 0, 0]
+    mode_2_2.inv = lambda state: state[0] >= 2.0 and state[0] <= 3.0 and state[1] >= 2.0 and state[1] <= 3.0
+    mode_2_2.der = lambda _, state: [0.0, 0.0, 0.0, 0.0]
     mode_2_2.der_interval_list = [[0, 0], [0, 0], [0, 0], [0, 0]]
 
     mode_3_2 = ha.new_mode('mode_3_2')
-    mode_3_2.inv = lambda state: state[0] >= 3 and state[0] <= 4 and state[1] >= 2 and state[1] <= 3
+    mode_3_2.inv = lambda state: state[0] >= 3.0 and state[0] <= 4.0 and state[1] >= 2.0 and state[1] <= 3.0
     mode_3_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.7071067811865476) + -0.2 * (state[3] - -0.7071067811865475), -0.1 * (state[2] - 0.7071067811865476) + -0.8 * (state[3] - -0.7071067811865475)]
     mode_3_2.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_4_2 = ha.new_mode('mode_4_2')
-    mode_4_2.inv = lambda state: state[0] >= 4 and state[1] >= 2 and state[1] <= 3
-    mode_4_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_4_2.inv = lambda state: state[0] >= 4.0 and state[1] >= 2.0 and state[1] <= 3.0
+    mode_4_2.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_4_2.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_0_3 = ha.new_mode('mode_0_3')
-    mode_0_3.inv = lambda state: state[0] <= 1 and state[1] >= 3 and state[1] <= 4
-    mode_0_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - 1) + -0.8 * (state[3] - 0)]
+    mode_0_3.inv = lambda state: state[0] <= 1.0 and state[1] >= 3.0 and state[1] <= 4.0
+    mode_0_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - 1.0) + -0.8 * (state[3] - 0.0)]
     mode_0_3.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_1_3 = ha.new_mode('mode_1_3')
-    mode_1_3.inv = lambda state: state[0] >= 1 and state[0] <= 2 and state[1] >= 3 and state[1] <= 4
-    mode_1_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_1_3.inv = lambda state: state[0] >= 1.0 and state[0] <= 2.0 and state[1] >= 3.0 and state[1] <= 4.0
+    mode_1_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_1_3.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_2_3 = ha.new_mode('mode_2_3')
-    mode_2_3.inv = lambda state: state[0] >= 2 and state[0] <= 3 and state[1] >= 3 and state[1] <= 4
+    mode_2_3.inv = lambda state: state[0] >= 2.0 and state[0] <= 3.0 and state[1] >= 3.0 and state[1] <= 4.0
     mode_2_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -0.7071067811865477) + -0.2 * (state[3] - 0.7071067811865474), -0.1 * (state[2] - -0.7071067811865477) + -0.8 * (state[3] - 0.7071067811865474)]
     mode_2_3.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_3_3 = ha.new_mode('mode_3_3')
-    mode_3_3.inv = lambda state: state[0] >= 3 and state[0] <= 4 and state[1] >= 3 and state[1] <= 4
+    mode_3_3.inv = lambda state: state[0] >= 3.0 and state[0] <= 4.0 and state[1] >= 3.0 and state[1] <= 4.0
     mode_3_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -0.7071067811865477) + -0.2 * (state[3] - 0.7071067811865474), -0.1 * (state[2] - -0.7071067811865477) + -0.8 * (state[3] - 0.7071067811865474)]
     mode_3_3.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_4_3 = ha.new_mode('mode_4_3')
-    mode_4_3.inv = lambda state: state[0] >= 4 and state[1] >= 3 and state[1] <= 4
-    mode_4_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_4_3.inv = lambda state: state[0] >= 4.0 and state[1] >= 3.0 and state[1] <= 4.0
+    mode_4_3.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_4_3.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_0_4 = ha.new_mode('mode_0_4')
-    mode_0_4.inv = lambda state: state[0] <= 1 and state[1] >= 4
-    mode_0_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - 1) + -0.8 * (state[3] - 0)]
+    mode_0_4.inv = lambda state: state[0] <= 1.0 and state[1] >= 4.0
+    mode_0_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - 1.0) + -0.8 * (state[3] - 0.0)]
     mode_0_4.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_1_4 = ha.new_mode('mode_1_4')
-    mode_1_4.inv = lambda state: state[0] >= 1 and state[0] <= 2 and state[1] >= 4
-    mode_1_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0) + -0.2 * (state[3] - -1), -0.1 * (state[2] - 0) + -0.8 * (state[3] - -1)]
+    mode_1_4.inv = lambda state: state[0] >= 1.0 and state[0] <= 2.0 and state[1] >= 4.0
+    mode_1_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - 0.0) + -0.2 * (state[3] - -1.0), -0.1 * (state[2] - 0.0) + -0.8 * (state[3] - -1.0)]
     mode_1_4.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_2_4 = ha.new_mode('mode_2_4')
-    mode_2_4.inv = lambda state: state[0] >= 2 and state[0] <= 3 and state[1] >= 4
-    mode_2_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_2_4.inv = lambda state: state[0] >= 2.0 and state[0] <= 3.0 and state[1] >= 4.0
+    mode_2_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_2_4.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_3_4 = ha.new_mode('mode_3_4')
-    mode_3_4.inv = lambda state: state[0] >= 3 and state[0] <= 4 and state[1] >= 4
-    mode_3_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_3_4.inv = lambda state: state[0] >= 3.0 and state[0] <= 4.0 and state[1] >= 4.0
+    mode_3_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_3_4.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     mode_4_4 = ha.new_mode('mode_4_4')
-    mode_4_4.inv = lambda state: state[0] >= 4 and state[1] >= 4
-    mode_4_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1) + -0.2 * (state[3] - 0), -0.1 * (state[2] - -1) + -0.8 * (state[3] - 0)]
+    mode_4_4.inv = lambda state: state[0] >= 4.0 and state[1] >= 4.0
+    mode_4_4.der = lambda _, state: [state[2], state[3], -0.8 * (state[2] - -1.0) + -0.2 * (state[3] - 0.0), -0.1 * (state[2] - -1.0) + -0.8 * (state[3] - 0.0)]
     mode_4_4.der_interval_list = [[0, 0], [0, 0], [-0.1, 0.1], [-0.1, 0.1]]
 
     t = ha.new_transition(mode_0_0, mode_1_0)
-    t.guard = lambda state: state[0] >= 1
+    t.guard = lambda state: state[0] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_0, mode_0_1)
-    t.guard = lambda state: state[1] >= 1
+    t.guard = lambda state: state[1] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_0, mode_0_0)
-    t.guard = lambda state: state[0] <= 1
+    t.guard = lambda state: state[0] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_0, mode_2_0)
-    t.guard = lambda state: state[0] >= 2
+    t.guard = lambda state: state[0] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_0, mode_1_1)
-    t.guard = lambda state: state[1] >= 1
+    t.guard = lambda state: state[1] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_0, mode_1_0)
-    t.guard = lambda state: state[0] <= 2
+    t.guard = lambda state: state[0] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_0, mode_3_0)
-    t.guard = lambda state: state[0] >= 3
+    t.guard = lambda state: state[0] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_0, mode_2_1)
-    t.guard = lambda state: state[1] >= 1
+    t.guard = lambda state: state[1] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_0, mode_2_0)
-    t.guard = lambda state: state[0] <= 3
+    t.guard = lambda state: state[0] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_0, mode_4_0)
-    t.guard = lambda state: state[0] >= 4
+    t.guard = lambda state: state[0] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_0, mode_3_1)
-    t.guard = lambda state: state[1] >= 1
+    t.guard = lambda state: state[1] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_0, mode_3_0)
-    t.guard = lambda state: state[0] <= 4
+    t.guard = lambda state: state[0] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_0, mode_4_1)
-    t.guard = lambda state: state[1] >= 1
+    t.guard = lambda state: state[1] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_1, mode_1_1)
-    t.guard = lambda state: state[0] >= 1
+    t.guard = lambda state: state[0] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_1, mode_0_0)
-    t.guard = lambda state: state[1] <= 1
+    t.guard = lambda state: state[1] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_1, mode_0_2)
-    t.guard = lambda state: state[1] >= 2
+    t.guard = lambda state: state[1] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_1, mode_0_1)
-    t.guard = lambda state: state[0] <= 1
+    t.guard = lambda state: state[0] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_1, mode_2_1)
-    t.guard = lambda state: state[0] >= 2
+    t.guard = lambda state: state[0] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_1, mode_1_0)
-    t.guard = lambda state: state[1] <= 1
+    t.guard = lambda state: state[1] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_1, mode_1_2)
-    t.guard = lambda state: state[1] >= 2
+    t.guard = lambda state: state[1] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_1, mode_1_1)
-    t.guard = lambda state: state[0] <= 2
+    t.guard = lambda state: state[0] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_1, mode_3_1)
-    t.guard = lambda state: state[0] >= 3
+    t.guard = lambda state: state[0] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_1, mode_2_0)
-    t.guard = lambda state: state[1] <= 1
+    t.guard = lambda state: state[1] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_1, mode_2_2)
-    t.guard = lambda state: state[1] >= 2
+    t.guard = lambda state: state[1] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_1, mode_2_1)
-    t.guard = lambda state: state[0] <= 3
+    t.guard = lambda state: state[0] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_1, mode_4_1)
-    t.guard = lambda state: state[0] >= 4
+    t.guard = lambda state: state[0] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_1, mode_3_0)
-    t.guard = lambda state: state[1] <= 1
+    t.guard = lambda state: state[1] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_1, mode_3_2)
-    t.guard = lambda state: state[1] >= 2
+    t.guard = lambda state: state[1] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_1, mode_3_1)
-    t.guard = lambda state: state[0] <= 4
+    t.guard = lambda state: state[0] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_1, mode_4_0)
-    t.guard = lambda state: state[1] <= 1
+    t.guard = lambda state: state[1] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_1, mode_4_2)
-    t.guard = lambda state: state[1] >= 2
+    t.guard = lambda state: state[1] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_2, mode_1_2)
-    t.guard = lambda state: state[0] >= 1
+    t.guard = lambda state: state[0] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_2, mode_0_1)
-    t.guard = lambda state: state[1] <= 2
+    t.guard = lambda state: state[1] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_2, mode_0_3)
-    t.guard = lambda state: state[1] >= 3
+    t.guard = lambda state: state[1] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_2, mode_0_2)
-    t.guard = lambda state: state[0] <= 1
+    t.guard = lambda state: state[0] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_2, mode_2_2)
-    t.guard = lambda state: state[0] >= 2
+    t.guard = lambda state: state[0] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_2, mode_1_1)
-    t.guard = lambda state: state[1] <= 2
+    t.guard = lambda state: state[1] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_2, mode_1_3)
-    t.guard = lambda state: state[1] >= 3
+    t.guard = lambda state: state[1] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_2, mode_1_2)
-    t.guard = lambda state: state[0] <= 2
+    t.guard = lambda state: state[0] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_2, mode_3_2)
-    t.guard = lambda state: state[0] >= 3
+    t.guard = lambda state: state[0] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_2, mode_2_1)
-    t.guard = lambda state: state[1] <= 2
+    t.guard = lambda state: state[1] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_2, mode_2_3)
-    t.guard = lambda state: state[1] >= 3
+    t.guard = lambda state: state[1] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_2, mode_2_2)
-    t.guard = lambda state: state[0] <= 3
+    t.guard = lambda state: state[0] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_2, mode_4_2)
-    t.guard = lambda state: state[0] >= 4
+    t.guard = lambda state: state[0] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_2, mode_3_1)
-    t.guard = lambda state: state[1] <= 2
+    t.guard = lambda state: state[1] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_2, mode_3_3)
-    t.guard = lambda state: state[1] >= 3
+    t.guard = lambda state: state[1] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_2, mode_3_2)
-    t.guard = lambda state: state[0] <= 4
+    t.guard = lambda state: state[0] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_2, mode_4_1)
-    t.guard = lambda state: state[1] <= 2
+    t.guard = lambda state: state[1] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_2, mode_4_3)
-    t.guard = lambda state: state[1] >= 3
+    t.guard = lambda state: state[1] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_3, mode_1_3)
-    t.guard = lambda state: state[0] >= 1
+    t.guard = lambda state: state[0] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_3, mode_0_2)
-    t.guard = lambda state: state[1] <= 3
+    t.guard = lambda state: state[1] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_3, mode_0_4)
-    t.guard = lambda state: state[1] >= 4
+    t.guard = lambda state: state[1] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_3, mode_0_3)
-    t.guard = lambda state: state[0] <= 1
+    t.guard = lambda state: state[0] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_3, mode_2_3)
-    t.guard = lambda state: state[0] >= 2
+    t.guard = lambda state: state[0] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_3, mode_1_2)
-    t.guard = lambda state: state[1] <= 3
+    t.guard = lambda state: state[1] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_3, mode_1_4)
-    t.guard = lambda state: state[1] >= 4
+    t.guard = lambda state: state[1] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_3, mode_1_3)
-    t.guard = lambda state: state[0] <= 2
+    t.guard = lambda state: state[0] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_3, mode_3_3)
-    t.guard = lambda state: state[0] >= 3
+    t.guard = lambda state: state[0] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_3, mode_2_2)
-    t.guard = lambda state: state[1] <= 3
+    t.guard = lambda state: state[1] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_3, mode_2_4)
-    t.guard = lambda state: state[1] >= 4
+    t.guard = lambda state: state[1] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_3, mode_2_3)
-    t.guard = lambda state: state[0] <= 3
+    t.guard = lambda state: state[0] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_3, mode_4_3)
-    t.guard = lambda state: state[0] >= 4
+    t.guard = lambda state: state[0] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_3, mode_3_2)
-    t.guard = lambda state: state[1] <= 3
+    t.guard = lambda state: state[1] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_3, mode_3_4)
-    t.guard = lambda state: state[1] >= 4
+    t.guard = lambda state: state[1] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_3, mode_3_3)
-    t.guard = lambda state: state[0] <= 4
+    t.guard = lambda state: state[0] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_3, mode_4_2)
-    t.guard = lambda state: state[1] <= 3
+    t.guard = lambda state: state[1] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_3, mode_4_4)
-    t.guard = lambda state: state[1] >= 4
+    t.guard = lambda state: state[1] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_4, mode_1_4)
-    t.guard = lambda state: state[0] >= 1
+    t.guard = lambda state: state[0] >= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_0_4, mode_0_3)
-    t.guard = lambda state: state[1] <= 4
+    t.guard = lambda state: state[1] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_4, mode_0_4)
-    t.guard = lambda state: state[0] <= 1
+    t.guard = lambda state: state[0] <= 1.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_4, mode_2_4)
-    t.guard = lambda state: state[0] >= 2
+    t.guard = lambda state: state[0] >= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_1_4, mode_1_3)
-    t.guard = lambda state: state[1] <= 4
+    t.guard = lambda state: state[1] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_4, mode_1_4)
-    t.guard = lambda state: state[0] <= 2
+    t.guard = lambda state: state[0] <= 2.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_4, mode_3_4)
-    t.guard = lambda state: state[0] >= 3
+    t.guard = lambda state: state[0] >= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_2_4, mode_2_3)
-    t.guard = lambda state: state[1] <= 4
+    t.guard = lambda state: state[1] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_4, mode_2_4)
-    t.guard = lambda state: state[0] <= 3
+    t.guard = lambda state: state[0] <= 3.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_4, mode_4_4)
-    t.guard = lambda state: state[0] >= 4
+    t.guard = lambda state: state[0] >= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_3_4, mode_3_3)
-    t.guard = lambda state: state[1] <= 4
+    t.guard = lambda state: state[1] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_4, mode_3_4)
-    t.guard = lambda state: state[0] <= 4
+    t.guard = lambda state: state[0] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     t = ha.new_transition(mode_4_4, mode_4_3)
-    t.guard = lambda state: state[1] <= 4
+    t.guard = lambda state: state[1] <= 4.0
     t.reset = lambda state: [None, None, None, None]
 
     return ha
@@ -467,22 +467,20 @@ def define_init_states(ha):
     '''returns a list of (mode, HyperRectangle)'''
     # Variable ordering: [x, y, xvel, yvel]
     rv = []
-
-    r = HyperRectangle([(3.5, 3.5), (3.5, 3.5), (-1, 1), (-1, 1)])
-    rv.append((ha.modes['mode_3_3'], r))
-
+    
+    rv.append((ha.modes['mode_3_3'],HyperRectangle([(3.5, 3.5), (3.5, 3.5), (-1, 1), (-1, 1)])))
     return rv
+
 
 def define_settings():
     '''defines the automaton / plot settings'''
     s = PySimSettings()
     s.max_time = 10.0
     s.step = 0.1
-    s.x_dim = 0
-    s.y_dim = 1
+    s.dim_x = 0
+    s.dim_y = 1
 
     return s
-
 
 def simulate(init_states, settings):
     '''simulate the automaton from each initial rect'''

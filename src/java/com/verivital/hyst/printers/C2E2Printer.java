@@ -486,9 +486,9 @@ public class C2E2Printer extends ToolPrinter
 		if (config.init.size() != 1)
 			throw new AutomatonExportException(
 					"Printer currently only supports single-initial-state models");
-		// else if (ha.forbidden.size() != 1)
-		// throw new AutomatonExportException("Printer currently only supports
-		// single-forbidden-state models");
+				// else if (ha.forbidden.size() != 1)
+				// throw new AutomatonExportException("Printer currently only supports
+				// single-forbidden-state models");
 
 		// transform resets to include identity expressions
 		new AddIdentityResetPass().runTransformationPass(config, null);

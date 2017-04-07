@@ -61,7 +61,12 @@ public class DynamicsUtil
 	{
 		ArrayList<String> rv = new ArrayList<String>();
 
-		if (am.flowDynamics != null)
+		if (am.flowDynamics == null)
+		{
+			// if the mode is urgent, there are no input variables...
+			rv.addAll(variables);
+		}
+		else
 		{
 			for (String row : am.automaton.variables)
 			{

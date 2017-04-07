@@ -379,7 +379,7 @@ public class RangeExtractor
 	 */
 	private static void getVariableRangesRecursive(Expression expression,
 			Map<String, Interval> ranges, Collection<String> vars, boolean extractWeakRanges)
-			throws EmptyRangeException, UnsupportedConditionException
+					throws EmptyRangeException, UnsupportedConditionException
 	{
 		Operation o = expression.asOperation();
 

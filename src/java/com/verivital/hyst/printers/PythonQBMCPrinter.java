@@ -102,7 +102,7 @@ public class PythonQBMCPrinter extends ToolPrinter
 	{
 		printLine("from z3 import *\n" + "from math import *\n\n" +
 
-				"opt_debug = True");
+		"opt_debug = True");
 		printNewline();
 	}
 
@@ -471,14 +471,13 @@ public class PythonQBMCPrinter extends ToolPrinter
 	{
 		printLine(commentChar + " Run z3\n" + "z3_solver = Solver()\n\n" +
 
-				"if opt_debug:\n" + indentationAmount + "print qbf_bmc_outer\n\n" +
+		"if opt_debug:\n" + indentationAmount + "print qbf_bmc_outer\n\n" +
 
-				"z3_solver.add( qbf_bmc_outer )\n" + "result = z3_solver.check()\n"
-				+ "print result\n\n" +
+		"z3_solver.add( qbf_bmc_outer )\n" + "result = z3_solver.check()\n" + "print result\n\n" +
 
-				"if result == sat:\n" + indentationAmount + "model = z3_solver.model()\n\n" +
+		"if result == sat:\n" + indentationAmount + "model = z3_solver.model()\n\n" +
 
-				indentationAmount + "print model\n");
+		indentationAmount + "print model\n");
 		increaseIndentation();
 		printCounterExample();
 		decreaseIndentation();
