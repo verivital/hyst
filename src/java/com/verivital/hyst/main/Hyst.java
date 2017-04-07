@@ -98,7 +98,7 @@ public class Hyst
 			new NavigationGenerator(), new NamedNavigationGenerator(),
 			new SwitchedOscillatorGenerator(), new BuildGenerator(), new DrivetrainGenerator() };
 
-	public static String TOOL_NAME = "Hyst v1.3";
+	public static String TOOL_NAME = "Hyst v1.4";
 
 	// all program arguments as a single string
 	public static String programArguments;
