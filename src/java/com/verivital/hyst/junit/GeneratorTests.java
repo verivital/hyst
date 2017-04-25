@@ -2,6 +2,7 @@ package com.verivital.hyst.junit;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map.Entry;
 
 import org.junit.Assert;
@@ -21,6 +22,7 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
@@ -206,21 +208,144 @@ public class GeneratorTests
 	}
 
 	@Test
-	public void testMatthiasDrivetrainThetaZero()
+	public void testMatthiasDrivetrainDynamicsThetaZero()
 	{
-		DrivetrainGenerator gen = new DrivetrainGenerator();
+		HashMap<String, ExpressionInterval> flowDynamics = new HashMap<String, ExpressionInterval>();
+		DrivetrainGenerator.makeDynamics(flowDynamics, 0, false, "alpha", "k_s", "u");
 
-		String param = "-theta 0 -init_scale 0 -error_guard x3>=85";
-		Configuration c = gen.generate(param);
+		/*
+		 * v = p.k_p*(gamma*x(4) - x(7)) ... + p.k_KD*(p.i*u(1) - 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) -
+		 * p.alpha) - p.b_m*x(7))) ... + p.k_KI*(p.i*x(3) - p.i*(x(1) + x(5))) ... +
+		 * 0*1/p.i*p.J_l*u(1);
+		 */
+		// plant model
+		// f(1,1) = 1/p.i*x(7) - x(6); %Theta_d
+		// f(2,1) = (v - x(2))/p.tau_eng; %T_m
+		// f(3,1) = x(4); %Theta_ref
+		// f(4,1) = u(1); %\dot{Theta}_ref
+		// f(5,1) = x(6); %Theta_l
+		// f(6,1) = 1/p.J_l*(p.k*(x(1) - p.alpha) - u(2) - p.b_l*x(6)); %\dot{Theta}_l
+		// f(7,1) = 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) - p.alpha) - p.b_m*x(7)); %\dot{Theta}_m
 
-		Assert.assertEquals("8 variables", 8, c.root.variables.size());
-		ToolPrinter printer = new PySimPrinter();
-		printer.setOutputString();
-		printer.print(c, "", "model.xml");
+		String v = "k_P * (gamma * x4 - x7) + k_I * (gamma * x3 - gamma * (x1 + x5)) + "
+				+ "k_D * (gamma * u - 1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)";
+		HashMap<String, String> expected = new HashMap<String, String>();
+		expected.put("x1", "1.0 / gamma * x7 - x6");
+		expected.put("x2", "(" + v + ") - x2) / tau_eng");
+		expected.put("x3", "x4");
+		expected.put("x4", "u");
+		expected.put("x5", "x6");
+		expected.put("x6", "1.0 / J_l * (k_i * (x1 - alpha) - b_l * x6)");
+		expected.put("x7", "1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)");
 
-		String out = printer.outputString.toString();
+		for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
+		{
+			String expectedString = expected.get(e.getKey());
 
-		Assert.assertTrue("some output exists", out.length() > 10);
+			Assert.assertNotNull("flow for '" + e.getKey() + "' was not expected.", expectedString);
+
+			Assert.assertEquals("Mismatch in flow for " + e.getKey(), expectedString,
+					e.getValue().toDefaultString());
+		}
+	}
+
+	@Test
+	public void testMatthiasDrivetrainDynamicsThetaOne()
+	{
+		HashMap<String, ExpressionInterval> flowDynamics = new HashMap<String, ExpressionInterval>();
+		DrivetrainGenerator.makeDynamics(flowDynamics, 1, false, "alpha", "k_s", "u");
+
+		// v = p.k_K*(p.i*x(4) - x(7)) ...
+		// + p.k_KD*(p.i*u(1) - 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) - p.alpha) - p.b_m*x(7))) ...
+		// + p.k_KI*(p.i*x(3) - p.i*(x(1) + x(8))) ...
+		// + 0*1/p.i*p.J_l*u(1);
+
+		// %plant model
+		// f(1,1) = 1/p.i*x(7) - x(9); %Theta_d
+		// f(2,1) = (v - x(2))/p.tau_eng; %T_m
+		// f(3,1) = x(4); %Theta_ref
+		// f(4,1) = u(1); %\dot{Theta}_ref
+		// f(5,1) = x(6); %Theta_l
+		// f(6,1) = 1/p.J_l*(p.k_i*(x(8) - x(5)) - u(2) - p.b_l*x(6)); %\dot{Theta}_l
+		// f(7,1) = 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) - p.alpha) - p.b_m*x(7)); %\dot{Theta}_m
+		// f(8,1) = x(9); %Theta_1
+		// f(9,1) = p.J_i*(p.k*(x(1) - p.alpha) - p.k_i*(x(8) - x(5)) - p.b_i*x(9)); %\dot{Theta}_1
+
+		String v = "k_P * (gamma * x4 - x7) + k_I * (gamma * x3 - gamma * (x1 + x8)) + "
+				+ "k_D * (gamma * u - 1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)";
+
+		HashMap<String, String> expected = new HashMap<String, String>();
+		expected.put("x1", "1.0 / gamma * x7 - x9");
+		expected.put("x2", "(" + v + ") - x2) / tau_eng");
+		expected.put("x3", "x4");
+		expected.put("x4", "u");
+		expected.put("x5", "x6");
+		expected.put("x6", "1.0 / J_l * (k_i * (x8 - x5) - b_l * x6)");
+		expected.put("x7", "1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)");
+		expected.put("x8", "x9");
+		expected.put("x9", "J_i * (k_s * (x1 - alpha) - k_i * (x8 - x5) - b_i * x9)");
+
+		for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
+		{
+			String expectedString = expected.get(e.getKey());
+
+			Assert.assertNotNull("flow for '" + e.getKey() + "' was not expected.", expectedString);
+
+			Assert.assertEquals("Mismatch in flow for " + e.getKey(), expectedString,
+					e.getValue().toDefaultString());
+		}
+	}
+
+	@Test
+	public void testMatthiasDrivetrainDynamicsThetaTwo()
+	{
+		HashMap<String, ExpressionInterval> flowDynamics = new HashMap<String, ExpressionInterval>();
+		DrivetrainGenerator.makeDynamics(flowDynamics, 2, false, "alpha", "k_s", "u");
+
+		// %control
+		// v = p.k_K*(p.i*x(4) - x(7)) ...
+		// + p.k_KD*(p.i*u(1) - 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) - p.alpha) - p.b_m*x(7))) ...
+		// + p.k_KI*(p.i*x(3) - p.i*(x(1) + x(8)));
+
+		// %plant model
+		// f(1,1) = 1/p.i*x(7) - x(9); %Theta_d
+		// f(2,1) = (v - x(2))/p.tau_eng; %T_m
+		// f(3,1) = x(4); %Theta_ref
+		// f(4,1) = u(1); %\dot{Theta}_ref
+		// f(5,1) = x(6); %Theta_l
+		// f(6,1) = 1/p.J_l*(p.k_i*(x(10) - x(5)) - u(2) - p.b_l*x(6)); %\dot{Theta}_l
+		// f(7,1) = 1/p.J_m*(x(2) - 1/p.i*p.k*(x(1) - p.alpha) - p.b_m*x(7)); %\dot{Theta}_m
+		// f(8,1) = x(9); %Theta_1
+		// f(9,1) = p.J_i*(p.k*(x(1) - p.alpha) - p.k_i*(x(8) - x(10)) - p.b_i*x(9)); %\dot{Theta}_1
+		// f(10,1) = x(11); %Theta_2
+		// f(11,1) = p.J_i*(p.k_i*(x(8) - x(10)) - p.k_i*(x(10) - x(5)) - p.b_i*x(11));
+		// %\dot{Theta}_2
+
+		String v = "k_P * (gamma * x4 - x7) + k_I * (gamma * x3 - gamma * (x1 + x8)) + "
+				+ "k_D * (gamma * u - 1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)";
+
+		HashMap<String, String> expected = new HashMap<String, String>();
+		expected.put("x1", "1.0 / gamma * x7 - x9");
+		expected.put("x2", "(" + v + ") - x2) / tau_eng");
+		expected.put("x3", "x4");
+		expected.put("x4", "u");
+		expected.put("x5", "x6");
+		expected.put("x6", "1.0 / J_l * (k_i * (x10 - x5) - b_l * x6)");
+		expected.put("x7", "1.0 / J_m * (x2 - 1.0 / gamma * k_s * (x1 - alpha) - b_m * x7)");
+		expected.put("x8", "x9");
+		expected.put("x9", "J_i * (k_s * (x1 - alpha) - k_i * (x8 - x10) - b_i * x9)");
+		expected.put("x10", "x11");
+		expected.put("x11", "J_i * (k_i * (x8 - x10) - k_i * (x10 - x5) - b_i * x11)");
+
+		for (Entry<String, ExpressionInterval> e : flowDynamics.entrySet())
+		{
+			String expectedString = expected.get(e.getKey());
+
+			Assert.assertNotNull("flow for '" + e.getKey() + "' was not expected.", expectedString);
+
+			Assert.assertEquals("Mismatch in flow for " + e.getKey(), expectedString,
+					e.getValue().toDefaultString());
+		}
 	}
 
 	@Test
@@ -245,7 +370,7 @@ public class GeneratorTests
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 
-		// shouldn't be doing integet division
+		// shouldn't be doing integer division
 		Assert.assertFalse("Pysim printer shouldn't be using integer division",
 				out.contains("1 / 12"));
 	}
@@ -307,5 +432,23 @@ public class GeneratorTests
 		// shouldn't be doing integet division
 		Assert.assertFalse("Pysim printer shouldn't be using integer division",
 				out.contains("1 / 12"));
+	}
+
+	@Test
+	public void testDrivetrainReverseErrors()
+	{
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 1 -init_scale 0 -reverse_errors";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("10 variables", 10, c.root.variables.size());
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }

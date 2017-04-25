@@ -253,7 +253,7 @@
 	<!-- code reformatting moved here because I want to be able to run unit tests before waiting for reformatting -->
 	<target name ="test_gen_passes" depends="reformat" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
 		<echo message="Running generator and transformation pass tests..."/>
-		 
+
 		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
 		    <arg line="plot.py" />
 		</exec>

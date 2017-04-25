@@ -1,5 +1,5 @@
 '''
-Created by Hyst v1.3
+Created by Hyst v1.4
 Hybrid Automaton in PySim
 Converted from file: 
 Command Line arguments: -gen nav "-matrix -0.8 -0.2 -0.1 -0.8 -i_list 2 4 6 6 6 2 4 7 7 4 2 4 B 3 4 2 4 6 6 6 2 A 0 0 0 -width 5 -startx 3.5 -starty 3.5 -noise 0.1" -o nav_fig2a.py -tool pysim "-corners True -legend False -rand 100 -time 10 -title nav_fig2a"

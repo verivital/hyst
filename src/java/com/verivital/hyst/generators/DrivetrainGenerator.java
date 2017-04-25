@@ -2,6 +2,7 @@ package com.verivital.hyst.generators;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
@@ -51,14 +52,17 @@ public class DrivetrainGenerator extends ModelGenerator
 	@Option(name = "-init_points", usage = "instead of an initial set, initialize with equidistant points")
 	private int initPoints;
 
+	@Option(name = "-reverse_errors", usage = "add error modes instead of transitions if modes are visited in reverse order")
+	private boolean reverseErrors = false;
+
 	////////////// parameters ////////////////
-	final static double[] inputs = new double[] { -5, 5 };
+	final static String[] inputs = new String[] { "-5", "5" };
 
 	final static HashMap<String, Double> constants = new HashMap<String, Double>();
 
 	static
 	{
-		// model constants taken from CORA model (slight differences with his paper, e.g. k_i / k_s)
+		// model constants
 
 		constants.put("alpha", 0.03); // backlash size (half gap) [rad]
 		constants.put("tau_eng", 0.1); // time constant of the engine [s]
@@ -67,22 +71,19 @@ public class DrivetrainGenerator extends ModelGenerator
 									// NOTE: b_m is 0.02 in CORA (but formulas are modified),
 									// is is 0 in the paper and SpaceEx models
 		constants.put("b_i", 1.0); // viscous friction of additional inertias [Nm/(rad/s)]
-		constants.put("i", 12.0); // transmission ratio, Theta_m/Theta_1 [rad/rad]
-		constants.put("k", 10e3); // shaft stiffness [Nm/rad]
+
+		constants.put("k_s", 10e3); // shaft stiffness [Nm/rad]
 		constants.put("k_i", 10e4); // shaft stiffness of additional inertias [Nm/rad]
-		constants.put("r", 0.33); // wheel radius [m]
+
 		constants.put("J_l", 140.0); // moment of inertia of wheels and vehicle mass [kgm^2]
 		constants.put("J_m", 0.3); // moment of inertia of engine flywheel [kgm^2]
 		constants.put("J_i", 0.01); // moment of inertia of additional inertias [kgm^2]
 
-		// control parameters
-		constants.put("k_P", 0.0);
-		constants.put("k_I", 0.0);
-		constants.put("k_D", 0.0);
-		constants.put("k_K", 0.5);
-		constants.put("k_KD", 0.5);
-		constants.put("k_KI", 0.5);
-		constants.put("k_KK", 0.0);
+		constants.put("gamma", 12.0); // transmission ratio, Theta_m/Theta_1 [rad/rad]
+
+		constants.put("k_P", 0.5);
+		constants.put("k_I", 0.5);
+		constants.put("k_D", 0.5);
 	}
 
 	@Override
@@ -123,9 +124,12 @@ public class DrivetrainGenerator extends ModelGenerator
 		if (errorGuard != null)
 			c.forbidden.put("posAngle", FormulaParser.parseGuard(errorGuard));
 
+		if (reverseErrors)
+			c.forbidden.put("error", Constant.TRUE);
+
 		// settings
 		c.settings.plotVariableNames[0] = "x1";
-		c.settings.plotVariableNames[1] = "x2";
+		c.settings.plotVariableNames[1] = "x3";
 
 		c.settings.spaceExConfig.timeHorizon = 2.0;
 		c.settings.spaceExConfig.samplingTime = 5e-4; // 0.0005
@@ -136,6 +140,7 @@ public class DrivetrainGenerator extends ModelGenerator
 	private BaseComponent makeDrivetrainAutomaton()
 	{
 		BaseComponent rv = new BaseComponent(); // input generator
+		boolean addTime = !forceHighInput;
 
 		for (Entry<String, Double> e : constants.entrySet())
 			rv.constants.put(e.getKey(), new Interval(e.getValue()));
@@ -147,7 +152,7 @@ public class DrivetrainGenerator extends ModelGenerator
 			rv.variables.add("t");
 
 		String[] alphas = new String[] { "-alpha", "-alpha", "alpha" };
-		String[] ks = new String[] { "k", "0", "k" };
+		String[] k_s = new String[] { "k_s", "0", "k_s" };
 
 		// modes under input 2
 		AutomatonMode loc1_u2 = rv.createMode("negAngle");
@@ -171,7 +176,7 @@ public class DrivetrainGenerator extends ModelGenerator
 
 			pre.invariant = FormulaParser.parseInvariant("t <= " + switchTime);
 
-			makeDynamics(loc1_u1, alphas[0], ks[0], inputs[0]);
+			makeDynamics(loc1_u1.flowDynamics, theta, addTime, alphas[0], k_s[0], inputs[0]);
 		}
 
 		AutomatonMode loc1 = transitionLocs[0];
@@ -186,16 +191,32 @@ public class DrivetrainGenerator extends ModelGenerator
 				FormulaParser.parseInvariant("alpha <= x1"));
 
 		rv.createTransition(loc1, loc2).guard = FormulaParser.parseGuard("x1 >= -alpha");
-		rv.createTransition(loc2, loc1).guard = FormulaParser.parseGuard("x1 <= -alpha");
 
 		rv.createTransition(loc2, loc3).guard = FormulaParser.parseGuard("x1 >= alpha");
-		rv.createTransition(loc3, loc2).guard = FormulaParser.parseGuard("x1 <= alpha");
+
+		if (reverseErrors)
+		{
+			AutomatonMode error = rv.createMode("error");
+			error.invariant = Constant.TRUE;
+
+			rv.createTransition(loc2, error).guard = FormulaParser.parseGuard("x1 <= -alpha");
+			rv.createTransition(loc3, error).guard = FormulaParser.parseGuard("x1 <= alpha");
+
+			for (String var : rv.variables)
+				error.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+		}
+		else
+		{
+			// reverse-transitions
+			rv.createTransition(loc2, loc1).guard = FormulaParser.parseGuard("x1 <= -alpha");
+			rv.createTransition(loc3, loc2).guard = FormulaParser.parseGuard("x1 <= alpha");
+		}
 
 		// dynamics
 		for (int i = 0; i < 3; ++i)
 		{
 			AutomatonMode loc = transitionLocs[i];
-			makeDynamics(loc, alphas[i], ks[i], inputs[1]);
+			makeDynamics(loc.flowDynamics, theta, addTime, alphas[i], k_s[i], inputs[1]);
 		}
 
 		rv.validate();
@@ -203,7 +224,8 @@ public class DrivetrainGenerator extends ModelGenerator
 		return rv;
 	}
 
-	private void makeDynamics(AutomatonMode loc, String alpha, String k, double u_value)
+	public static void makeDynamics(Map<String, ExpressionInterval> flowDynamics, int theta,
+			boolean addTime, String alpha, String k_s, String u_str)
 	{
 		String firstGearAngVel = "x9";
 		String firstGear = "x8";
@@ -214,54 +236,50 @@ public class DrivetrainGenerator extends ModelGenerator
 			firstGear = "x5";
 		}
 
-		if (!forceHighInput)
-			loc.flowDynamics.put("t", new ExpressionInterval(1));
+		if (addTime)
+			flowDynamics.put("t", new ExpressionInterval(1));
 
-		String v = "k_K*(i*x4 - x7) + k_KD*(i*" + u_value + " - 1/J_m*(x2 - 1/i*" + k + "*(x1 - ("
-				+ alpha + ")) - b_m*x7)) + k_KI*(i*x3 - i*(x1 + " + firstGear + "))";
+		String v = "k_P*(gamma*x4 - x7) + " + //
+				"k_I*(gamma*x3 - gamma*(x1 + " + firstGear + ")) + " + //
+				"k_D*(gamma*" + u_str + " - 1/J_m*(x2 - 1/gamma*" + k_s + "*(x1 - (" + alpha
+				+ ")) - b_m*x7))";
 
-		loc.flowDynamics.put("x1", new ExpressionInterval("1/i*x7 - " + firstGearAngVel));
-		loc.flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));
-		loc.flowDynamics.put("x3", new ExpressionInterval("x4"));
-		loc.flowDynamics.put("x4", new ExpressionInterval(u_value));
-		loc.flowDynamics.put("x5", new ExpressionInterval("x6"));
+		flowDynamics.put("x1", new ExpressionInterval("1/gamma * x7 - " + firstGearAngVel));
+		flowDynamics.put("x2", new ExpressionInterval("(" + v + " - x2)/tau_eng"));
+		flowDynamics.put("x3", new ExpressionInterval("x4"));
+		flowDynamics.put("x4", new ExpressionInterval(u_str));
+		flowDynamics.put("x5", new ExpressionInterval("x6"));
 
 		String xBeforeLast = "x" + (7 + 2 * theta - 1);
 
-		loc.flowDynamics.put("x6",
-				new ExpressionInterval("1/J_l*(k_i*(" + xBeforeLast + " - x5) - b_l*x6)"));
+		if (theta == 0)
+			flowDynamics.put("x6",
+					new ExpressionInterval("1/J_l*(k_i*(x1 - (" + alpha + ")) - b_l*x6)"));
+		else
+			flowDynamics.put("x6",
+					new ExpressionInterval("1/J_l*(k_i*(" + xBeforeLast + " - x5) - b_l*x6)"));
 
-		loc.flowDynamics.put("x7", new ExpressionInterval(
-				"1/J_m*(x2 - 1/i*" + k + "*(x1 - (" + alpha + ")) - b_m*x7)"));
+		flowDynamics.put("x7", new ExpressionInterval(
+				"1/J_m*(x2 - 1/gamma*" + k_s + "*(x1 - (" + alpha + ")) - b_m*x7)"));
 
-		if (theta >= 1)
+		for (int t = 1; t <= theta; ++t)
 		{
-			loc.flowDynamics.put("x8", new ExpressionInterval("x9"));
+			int index = 7 + 2 * t - 1;
 
-			String nextOne = theta > 1 ? "x10" : "x5";
+			// variables from the perspective of x_8 (when theta == 1)
+			String x6 = "x" + (index - 2);
+			String x8 = "x" + index;
+			String x9 = "x" + (index + 1);
+			String x10 = "x" + (index + 2);
 
-			loc.flowDynamics.put("x9", new ExpressionInterval(
-					"J_i*(" + k + "*(x1 - (" + alpha + ")) - k_i*(x8 - " + nextOne + "))"));
-		}
+			flowDynamics.put("x" + index, new ExpressionInterval(x9));
 
-		if (theta >= 2)
-		{
-			for (int t = 2; t <= theta; ++t)
-			{
-				int index = 7 + 2 * t - 1;
+			String previousK = t == 1 ? k_s : "k_i";
+			String parenthesis1 = t == 1 ? "x1 - (" + alpha + ")" : x6 + " - " + x8;
+			String parenthesis2 = t == theta ? x8 + " - x5" : x8 + " - " + x10;
 
-				loc.flowDynamics.put("x" + index, new ExpressionInterval("x" + (index + 1)));
-
-				String nextOne = theta > t ? "x" + (index + 2) : "x5";
-
-				loc.flowDynamics.put("x" + (index + 1),
-						new ExpressionInterval("J_i*(k_i*(x" + (index - 2) + " - x" + index
-								+ ") - k_i*(x" + index + " - " + nextOne + "))"));
-
-				// loc1.flowDynamics.put("x10", new ExpressionInterval("x11"));
-				// loc1.flowDynamics.put("x11",
-				// new ExpressionInterval("J_i*(k_i*(x8 - x10) - k_i*(x10 - x5))"));
-			}
+			flowDynamics.put("x" + (index + 1), new ExpressionInterval("J_i*(" + previousK + "*("
+					+ parenthesis1 + ") - k_i*(" + parenthesis2 + ") - b_i * " + x9 + ")"));
 		}
 	}
 
