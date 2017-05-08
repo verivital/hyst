@@ -174,7 +174,7 @@ def run_check_stderr(params, stdin=None):
 
 def get_tool_path(filename, print_errors=True):
     '''
-    Get a path for tool's executable file. This will search directories on HYPYPATH, followed by PATH.
+    Get a path for tool's executable file. This will search directories on HYPY_PATH, followed by PATH.
 
     returns the full path to the tool, or None 
     '''
@@ -185,7 +185,7 @@ def get_tool_path(filename, print_errors=True):
     if os.path.exists(filename):
         rv = filename
     else:
-        for env_var_name in ["HYPYPATH", "PATH"]:
+        for env_var_name in ["HYPY_PATH", "PATH"]:
             env_var_value = os.environ.get(env_var_name)
 
             if env_var_value is None:
