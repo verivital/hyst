@@ -27,10 +27,16 @@ from sympy.functions.elementary.trigonometric import sin, cos, tan
 from sympy.core import symbols
 from sympy.polys import PolynomialError
 from sympy.polys.polyfuncs import horner
-# from sympy.mpmath import mpi as interval, mpf  // just mpmath on windows?
-# from sympy.mpmath import iv // just mpmath on windows?
-from mpmath import mpi as interval, mpf # just mpmath on windows?
-from mpmath import iv # just mpmath on windows?
+
+try:
+    # windows
+    from mpmath import mpi as interval, mpf
+    from mpmath import iv
+except:
+    # linux/other
+    from sympy.mpmath import mpi as interval, mpf
+    from sympy.mpmath import iv
+
 from multiprocessing import Pool
 import copy
 import scipy_optimize
