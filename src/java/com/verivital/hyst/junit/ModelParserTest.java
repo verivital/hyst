@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +51,7 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 @RunWith(Parameterized.class)
 public class ModelParserTest
 {
-	public static String UNIT_BASEDIR = "tests/unit/models/";
+	private String UNIT_BASEDIR;
 
 	@Parameters
 	public static Collection<Object[]> data()
@@ -61,6 +62,30 @@ public class ModelParserTest
 	public ModelParserTest(boolean block)
 	{
 		PythonBridge.setBlockPython(block);
+		
+UNIT_BASEDIR = "tests/unit/models/";
+		
+		File f;
+		try {
+			f = new File(UNIT_BASEDIR);
+			
+			if (!f.exists()) {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+			}
+		}
+		catch (Exception ex0) {
+			try {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+				f = new File(UNIT_BASEDIR); 
+			}
+			catch (Exception ex1) {
+				
+				//if (!f.exists()) {
+				//	throw new Exception("Bad unit test base directory: " +
+				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
+				//}
+			}
+		}
 	}
 
 	@Before

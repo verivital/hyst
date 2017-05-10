@@ -156,7 +156,7 @@ class Engine(object):
         hyst_path = get_tool_path('Hyst.jar')
 
         if hyst_path is None:
-            raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPY_PATH?')
+            raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPYPATH?')
 
         params = ['java', '-jar', hyst_path]
 
