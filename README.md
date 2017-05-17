@@ -17,6 +17,48 @@ HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to 
 
 THIS SOFTWARE WAS DEVELOPED WITH FUNDING BY AIR FORCE RESEARCH LABORATORY (AFRL) AND IS APPROVED FOR PUBLIC RELEASE. DISTRIBUTION A. Approved for public release; Distribution unlimited. (Approval AFRL PA case number 88ABW-2016-1014, 08 MAR 2016.)
 
+***********************************
+### Repeatability Evaluation Virtual Machine (REVM) with Tools Installed
+***********************************
+
+A VMWare virtual machine running Ubuntu is available with most of the supported tools already installed and with HyST set up. This allows easy use of HyST and the supported tools, including HyPy for scripting evaluation of benchmarks.
+
+The VM is downloadable from:
+
+With all tools (no Matlab):
+
+https://www.dropbox.com/s/oqnn6p9yvv7z1j8/hyst-2016-02-02.7z?dl=0
+
+We have a version that we may privately share with Matlab also set up that you are required to install your own license file to run.
+
+#### GitHub Setup on REVM
+
+The HyST github repository is at `~/hyst`. You need to set up your own GitHub username and an RSA public key to use GitHub with HyST (e.g., to pull latest updates from the current GitHub repository).
+
+Instructions for setting up git via an ssh RSA key are available here:
+
+https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
+
+The basic commandline instructions are:
+
+```
+cd ~/hyst
+
+git config --global user.name "ttj"
+
+git config --global user.name
+
+ssh-keygen -t rsa -b 4096 -C "your_github_email@example.com"
+
+eval $(ssh-agent -s)
+
+ssh-add ~/.ssh/id_rsa
+
+echo ~/.ssh/id_rsa.pub
+```
+
+Then copy the resultant RSA public key as a new SSH RSA key in GitHub.
+
 ************************************
 ### HYST USAGE
 ************************************
