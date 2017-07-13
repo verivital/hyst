@@ -35,7 +35,7 @@ After building Hyst.jar, you can run it as an executable .jar file with the -hel
 
 ```
 $ java -jar Hyst.jar -help
-Hyst v1.3 General Usage:
+Hyst v1.6 General Usage:
  -debug (-d)                            : print debug (and verbose) output
                                           (default: false)
  -generate (-gen) GEN_NAME GEN_PARAMS   : generate a model (rather than loading
