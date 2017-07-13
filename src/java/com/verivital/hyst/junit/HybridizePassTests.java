@@ -32,7 +32,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SpaceSplittingElement;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMTRawPass.SplittingElement;
@@ -50,7 +49,6 @@ public class HybridizePassTests
 {
 	private String UNIT_BASEDIR;
 
-	
 	@Before
 	public void setUpClass()
 	{
@@ -66,28 +64,34 @@ public class HybridizePassTests
 	public HybridizePassTests(boolean block)
 	{
 		PythonBridge.setBlockPython(block);
-		
+
 		UNIT_BASEDIR = "tests/unit/models/";
-		
+
 		File f;
-		try {
+		try
+		{
 			f = new File(UNIT_BASEDIR);
-			
-			if (!f.exists()) {
+
+			if (!f.exists())
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
 			}
 		}
-		catch (Exception ex0) {
-			try {
+		catch (Exception ex0)
+		{
+			try
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
-				f = new File(UNIT_BASEDIR); 
+				f = new File(UNIT_BASEDIR);
 			}
-			catch (Exception ex1) {
-				
-				//if (!f.exists()) {
-				//	throw new Exception("Bad unit test base directory: " +
-				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
-				//}
+			catch (Exception ex1)
+			{
+
+				// if (!f.exists()) {
+				// throw new Exception("Bad unit test base directory: " +
+				// UNIT_BASEDIR + " not found; full path tried: " + new
+				// File(UNIT_BASEDIR).getAbsolutePath());
+				// }
 			}
 		}
 	}
@@ -137,7 +141,7 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 
-		Hyst.debugMode = true;
+		// Hyst.debugMode = true;
 
 		RoundPrinter rp = new RoundPrinter(4);
 		Configuration c = makeSampleBaseConfiguration();
