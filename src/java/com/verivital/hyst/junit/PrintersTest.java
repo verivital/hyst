@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -63,13 +64,40 @@ public class PrintersTest
 	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
+	
+	private String UNIT_BASEDIR;
 
-	public PrintersTest(boolean block)
+	public PrintersTest(boolean block) throws Exception
 	{
 		PythonBridge.setBlockPython(block);
+		
+		UNIT_BASEDIR = "tests/unit/models/";
+		
+		File f;
+		try {
+			f = new File(UNIT_BASEDIR);
+			
+			if (!f.exists()) {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+			}
+		}
+		catch (Exception ex0) {
+			try {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+				f = new File(UNIT_BASEDIR); 
+			}
+			catch (Exception ex1) {
+				
+				//if (!f.exists()) {
+				//	throw new Exception("Bad unit test base directory: " +
+				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
+				//}
+			}
+		}
+
 	}
 
-	private String UNIT_BASEDIR = "tests/unit/models/";
+	
 
 	// tools to test here. Each test will run all of these
 	private static final ArrayList<ToolPrinter> printers;
@@ -488,7 +516,7 @@ public class PrintersTest
 		if (!PythonBridge.hasPython())
 			return;
 
-		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		String path = UNIT_BASEDIR + "hybridize_skiperror/";
 		SpaceExDocument doc = SpaceExImporter.importModels(path + "vanderpol_althoff.cfg",
 				path + "vanderpol_althoff.xml");
 		Configuration c = ModelParserTest.flatten(doc);

@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +48,9 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 @RunWith(Parameterized.class)
 public class HybridizePassTests
 {
+	private String UNIT_BASEDIR;
+
+	
 	@Before
 	public void setUpClass()
 	{
@@ -62,6 +66,30 @@ public class HybridizePassTests
 	public HybridizePassTests(boolean block)
 	{
 		PythonBridge.setBlockPython(block);
+		
+		UNIT_BASEDIR = "tests/unit/models/";
+		
+		File f;
+		try {
+			f = new File(UNIT_BASEDIR);
+			
+			if (!f.exists()) {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+			}
+		}
+		catch (Exception ex0) {
+			try {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+				f = new File(UNIT_BASEDIR); 
+			}
+			catch (Exception ex1) {
+				
+				//if (!f.exists()) {
+				//	throw new Exception("Bad unit test base directory: " +
+				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
+				//}
+			}
+		}
 	}
 
 	/**
@@ -802,7 +830,7 @@ public class HybridizePassTests
 		if (!PythonBridge.hasPython())
 			return;
 
-		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		String path = UNIT_BASEDIR + "hybridize_skiperror/";
 		SpaceExDocument doc = SpaceExImporter.importModels(path + "vanderpol_althoff.cfg",
 				path + "vanderpol_althoff.xml");
 		Configuration c = ModelParserTest.flatten(doc);
