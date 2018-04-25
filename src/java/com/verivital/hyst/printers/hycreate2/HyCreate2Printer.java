@@ -70,8 +70,8 @@ public class HyCreate2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Sets up internal data structures for HyCreate output. The output is done
-	 * using an XML printer on this data structure.
+	 * Sets up internal data structures for HyCreate output. The output is done using an XML printer
+	 * on this data structure.
 	 * 
 	 * @param baseName
 	 * @param isSimulation
@@ -255,9 +255,8 @@ public class HyCreate2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Get the condition (guard/invariant) code by iterating all min / max
-	 * combinations of variables. If any of them is satisfied, the condition is
-	 * deemed true
+	 * Get the condition (guard/invariant) code by iterating all min / max combinations of
+	 * variables. If any of them is satisfied, the condition is deemed true
 	 * 
 	 * @param exp
 	 *            the condition expression
@@ -305,8 +304,8 @@ public class HyCreate2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Get the code for checking a condition. If this is linear, it's exact.
-	 * Otherwise we iterate min/max combinations
+	 * Get the code for checking a condition. If this is linear, it's exact. Otherwise we iterate
+	 * min/max combinations
 	 * 
 	 * @param e
 	 *            the condition expresssion
@@ -432,8 +431,8 @@ public class HyCreate2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Get the HyCreate reset text. Only a small class of expressions are
-	 * directly supported: x := constant + [a, b] or x := var + [a, b]
+	 * Get the HyCreate reset text. Only a small class of expressions are directly supported: x :=
+	 * constant + [a, b] or x := var + [a, b]
 	 * 
 	 * @param exp
 	 *            the reset map

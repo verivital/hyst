@@ -23,7 +23,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 	{
 		constFormatter = new DecimalFormat("", new DecimalFormatSymbols(Locale.ENGLISH));
 		constFormatter.setGroupingUsed(false);
-		// constFormatter.setMinimumFractionDigits(1);
+		constFormatter.setMinimumFractionDigits(1);
 		constFormatter.setMinimumIntegerDigits(1);
 
 		for (Operator o : Operator.values())
@@ -133,12 +133,12 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 			if (op.equals(Operator.NEGATIVE) || op.equals(Operator.LOGICAL_NOT))
 			{
 				if (child instanceof Operation && child.asOperation().children.size() > 1)
-					rv = opNames.get(o.op) + "(" + print(child) + ")";
+					rv = printOperator(o.op) + "(" + print(child) + ")";
 				else
-					rv = opNames.get(o.op) + "" + print(child);
+					rv = printOperator(o.op) + "" + print(child);
 			}
 			else
-				rv = opNames.get(o.op) + "(" + print(child) + ")";
+				rv = printOperator(o.op) + "(" + print(child) + ")";
 		}
 		else if (children.size() == 2)
 		{
@@ -182,7 +182,7 @@ public class DefaultExpressionPrinter extends ExpressionPrinter
 			else
 				rv += print(leftExp);
 
-			rv += " " + opNames.get(o.op) + " ";
+			rv += " " + printOperator(o.op) + " ";
 
 			if (needParenRight)
 				rv += "(" + print(rightExp) + ")";

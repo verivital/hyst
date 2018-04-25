@@ -65,16 +65,14 @@ public class AffineOptimize
 	}
 
 	/**
-	 * Perform an optimization in order to find out the differences in dynamics,
-	 * for example, between a nonlinear derivative and its linear approximation.
+	 * Perform an optimization in order to find out the differences in dynamics, for example,
+	 * between a nonlinear derivative and its linear approximation.
 	 * 
 	 * @param optimizationType
-	 *            one of {"basinhopping", "kodiak", "interval", "intervalXXX"
-	 *            where XXX is a real number describing the maximum
-	 *            overapproximation error
+	 *            one of {"basinhopping", "kodiak", "interval", "intervalXXX" where XXX is a real
+	 *            number describing the maximum overapproximation error
 	 * @param params
-	 *            [in/out] the list of OptimizationParams to optimize. Result is
-	 *            stored here
+	 *            [in/out] the list of OptimizationParams to optimize. Result is stored here
 	 */
 	public static void optimizeDynamics(String optimizationType, List<OptimizationParams> params)
 	{

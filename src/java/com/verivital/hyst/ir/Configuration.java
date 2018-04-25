@@ -10,14 +10,13 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.util.AutomatonUtil;
 
 /**
- * A configuration is a hybrid automaton (network or base component) plus the
- * settings (init states and such)
+ * A configuration is a hybrid automaton (network or base component) plus the settings (init states
+ * and such)
  * 
- * Class validation guarantees: settings is not null root is not null init is
- * not null and size > 0, each String is a mode in the automaton; expression may
- * be null (these can be rejected in ToolPrinter) forbidden is not null and if
- * size > 0, each String is a mode in the automaton; expression may be null
- * (these can be rejected in ToolPrinter)
+ * Class validation guarantees: settings is not null root is not null init is not null and size > 0,
+ * each String is a mode in the automaton; expression may be null (these can be rejected in
+ * ToolPrinter) forbidden is not null and if size > 0, each String is a mode in the automaton;
+ * expression may be null (these can be rejected in ToolPrinter)
  *
  */
 public class Configuration
@@ -55,6 +54,11 @@ public class Configuration
 		if (!Configuration.DO_VALIDATION)
 			return;
 
+		if (root == null)
+			throw new AutomatonValidationException("root component cannot be null");
+
+		root.validate();
+
 		Collection<String> validVarNames = root.getAllVariables();
 		validVarNames.addAll(root.getAllConstants().keySet());
 
@@ -66,9 +70,6 @@ public class Configuration
 			throw new AutomatonValidationException("settings cannot be null");
 
 		settings.validate();
-
-		if (root == null)
-			throw new AutomatonValidationException("root component cannot be null");
 
 		// only root has a null parent and no instance name
 		if (root.instanceName != null)
@@ -108,8 +109,6 @@ public class Configuration
 			if (e == null)
 				throw new AutomatonValidationException("Forbidden states contain null expression");
 		}
-
-		root.validate();
 	}
 
 	private void validateMap(LinkedHashMap<String, Expression> map, String name,
@@ -155,8 +154,7 @@ public class Configuration
 	 *            the missing variable
 	 * @param validVarNames
 	 *            the valid variable names
-	 * @return a string (may be empty) describing the best guess, for the error
-	 *         message
+	 * @return a string (may be empty) describing the best guess, for the error message
 	 */
 	private String getBestVariableGuess(String var, Collection<String> validVarNames)
 	{

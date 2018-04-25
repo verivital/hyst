@@ -3,12 +3,10 @@ package com.verivital.hyst.grammar.formula;
 /**
  * General parent class for expressions.
  * 
- * Expressions can be Constants, Variables, or Operations (like +, -, &&, ==, or
- * cos)
+ * Expressions can be Constants, Variables, or Operations (like +, -, &&, ==, or cos)
  * 
- * To print expressions differently, you should inherit from ExpressionPrinter,
- * override any methods you want to change, and then assign
- * Expression.expressionPrinter
+ * To print expressions differently, you should inherit from ExpressionPrinter, override any methods
+ * you want to change, and then assign Expression.expressionPrinter
  */
 public abstract class Expression
 {
@@ -75,9 +73,8 @@ public abstract class Expression
 	}
 
 	/**
-	 * Create an AND operation with this and the given expression. This is a
-	 * short-circuited AND which will simplify if either expression is TRUE or
-	 * FALSE.
+	 * Create an AND operation with this and the given expression. This is a short-circuited AND
+	 * which will simplify if either expression is TRUE or FALSE.
 	 * 
 	 * @param e
 	 *            the other expression
@@ -97,6 +94,25 @@ public abstract class Expression
 			rv = i;
 		else
 			rv = new Operation(Operator.AND, i, j);
+
+		return rv;
+	}
+
+	public static Expression or(Expression i, Expression j)
+	{
+		Expression rv;
+
+		if (i == null || j == null)
+			throw new RuntimeException("parameter to Expression.or() was null");
+
+		if (i == Constant.TRUE || j == Constant.TRUE)
+			rv = Constant.TRUE;
+		else if (i == Constant.FALSE)
+			rv = j;
+		else if (j == Constant.FALSE)
+			rv = i;
+		else
+			rv = new Operation(Operator.OR, i, j);
 
 		return rv;
 	}

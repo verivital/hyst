@@ -3,9 +3,9 @@ package de.uni_freiburg.informatik.swt.sxhybridautomaton;
 import java.util.ArrayList;
 
 /**
- * Waypoints are used by the Model Editor to further specify the shape of a
- * Transition's arrow. They consist of a series of points before and after the
- * middle point of the Transition arrow given as double x double coordinates.
+ * Waypoints are used by the Model Editor to further specify the shape of a Transition's arrow. They
+ * consist of a series of points before and after the middle point of the Transition arrow given as
+ * double x double coordinates.
  * 
  * @author Christopher Dillo (dilloc@informatik.uni-freiburg.de)
  *
@@ -22,8 +22,7 @@ public class UIWaypoints
 	 * @param index
 	 *            Number of the waypoint (starting at 0)
 	 * @param isBefore
-	 *            Get a point BEFORE (true) or AFTER (false) the arrow's middle
-	 *            point
+	 *            Get a point BEFORE (true) or AFTER (false) the arrow's middle point
 	 * @return The waypoint's position or (0, 0) if the index is out of bounds.
 	 */
 	public UIPosition getWaypoint(int index, boolean isBefore)
@@ -38,8 +37,7 @@ public class UIWaypoints
 	 * Get the number of waypoints in a list
 	 * 
 	 * @param isBefore
-	 *            Get the number of points BEFORE (true) or AFTER (false) the
-	 *            arrow's middle point
+	 *            Get the number of points BEFORE (true) or AFTER (false) the arrow's middle point
 	 * @return The number of waypoints in the requested list.
 	 */
 	public int getCount(boolean isBefore)
@@ -55,8 +53,8 @@ public class UIWaypoints
 	 * @param waypoint
 	 *            The new waypoint's position
 	 * @param insertBefore
-	 *            Insert into the list of points BEFORE (true) or AFTER (false)
-	 *            the arrow's middle point
+	 *            Insert into the list of points BEFORE (true) or AFTER (false) the arrow's middle
+	 *            point
 	 */
 	public void addWaypoint(UIPosition waypoint, boolean insertBefore)
 	{
@@ -72,8 +70,8 @@ public class UIWaypoints
 	 * @param Y
 	 *            The new waypoint's Y position
 	 * @param insertBefore
-	 *            Insert into the list of points BEFORE (true) or AFTER (false)
-	 *            the arrow's middle point
+	 *            Insert into the list of points BEFORE (true) or AFTER (false) the arrow's middle
+	 *            point
 	 */
 	public void addWaypoint(double X, double Y, boolean insertBefore)
 	{

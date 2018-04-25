@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.verivital.hyst.generators.DrivetrainGenerator;
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
@@ -30,6 +32,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -41,9 +44,8 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 /**
- * A unit test suite for testing various types of printers. While
- * ModelParserTest focuses on validating that the models are input correctly,
- * this suite instead focuses on exporting models.
+ * A unit test suite for testing various types of printers. While ModelParserTest focuses on
+ * validating that the models are input correctly, this suite instead focuses on exporting models.
  * 
  * @author Stanley Bak
  *
@@ -62,13 +64,40 @@ public class PrintersTest
 	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
+	
+	private String UNIT_BASEDIR;
 
-	public PrintersTest(boolean block)
+	public PrintersTest(boolean block) throws Exception
 	{
 		PythonBridge.setBlockPython(block);
+		
+		UNIT_BASEDIR = "tests/unit/models/";
+		
+		File f;
+		try {
+			f = new File(UNIT_BASEDIR);
+			
+			if (!f.exists()) {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+			}
+		}
+		catch (Exception ex0) {
+			try {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+				f = new File(UNIT_BASEDIR); 
+			}
+			catch (Exception ex1) {
+				
+				//if (!f.exists()) {
+				//	throw new Exception("Bad unit test base directory: " +
+				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
+				//}
+			}
+		}
+
 	}
 
-	private String UNIT_BASEDIR = "tests/unit/models/";
+	
 
 	// tools to test here. Each test will run all of these
 	private static final ArrayList<ToolPrinter> printers;
@@ -83,6 +112,8 @@ public class PrintersTest
 		addPrinter(new HyCreate2Printer());
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
+		addPrinter(new PySimPrinter());
+		addPrinter(new HylaaPrinter());
 	};
 
 	private static void addPrinter(ToolPrinter p)
@@ -91,12 +122,11 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * model within the tests/unit/models/ directory
+	 * Test all the printers defined in the printers array on the passed-in model within the
+	 * tests/unit/models/ directory
 	 * 
 	 * @param baseName
-	 *            the name used to construct the directory, and names of the
-	 *            .xml and .cfg files
+	 *            the name used to construct the directory, and names of the .xml and .cfg files
 	 */
 	private void runAllPrintersOnModel(String baseName)
 	{
@@ -108,8 +138,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * model
+	 * Test all the printers defined in the printers array on the passed-in model
 	 * 
 	 * @param path
 	 *            the directory path, ends in '/'
@@ -155,8 +184,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test all the printers defined in the printers array on the passed-in
-	 * hybrid automaton
+	 * Test all the printers defined in the printers array on the passed-in hybrid automaton
 	 * 
 	 * @param ha
 	 *            the automaton to print
@@ -211,8 +239,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with havoc flows in the init
-	 * state
+	 * Printers should be able to print a model with havoc flows in the init state
 	 */
 	@Test
 	public void testPrintHavocInitFlows()
@@ -233,8 +260,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with havoc flows in a state that
-	 * occurs after a transition
+	 * Printers should be able to print a model with havoc flows in a state that occurs after a
+	 * transition
 	 */
 	@Test
 	public void testPrintHavocTransitionFlows()
@@ -243,8 +270,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * Printers should be able to print a model with nondeterministic
-	 * assignments and deterministic flows
+	 * Printers should be able to print a model with nondeterministic assignments and deterministic
+	 * flows
 	 */
 	@Test
 	public void testPrintNondeterministicAssignments()
@@ -287,8 +314,7 @@ public class PrintersTest
 	}
 
 	/**
-	 * Test the conversion of multiple initial modes for use in the Flow*
-	 * printer
+	 * Test the conversion of multiple initial modes for use in the Flow* printer
 	 */
 	@Test
 	public void testFlowConvertMultipleInitialModes()
@@ -325,8 +351,8 @@ public class PrintersTest
 	}
 
 	/**
-	 * The printers should be able to print a hybrid automaton which has
-	 * interval expressions in the flow dynamics
+	 * The printers should be able to print a hybrid automaton which has interval expressions in the
+	 * flow dynamics
 	 */
 	@Test
 	public void testPrintIntervalExpression()
@@ -406,8 +432,8 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 		Assert.assertFalse("found '^' in HyCreate output", out.contains("^"));
-		Assert.assertTrue("didn't find 'Math.pow($t, 2)' in HyCreate output",
-				out.contains("Math.pow($t, 2)"));
+		Assert.assertTrue("didn't find 'Math.pow($t, 2.0)' in HyCreate output",
+				out.contains("Math.pow($t, 2.0)"));
 	}
 
 	@Test
@@ -429,8 +455,8 @@ public class PrintersTest
 
 		Assert.assertTrue("some output exists", out.length() > 10);
 
-		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5 | t >= 5) "
-				+ "| loc(fakeinput) == loc3 & t <= 5\"";
+		String expected = "forbidden = \"loc(fakeinput) == loc1 & (x >= 5.0 | t >= 5.0) "
+				+ "| loc(fakeinput) == loc3 & t <= 5.0\"";
 		Assert.assertTrue("forbidden is correct (disjunction)", out.contains(expected));
 	}
 
@@ -490,7 +516,7 @@ public class PrintersTest
 		if (!PythonBridge.hasPython())
 			return;
 
-		String path = ModelParserTest.UNIT_BASEDIR + "hybridize_skiperror/";
+		String path = UNIT_BASEDIR + "hybridize_skiperror/";
 		SpaceExDocument doc = SpaceExImporter.importModels(path + "vanderpol_althoff.cfg",
 				path + "vanderpol_althoff.xml");
 		Configuration c = ModelParserTest.flatten(doc);
@@ -532,7 +558,6 @@ public class PrintersTest
 		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 
-	@Test
 	public void testConstantInResetRange()
 	{
 		// model with constant in reset range. There's no good internal
@@ -674,5 +699,176 @@ public class PrintersTest
 		Assert.assertTrue("init has both mode's x range limits: x in [-2, 1.5]",
 				fp.outputString.toString().contains("x in [-2, 1.5]"));
 
+	}
+
+	@Test
+	public void testFlowstarStrictIneq()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		// printing a strict inequality '<' in flow* should convert it to a
+		// non-strict one '<='
+
+		String[][] dynamics = { { "x", "1", "0" }, { "y", "1", "0" } };
+		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
+
+		BaseComponent ha = ((BaseComponent) c.root);
+
+		AutomatonMode off = ha.createMode("off");
+		off.flowDynamics.put("x", new ExpressionInterval(1));
+		off.flowDynamics.put("y", new ExpressionInterval(2));
+		off.invariant = Constant.TRUE;
+
+		AutomatonMode on = ha.modes.get("on");
+
+		AutomatonTransition at = ha.createTransition(on, off);
+		at.guard = FormulaParser.parseGuard("x < 1");
+
+		c.validate();
+
+		Assert.assertEquals("two modes", 2, ha.modes.size());
+
+		// try to print to Flow*
+		FlowstarPrinter fp = new FlowstarPrinter();
+
+		fp.setOutputNone();
+
+		try
+		{
+			fp.print(c, "", "filename.xml");
+			Assert.fail("Expected exception due to strict inequality operator.");
+		}
+		catch (AutomatonExportException e)
+		{
+			Assert.assertTrue("exception was due to strict inequality",
+					e.toString().contains("doesn't support operator"));
+		}
+	}
+
+	@Test
+	public void testPrintHeli()
+	{
+		runAllPrintersOnModel("heli_large");
+	}
+
+	/**
+	 * Hylaa should be able to print the drivetrain model, after python simplification
+	 */
+	@Test
+	public void testHylaaPrintDrivetrain()
+	{
+		if (!PythonBridge.hasPython())
+			return;
+
+		DrivetrainGenerator gen = new DrivetrainGenerator();
+
+		String param = "-theta 2";
+		Configuration c = gen.generate(param);
+
+		Assert.assertEquals("12 variables", 12, c.root.variables.size());
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "-python_simplify", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+	}
+
+	/**
+	 * Hylaa should be able to print the input osciallator model model
+	 */
+	@Test
+	public void testHylaaPrintInputOscillator()
+	{
+		String path = UNIT_BASEDIR + "input_oscillator/input_oscillator";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		// two error conditions
+		String cond1 = "trans.condition_list.append(LinearConstraint([-1, -0], -6.5)) # x >= 6.5";
+		String cond2 = "trans.condition_list.append(LinearConstraint([1, 0], -10)) # x <= -10.0";
+
+		Assert.assertTrue("first error condition exists", out.contains(cond1));
+		Assert.assertTrue("second error condition exists", out.contains(cond2));
+	}
+
+	/**
+	 * Hylaa should be able to print the motor w/input model
+	 */
+	@Test
+	public void testHylaaPrintMotor()
+	{
+		String path = UNIT_BASEDIR + "motor/mcs_8";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new HylaaPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		Assert.assertTrue("has error mode in outout", out.contains("error"));
+		Assert.assertTrue("has input information in outout", out.contains("set_inputs"));
+	}
+
+	/**
+	 * Flow* should correctly print time-varying inputs
+	 */
+	@Test
+	public void testFlowstarInputs()
+	{
+		String path = UNIT_BASEDIR + "simple_inputs/simple_inputs";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
+
+		Assert.assertFalse("inputs in invariants were not removed",
+				out.contains("-0.5 - (u1) <= 0"));
+		Assert.assertTrue("correctly converted inputs", out.contains("x' = y + [-0.5, 0.5]"));
+	}
+
+	@Test
+	public void testPysimPrintPdLutLinear()
+	{
+		String cfgPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.cfg";
+		String xmlPath = UNIT_BASEDIR + "pd_lut_linear/pd_lut_linear.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+		Configuration config = ConfigurationMaker.fromSpaceEx(doc, componentTemplates);
+
+		ToolPrinter printer = new PySimPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		// make sure empty hyperrectangle is not printed
+		Assert.assertTrue("some output is printed", out.length() > 10);
+		Assert.assertFalse("empty hyperrectangle is not printed",
+				out.contains("HyperRectangle([])"));
 	}
 }

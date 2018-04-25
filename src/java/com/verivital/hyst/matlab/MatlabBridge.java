@@ -21,17 +21,16 @@ import matlabcontrol.MatlabProxyFactoryOptions;
 /**
  * This class is java <-> matlab interface using a matlab proxy
  * 
- * TODO: could operate via stdin / stdout and matlab interactive mode TODO: look
- * at whether we can do everything we need to do by calling matlab in its
- * console mode as this will probably speed things up a lot (no GUI, etc.)
+ * TODO: could operate via stdin / stdout and matlab interactive mode TODO: look at whether we can
+ * do everything we need to do by calling matlab in its console mode as this will probably speed
+ * things up a lot (no GUI, etc.)
  * 
- * It is a singleton, use getInstance() to get an instance of the bridge. The
- * bridge is reused for any passes or printers which use it, so don't put it
- * into an inconsistent state.
+ * It is a singleton, use getInstance() to get an instance of the bridge. The bridge is reused for
+ * any passes or printers which use it, so don't put it into an inconsistent state.
  * 
- * Based on python bridge TODO: generalize and refactor bridges to move common
- * functionality into a parent class (like ToolPrinter) TODO: check duplication
- * between Python bridge and the Z3Py printer used for QBMC
+ * Based on python bridge TODO: generalize and refactor bridges to move common functionality into a
+ * parent class (like ToolPrinter) TODO: check duplication between Python bridge and the Z3Py
+ * printer used for QBMC
  * 
  * @author Taylor Johnson (December 2015)
  *
@@ -41,9 +40,6 @@ public class MatlabBridge
 	private static MatlabBridge instance = null;
 
 	private MatlabProxyFactory factory;
-
-	// todo: add required package checking
-	private static final String[] REQUIRED_PACKAGES = { "sympy", "scipy" };
 
 	private static final int DEFAULT_TIMEOUT = 30000; // 30 seconds: may have to
 														// start matlab up
@@ -63,8 +59,8 @@ public class MatlabBridge
 	private static Status statusMatlab = Status.UNKNOWN;
 
 	/**
-	 * This sets whether matlab should be blocked (pretend it doesn't exist).
-	 * This is useful for unit testing.
+	 * This sets whether matlab should be blocked (pretend it doesn't exist). This is useful for
+	 * unit testing.
 	 * 
 	 * @param val
 	 */
@@ -199,8 +195,7 @@ public class MatlabBridge
 		openProcess();
 
 		/*
-		 * log("Reading Matlab preamble"); String preamble =
-		 * readPreamble(timeoutMs);
+		 * log("Reading Matlab preamble"); String preamble = readPreamble(timeoutMs);
 		 * 
 		 * if (!preamble.startsWith("Python 2.7")) warn(
 		 * "Python 2.7 was not detected in python interpreter preamble. " +
@@ -215,9 +210,9 @@ public class MatlabBridge
 		// send("import sys");
 		// send("sys.ps2 = ''");
 		/*
-		 * for (String pack : REQUIRED_PACKAGES) { try { send("import " + pack);
-		 * } catch (AutomatonExportException e) { error(
-		 * "Python import failed on required package '" + pack + "'"); } }
+		 * for (String pack : REQUIRED_PACKAGES) { try { send("import " + pack); } catch
+		 * (AutomatonExportException e) { error( "Python import failed on required package '" + pack
+		 * + "'"); } }
 		 */
 	}
 
@@ -250,11 +245,6 @@ public class MatlabBridge
 		close();
 
 		throw new AutomatonExportException(description, e);
-	}
-
-	private void warn(String description)
-	{
-		System.err.println("Warning: " + description);
 	}
 
 	private void close()
@@ -395,13 +385,11 @@ public class MatlabBridge
 
 	/*
 	 * private static boolean isInsideJar() { return
-	 * MatlabBridge.class.getResource("MatlaBridge.class").toString().startsWith
-	 * ("jar:"); }
+	 * MatlabBridge.class.getResource("MatlaBridge.class").toString().startsWith ("jar:"); }
 	 */
 
 	/**
-	 * Read the python preamble off of stderr. It ends when the prompy '>>> ' is
-	 * detected.
+	 * Read the python preamble off of stderr. It ends when the prompy '>>> ' is detected.
 	 * 
 	 * @return the preamble read from stderr
 	 */
@@ -476,8 +464,7 @@ public class MatlabBridge
 	 * Read stdout until the prompt '>>> ' is given on stderr
 	 * 
 	 * @param quitOnStderr
-	 *            should we raise an exception if stderr output is detected
-	 *            other than the prompt?
+	 *            should we raise an exception if stderr output is detected other than the prompt?
 	 * @return output the received stdout / stderr strings
 	 */
 	private String readUntilPrompt()
@@ -617,14 +604,12 @@ public class MatlabBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * 
 	 * @param cmd
-	 *            the command to send (without the trailing newline, which is
-	 *            automatically added)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (without the trailing newline, which is automatically added)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	private String sendAndWait(String s)
 	{
@@ -666,14 +651,12 @@ public class MatlabBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout
 	 * 
 	 * @param cmd
-	 *            the command to send (without the trailing newline, which is
-	 *            automatically added)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (without the trailing newline, which is automatically added)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	public String send(String s)
 	{
@@ -681,17 +664,16 @@ public class MatlabBridge
 	}
 
 	/**
-	 * Send a string over stdin to the python interpreter and get the result
-	 * printed from stdout.
+	 * Send a string over stdin to the python interpreter and get the result printed from stdout.
 	 * 
-	 * This version allows the string to end with a newline, which is typically
-	 * an error, but may be necessary for things like function declarations
+	 * This version allows the string to end with a newline, which is typically an error, but may be
+	 * necessary for things like function declarations
 	 * 
 	 * @param cmd
-	 *            the command to send (trailing newline is automatically added,
-	 *            so that your string will have two trailing newlines)
-	 * @return the output from stdout until the next prompt. May be the empty
-	 *         string, but never null.
+	 *            the command to send (trailing newline is automatically added, so that your string
+	 *            will have two trailing newlines)
+	 * @return the output from stdout until the next prompt. May be the empty string, but never
+	 *         null.
 	 */
 	public String sendWithTrailingNewline(String s)
 	{

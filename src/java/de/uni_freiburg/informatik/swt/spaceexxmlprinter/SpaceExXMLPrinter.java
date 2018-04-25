@@ -66,8 +66,8 @@ public class SpaceExXMLPrinter
 	private Document mXMLDocument;
 
 	/**
-	 * Initialize a new SpaceExXMLPrinter with a document, which will be
-	 * translated into a SpaceEx-compatible XML DOM
+	 * Initialize a new SpaceExXMLPrinter with a document, which will be translated into a
+	 * SpaceEx-compatible XML DOM
 	 * 
 	 * @param document
 	 */
@@ -647,7 +647,7 @@ public class SpaceExXMLPrinter
 	 * 
 	 * @param filename
 	 */
-	public String getCFGString()
+	public String getCFGString(boolean skipTol)
 	{
 		StringBuffer rv = new StringBuffer();
 
@@ -656,14 +656,21 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "system", config.systemID);
 		appendCfgString(rv, "scenario", config.scenario); // was supp
 		appendCfgString(rv, "directions", config.directions);
-		appendCfgString(rv, "sampling-time", new Double(config.samplingTime).toString());
+		appendCfgString(rv, "set-aggregation", config.aggregation);
+
+		if (config.flowpipeTol > 0)
+			appendCfgString(rv, "flowpipe-tolerance", Double.toString(config.flowpipeTol));
+
+		appendCfgString(rv, "sampling-time", Double.toString(config.samplingTime).toString());
 		appendCfgString(rv, "time-horizon", Double.toString(config.timeHorizon));
 		appendCfgString(rv, "iter-max", Integer.toString(config.maxIterations));
 		appendCfgString(rv, "output-format", config.outputFormat);
-		appendCfgString(rv, "rel-err", "1.0e-12");
-		appendCfgString(rv, "abs-err", "1.0e-13");
-		appendCfgString(rv, "flowpipe-tolerance", "0.001");
-		appendCfgString(rv, "set-aggregation", "chull");
+
+		if (!skipTol)
+		{
+			appendCfgString(rv, "rel-err", "1.0e-12");
+			appendCfgString(rv, "abs-err", "1.0e-13");
+		}
 
 		if (config.timeTriggered)
 			appendCfgString(rv, "map-zero-duration-jump-sets", "true");
@@ -773,8 +780,8 @@ public class SpaceExXMLPrinter
 	}
 
 	/**
-	 * Compatible format: No grouping, dot as decimal seperator, at least one
-	 * digit before and after the dot
+	 * Compatible format: No grouping, dot as decimal seperator, at least one digit before and after
+	 * the dot
 	 * 
 	 * @param value
 	 * @return
@@ -794,8 +801,8 @@ public class SpaceExXMLPrinter
 	}
 
 	/**
-	 * Same as doubleToString(), except that no floating point part is enforced
-	 * (1.0 will be returned as "1").
+	 * Same as doubleToString(), except that no floating point part is enforced (1.0 will be
+	 * returned as "1").
 	 * 
 	 * @param value
 	 * @return

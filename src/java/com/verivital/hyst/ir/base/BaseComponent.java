@@ -2,13 +2,14 @@ package com.verivital.hyst.ir.base;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
+import com.verivital.hyst.grammar.formula.Operation;
+import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonValidationException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
@@ -18,11 +19,11 @@ import com.verivital.hyst.util.AutomatonUtil;
 /**
  * Main (flattened) hybrid automaton class for the internal representation.
  * 
- * After parsing a model into the intermediate representation, the following
- * guarantees are provided: name is not null
+ * After parsing a model into the intermediate representation, the following guarantees are
+ * provided: name is not null
  * 
- * modes is not null, and there is at least one mode in modes transitions is not
- * null, but may be empty
+ * modes is not null, and there is at least one mode in modes transitions is not null, but may be
+ * empty
  * 
  * labels (exported labels) must match at least one label in a transition
  * 
@@ -37,10 +38,9 @@ public class BaseComponent extends Component
 	public ArrayList<AutomatonTransition> transitions = new ArrayList<AutomatonTransition>();
 
 	/**
-	 * Create a new mode in this hybrid automaton. By default the invariant is
-	 * null (must be manually set) and the flows are x'=null for all x (these
-	 * must be assigned), or flows can be set to null and the mode's urgent flag
-	 * enabled
+	 * Create a new mode in this hybrid automaton. By default the invariant is null (must be
+	 * manually set) and the flows are x'=null for all x (these must be assigned), or flows can be
+	 * set to null and the mode's urgent flag enabled
 	 * 
 	 * @param name
 	 *            a name for the mode (must be unique)
@@ -59,8 +59,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Create a new mode in this hybrid automaton. By default the invariant is
-	 * null (must be manually set) and the flows are x'=<allDynamics>
+	 * Create a new mode in this hybrid automaton. By default the invariant is null (must be
+	 * manually set) and the flows are x'=<allDynamics>
 	 * 
 	 * @param name
 	 *            a name for the mode (must be unique)
@@ -110,8 +110,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Create a new transition in this hybrid automaton. Guard is initially
-	 * null; be sure to assign it or validation will fail.
+	 * Create a new transition in this hybrid automaton. Guard is initially null; be sure to assign
+	 * it or validation will fail.
 	 * 
 	 * @param from
 	 *            the source
@@ -133,8 +133,8 @@ public class BaseComponent extends Component
 	}
 
 	/**
-	 * Check if the guarantees expected of this class are met. This is run prior
-	 * to any printing procedures.
+	 * Check if the guarantees expected of this class are met. This is run prior to any printing
+	 * procedures.
 	 * 
 	 * @throws AutomatonValidationException
 	 *             if guarantees are violated
@@ -223,6 +223,49 @@ public class BaseComponent extends Component
 							+ firstModeFlows + ") differ from mode '" + name + "' (" + flows + ")");
 				}
 			}
+
+			for (Entry<String, ExpressionInterval> entry : am.flowDynamics.entrySet())
+			{
+				Expression exp = entry.getValue().getExpression();
+
+				try
+				{
+					checkExpression(exp);
+				}
+				catch (AutomatonValidationException ave)
+				{
+					throw new AutomatonValidationException("BaseComponent "
+							+ getPrintableInstanceName() + ": Flow in mode '" + am.name
+							+ "' for variable '" + entry.getKey() + "'='" + exp.toDefaultString()
+							+ "' uses a variable/constant not in the component. "
+							+ ave.getMessage());
+				}
+			}
+		}
+	}
+
+	/**
+	 * Checks that Variables in an Expression are defined in the component.
+	 * 
+	 * @param e
+	 *            the expression to check
+	 */
+	private void checkExpression(Expression e)
+	{
+		if (e instanceof Variable)
+		{
+			Variable v = (Variable) e;
+
+			if (!variables.contains(v.name) && !constants.containsKey(v.name))
+				throw new AutomatonValidationException(
+						"Variable/constant not in automaton: '" + v.name + "'");
+		}
+		else if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			for (Expression child : o.children)
+				checkExpression(child);
 		}
 	}
 
@@ -257,7 +300,10 @@ public class BaseComponent extends Component
 		ArrayList<String> rv = new ArrayList<String>(variables.size());
 
 		for (String v : variables)
-			rv.add(getFullyQualifiedVariableName(v));
+		{
+			String fullName = getFullyQualifiedVariableName(v);
+			rv.add(fullName);
+		}
 
 		return rv;
 	}
@@ -288,7 +334,7 @@ public class BaseComponent extends Component
 	 */
 	public Collection<String> getAllNames()
 	{
-		Collection<String> rv = new HashSet<String>();
+		Collection<String> rv = new ArrayList<String>();
 
 		rv.addAll(variables);
 		rv.addAll(constants.keySet());
@@ -304,8 +350,7 @@ public class BaseComponent extends Component
 	 *            the mode from
 	 * @param to
 	 *            the mode to
-	 * @return the first transition between modes named 'from' and 'to', or null
-	 *         if not found
+	 * @return the first transition between modes named 'from' and 'to', or null if not found
 	 */
 	public AutomatonTransition findTransition(String from, String to)
 	{

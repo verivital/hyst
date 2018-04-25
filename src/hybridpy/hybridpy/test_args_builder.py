@@ -31,7 +31,7 @@ class TestArgsBuilder(unittest.TestCase):
                     '-error', 'on', 'x >= 80',
                     '-modes', 'on', 'true', '1.2 * x', 'x * t', 'off', 't <= 10', '0', '0',
                     '-transitions', 'on', 'off', 'x <= t', 't', '1'
-                    ]
+                   ]
 
         expected = " ".join(["\"" + s + "\"" if " " in s else s for s in sub_args])
         
@@ -55,5 +55,29 @@ class TestArgsBuilder(unittest.TestCase):
 
         self.assertEqual(res['code'], hypy.Engine.SUCCESS)
 
+    def test_build_nondeterministic(self):
+        'generate a model with nondeterministic dynamics'
+
+        m = BuildGenArgsBuilder(["t", "x"])
+
+        m.add_init_condition("on", "t == 0 && x == 0")
+        m.set_time_bound(1.0)
+        m.add_mode("on", "true", ["1", " x + [0.1, 0.2]"])
+        
+        e = hypy.Engine('flowstar')
+        e.set_verbose(True)
+        e.set_generator('build', m.get_generator_param())
+
+        res = e.run(run_tool=False, print_stdout=True)
+
+        self.assertEqual(res['code'], hypy.Engine.SUCCESS)
+
 if __name__ == '__main__':
     unittest.main()
+
+
+
+
+
+
+

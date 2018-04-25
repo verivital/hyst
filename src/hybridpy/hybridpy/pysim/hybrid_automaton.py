@@ -3,8 +3,6 @@ Hybrid Automaton Simulation Library
 Stanley Bak (12-2015)
 '''
 
-from sympy.core import symbols
-
 class HyperRectangle(object):
     'An n-dimensional box'
 
@@ -101,8 +99,6 @@ class AutomatonTransition(object):
 
     guard = None # function taking a state and returning true/false
     reset = None # function taking a state and returning a new state
-    
-    guard_sympy = None # symbolic expression for the guard
 
     def __init__(self, parent, from_mode, to_mode, name=None):
         self.parent = parent
@@ -114,7 +110,7 @@ class AutomatonTransition(object):
     def __str__(self):
         rv = self.name
         
-        if rv == None:
+        if rv is None:
             rv = self.from_mode.name + " -> " + self.to_mode.name
 
         return rv
@@ -124,6 +120,7 @@ class HybridAutomaton(object):
 
     modes = {}
     transitions = []
+    variables = [] # list of strings
 
     def __init__(self):
         pass

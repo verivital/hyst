@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.LutExpression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.Component;
@@ -22,22 +23,20 @@ import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
  * @author Stanley Bak
  */
 public class RenameParams
 {
 	/**
-	 * Swaps params (variable / constant / label) names for alternates. Params
-	 * are a colon separated list of names:
-	 * oldname1:newname1:oldname2:newname2:...
+	 * Swaps params (variable / constant / label) names for alternates. Params are a colon separated
+	 * list of names: oldname1:newname1:oldname2:newname2:...
 	 * 
-	 * If new name exists, a number will be appended to it (the number starts at
-	 * 2 and is incremented until a fresh variable is found)
+	 * If new name exists, a number will be appended to it (the number starts at 2 and is
+	 * incremented until a fresh variable is found)
 	 *
 	 * @param convertMap
 	 *            the mapping of oldName -> newName
@@ -306,6 +305,25 @@ public class RenameParams
 
 				for (int i = 0; i < o.children.size(); ++i)
 					o.children.set(i, modifyExpression(o.children.get(i)));
+			}
+			else if (e instanceof LutExpression)
+			{
+				LutExpression lut = (LutExpression) e;
+
+				// modify the inputs
+				for (int i = 0; i < lut.inputs.length; ++i)
+					lut.inputs[i] = modifyExpression(lut.inputs[i]);
+
+				// modify each table entry
+				for (Entry<int[], Expression> entry : lut.table)
+				{
+					int[] index = entry.getKey();
+
+					Expression tableExp = lut.table.get(index);
+					Expression moddedTableExp = modifyExpression(tableExp);
+
+					lut.table.setExpressionAtIndex(index, moddedTableExp);
+				}
 			}
 
 			return rv;

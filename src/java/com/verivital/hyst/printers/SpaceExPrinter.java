@@ -48,8 +48,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.Transition;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.VariableParam;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a SpaceEx
- * model. Based on Chris' Boogie printer.
+ * Takes a hybrid automaton from the internal model format and outputs a SpaceEx model. Based on
+ * Chris' Boogie printer.
  * 
  * @author Stanley Bak (8-2014)
  * @author Taylor Johnson (11-2014)
@@ -74,6 +74,21 @@ public class SpaceExPrinter extends ToolPrinter
 
 	@Option(name = "-directions", usage = "support function directions", metaVar = "VAL")
 	String directions = "auto";
+
+	@Option(name = "-aggregation", usage = "aggregation parameter", metaVar = "VAL")
+	String aggregation = "auto";
+
+	@Option(name = "-flowpipe_tol", usage = "flowpipe-tolerance parameter (0 = skip)", metaVar = "VAL")
+	String flowpipeTol = "auto";
+
+	@Option(name = "-skiptol", usage = "skip printing error tolerances")
+	boolean skipTol = false;
+
+	@Option(name = "-time_triggered", usage = "sets map-zero-duration-jump-sets=true")
+	boolean isTimeTriggered = false;
+
+	@Option(name = "-output_vars", usage = "comma-separated output variables", metaVar = "VAL")
+	String outputVars = "auto";
 
 	private String cfgFilename = null;
 	private BaseComponent ha;
@@ -104,8 +119,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
 
@@ -125,8 +139,8 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -157,7 +171,7 @@ public class SpaceExPrinter extends ToolPrinter
 			try
 			{
 				Writer w = new BufferedWriter(new FileWriter(new File(cfgFilename)));
-				w.write(spaceex_printer.getCFGString());
+				w.write(spaceex_printer.getCFGString(skipTol));
 				w.close();
 			}
 			catch (IOException e)
@@ -168,14 +182,13 @@ public class SpaceExPrinter extends ToolPrinter
 		else
 		{
 			// it will get printed to stdout
-			printLine("\n" + spaceex_printer.getCFGString());
+			printLine("\n" + spaceex_printer.getCFGString(skipTol));
 		}
 
 	}
 
 	/**
-	 * Convert hybrid automaton in Hyst internal representation to SpaceEx
-	 * representation
+	 * Convert hybrid automaton in Hyst internal representation to SpaceEx representation
 	 * 
 	 * @param ha
 	 * @return
@@ -188,7 +201,7 @@ public class SpaceExPrinter extends ToolPrinter
 		SpaceExDocument sed = new SpaceExDocument();
 		sed.setVersion("0.2");
 		sed.setMathFormat("SpaceEx");
-		sed.setTimeTriggered(config.settings.spaceExConfig.timeTriggered);
+		sed.setTimeTriggered(isTimeTriggered || config.settings.spaceExConfig.timeTriggered);
 		// sed.setTimeHorizon(-1);
 		sed.setMaxIterations(
 				Integer.parseInt((getParam(iterMax, config.settings.spaceExConfig.maxIterations))));
@@ -198,6 +211,13 @@ public class SpaceExPrinter extends ToolPrinter
 
 		String dirs = getParam(directions, config.settings.spaceExConfig.directions);
 		sed.setDirections(dirs);
+
+		double flowpipeTol = Double
+				.parseDouble(getParam(this.flowpipeTol, config.settings.spaceExConfig.flowpipeTol));
+		sed.setFlowpipeTolerance(flowpipeTol);
+
+		String agg = getParam(aggregation, config.settings.spaceExConfig.aggregation);
+		sed.setAggregation(agg);
 
 		String scenario = getParam(this.scenario, config.settings.spaceExConfig.scenario);
 		sed.setScenario(scenario);
@@ -375,9 +395,17 @@ public class SpaceExPrinter extends ToolPrinter
 			sed.setForbiddenStateConditions(ForbiddenState);
 		}
 
-		// add ouput variables
-		for (String v : config.settings.plotVariableNames)
-			sed.addOutputVar(v);
+		// add output variables
+		if (outputVars.equals("auto"))
+		{
+			for (String v : config.settings.plotVariableNames)
+				sed.addOutputVar(v);
+		}
+		else
+		{
+			for (String var : outputVars.split(","))
+				sed.addOutputVar(var);
+		}
 
 		return sed;
 	}
@@ -417,13 +445,11 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Get the interval parts of the flows for each variable. May return a map
-	 * of size 0.
+	 * Get the interval parts of the flows for each variable. May return a map of size 0.
 	 * 
 	 * @param flowDynamics
 	 *            the flow dynamics to check
-	 * @return a mapping of variable name -> interval part of flow for all
-	 *         nondeterministic flows
+	 * @return a mapping of variable name -> interval part of flow for all nondeterministic flows
 	 */
 	private Map<String, Interval> getVariableIntervals(
 			LinkedHashMap<String, ExpressionInterval> flowDynamics)
@@ -445,8 +471,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Get the name of the associated interval variable (for nondeterministic
-	 * flows)
+	 * Get the name of the associated interval variable (for nondeterministic flows)
 	 * 
 	 * @param varName
 	 *            the variable name
@@ -458,8 +483,7 @@ public class SpaceExPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Convert the reset dictionary to a single expression using primed
-	 * variables
+	 * Convert the reset dictionary to a single expression using primed variables
 	 * 
 	 * @return
 	 */
@@ -559,11 +583,18 @@ public class SpaceExPrinter extends ToolPrinter
 
 		for (Entry<String, Expression> entry : fromMap.entrySet())
 		{
-			Expression e = new Operation(Operator.LOC, new Variable(baseName));
-			e = new Operation(Operator.EQUAL, e, new Variable(entry.getKey()));
+			Expression e;
 
-			if (entry.getValue() != null && entry.getValue() != Constant.TRUE)
-				e = new Operation(Operator.AND, e, entry.getValue());
+			if (ha.modes.size() > 1)
+			{
+				e = new Operation(Operator.LOC, new Variable(baseName));
+				e = new Operation(Operator.EQUAL, e, new Variable(entry.getKey()));
+
+				if (entry.getValue() != null && entry.getValue() != Constant.TRUE)
+					e = new Operation(Operator.AND, e, entry.getValue());
+			}
+			else
+				e = entry.getValue();
 
 			if (rv == null)
 				rv = e;

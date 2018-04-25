@@ -42,8 +42,8 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 /**
- * Small tests dealing with the expression parser or range extractor. Things
- * that don't require loading a whole model.
+ * Small tests dealing with the expression parser or range extractor. Things that don't require
+ * loading a whole model.
  * 
  * @author Stanley Bak
  *
@@ -127,16 +127,16 @@ public class SmallTest
 
 		Expression e = FormulaParser.parseGuard(sampleExpression);
 
-		Assert.assertEquals("0.5 >= x & x <= 1230", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("0.5 >= x & x <= 1230.0", DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "1.5e-5 >= x & x <= 100.123e4";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("0.000015 >= x & x <= 1001230",
+		Assert.assertEquals("0.000015 >= x & x <= 1001230.0",
 				DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "-1.5e+5 >= x & x <= -100.123e-0";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("-150000 >= x & x <= -100.123",
+		Assert.assertEquals("-150000.0 >= x & x <= -100.123",
 				DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "--1.5e0 >= x & x <= -100.123e+0";
@@ -145,7 +145,7 @@ public class SmallTest
 
 		sampleExpression = "x == 9.1e16";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("x = 91000000000000000", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("x = 91000000000000000.0", DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "x == 25.1e-16";
 		e = FormulaParser.parseGuard(sampleExpression);
@@ -154,26 +154,26 @@ public class SmallTest
 		// using 10^X
 		sampleExpression = "x == 10^4.1";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("x = 10 ^ 4.1", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("x = 10.0 ^ 4.1", DefaultExpressionPrinter.instance.print(e));
 		// probably want to do this comparisons with regex to avoid spacing
 		// complaints
 
 		sampleExpression = "x == 10^-4.1";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("x = 10 ^ -4.1", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("x = 10.0 ^ -4.1", DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "x == 10^(0)";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("x = 10 ^ 0", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("x = 10.0 ^ 0.0", DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "x == 10^(-1)";
 		e = FormulaParser.parseGuard(sampleExpression);
-		Assert.assertEquals("x = 10 ^ -1", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("x = 10.0 ^ -1.0", DefaultExpressionPrinter.instance.print(e));
 
 		sampleExpression = "A == 7.89*10^-10.1"; // from E5/E5.xml example from
 													// ODE/DAE test set
 		e = FormulaParser.parseInitialForbidden(sampleExpression);
-		Assert.assertEquals("A = 7.89 * 10 ^ -10.1", DefaultExpressionPrinter.instance.print(e));
+		Assert.assertEquals("A = 7.89 * 10.0 ^ -10.1", DefaultExpressionPrinter.instance.print(e));
 	}
 
 	@Test
@@ -185,7 +185,7 @@ public class SmallTest
 
 		Expression e = FormulaParser.parseFlow(sampleFlow);
 
-		Assert.assertEquals("nu1 = sqrt(mu / p1 ^ 3) * (1 + e1 * cos(nu1)) ^ 2",
+		Assert.assertEquals("nu1 = sqrt(mu / p1 ^ 3.0) * (1.0 + e1 * cos(nu1)) ^ 2.0",
 				DefaultExpressionPrinter.instance.print(e));
 	}
 
@@ -295,11 +295,11 @@ public class SmallTest
 
 		Expression e = FormulaParser.parseReset(t);
 
-		if (e == null || !DefaultExpressionPrinter.instance.print(e).equals("0 <= x & x <= 0.1"))
+		if (e == null || !DefaultExpressionPrinter.instance.print(e).equals("0.0 <= x & x <= 0.1"))
 			// if (e == null ||
 			// !DefaultExpressionPrinter.instance.print(e).equals("((0.0 <= x)
 			// && (x <= 0.1))"))
-			Assert.fail("parsed incorrectly, was: " + e);
+			Assert.fail("parsed incorrectly, was: " + e.toDefaultString());
 	}
 
 	@Test
@@ -309,9 +309,9 @@ public class SmallTest
 
 		Expression e = FormulaParser.parseReset(t);
 
-		if (e == null
-				|| !e.toDefaultString().equals("1 <= z & y = x + 3 & 0 <= x & x <= 0.1 & z <= 2"))
-			Assert.fail("parsed incorrectly, was: " + e);
+		if (e == null || !e.toDefaultString()
+				.equals("1.0 <= z & y = x + 3.0 & 0.0 <= x & x <= 0.1 & z <= 2.0"))
+			Assert.fail("parsed incorrectly, was: " + e.toDefaultString());
 	}
 
 	@Test
@@ -323,8 +323,9 @@ public class SmallTest
 
 		Assert.assertNotEquals(e, null);
 
-		Assert.assertTrue(DefaultExpressionPrinter.instance.print(e)
-				.equals("T = 0 & ImaginaryChannel_min >= 0 & ImaginaryChannel_min <= 2147483647"));
+		Assert.assertEquals(
+				"T = 0.0 & ImaginaryChannel_min >= 0.0 & ImaginaryChannel_min <= 2147483647.0",
+				DefaultExpressionPrinter.instance.print(e));
 	}
 
 	/**
@@ -606,8 +607,7 @@ public class SmallTest
 	{
 		Expression e = FormulaParser.parseGuard("y >= 10^3");
 
-		if (e == null || !DefaultExpressionPrinter.instance.print(e).equals("y >= 10 ^ 3"))
-			Assert.fail("displayed pow incorrectly: " + e);
+		Assert.assertEquals("y >= 10.0 ^ 3.0", DefaultExpressionPrinter.instance.print(e));
 	}
 
 	/**
@@ -620,7 +620,7 @@ public class SmallTest
 
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 
-		if (!DefaultExpressionPrinter.instance.print(simple).equals("3"))
+		if (!DefaultExpressionPrinter.instance.print(simple).equals("3.0"))
 			Assert.fail("simplification failed: got: "
 					+ DefaultExpressionPrinter.instance.print(simple));
 	}
@@ -635,8 +635,7 @@ public class SmallTest
 
 		Expression simple = SimplifyExpressionsPass.simplifyExpression(e);
 
-		if (!DefaultExpressionPrinter.instance.print(simple).equals("30000000"))
-			Assert.fail("simplification failed");
+		Assert.assertEquals("30000000.0", DefaultExpressionPrinter.instance.print(simple));
 	}
 
 	@Test
@@ -718,7 +717,7 @@ public class SmallTest
 
 		String sampleFlow = "nu1' = sqrt( mu / (p1^3)) * ((1 + e1 * cos(nu1))^2)";
 		Expression e3 = FormulaParser.parseFlow(sampleFlow);
-		Assert.assertEquals("nu1 = sqrt(mu / p1 ^ 3) * (1 + e1 * cos(nu1)) ^ 2",
+		Assert.assertEquals("nu1 = sqrt(mu / p1 ^ 3.0) * (1.0 + e1 * cos(nu1)) ^ 2.0",
 				exp_printer.print(e3));
 
 	}
@@ -773,16 +772,14 @@ public class SmallTest
 	}
 
 	/*
-	 * @Test public void testFlowstarLinearDetection() { String exp =
-	 * "(1.0 - x * x) * y - x";
+	 * @Test public void testFlowstarLinearDetection() { String exp = "(1.0 - x * x) * y - x";
 	 * 
 	 * Expression e = FormulaParser.parseValue(exp);
 	 * 
-	 * if (FlowPrinter.isLinearExpression(e)) Assert.fail(
-	 * "expression was detected as linear: " + exp); }
+	 * if (FlowPrinter.isLinearExpression(e)) Assert.fail( "expression was detected as linear: " +
+	 * exp); }
 	 * 
-	 * /** Make sure usage can be printed in Hyst (will also check for class
-	 * loading issues)
+	 * /** Make sure usage can be printed in Hyst (will also check for class loading issues)
 	 */
 	@Test
 	public void testPrintUsage()
@@ -802,7 +799,7 @@ public class SmallTest
 		Expression result = AutomatonUtil.substituteVariable(e, "c", sub);
 
 		Assert.assertTrue("Substituted in correctly",
-				result.toDefaultString().equals("5 * (c + [0.0, 1.0]) + 2"));
+				result.toDefaultString().equals("5.0 * (c + [0.0, 1.0]) + 2.0"));
 
 		ExpressionInterval ei = ContinuizationPass.simplifyExpressionWithIntervals(result);
 
@@ -811,7 +808,7 @@ public class SmallTest
 				new Interval(0, 5).equals(ei.getInterval()));
 
 		Assert.assertTrue("simplification resulted in correct expression",
-				ei.getExpression().toDefaultString().equals("5 * c + 2"));
+				ei.getExpression().toDefaultString().equals("5.0 * c + 2.0"));
 	}
 
 	@Test
@@ -822,8 +819,8 @@ public class SmallTest
 				new IntervalTerm(new Interval(-1, 2)));
 		Expression result = AutomatonUtil.substituteVariable(e, "a", sub);
 
-		Assert.assertTrue("Substituted in correctly", DefaultExpressionPrinter.instance
-				.print(result).equals("-10 * v - 3 * (a + [-1.0, 2.0])"));
+		Assert.assertEquals("-10.0 * v - 3.0 * (a + [-1.0, 2.0])",
+				DefaultExpressionPrinter.instance.print(result));
 
 		ExpressionInterval ei = ContinuizationPass.simplifyExpressionWithIntervals(result);
 
@@ -847,8 +844,8 @@ public class SmallTest
 		Expression e2 = FormulaParser.parseInvariant("5 <= t");
 		Expression e3 = FormulaParser.parseInvariant("5 < t");
 
-		Assert.assertEquals(e1.toString(), "t <= 5");
-		Assert.assertEquals(e2.toString(), "5 - (t) <= 0");
+		Assert.assertEquals(e1.toString(), "t <= 5.0");
+		Assert.assertEquals(e2.toString(), "5.0 - (t) <= 0");
 
 		try
 		{
@@ -907,9 +904,8 @@ public class SmallTest
 
 	@Test
 	/**
-	 * Ensure a bind cannot have multiple parameters added with the same names
-	 * (SpaceEx will not accept these if done and had an error where a model was
-	 * created with multiple binds)
+	 * Ensure a bind cannot have multiple parameters added with the same names (SpaceEx will not
+	 * accept these if done and had an error where a model was created with multiple binds)
 	 */
 	public void testSpaceExNetworkComponentDuplicateBind()
 	{
@@ -956,7 +952,9 @@ public class SmallTest
 				new ExpressionClassification("ln(x + 1)", AutomatonUtil.OPS_NONLINEAR,
 						AutomatonUtil.OPS_LINEAR),
 				new ExpressionClassification("lut([t], [0,0,1,1,0], [1,2,3,4,8])",
-						AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX), };
+						AutomatonUtil.OPS_LUT, AutomatonUtil.OPS_MATRIX),
+				new ExpressionClassification("-100 * x - 4 * v - 9.81",
+						AutomatonUtil.OPS_LINEAR), };
 
 		for (ExpressionClassification test : tests)
 		{
@@ -1018,4 +1016,21 @@ public class SmallTest
 
 		Assert.assertNotEquals(e, null);
 	}
+
+	/*
+	 * @Test public void testExtractDynamicsMatrixA() { String test = "-100 * x - 4 * v - 9.81";
+	 * 
+	 * Configuration c = AutomatonUtil .makeDebugConfiguration(new String[][] { { "x", "-v" }, {
+	 * "v", test } });
+	 * 
+	 * AutomatonMode am = ((BaseComponent) c.root).modes.values().iterator().next();
+	 * 
+	 * ArrayList<ArrayList<Double>> matrix = DynamicsUtil.extractDynamicsMatrixA(am);
+	 * 
+	 * Assert.assertEquals(0.0, (double) matrix.get(0).get(0), 1e-9); Assert.assertEquals(-1.0,
+	 * (double) matrix.get(0).get(1), 1e-9);
+	 * 
+	 * Assert.assertEquals(-100.0, (double) matrix.get(1).get(0), 1e-9); Assert.assertEquals(-4.0,
+	 * (double) matrix.get(1).get(1), 1e-9); }
+	 */
 }

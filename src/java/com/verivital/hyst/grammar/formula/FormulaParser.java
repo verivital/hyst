@@ -208,11 +208,10 @@ public class FormulaParser
 	}
 
 	/**
-	 * Parses initial/forbidden expressions in the spaceex config files (may
-	 * include loc() functions)
+	 * Parses initial/forbidden expressions in the spaceex config files (may include loc()
+	 * functions)
 	 * 
-	 * Used to Parse: initially and forbidden expressions from SpaceEx XML
-	 * config file
+	 * Used to Parse: initially and forbidden expressions from SpaceEx XML config file
 	 * 
 	 * @param text
 	 * @return

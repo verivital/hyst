@@ -46,9 +46,8 @@ public class TemplateImporter
 	public static final String TEMPLATE_VALUE_MAP_PREFIX = "~";
 
 	/**
-	 * Create an instance of every base component type declared in the SpaceEx
-	 * document. These are essentially templates that get copied when the
-	 * network is instantiated.
+	 * Create an instance of every base component type declared in the SpaceEx document. These are
+	 * essentially templates that get copied when the network is instantiated.
 	 * 
 	 * @param doc
 	 *            the SpaceEx document to create them from
@@ -69,8 +68,7 @@ public class TemplateImporter
 	}
 
 	/**
-	 * Instantiate a template from a spaceex component, and add it to the
-	 * template list
+	 * Instantiate a template from a spaceex component, and add it to the template list
 	 * 
 	 * @param comp
 	 *            the spaceex component to make a template for
@@ -177,9 +175,8 @@ public class TemplateImporter
 	}
 
 	/**
-	 * Get the parameter being mapped to (label, const, or variable). This isn't
-	 * present in the bind map, but instead you need to look at the params of
-	 * the child component
+	 * Get the parameter being mapped to (label, const, or variable). This isn't present in the bind
+	 * map, but instead you need to look at the params of the child component
 	 * 
 	 * @param componentName
 	 * @param paramName

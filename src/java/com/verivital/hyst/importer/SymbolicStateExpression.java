@@ -12,22 +12,20 @@ import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
 
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExBaseComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Bind;
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.Location;
-import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExBaseComponent;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExComponent;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
+import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 
 /**
- * This is a container class used when importing. Basically, it stores a set of
- * discrete modes and an equation for the continuous constraints
+ * This is a container class used when importing. Basically, it stores a set of discrete modes and
+ * an equation for the continuous constraints
  * 
- * The discrete modes are divided up into the modes of the sub-automata in the
- * networked system.
+ * The discrete modes are divided up into the modes of the sub-automata in the networked system.
  * 
- * Initially the symbolic state is unconstrainted (all discrete states and all
- * continuous states)
+ * Initially the symbolic state is unconstrainted (all discrete states and all continuous states)
  * 
  * @author Stanley Bak
  *
@@ -118,6 +116,8 @@ public class SymbolicStateExpression
 
 		if (contStates == Constant.TRUE)
 			contStates = e;
+		else if (contStates instanceof Operation && contStates.asOperation().op == Operator.AND)
+			contStates.asOperation().children.add(e); // big and expression
 		else
 			contStates = new Operation(Operator.AND, contStates, e);
 	}
@@ -187,6 +187,8 @@ public class SymbolicStateExpression
 	{
 		ArrayList<String> discFlat = getFlatDiscreteStatesRec(0, new StringBuffer(""));
 
+		contStates = splitLargeConjunctions(contStates);
+
 		for (String s : discFlat)
 		{
 			Expression e = map.get(s);
@@ -198,9 +200,43 @@ public class SymbolicStateExpression
 		}
 	}
 
+	Expression makeBalancedAnd(List<Expression> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = children.get(0);
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, makeBalancedAnd(children.subList(0, middleIndex)),
+					makeBalancedAnd(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
+	Expression splitLargeConjunctions(Expression e)
+	{
+		Expression rv = e;
+
+		if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			if (o.op == Operator.AND && o.children.size() > 2)
+			{
+				rv = makeBalancedAnd(o.children);
+			}
+
+		}
+
+		return rv;
+	}
+
 	/**
-	 * get the (flattened) set of discrete states corresponding to this symbolic
-	 * state
+	 * get the (flattened) set of discrete states corresponding to this symbolic state
 	 * 
 	 * @param componentIndex
 	 *            the index of the component
@@ -352,8 +388,7 @@ public class SymbolicStateExpression
 	 * @param e
 	 *            the expression to parse
 	 * @param description
-	 *            the text description of the states being parsed, like
-	 *            "initial states"
+	 *            the text description of the states being parsed, like "initial states"
 	 */
 	public static List<SymbolicStateExpression> extractSymbolicStates(Expression e,
 			String description)

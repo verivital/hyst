@@ -25,6 +25,7 @@ import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -95,16 +96,15 @@ public class LutMatrixTest
 		// matlab also permits expressions like "+50" rather than 50
 
 		/*
-		 * String[] strings = {"[1 1]", "[1-1]", "[1 - 1]", "[1 -1]", "[-1 -1]",
-		 * "[-1 -(1 -1)]" }; int widths[] = {2, 1, 1, 2, 2, 2 };
+		 * String[] strings = {"[1 1]", "[1-1]", "[1 - 1]", "[1 -1]", "[-1 -1]", "[-1 -(1 -1)]" };
+		 * int widths[] = {2, 1, 1, 2, 2, 2 };
 		 * 
-		 * for (int i = 0; i < strings.length; ++i) { String s = strings[i]; int
-		 * expected = widths[i];
+		 * for (int i = 0; i < strings.length; ++i) { String s = strings[i]; int expected =
+		 * widths[i];
 		 * 
 		 * MatrixExpression m = (MatrixExpression)FormulaParser.parseValue(s);
 		 * 
-		 * Assert.assertEquals("matrix width is incorrect for " + s, expected,
-		 * m.getDimWidth(0)); }
+		 * Assert.assertEquals("matrix width is incorrect for " + s, expected, m.getDimWidth(0)); }
 		 */
 	}
 
@@ -130,8 +130,8 @@ public class LutMatrixTest
 	@Test
 	public void testPrintMatrix()
 	{
-		String[] strs = { "[1, 2, -5, 10]", "[1, 2 ; 10, 20 ; 100, 200]",
-				"reshape([1, 2, 3, 11, 12, 13, 101, 102, 103, 111, 112, 113], 3, 2, 2)" };
+		String[] strs = { "[1.0, 2.0, -5.0, 10.0]", "[1.0, 2.0 ; 10.0, 20.0 ; 100.0, 200.0]",
+				"reshape([1.0, 2.0, 3.0, 11.0, 12.0, 13.0, 101.0, 102.0, 103.0, 111.0, 112.0, 113.0], 3, 2, 2)" };
 
 		for (String str : strs)
 		{
@@ -149,8 +149,8 @@ public class LutMatrixTest
 				{ new Constant(10), new Constant(20) }, { new Constant(100), new Constant(200) } };
 		MatrixExpression m = new MatrixExpression(expArray);
 
-		String expectedReshape = "reshape([1, 10, 100, 2, 20, 200], 3, 2)";
-		String expected2d = "[1, 2 ; 10, 20 ; 100, 200]";
+		String expectedReshape = "reshape([1.0, 10.0, 100.0, 2.0, 20.0, 200.0], 3, 2)";
+		String expected2d = "[1.0, 2.0 ; 10.0, 20.0 ; 100.0, 200.0]";
 
 		StringBuilder rv = new StringBuilder();
 		m.makeStringReshape(rv, DefaultExpressionPrinter.instance);
@@ -169,7 +169,7 @@ public class LutMatrixTest
 
 		// make sure the internal representation matches what matlab uses (from
 		// reshape)
-		String correct = "reshape([1, 10, 100, 2, 20, 200], 3, 2)";
+		String correct = "reshape([1.0, 10.0, 100.0, 2.0, 20.0, 200.0], 3, 2)";
 		StringBuilder sb = new StringBuilder();
 		m2d.makeStringReshape(sb, DefaultExpressionPrinter.instance);
 		Assert.assertEquals("matrix internals should be same as matlab's reshape", correct,
@@ -178,7 +178,7 @@ public class LutMatrixTest
 		Assert.assertEquals("2d matrix size doesn't match matlab", 3, m2d.getDimWidth(0));
 		Assert.assertEquals("2d matrix size doesn't match matlab", 2, m2d.getDimWidth(1));
 
-		Assert.assertEquals("matrix dereference order doesn't match matlab in 2d matrix", "100",
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 2d matrix", "100.0",
 				m2d.get(2, 0).toDefaultString());
 
 		// try 3d matrix
@@ -188,9 +188,9 @@ public class LutMatrixTest
 		Assert.assertEquals("3d matrix size doesn't match matlab", 2, m3d.getDimWidth(1));
 		Assert.assertEquals("3d matrix size doesn't match matlab", 2, m3d.getDimWidth(2));
 
-		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "113",
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "113.0",
 				m3d.get(2, 1, 1).toDefaultString());
-		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "13",
+		Assert.assertEquals("matrix dereference order doesn't match matlab in 3d matrix", "13.0",
 				m3d.get(2, 1, 0).toDefaultString());
 	}
 
@@ -259,7 +259,7 @@ public class LutMatrixTest
 	@Test
 	public void testLutPrinting()
 	{
-		String lutStr = "lut([t], [1, 2, 1, 2], [0.0, 10.0, 30.0, 40.0])";
+		String lutStr = "lut([t], [1.0, 2.0, 1.0, 2.0], [0.0, 10.0, 30.0, 40.0])";
 
 		Expression e = FormulaParser.parseValue(lutStr);
 
@@ -281,7 +281,8 @@ public class LutMatrixTest
 
 		// lut([t+1], [1, 2, 1, 2], [0, 10, 30, 40])
 		String[] names = { "on_0", "on_1", "on_2" };
-		String[] invariants = { "t + 1 <= 10", "t + 1 >= 10 & t + 1 <= 30", "t + 1 >= 30" };
+		String[] invariants = { "t + 1.0 <= 10.0", "t + 1.0 >= 10.0 & t + 1.0 <= 30.0",
+				"t + 1.0 >= 30.0" };
 		String[] flows = { "1 + 1 / 10 * ((t+1) - 0)", "2 + -1 * ((t+1) - 10) / 20",
 				"1 + 1 * ((t+1) - 30) / 10" };
 
@@ -310,12 +311,12 @@ public class LutMatrixTest
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
 		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
 		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect",
-				"t + 1 >= 10 & t >= 0", at.guard.toDefaultString());
+				"t + 1.0 >= 10.0 & t >= 0.0", at.guard.toDefaultString());
 
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
 		at = ha.findTransition(names[2], names[1]);
 		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect",
-				"t + 1 <= 30 & t <= 0", at.guard.toDefaultString());
+				"t + 1.0 <= 30.0 & t <= 0.0", at.guard.toDefaultString());
 	}
 
 	/**
@@ -343,7 +344,7 @@ public class LutMatrixTest
 
 		// 15 -> 1.75
 		String[] names = { "on_0", "on_1", "on_2" };
-		String[] invariants = { "t <= 10", "t >= 10 & t <= 30", "t >= 30" };
+		String[] invariants = { "t <= 10.0", "t >= 10.0 & t <= 30.0", "t >= 30.0" };
 		String[] flows = { "1 + 1 / 10 * (t - 0)", "2 + -1 * (t - 10) / 20",
 				"1 + 1 * (t - 30) / 10" };
 
@@ -372,12 +373,12 @@ public class LutMatrixTest
 		AutomatonTransition at = ha.findTransition(names[0], names[1]);
 		Assert.assertNotNull("transition exists between " + names[0] + " and " + names[1], at);
 		Assert.assertEquals("guard for transition from mode 0 to mode 1 is incorrect",
-				"t >= 10 & 1 >= 0", at.guard.toDefaultString());
+				"t >= 10.0 & 1.0 >= 0.0", at.guard.toDefaultString());
 
 		// test the guard from mode 2 to mode 1 (should be t <= 30)
 		at = ha.findTransition(names[2], names[1]);
 		Assert.assertEquals("guard for transition from mode 2 to mode 1 is incorrect",
-				"t <= 30 & 1 <= 0", at.guard.toDefaultString());
+				"t <= 30.0 & 1.0 <= 0.0", at.guard.toDefaultString());
 	}
 
 	/**
@@ -419,7 +420,7 @@ public class LutMatrixTest
 
 		// check the invariant at 1_1
 		String name = "on_1_1";
-		String invariant = "a >= 1 & b >= 10";
+		String invariant = "a >= 1.0 & b >= 10.0";
 
 		AutomatonMode am = ha.modes.get(name);
 		Assert.assertNotEquals("mode " + name + " is not supposed to be null", null, am);
@@ -445,7 +446,7 @@ public class LutMatrixTest
 		int[] indexList = new int[] { 0 };
 		Interval[] rangeList = new Interval[] { new Interval(0, 10) };
 
-		Expression expected = FormulaParser.parseValue("1 + 1 / 10 * (t - 0)");
+		Expression expected = FormulaParser.parseValue("1.0 + 1.0 / 10.0 * (t - 0)");
 		Expression got = ConvertLutFlowsPass.nLinearInterpolation(lut, indexList, rangeList);
 
 		String msg = AutomatonUtil.areExpressionsEqual(expected, got);
@@ -610,6 +611,11 @@ public class LutMatrixTest
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 		BaseComponent ha = (BaseComponent) c.root;
 
+		ha.variables.add("input");
+
+		for (AutomatonMode am : ha.modes.values())
+			am.flowDynamics.put("input", new ExpressionInterval("0"));
+
 		new ConvertLutFlowsPass().runTransformationPass(c, null);
 
 		// we are interested in on_0_0
@@ -647,5 +653,15 @@ public class LutMatrixTest
 		Assert.assertTrue("some output exists", out.length() > 10);
 
 		Assert.assertTrue("output doesn't contain 'lut('", !out.contains("lut("));
+	}
+
+	@Test
+	public void testLutGenerated()
+	{
+		String lutStr = "[-1:0.5:1]";
+
+		Expression e = FormulaParser.parseValue(lutStr);
+
+		Assert.assertEquals("[-1.0, -0.5, 0.0, 0.5, 1.0]", e.toDefaultString());
 	}
 }

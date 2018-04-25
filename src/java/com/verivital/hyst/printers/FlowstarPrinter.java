@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.Option;
@@ -68,6 +69,9 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-cutoff", usage = "taylor model cutoff", metaVar = "VAL")
 	String cutoff = "1e-15";
 
+	@Option(name = "-ode", usage = "ode integration mode (like 'poly ode 1')", metaVar = "VAL")
+	String ode = "auto";
+
 	@Option(name = "-precision", usage = "numerical precision", metaVar = "VAL")
 	String precision = "53";
 
@@ -82,7 +86,11 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
 	String aggregation = "parallelotope";
 
-	@Option(name = "-taylor_init", usage = "override the initial states with a taylor mode", metaVar = "MODE TM", handler = PairStringOptionHandler.class)
+	FlowstarExpressionPrinter flowstarExpressionPrinter;
+
+	@SuppressWarnings("deprecation")
+	@Option(name = "-taylor_init", usage = "override the initial states with a taylor model. Expects two arguments: "
+			+ "(mode name) (TM expression), where colons in the TM expression are replaced with newlines.", metaVar = "MODE TM", handler = PairStringOptionHandler.class)
 	public void setTaylorIinit(String[] params) throws CmdLineException
 	{
 		if (params.length != 2)
@@ -99,9 +107,10 @@ public class FlowstarPrinter extends ToolPrinter
 
 	public FlowstarPrinter()
 	{
-		preconditions.skip[PreconditionsFlag.NO_URGENT.ordinal()] = true;
-		preconditions.skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()] = true;
-		preconditions.skip[PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS.ordinal()] = true;
+		preconditions.skip(PreconditionsFlag.NO_URGENT);
+		preconditions.skip(PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS);
+		preconditions.skip(PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS);
+		preconditions.skip(PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED);
 	}
 
 	@Override
@@ -111,8 +120,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	private void printDocument(String originalFilename)
 	{
@@ -124,8 +133,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Simplify an expression by substituting constants and then doing math
-	 * simplification
+	 * Simplify an expression by substituting constants and then doing math simplification
 	 * 
 	 * @param e
 	 *            the original expression
@@ -225,7 +233,7 @@ public class FlowstarPrinter extends ToolPrinter
 		int jumps = Integer.parseInt(this.jumps);
 
 		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
-			jumps = config.settings.spaceExConfig.maxIterations;
+			jumps = config.settings.spaceExConfig.maxIterations - 1;
 
 		printLine("max jumps " + jumps);
 		printLine("print on");
@@ -277,8 +285,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -369,8 +376,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{
@@ -384,6 +391,10 @@ public class FlowstarPrinter extends ToolPrinter
 		for (Entry<String, AutomatonMode> e : ha.modes.entrySet())
 		{
 			AutomatonMode mode = e.getValue();
+
+			// removed this
+			if (flowstarExpressionPrinter.inputVariables.size() > 0)
+				flowstarExpressionPrinter.extractInputVariableRanges(mode.invariant);
 
 			if (first)
 				first = false;
@@ -404,22 +415,38 @@ public class FlowstarPrinter extends ToolPrinter
 			// high degree and high dimension ODEs.
 			// "nonpoly ode" works with nonlinear terms
 
-			if (isNonLinearDynamics(mode.flowDynamics))
-				printLine("nonpoly ode");
-			else if (Classification.isLinearDynamics(mode.flowDynamics))
-				printLine("linear ode");
-			else if (ha.variables.size() <= 3)
-				printLine("poly ode 1");
-			else if (ha.variables.size() <= 6)
-				printLine("poly ode 2");
-			else
-				printLine("poly ode 3");
-
-			printLine("{");
+			// first simplify
 			for (Entry<String, ExpressionInterval> entry : mode.flowDynamics.entrySet())
 			{
 				ExpressionInterval ei = entry.getValue();
 				ei.setExpression(simplifyExpression(ei.getExpression()));
+			}
+
+			// then classify
+			if (ode.equals("auto"))
+			{
+				if (isNonLinearDynamics(mode.flowDynamics))
+					printLine("nonpoly ode");
+				else if (Classification.isLinearDynamics(mode.flowDynamics))
+					printLine("linear ode");
+				else if (ha.variables.size() <= 3)
+					printLine("poly ode 1");
+				else if (ha.variables.size() <= 6)
+					printLine("poly ode 2");
+				else
+					printLine("poly ode 3");
+			}
+			else
+			{
+				// force ode line
+				printLine(ode);
+			}
+
+			// then print
+			printLine("{");
+			for (Entry<String, ExpressionInterval> entry : mode.flowDynamics.entrySet())
+			{
+				ExpressionInterval ei = entry.getValue();
 
 				// be explicit (even though x' == 0 is implied by Flow*)
 				printLine(entry.getKey() + "' = " + ei);
@@ -430,11 +457,13 @@ public class FlowstarPrinter extends ToolPrinter
 			printLine("inv");
 			printLine("{");
 
+			String originalInvariant = mode.invariant.toDefaultString();
 			Expression inv = simplifyExpression(mode.invariant);
 
 			if (!inv.equals(Constant.TRUE))
 			{
-				printCommentBlock("Original invariant: " + inv.toDefaultString());
+				printCommentBlock("Original invariant: " + originalInvariant);
+
 				printLine(inv.toString());
 			}
 
@@ -496,7 +525,7 @@ public class FlowstarPrinter extends ToolPrinter
 		}
 	}
 
-	private static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
+	public static HashMap<String, Interval> getExpressionVariableRanges(Expression ex)
 	{
 		HashMap<String, Interval> ranges = new HashMap<String, Interval>();
 
@@ -580,11 +609,44 @@ public class FlowstarPrinter extends ToolPrinter
 
 	public static class FlowstarExpressionPrinter extends DefaultExpressionPrinter
 	{
+		public ArrayList<String> inputVariables = new ArrayList<String>(); // populated externally
+
+		TreeMap<String, Interval> inputVariableRanges;
+
 		public FlowstarExpressionPrinter()
 		{
 			super();
 
 			opNames.put(Operator.AND, " ");
+		}
+
+		/**
+		 * Extract the input variable ranges from a mode's invariant. Afterwards, instead of
+		 * printing the variable you will print the interval range.
+		 * 
+		 * @param invariant
+		 *            the current mode's invariant expression
+		 */
+		public void extractInputVariableRanges(Expression invariant)
+		{
+			inputVariableRanges = new TreeMap<String, Interval>();
+
+			try
+			{
+				RangeExtractor.getVariableRanges(invariant, inputVariableRanges);
+			}
+			catch (EmptyRangeException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
+			catch (ConstantMismatchException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
+			catch (UnsupportedConditionException e)
+			{
+				throw new AutomatonExportException(e.getLocalizedMessage(), e);
+			}
 		}
 
 		@Override
@@ -593,7 +655,7 @@ public class FlowstarPrinter extends ToolPrinter
 			if (op.equals(Operator.GREATER) || op.equals(Operator.LESS)
 					|| op.equals(Operator.NOTEQUAL) || op == Operator.OR)
 				throw new AutomatonExportException(
-						"Flow* printer doesn't support operator " + op.toDefaultString());
+						"Flow* printer doesn't support operator '" + op.toDefaultString() + "'");
 
 			return super.printOperator(op);
 		}
@@ -611,6 +673,27 @@ public class FlowstarPrinter extends ToolPrinter
 		}
 
 		@Override
+		protected String printVariable(Variable v)
+		{
+			String rv = null;
+
+			if (inputVariables.contains(v.name))
+			{
+				Interval range = inputVariableRanges.get(v.name);
+
+				if (range.isConstant())
+					rv = this.printConstantValue(range.min);
+				else
+					rv = "[" + this.printConstantValue(range.min) + ", "
+							+ this.printConstantValue(range.max) + "]";
+			}
+			else
+				rv = super.printVariable(v);
+
+			return rv;
+		}
+
+		@Override
 		protected String printOperation(Operation o)
 		{
 			String rv = "";
@@ -619,13 +702,30 @@ public class FlowstarPrinter extends ToolPrinter
 			{
 				Operator op = o.op;
 
-				// make sure it's of the form p ~ c
-				if (o.children.size() == 2 && o.getRight() instanceof Constant)
-					rv = super.printOperation(o);
-				else
+				// print nothing if the expression contains an input variable
+				// this will omit it in the invariant expressions
+				boolean hasInputVariable = false;
+				Collection<String> allVars = AutomatonUtil.getVariablesInExpression(o);
+
+				for (String v : allVars)
 				{
-					// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
-					rv += o.getLeft() + " - (" + o.getRight() + ") " + printOperator(op) + " 0";
+					if (inputVariables.contains(v))
+					{
+						hasInputVariable = true;
+						break;
+					}
+				}
+
+				if (!hasInputVariable)
+				{
+					// make sure it's of the form p ~ c
+					if (o.children.size() == 2 && o.getRight() instanceof Constant)
+						rv = super.printOperation(o);
+					else
+					{
+						// change 'p1 ~ p2' to 'p1 - (p2) ~ 0'
+						rv += o.getLeft() + " - (" + o.getRight() + ") " + printOperator(op) + " 0";
+					}
 				}
 			}
 			else
@@ -639,7 +739,8 @@ public class FlowstarPrinter extends ToolPrinter
 	protected void printAutomaton()
 	{
 		this.ha = (BaseComponent) config.root;
-		Expression.expressionPrinter = new FlowstarExpressionPrinter();
+		flowstarExpressionPrinter = new FlowstarExpressionPrinter();
+		Expression.expressionPrinter = flowstarExpressionPrinter;
 
 		if (ha.modes.containsKey("init"))
 			throw new AutomatonExportException("mode named 'init' is not allowed in Flow* printer");
@@ -648,10 +749,13 @@ public class FlowstarPrinter extends ToolPrinter
 			throw new AutomatonExportException(
 					"mode named 'start' is not allowed in Flow* printer");
 
-		if (!areIntervalInitialStates(config))
-			convertInitialStatesToUrgent(config);
+		if (taylorInit == null)
+		{
+			if (!areIntervalInitialStates(config))
+				convertInitialStatesToUrgent(config);
 
-		checkBoundedInitialStates(config);
+			removeUnboundedInitialStates(config);
+		}
 
 		AutomatonUtil.convertUrgentTransitions(ha, config);
 
@@ -746,8 +850,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Gets the weak ranges for the given expression. Only interval ranges are
-	 * extracted... other ranges are ignored.
+	 * Gets the weak ranges for the given expression. Only interval ranges are extracted... other
+	 * ranges are ignored.
 	 * 
 	 * @param ex
 	 *            the input expression
@@ -762,24 +866,43 @@ public class FlowstarPrinter extends ToolPrinter
 		return ranges;
 	}
 
-	private static void checkBoundedInitialStates(Configuration c)
+	private void removeUnboundedInitialStates(Configuration c)
 	{
-		// there must be bounds on every variable in the initial state for Flow*
-		// to work
+		// remove 'variables' which don't have bounds in the initial conditions. This is how we
+		// can handle nondeterministic inputs in the model
+
 		for (Entry<String, Expression> e : c.init.entrySet())
 		{
 			Expression exp = e.getValue();
 			String mode = e.getKey();
 
 			Collection<String> allVars = AutomatonUtil.getVariablesInExpression(exp);
+			ArrayList<String> toRemove = new ArrayList<String>();
 
 			for (String v : c.root.variables)
 			{
 				if (!allVars.contains(v))
-					throw new AutomatonExportException("Flow* requires bounds be defined for all "
-							+ "variables in initial states. Variable '" + v + "' was not bounded in"
-							+ " initial mode '" + mode + "' with expression: "
-							+ exp.toDefaultString());
+				{
+					Hyst.log(
+							"Removing input variable from root.variables without bounds in initial states: "
+									+ v);
+					toRemove.add(v);
+				}
+			}
+
+			for (String v : toRemove)
+			{
+				// check to make sure dynamics weren't defined for this variable in any modes
+				AutomatonMode am = ((BaseComponent) c.root).modes.values().iterator().next();
+
+				if (am.flowDynamics.get(v) != null)
+					throw new AutomatonExportException(
+							"Initial states didn't define bounds for variable '" + v
+									+ "' in initial location " + mode);
+
+				// flow was null, it's indeed an input variable
+				c.root.variables.remove(v);
+				flowstarExpressionPrinter.inputVariables.add(v);
 			}
 		}
 	}
@@ -817,8 +940,7 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
-	 * Test if each initial mode can be defined just using intervals over the
-	 * variables
+	 * Test if each initial mode can be defined just using intervals over the variables
 	 * 
 	 * @param c
 	 *            the configuration

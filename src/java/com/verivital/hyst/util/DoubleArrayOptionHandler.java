@@ -9,12 +9,12 @@ import org.kohsuke.args4j.spi.Parameters;
 import org.kohsuke.args4j.spi.Setter;
 
 /**
- * An {@link OptionHandler} for greedily mapping a list of tokens into a
- * collection of {@link Doubles}s (such as {@code Double[]}, {@code List
+ * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of
+ * {@link Doubles}s (such as {@code Double[]}, {@code List
  * <Double>}, etc.).
  *
- * This {@code OptionHandler} scans for parameter which begins with
- * <tt>-(NON_NUMBER)</tt>. If found, it will stop.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUMBER)</tt>. If
+ * found, it will stop.
  * </p>
  *
  * @author Stanley Bak

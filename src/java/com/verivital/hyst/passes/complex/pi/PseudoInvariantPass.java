@@ -24,14 +24,13 @@ import com.verivital.hyst.util.HyperPointArrayOptionHandler;
 import com.verivital.hyst.util.StringOperations;
 
 /**
- * This pass splits the initial mode into two using the technique of
- * pseudo-invariants:
- * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-Invariants"
- * , CyPhy 2014, Bak 2014
+ * This pass splits the initial mode into two using the technique of pseudo-invariants:
+ * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-Invariants" , CyPhy 2014, Bak
+ * 2014
  * 
- * The parameters define the list of (mode, point, direction), which define the
- * mode to apply the transformation, the continuous point, and the direction of
- * the hyperplane which defines the invariant.
+ * The parameters define the list of (mode, point, direction), which define the mode to apply the
+ * transformation, the continuous point, and the direction of the hyperplane which defines the
+ * invariant.
  * 
  * -modes MODE1 MODE2 ... -points POINT1 POINT2 ... -dirs DIR1 DIR2 ...
  * 
@@ -124,8 +123,8 @@ public class PseudoInvariantPass extends TransformationPass
 	 * @param points
 	 * @param dirs
 	 * @param skipUrgentInit
-	 *            should we omit constructing an urgent start state and assume
-	 *            all initial states go to the first mode?
+	 *            should we omit constructing an urgent start state and assume all initial states go
+	 *            to the first mode?
 	 * @return a string you can call runPass() with
 	 */
 	public static String makeParamString(List<String> modes, List<HyperPoint> points,
@@ -245,9 +244,8 @@ public class PseudoInvariantPass extends TransformationPass
 	}
 
 	/**
-	 * Create the expression for the invariant, at the given point with the
-	 * given gradient. The invariant is that we are BEFORE the time at which a
-	 * trajectory would reach the given point.
+	 * Create the expression for the invariant, at the given point with the given gradient. The
+	 * invariant is that we are BEFORE the time at which a trajectory would reach the given point.
 	 * 
 	 * @param vars
 	 *            the variable names, in order
@@ -300,8 +298,8 @@ public class PseudoInvariantPass extends TransformationPass
 	}
 
 	/**
-	 * Make an expression from a linear inequality (dot product of vars and
-	 * coeffs) <= right-hand-side value
+	 * Make an expression from a linear inequality (dot product of vars and coeffs) <=
+	 * right-hand-side value
 	 * 
 	 * @param vars
 	 *            the list of variables

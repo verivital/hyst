@@ -77,7 +77,7 @@ After building Hyst.jar, you can run it as an executable .jar file with the -hel
 
 ```
 $ java -jar Hyst.jar -help
-Hyst v1.3 General Usage:
+Hyst v1.6 General Usage:
  -debug (-d)                            : print debug (and verbose) output
                                           (default: false)
  -generate (-gen) GEN_NAME GEN_PARAMS   : generate a model (rather than loading
@@ -256,9 +256,9 @@ Another basic example is the ShortenModeNamesPass.java ( https://github.com/veri
 
 #### ECLIPSE SETUP:
 
-You need to compile with antlt-4.4-runtime.jar and several others jars (in /lib) on your classpath. In Eclipse, you do this by going to: 
+You need to compile with antlr-4.4-runtime.jar and several others jars (in /lib) on your classpath. In Eclipse, you do this by going to: 
 
-Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> select the antlt-4.4-complete.jar file (should be in the project directory) -> Ok
+Project -> Properties -> Java Build Path -> Libraries -> Add External Jar -> select the antlr-4.4-complete.jar file (should be in the project directory) -> Ok
 
 #### RUNNING DIRECTLY FROM .CLASS FILES:
 

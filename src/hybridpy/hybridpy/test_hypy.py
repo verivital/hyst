@@ -16,7 +16,7 @@ def get_script_dir():
 class TestHypy(unittest.TestCase):
     'Unit tests for hypy'
 
-    def test_simple(self):
+    def test_pysim(self):
         '''run the simple example from the hyst readme'''
         
         model = get_script_dir() + "/../../../examples/toy/toy.xml"

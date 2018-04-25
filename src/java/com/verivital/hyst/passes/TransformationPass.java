@@ -14,12 +14,10 @@ import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
 
 /**
- * A transformation pass is a behavior which modifies a Configuration (Hybrid
- * Automaton) object. Transformation passes can be called from the command line
- * and accept params. When your runPass() method gets called, the pass will have
- * done automatic command-line parsing using the args4j library. To use
- * parameters, all you need to do is define the annotations for member
- * variables.
+ * A transformation pass is a behavior which modifies a Configuration (Hybrid Automaton) object.
+ * Transformation passes can be called from the command line and accept params. When your runPass()
+ * method gets called, the pass will have done automatic command-line parsing using the args4j
+ * library. To use parameters, all you need to do is define the annotations for member variables.
  * 
  * See TimeScalePass for a simple example of these annotations.
  * 
@@ -48,9 +46,9 @@ public abstract class TransformationPass
 	}
 
 	/**
-	 * Run the pass on the given configuration, modifying it in place. This
-	 * first checks preconditions, then runs the pass, then afterwards validates
-	 * the configuration to make sure IR-assumptions remain valid.
+	 * Run the pass on the given configuration, modifying it in place. This first checks
+	 * preconditions, then runs the pass, then afterwards validates the configuration to make sure
+	 * IR-assumptions remain valid.
 	 * 
 	 * @param c
 	 *            the configuration to run the pass on
@@ -77,8 +75,8 @@ public abstract class TransformationPass
 	}
 
 	/**
-	 * Check the preconditions, throwing a PreconditionsException or converting
-	 * the automaton if they're not met
+	 * Check the preconditions, throwing a PreconditionsException or converting the automaton if
+	 * they're not met
 	 * 
 	 * @param c
 	 *            the Configuration object to check / convert
@@ -86,8 +84,7 @@ public abstract class TransformationPass
 	 *            the name of the pass, for error reporting
 	 * 
 	 * @throws PreconditionsFailedException
-	 *             if the automaton does not match the assumptions and cannot be
-	 *             converted
+	 *             if the automaton does not match the assumptions and cannot be converted
 	 */
 	protected void checkPreconditons(Configuration c, String name)
 	{
@@ -95,8 +92,8 @@ public abstract class TransformationPass
 	}
 
 	/**
-	 * Run the pass on the given configuration, modifying it in place. This does
-	 * NOT check preconditions, but does validate the model afterwards.
+	 * Run the pass on the given configuration, modifying it in place. This does NOT check
+	 * preconditions, but does validate the model afterwards.
 	 * 
 	 * @param c
 	 *            the configuration to run the pass on
@@ -163,8 +160,8 @@ public abstract class TransformationPass
 	}
 
 	/**
-	 * Get the flag used to run this pass on the command line. If null (the
-	 * default), this pass cannnot be used as a command-line pass
+	 * Get the flag used to run this pass on the command line. If null (the default), this pass
+	 * cannnot be used as a command-line pass
 	 * 
 	 * @return null or a command-line flag used to run this pass
 	 */
@@ -178,9 +175,8 @@ public abstract class TransformationPass
 	public abstract String getName();
 
 	/**
-	 * Run the pass on the given configuration (stored in the global config
-	 * object), modifying it in place. The command-line args are parsed before
-	 * this is called
+	 * Run the pass on the given configuration (stored in the global config object), modifying it in
+	 * place. The command-line args are parsed before this is called
 	 */
 	protected abstract void runPass();
 }

@@ -4,20 +4,22 @@
 package com.verivital.hyst.grammar.formula;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 
 /**
  * A matrix expression is one defined using matlab-like syntax: [1, 2; 3 4]
  * 
- * It can also be n-dimension, through the reshape function
- * reshape([1,1,2,2,3,3,4,4],2,2,2) would be a 2x2x2 matrix
+ * It can also be n-dimension, through the reshape function reshape([1,1,2,2,3,3,4,4],2,2,2) would
+ * be a 2x2x2 matrix
  * 
- * They can be used, for example, to specify look up tables. They must be at
- * least one dimensional, and each dimension must be at least width 1
+ * They can be used, for example, to specify look up tables. They must be at least one dimensional,
+ * and each dimension must be at least width 1
  */
 public class MatrixExpression extends Expression implements Iterable<Entry<int[], Expression>>
 {
@@ -69,8 +71,8 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 	}
 
 	/**
-	 * Create a 2-d matrix. The order used in get() is BACKWARDS from the matrix
-	 * order. This is to preserve the behavior in matlab
+	 * Create a 2-d matrix. The order used in get() is BACKWARDS from the matrix order. This is to
+	 * preserve the behavior in matlab
 	 * 
 	 * @param data
 	 */
@@ -120,12 +122,10 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 	}
 
 	/**
-	 * Create a new MatrixExpression from values given in the same order as
-	 * matlab's reshape command
+	 * Create a new MatrixExpression from values given in the same order as matlab's reshape command
 	 * 
 	 * @param data
-	 *            the matrix data, in the same order as matlab's reshape()
-	 *            command
+	 *            the matrix data, in the same order as matlab's reshape() command
 	 * @param sizes
 	 *            the sizes for each dimension
 	 */
@@ -178,8 +178,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 	 * Get an expression from this matrix
 	 * 
 	 * @param indices
-	 *            the index for each dimension, ordered from largest offset to
-	 *            smallest offset
+	 *            the index for each dimension, ordered from largest offset to smallest offset
 	 * @return
 	 */
 	public Expression get(int... indices)
@@ -340,8 +339,7 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 	}
 
 	/**
-	 * An iterator for matrix expressions. Loop over every expression in the
-	 * matrix.
+	 * An iterator for matrix expressions. Loop over every expression in the matrix.
 	 * 
 	 * @author Stanley Bak (11-2015)
 	 *
@@ -381,8 +379,8 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 		}
 
 		/**
-		 * Increment the iterator indexList (with overflowing to the next
-		 * dimension if necessary) This returns null upon overflow (when done)
+		 * Increment the iterator indexList (with overflowing to the next dimension if necessary)
+		 * This returns null upon overflow (when done)
 		 * 
 		 * @return the incremented indexList
 		 */
@@ -413,6 +411,56 @@ public class MatrixExpression extends Expression implements Iterable<Entry<int[]
 
 			return rv;
 		}
+	}
 
+	public static Expression fromRange(Expression startExp, Expression stepExp, Expression stopExp)
+	{
+		Expression start = SimplifyExpressionsPass.simplifyExpression(startExp);
+		Expression step = SimplifyExpressionsPass.simplifyExpression(stepExp);
+		Expression stop = SimplifyExpressionsPass.simplifyExpression(stopExp);
+
+		if (!(start instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got start = "
+							+ startExp.toDefaultString());
+
+		if (!(step instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got step = "
+							+ stepExp.toDefaultString());
+
+		if (!(stop instanceof Constant))
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should be constants. Got stop = "
+							+ stopExp.toDefaultString());
+
+		double min = ((Constant) start).getVal();
+		double max = ((Constant) stop).getVal();
+		double delta = ((Constant) step).getVal();
+
+		if (max < min)
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should have stop >= start");
+
+		if (delta <= 0)
+			throw new AutomatonExportException(
+					"Matrix start;step;stop expression should have step > 0");
+
+		ArrayList<Double> values = new ArrayList<Double>();
+
+		double tol = 1e-9;
+
+		if (delta < tol)
+			tol = delta / 2.0;
+
+		for (double d = min; d < max + tol; d += delta)
+			values.add(d);
+
+		double[] vals = new double[values.size()];
+
+		for (int i = 0; i < values.size(); ++i)
+			vals[i] = values.get(i);
+
+		return new MatrixExpression(vals);
 	}
 }

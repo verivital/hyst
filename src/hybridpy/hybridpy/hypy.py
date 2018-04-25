@@ -17,10 +17,11 @@ from hybridpy.tool_dreach import DReachTool
 from hybridpy.tool_spaceex import SpaceExTool
 from hybridpy.tool_hycreate import HyCreateTool
 from hybridpy.tool_pysim import PySimTool
+from hybridpy.tool_hylaa import HylaaTool
 
 # tools for which models can be generated
-TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), \
-         'spaceex':SpaceExTool(), 'dreach':DReachTool(), 'pysim':PySimTool()}
+TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), 'spaceex':SpaceExTool(), 
+         'dreach':DReachTool(), 'pysim':PySimTool(), 'hylaa':HylaaTool()}
 
 EXIT_CODE_TERM = 143
 
@@ -155,7 +156,7 @@ class Engine(object):
         hyst_path = get_tool_path('Hyst.jar')
 
         if hyst_path is None:
-            raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPY_PATH?')
+            raise RuntimeError('Hyst not found. Did you add the directory with Hyst.jar to HYPYPATH?')
 
         params = ['java', '-jar', hyst_path]
 
@@ -230,8 +231,6 @@ class Engine(object):
         'output' - tool-specific processed output object, only returned if successful and parse_output == True
         '''
 
-        #image_path = os.path.splitext(filename)[0] + ".png" if filename is not None else "generated.png"
-
         start_time = time.time()
         tool = TOOLS.get(self.printer[0])
 
@@ -279,7 +278,6 @@ class Engine(object):
                 rv['hyst_stdout'] = hyst_out.lines
 
         if rv['code'] == Engine.SUCCESS and run_tool:
-
             temp_dir = None
 
             if parse_output:

@@ -1,10 +1,10 @@
 package com.verivital.hyst.ir.network;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeSet;
 
 import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.ir.AutomatonExportException;
@@ -13,16 +13,14 @@ import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 
 /**
- * A network component as part of a hybrid automaton. This can compose one or
- * more subcomponents, as well as do renaming of variables, labels, constants,
- * ect.
+ * A network component as part of a hybrid automaton. This can compose one or more subcomponents, as
+ * well as do renaming of variables, labels, constants, ect.
  * 
- * The children of this class are the instantiated sub-components, not the
- * templates. Thus, if a single base component is instantiated several times,
- * there will be several children here.
+ * The children of this class are the instantiated sub-components, not the templates. Thus, if a
+ * single base component is instantiated several times, there will be several children here.
  * 
- * Validation guarantees: children is not null and size > 0, instance names are
- * valid identifiers, Components are nonnull
+ * Validation guarantees: children is not null and size > 0, instance names are valid identifiers,
+ * Components are nonnull
  * 
  */
 public class NetworkComponent extends Component
@@ -58,10 +56,16 @@ public class NetworkComponent extends Component
 	@Override
 	public Collection<String> getAllVariables()
 	{
-		HashSet<String> vars = new HashSet<String>();
+		TreeSet<String> vars = new TreeSet<String>();
 
-		for (ComponentInstance ci : children.values())
-			vars.addAll(ci.child.getAllVariables());
+		for (Entry<String, ComponentInstance> entry : children.entrySet())
+		{
+			ComponentInstance ci = entry.getValue();
+
+			Collection<String> childVars = ci.child.getAllVariables();
+
+			vars.addAll(childVars);
+		}
 
 		return vars;
 	}

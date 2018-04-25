@@ -26,8 +26,7 @@ import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
 
 /**
- * Takes a hybrid automaton from the internal model format and outputs a C2E2
- * (HyXML) model
+ * Takes a hybrid automaton from the internal model format and outputs a C2E2 (HyXML) model
  * 
  * TODO: just created base model
  * 
@@ -42,8 +41,7 @@ public class C2E2Printer extends ToolPrinter
 	private BaseComponent ha;
 
 	/**
-	 * map from mode string names to numeric ids, starting from 1 and
-	 * incremented
+	 * map from mode string names to numeric ids, starting from 1 and incremented
 	 */
 	private TreeMap<String, Integer> modeNamesToIds = new TreeMap<String, Integer>();
 
@@ -54,8 +52,8 @@ public class C2E2Printer extends ToolPrinter
 	}
 
 	/**
-	 * This method starts the actual printing! Prepares variables etc. and calls
-	 * printProcedure() to print the BPL code
+	 * This method starts the actual printing! Prepares variables etc. and calls printProcedure() to
+	 * print the BPL code
 	 */
 	protected void printDocument(String originalFilename)
 	{
@@ -115,8 +113,7 @@ public class C2E2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Print variable declarations and their initial value assignments plus a
-	 * list of all constants
+	 * Print variable declarations and their initial value assignments plus a list of all constants
 	 */
 	private void printVars()
 	{
@@ -158,17 +155,14 @@ public class C2E2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Print constants as FROZENVARS. Although there is also something called
-	 * DEFINE, so...
+	 * Print constants as FROZENVARS. Although there is also something called DEFINE, so...
 	 * 
-	 * This is more efficient than printing them as part of initial condition,
-	 * since if we do that, we'd have to declare them as variables, which will
-	 * increase the state space size
+	 * This is more efficient than printing them as part of initial condition, since if we do that,
+	 * we'd have to declare them as variables, which will increase the state space size
 	 * 
-	 * Note: in general, we may not always be able to just use #defines, for
-	 * instance, if we have a nondeterministic range in which case, we would
-	 * need to introduce another variable and add e.g. 0 <= A <= 5.2 as an
-	 * initial condition constraint
+	 * Note: in general, we may not always be able to just use #defines, for instance, if we have a
+	 * nondeterministic range in which case, we would need to introduce another variable and add
+	 * e.g. 0 <= A <= 5.2 as an initial condition constraint
 	 */
 	private void printConstants()
 	{
@@ -247,8 +241,8 @@ public class C2E2Printer extends ToolPrinter
 	}
 
 	/**
-	 * Prints the locations with their labels and everything that happens in
-	 * them (invariant, flow...)
+	 * Prints the locations with their labels and everything that happens in them (invariant,
+	 * flow...)
 	 */
 	private void printModes()
 	{
@@ -492,9 +486,9 @@ public class C2E2Printer extends ToolPrinter
 		if (config.init.size() != 1)
 			throw new AutomatonExportException(
 					"Printer currently only supports single-initial-state models");
-		// else if (ha.forbidden.size() != 1)
-		// throw new AutomatonExportException("Printer currently only supports
-		// single-forbidden-state models");
+				// else if (ha.forbidden.size() != 1)
+				// throw new AutomatonExportException("Printer currently only supports
+				// single-forbidden-state models");
 
 		// transform resets to include identity expressions
 		new AddIdentityResetPass().runTransformationPass(config, null);

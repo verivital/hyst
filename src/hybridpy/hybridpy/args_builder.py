@@ -60,7 +60,7 @@ class BuildGenArgsBuilder(object):
 
             rv += self.transition_args
 
-        quoted_args = ["\"" + s + "\"" if " " in s else s for s in rv]
+        quoted_args = ["null" if s is None else "\"" + s + "\"" if " " in s else s for s in rv]
         arg_string = " ".join(quoted_args)
 
         return arg_string
@@ -87,7 +87,7 @@ class BuildGenArgsBuilder(object):
         'assigns the time bound'
 
         self.time_bound = tb
-
+    
     def add_mode(self, name, invariant, der_list):
         'add a mode'
 
@@ -97,7 +97,7 @@ class BuildGenArgsBuilder(object):
                                                     .format(name, len(self.variables), len(der_list))
 
         for der in der_list:
-            assert str(der) == der, "derivatives must be strings: {}".format(repr(der))
+            assert der is None or str(der) == der, "derivatives must be strings: {}".format(repr(der))
 
         assert self.modes.get(name) is None, "mode '{}' was already in the automaton".format(name)
 
@@ -106,7 +106,7 @@ class BuildGenArgsBuilder(object):
         self.mode_args.append(invariant)
         self.mode_args += der_list
 
-    def add_transition(self, from_name, to_name, guard, reset_list):
+    def add_transition(self, from_name, to_name, guard, reset_list=None):
         'add a transition'
 
         assert str(from_name) == from_name, "source mode name must be a string: {}".format(from_name)

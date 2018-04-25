@@ -108,6 +108,42 @@ class TestPySimUtils(unittest.TestCase):
         if res.find(";") == -1:
             self.fail("unexpected result")
 
+    def test_sim_overflow_error(self):
+        'regression test for an overflow error that was encountered'
+
+        ha = HybridAutomaton()
+        ha.variables = ["barrier_clock", "x", "y"]
+        on = ha.new_mode('on')
+
+        def inv(state):
+            'state invariant'
+        
+            rv = (state[1] ** 2) + (state[2] ** 2) - 9 <= 0.0001
+
+            #print "inv returning {}".format(rv)
+
+            return rv
+
+        on.inv = inv
+        on.der = lambda _, state: [1, -state[2], -(-state[1] + state[2] * (-state[1] ** 2 + 1))]
+        on.der_interval_list = [[0, 0], [0, 0], [0, 0]]
+        error = ha.new_mode('error')
+        error.inv = lambda state: True
+        error.der = lambda _, state: [0, 0, 0]
+        error.der_interval_list = [[0, 0], [0, 0], [0, 0]]
+        t = ha.new_transition(on, error)
+        t.guard = lambda state: state[0] >= 5
+        t.reset = lambda state: [None, None, None]
+
+        res = util.simulate_multi_trajectory_time(ha, ['on'], [[0.0, 0.0, -2.9142074584950004]], 5.0001)
+        
+        # two points before, invariant should still be true
+        point = res.split(';')[-2]
+
+        _, t, x, y = point.split(",")
+
+        self.assertTrue(inv([float(t), float(x), float(y)]), msg="Invariant should be true at last point")
+
 if __name__ == '__main__':
     unittest.main()
 

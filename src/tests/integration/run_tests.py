@@ -50,27 +50,28 @@ def run_single((index, total, path, tool_tuple, quit_flag)):
 
     (tool_name, tool_param) = tool_tuple
 
-    index_str = str(index+1) + "/" + str(total)
-    print index_str + " Running " + model + " with " + tool_name
-    sys.stdout.flush()
-
     base = RESULT_PATH + '/' + model + '_' + tool_name
 
     e = hypy.Engine(tool_name, tool_param)
     e.set_input(path)
     e.set_output(base + hypy.TOOLS[tool_name].default_ext())
 
-    result = e.run(run_tool=SHOULD_RUN_TOOLS, timeout=TIMEOUT, save_stdout=True, image_path=base + ".png")
+    to = TIMEOUT
+
+    print "{}/{} Running {} with {} and timeout {}".format(index, total, model, tool_name, to)
+    sys.stdout.flush()
+
+    result = e.run(run_tool=SHOULD_RUN_TOOLS, timeout=to, save_stdout=True, image_path=base + ".png")
 
     if result['code'] in [Engine.ERROR_TOOL, Engine.ERROR_CONVERSION, Engine.TIMEOUT_CONVERSION]:
-        message = "Test failed for " + index_str + " model " + model + " with " + tool_name + ": " + str(result['code'])
+        message = "Test failed for {}/{} model {} with {}: {}".format(index, total, model, tool_name, result['code'])
 
         log = "\n".join(result['stdout'])
 
         rv = (message, log)
         quit_flag.value = 1
 
-    print index_str + " Finished " + model + " with " + tool_name
+    print "{}/{} Finished {} with {}".format(index, total, model, tool_name)
 
     return rv
 
@@ -150,7 +151,7 @@ def setup_env():
     if os.path.exists(RESULT_PATH):
         shutil.rmtree(RESULT_PATH)
 
-    if os.path.exists(RESULT_PATH) == False:
+    if not os.path.exists(RESULT_PATH):
         os.makedirs(RESULT_PATH)
 
 ############################
@@ -164,19 +165,21 @@ def main():
     files = get_files(MODELS_PATH)
     assert len(files) > 0, "No input .xml files detected in directory: {}".format(MODELS_PATH)
 
+    files.sort() # sort models in alphabetical order
+
     for (name, _) in TOOLS:
-        if hypy.TOOLS[name].tool_path == None:
+        if hypy.TOOLS[name].tool_path is None:
             print "Warning: {} is not runnable. Tool will be skipped.".format(name)
             skipped_some_tool = True
 
     if parallel_run(files):
-        if skipped_some_tool == False:
-            print "Done running all regression tests, success."
+        if not skipped_some_tool:
+            print "Done running all integration tests, success."
         else:
-            print "Regression test conversion passed, but some tools were not run."
+            print "Integration test conversion passed, but some tools were not run."
         sys.exit(0)
     else:
-        print "Error detected running regression tests."
+        print "Error detected running integration tests."
         sys.exit(1)
 
 if __name__ == "__main__":

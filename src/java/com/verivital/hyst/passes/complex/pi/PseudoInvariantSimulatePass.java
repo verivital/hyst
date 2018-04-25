@@ -21,17 +21,15 @@ import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.StringOperations;
 
 /**
- * This pass splits the initial mode into several using the technique of
- * pseudo-invariants:
- * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants"
- * , CyPhy 2014, Bak 2014
+ * This pass splits the initial mode into several using the technique of pseudo-invariants:
+ * "Reducing the Wrapping Effect in Flowpipe Construction Using Pseudo-invariants" , CyPhy 2014, Bak
+ * 2014
  * 
- * The parameter is a list of times. The center of the initial set is simulated
- * for these times before splitting orthogonal to the gradient.
+ * The parameter is a list of times. The center of the initial set is simulated for these times
+ * before splitting orthogonal to the gradient.
  * 
- * Currently, the simulatio is only done from the initial states, staying in the
- * initial mode. If there's a demand, this should be extended to work across
- * discrete transitions.
+ * Currently, the simulatio is only done from the initial states, staying in the initial mode. If
+ * there's a demand, this should be extended to work across discrete transitions.
  * 
  * @author Stanley Bak (October 2014)
  *

@@ -59,7 +59,7 @@ class SpaceExTool(HybridTool):
         if err_line != None:
             print "stderr output detected: '" + err_line + "'"
 
-    def _run_tool(self):
+    def _run_tool(self, image_requested):
         '''actually run the subprocess, parsing stdout and stderr appropriately
         returns a value in RunCode
         '''

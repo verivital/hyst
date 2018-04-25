@@ -72,6 +72,14 @@ public enum Operator
 		return COMMUTATIVE_OPS.contains(o);
 	}
 
+	static final List<Operator> BOOLEAN_OPS = Arrays.asList(AND, OR, LOGICAL_NOT, EQUAL, LESS,
+			GREATER, LESSEQUAL, GREATEREQUAL, NOTEQUAL);
+
+	public static boolean isBooleanOperator(Operator o)
+	{
+		return BOOLEAN_OPS.contains(o);
+	}
+
 	@Override
 	public String toString()
 	{

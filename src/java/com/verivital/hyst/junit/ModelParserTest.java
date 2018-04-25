@@ -1,5 +1,6 @@
 package com.verivital.hyst.junit;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,7 +20,6 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
 import com.verivital.hyst.importer.TemplateImporter;
-import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.AutomatonValidationException;
@@ -31,6 +31,7 @@ import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
@@ -50,7 +51,7 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExNetworkComponent;
 @RunWith(Parameterized.class)
 public class ModelParserTest
 {
-	public static String UNIT_BASEDIR = "tests/unit/models/";
+	private String UNIT_BASEDIR;
 
 	@Parameters
 	public static Collection<Object[]> data()
@@ -61,6 +62,30 @@ public class ModelParserTest
 	public ModelParserTest(boolean block)
 	{
 		PythonBridge.setBlockPython(block);
+		
+UNIT_BASEDIR = "tests/unit/models/";
+		
+		File f;
+		try {
+			f = new File(UNIT_BASEDIR);
+			
+			if (!f.exists()) {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+			}
+		}
+		catch (Exception ex0) {
+			try {
+				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
+				f = new File(UNIT_BASEDIR); 
+			}
+			catch (Exception ex1) {
+				
+				//if (!f.exists()) {
+				//	throw new Exception("Bad unit test base directory: " +
+				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
+				//}
+			}
+		}
 	}
 
 	@Before
@@ -85,8 +110,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Model has a 'const' value which is actually an interval in the initial
-	 * conditions
+	 * Model has a 'const' value which is actually an interval in the initial conditions
 	 */
 	@Test
 	public void testParseRangedConstant()
@@ -114,8 +138,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Model has a 'const' value which is defined in the model and not in the
-	 * initial conditions
+	 * Model has a 'const' value which is defined in the model and not in the initial conditions
 	 */
 	@Test
 	public void testParseModelConstants()
@@ -456,8 +479,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * For Flow*, models require at least one variable. Thus, printing such
-	 * models with a tool like Flow* should raise a precondition error
+	 * For Flow*, models require at least one variable. Thus, printing such models with a tool like
+	 * Flow* should raise a precondition error
 	 */
 	@Test
 	public void testModelNoVars()
@@ -503,8 +526,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Models with blank forbidden states should be allowed (spaceex includes
-	 * examples of these, like heli)
+	 * Models with blank forbidden states should be allowed (spaceex includes examples of these,
+	 * like heli)
 	 */
 	@Test
 	public void testModelBlankForbidden()
@@ -521,8 +544,8 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Test base component with a missing component name in loc(component)=
-	 * assignment for initial states This should be an error
+	 * Test base component with a missing component name in loc(component)= assignment for initial
+	 * states This should be an error
 	 */
 	@Test
 	public void testMissingBaseComponent()
@@ -542,8 +565,7 @@ public class ModelParserTest
 	}
 
 	/**
-	 * Test base component with blank component name in loc()= assignment for
-	 * initial states
+	 * Test base component with blank component name in loc()= assignment for initial states
 	 */
 	@Test
 	public void testModelBaseTwoComponent()
@@ -691,7 +713,7 @@ public class ModelParserTest
 
 			// it isn't run automatically during flatten since some printers
 			// (SpaceEx) can print havoc dynamics directly
-			ConvertHavocFlows.run(c);
+			new ConvertHavocFlows().runVanillaPass(c, "");
 
 			BaseComponent ha = (BaseComponent) c.root;
 
@@ -1300,7 +1322,7 @@ public class ModelParserTest
 		String loc3 = config.forbidden.get("loc3").toDefaultString();
 		Assert.assertTrue(loc1.contains("x >= 5"));
 		Assert.assertTrue(loc1.contains("t >= 5"));
-		Assert.assertEquals(loc3, "t <= 5");
+		Assert.assertEquals(loc3, "t <= 5.0");
 	}
 
 	@Test
@@ -1366,10 +1388,35 @@ public class ModelParserTest
 		/*
 		 * We need a network printer for this:
 		 * 
-		 * ToolPrinter printer = new SpaceExPrinter();
-		 * printer.setOutputString(); printer.print(config, "", "model.xml");
+		 * ToolPrinter printer = new SpaceExPrinter(); printer.setOutputString();
+		 * printer.print(config, "", "model.xml");
 		 * 
 		 * System.out.println(printer.outputString.toString());
 		 */
+	}
+
+	@Test
+	public void testModelWithUncontrolledVars()
+	{
+		// split harmonic oscialltor, x' = y, y' = -x
+		// Model with two base components and two variables, they each control one of them, but use
+		// the other
+
+		String cfgPath = UNIT_BASEDIR + "split_ha/split_ha.cfg";
+		String xmlPath = UNIT_BASEDIR + "split_ha/split_ha.xml";
+
+		SpaceExDocument doc = SpaceExImporter.importModels(cfgPath, xmlPath);
+		Map<String, Component> componentTemplates = TemplateImporter.createComponentTemplates(doc);
+
+		Configuration config = com.verivital.hyst.importer.ConfigurationMaker.fromSpaceEx(doc,
+				componentTemplates);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(config, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("some output exists", out.length() > 10);
 	}
 }

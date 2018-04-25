@@ -11,17 +11,16 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.util.DynamicsUtil;
 
 /**
- * Internal passes are similar to transformation passes, but instead are called
- * programmatically. They are like utility functions, but perform in-place
- * modifications of a Configuration object. By convention, call the static run()
- * method to perform the transformation.
+ * Internal passes are similar to transformation passes, but instead are called programmatically.
+ * They are like utility functions, but perform in-place modifications of a Configuration object. By
+ * convention, call the static run() method to perform the transformation.
  * 
- * This pass converts a hybrid automaton to standard form. A standard form
- * automaton is flat, and has a single initial state named _init, which is
- * urgent. It has a single forbidden state named _error, with no condition on
- * the real variables.
+ * This pass converts a hybrid automaton to standard form. A standard form automaton is flat, and
+ * has a single initial state named _init, which is urgent. It has a single forbidden state named
+ * _error, with no condition on the real variables.
  * 
  * @author Stanley Bak
  */
@@ -104,16 +103,28 @@ public class ConvertToStandardForm
 		AutomatonMode error = ha.createMode(ERROR_MODE_NAME);
 		error.invariant = Constant.TRUE;
 
+		AutomatonMode someMode = ha.modes.values().iterator().next();
+
 		for (String var : ha.variables)
-			error.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+		{
+			if (someMode.flowDynamics.get(var) != null)
+				error.flowDynamics.put(var, new ExpressionInterval(new Constant(0)));
+			else
+				error.flowDynamics.remove(var);
+		}
 
 		for (Entry<String, Expression> e : config.forbidden.entrySet())
 		{
 			Expression forbiddenCondition = e.getValue();
-			AutomatonMode m = ha.modes.get(e.getKey());
-			AutomatonTransition at = ha.createTransition(m, error);
+			ArrayList<Expression> conds = DynamicsUtil.splitDisjunction(forbiddenCondition);
 
-			at.guard = forbiddenCondition;
+			for (Expression cond : conds)
+			{
+				AutomatonMode m = ha.modes.get(e.getKey());
+				AutomatonTransition at = ha.createTransition(m, error);
+
+				at.guard = cond;
+			}
 		}
 
 		config.forbidden.clear();

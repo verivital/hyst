@@ -11,16 +11,16 @@ import org.kohsuke.args4j.spi.Setter;
 import com.verivital.hyst.geometry.HyperPoint;
 
 /**
- * An {@link OptionHandler} for greedily mapping a list of tokens into a
- * collection of {@link HyperPoint}s (such as {@code HyperPoint[]}, {@code List
+ * An {@link OptionHandler} for greedily mapping a list of tokens into a collection of
+ * {@link HyperPoint}s (such as {@code HyperPoint[]}, {@code List
  * <HyperPoint>}, etc.).
  *
- * This {@code OptionHandler} scans for parameter which begins with
- * <tt>-(NON_NUM)</tt>. If found, it will stop.
+ * This {@code OptionHandler} scans for parameter which begins with <tt>-(NON_NUM)</tt>. If found,
+ * it will stop.
  * </p>
  * 
- * All the HyperPoints must be the same dimensionality. Each Hyperpoint is a
- * comma-separated (no spaces) list of numbers for example: -3,4,15
+ * All the HyperPoints must be the same dimensionality. Each Hyperpoint is a comma-separated (no
+ * spaces) list of numbers for example: -3,4,15
  *
  * @author Stanley Bak
  */

@@ -19,17 +19,16 @@ import com.verivital.hyst.util.DoubleArrayOptionHandler;
 import com.verivital.hyst.util.ExpressionValueArrayOptionHandler;
 
 /**
- * Creates a chain of integrators. Based on "Chains of Integrators as a
- * Benchmark for Scalability of Hybrid Control Synthesis", Livingston et. al,
- * ARCH 2016
+ * Creates a chain of integrators. Based on "Chains of Integrators as a Benchmark for Scalability of
+ * Hybrid Control Synthesis", Livingston et. al, ARCH 2016
  * 
- * Paramters are # of parallel chains (n) Length of chain m Input for the last
- * dimension in each chain (u0 ... um)
+ * Paramters are # of parallel chains (n) Length of chain m Input for the last dimension in each
+ * chain (u0 ... um)
  * 
- * timeVar, optional, (should an explicit 'time dimension be added? parameter is
- * the name) xi, input noise list, optional, the additive noise for each input
+ * timeVar, optional, (should an explicit 'time dimension be added? parameter is the name) xi, input
+ * noise list, optional, the additive noise for each input
  * 
- * where x0' == 1, x1' == x0, x2' == x1, ...
+ * where x0' == 1, x1' == x0, x2' == x1, ..., xn = u
  * 
  * @author Stanley Bak (May 2016)
  *
@@ -107,7 +106,7 @@ public class IntegralChainGenerator extends ModelGenerator
 				// var_n' == var_{n+1}
 				if (numInChain != (m - 1))
 				{
-					String nextVar = varPrefix + "_" + chainNum + "_der" + (m + 1);
+					String nextVar = varPrefix + "_" + chainNum + "_der" + (numInChain + 1);
 					mode.flowDynamics.put(varName, new ExpressionInterval(new Variable(nextVar)));
 				}
 				else

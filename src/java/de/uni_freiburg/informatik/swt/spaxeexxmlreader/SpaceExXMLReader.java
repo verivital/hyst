@@ -418,8 +418,7 @@ public class SpaceExXMLReader
 				String contentStart = content.substring(0, 1);
 
 				/*
-				 * We need to check if we have a Param reference or a list of
-				 * concrete values.
+				 * We need to check if we have a Param reference or a list of concrete values.
 				 */
 				Pattern regex = Pattern.compile("^[a-zA-Z_]");
 
@@ -617,8 +616,7 @@ public class SpaceExXMLReader
 	}
 
 	/**
-	 * Checks if a DOM Element has a &lt;note&gt; child Element and returns its
-	 * text content if any.
+	 * Checks if a DOM Element has a &lt;note&gt; child Element and returns its text content if any.
 	 * 
 	 * @param element
 	 *            The Element to examine (PARENT of the &lt;note&gt; node!)
@@ -638,8 +636,8 @@ public class SpaceExXMLReader
 	}
 
 	/**
-	 * Checks if a DOM Element has "x" and "y" attributes and transforms them
-	 * into a UIPosition if they're present.
+	 * Checks if a DOM Element has "x" and "y" attributes and transforms them into a UIPosition if
+	 * they're present.
 	 * 
 	 * @param element
 	 *            The element which's position to check
@@ -673,8 +671,8 @@ public class SpaceExXMLReader
 	}
 
 	/**
-	 * Checks if a DOM Element has "x" and "y" attributes and transforms them
-	 * into a UIPosition if they're present.
+	 * Checks if a DOM Element has "x" and "y" attributes and transforms them into a UIPosition if
+	 * they're present.
 	 * 
 	 * @param element
 	 *            The element which's position to check
@@ -742,8 +740,7 @@ public class SpaceExXMLReader
 	}
 
 	/**
-	 * Parse a list of waypoints from a &lt;beforemiddle&gt; or
-	 * &lt;aftermiddle&gt; Node
+	 * Parse a list of waypoints from a &lt;beforemiddle&gt; or &lt;aftermiddle&gt; Node
 	 * 
 	 * @param source
 	 * @param waypoints
@@ -752,8 +749,8 @@ public class SpaceExXMLReader
 	private void parseWaypointsList(Element source, UIWaypoints waypoints, boolean insertBefore)
 	{
 		/*
-		 * waypoints are given as a comma-separated list of REAL values, which
-		 * use a dot as the decimal separator.
+		 * waypoints are given as a comma-separated list of REAL values, which use a dot as the
+		 * decimal separator.
 		 */
 		String content = source.getTextContent().trim();
 		String[] values = content.split(",");
@@ -846,16 +843,17 @@ public class SpaceExXMLReader
 			{
 				while ((line = br.readLine()) != null)
 				{
+					// remove comments from string
+					int commentPos = line.indexOf("#");
+					if (commentPos != -1)
+						line = line.substring(0, commentPos);
+
 					int eqPos = line.indexOf("=");
 					if (eqPos > 0)
 					{
-						String property = line.substring(0, eqPos - 1).trim().toLowerCase();
+						String property = line.substring(0, eqPos).trim().toLowerCase();
 
 						String value = line.substring(eqPos + 1);
-						// remove comments from value string
-						int commentPos = value.indexOf("#");
-						if (commentPos > 0)
-							value = value.substring(0, commentPos - 1);
 
 						int quoteIndex = value.indexOf("\"");
 
@@ -899,6 +897,12 @@ public class SpaceExXMLReader
 
 							mTarget.setSamplingTime(st);
 						}
+						else if (property.equals("flowpipe-tolerance"))
+						{
+							double tol = Double.parseDouble(value);
+
+							mTarget.setFlowpipeTolerance(tol);
+						}
 						else if (property.equals("iter-max"))
 						{
 							int im = Integer.parseInt(value);
@@ -938,6 +942,10 @@ public class SpaceExXMLReader
 						else if (property.equals("directions"))
 						{
 							mTarget.setDirections(value);
+						}
+						else if (property.equals("set-aggregation"))
+						{
+							mTarget.setAggregation(value);
 						}
 					}
 				}

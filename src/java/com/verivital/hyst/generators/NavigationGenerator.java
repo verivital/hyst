@@ -22,8 +22,8 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.util.DoubleArrayOptionHandler;
 
 /**
- * Creates the NAV benchmark, from "Benchmarks for Hybrid Systems Verification",
- * Fehnker et. al, HSCC 2004
+ * Creates the NAV benchmark, from "Benchmarks for Hybrid Systems Verification", Fehnker et. al,
+ * HSCC 2004
  * 
  * 
  * @author Stanley Bak (May 2016)
@@ -48,16 +48,47 @@ public class NavigationGenerator extends ModelGenerator
 
 	private int height = -1; // derived from list size and width
 
-	@Option(name = "-startx", required = true, usage = "x start position", metaVar = "REAL")
-	private double xInit = 0.0;
+	@Option(name = "-startx", required = true, usage = "x start position range", metaVar = "MIN (MAX)", handler = DoubleArrayOptionHandler.class)
+	private List<Double> xInit;
 
-	@Option(name = "-starty", required = true, usage = "y start position", metaVar = "REAL")
-	private double yInit = 0.0;
+	@Option(name = "-starty", required = true, usage = "y start position range", metaVar = "MIN (MAX)", handler = DoubleArrayOptionHandler.class)
+	private List<Double> yInit;
 
-	String startModeName = null;
+	@Option(name = "-startxvel", usage = "x start velocity range", metaVar = "MIN (MAX)", handler = DoubleArrayOptionHandler.class)
+	private List<Double> xVelInit = new ArrayList<Double>();
+
+	@Option(name = "-startyvel", usage = "y start velocity range", metaVar = "MIN (MAX)", handler = DoubleArrayOptionHandler.class)
+	private List<Double> yVelInit = new ArrayList<Double>();
+
+	ArrayList<String> startModeNames = null;
 
 	@Option(name = "-noise", usage = "amount of input noise [-val,val] to add to xvel and yel", metaVar = "VAL")
 	private double noise = 0.0;
+
+	public static String makeParamString(String[] map, double[] matA, Interval[] x0, Interval[] v0)
+	{
+		StringBuilder rv = new StringBuilder();
+
+		rv.append("-matrix");
+
+		for (double entry : matA)
+			rv.append(" " + entry);
+
+		rv.append(" -i_list");
+
+		for (String entry : map)
+			rv.append(" " + entry);
+
+		rv.append(" -width " + Math.round(Math.sqrt(map.length)));
+
+		rv.append(" -startx " + x0[0].min + " " + x0[0].max);
+		rv.append(" -starty " + x0[1].min + " " + x0[1].max);
+
+		rv.append(" -startxvel " + v0[0].min + " " + v0[0].max);
+		rv.append(" -startyvel " + v0[1].min + " " + v0[1].max);
+
+		return rv.toString();
+	}
 
 	private void checkParams()
 	{
@@ -108,8 +139,75 @@ public class NavigationGenerator extends ModelGenerator
 					"Width(" + width + ") should evenly divide number of elements in i_list ("
 							+ iListProcessed.size() + ").");
 
-		int startX = (int) Math.floor(xInit);
-		int startY = (int) Math.floor(yInit);
+		flipIListProcessed();
+
+		if (xVelInit.size() == 0)
+		{
+			xVelInit.add(-1.0);
+			xVelInit.add(1.0);
+		}
+
+		if (yVelInit.size() == 0)
+		{
+			yVelInit.add(-1.0);
+			yVelInit.add(1.0);
+		}
+
+		if (xInit.size() == 1)
+			xInit.add(xInit.get(0));
+
+		if (yInit.size() == 1)
+			yInit.add(yInit.get(0));
+
+		if (xVelInit.size() == 1)
+			xVelInit.add(xVelInit.get(0));
+
+		if (yVelInit.size() == 1)
+			yVelInit.add(yVelInit.get(0));
+
+		if (xInit.size() != 2)
+			throw new AutomatonExportException("Expected 1 or 2 initial x values, got: " + xInit);
+
+		if (yInit.size() != 2)
+			throw new AutomatonExportException("Expected 1 or 2 initial y values, got: " + yInit);
+
+		if (xVelInit.size() != 2)
+			throw new AutomatonExportException(
+					"Expected 1 or 2 initial x vel values, got: " + xVelInit);
+
+		if (yVelInit.size() != 2)
+			throw new AutomatonExportException(
+					"Expected 1 or 2 initial y vel values, got: " + yVelInit);
+
+		startModeNames = findStartModeNames();
+	}
+
+	/**
+	 * Flip I-list-processed vertically so element zero is at the origin (bottom left), rather than
+	 * the top left
+	 */
+	private void flipIListProcessed()
+	{
+		ArrayList<Integer> newList = new ArrayList<Integer>();
+
+		for (int offset = iListProcessed.size() - width; offset >= 0; offset -= width)
+		{
+			for (int i = 0; i < width; ++i)
+				newList.add(iListProcessed.get(offset + i));
+		}
+
+		iListProcessed = newList;
+	}
+
+	private ArrayList<String> findStartModeNames()
+	{
+		ArrayList<String> rv = new ArrayList<String>();
+
+		int startX = (int) Math.floor(xInit.get(0));
+		int startY = (int) Math.floor(yInit.get(0));
+
+		int endX = (int) Math.floor(xInit.get(1) - 1e-9);
+		int endY = (int) Math.floor(yInit.get(1) - 1e-9);
 
 		height = iListProcessed.size() / width;
 
@@ -123,7 +221,11 @@ public class NavigationGenerator extends ModelGenerator
 		else if (startY >= height)
 			startY = height - 1;
 
-		startModeName = modePrefix + startX + "_" + startY;
+		for (int y = startY; y <= endY; ++y)
+			for (int x = startX; x <= endX; ++x)
+				rv.add(modePrefix + x + "_" + y);
+
+		return rv;
 	}
 
 	@Override
@@ -159,8 +261,12 @@ public class NavigationGenerator extends ModelGenerator
 
 		// initial states
 		Expression initExp = FormulaParser.parseInitialForbidden(
-				"x == " + xInit + " && y == " + yInit + " & -1 <= xvel <= 1 & -1 <= yvel <= 1");
-		c.init.put(startModeName, initExp);
+				xInit.get(0) + " <= x <= " + xInit.get(1) + " && " + yInit.get(0) + " <= y <= "
+						+ yInit.get(1) + " & " + xVelInit.get(0) + " <= xvel <= " + xVelInit.get(1)
+						+ " & " + yVelInit.get(0) + " <= yvel <= " + yVelInit.get(1));
+
+		for (String mode : startModeNames)
+			c.init.put(mode, initExp);
 
 		// assign plot variables
 		c.settings.plotVariableNames[0] = "x";
@@ -270,6 +376,14 @@ public class NavigationGenerator extends ModelGenerator
 
 			double desiredXvel = Math.sin(i * Math.PI / 4);
 			double desiredYvel = Math.cos(i * Math.PI / 4);
+
+			double tol = 1e-9;
+
+			if (Math.abs(desiredXvel) < tol)
+				desiredXvel = 0;
+
+			if (Math.abs(desiredYvel) < tol)
+				desiredYvel = 0;
 
 			// v' = A(v-vd)
 			Expression xvelDer = FormulaParser.parseValue(matrixA[0][0] + " * (xvel - "

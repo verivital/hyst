@@ -15,6 +15,7 @@ LBRAC : '[';
 RBRAC : ']';
 COMMA : ',';
 SEMICOLON : ';';
+COLON : ':';
 
 PLUS : '+';
 MINUS : '-';
@@ -38,9 +39,14 @@ EQUAL_RESET : ':=';
 matrixRow
 	: addSub (COMMA addSub)*  # MatrixRowExp
 	;
+	
+matrixRange
+	: addSub COLON addSub COLON addSub # MatrixRangeExp
+	;
 
 matrixExpression
-	: LBRAC matrixRow (SEMICOLON matrixRow)* RBRAC # Matrix
+	: LBRAC matrixRow (SEMICOLON matrixRow)* RBRAC # MatrixExplicit
+	| LBRAC matrixRange RBRAC # MatrixGenerated
 	;
 
 functionExpression
@@ -89,8 +95,7 @@ or
     ;
 
 and
-    : not AND and # AndExpression
-    | not 	      # ToNot
+    : (not AND)* not # AndExpression
 	;
 
 not

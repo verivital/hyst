@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="core_component">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x5" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x6" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x7" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x8" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <location id="1" name="Model" x="362.0" y="430.0" width="426.0" height="610.0">
+      <invariant>u1 &gt;= 0.1600000 &amp; u1 &lt;= 0.3000000 &amp; u2 &gt;= 0.2000000 &amp; u2 &lt;= 0.4000000</invariant>
+      <flow>x1' == x2
+ &amp;x2' == 8487.2*x3 - 1.0865*x2
+ &amp;x3' == - 2592.1*x1 - 21.119*x2 - 698.91*x3 - 141399.0*x4
+ &amp;x4' == x1 - 1.0*u1
+ &amp;x5' == x6
+ &amp;x6' == 8487.2*x7 - 1.0865*x6
+ &amp;x7' == - 2592.1*x5 - 21.119*x6 - 698.91*x7 - 141399.0*x8
+ &amp;x8' == x5 - 1.0*u2
+ &amp;t' == 1</flow>
+    </location>
+  </component>
+  <component id="sys">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x3" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x4" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x5" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x6" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x7" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="x8" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="t" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="true" />
+    <param name="u1" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <param name="u2" type="real" local="false" d1="1" d2="1" dynamics="any" controlled="false" />
+    <bind component="core_component" as="core_component_1" x="523.0" y="174.0">
+      <map key="x1">x1</map>
+      <map key="x2">x2</map>
+      <map key="x3">x3</map>
+      <map key="x4">x4</map>
+      <map key="x5">x5</map>
+      <map key="x6">x6</map>
+      <map key="x7">x7</map>
+      <map key="x8">x8</map>
+      <map key="t">t</map>
+      <map key="u1">u1</map>
+      <map key="u2">u2</map>
+    </bind>
+  </component>
+</sspaceex>
+

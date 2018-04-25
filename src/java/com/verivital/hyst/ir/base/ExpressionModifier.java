@@ -18,16 +18,19 @@ public abstract class ExpressionModifier
 		for (Entry<String, ExpressionInterval> e : m.entrySet())
 		{
 			ExpressionInterval ei = e.getValue();
-			rv.put(e.getKey(), new ExpressionInterval(em.modifyExpression(ei.getExpression()),
-					ei.getInterval()));
+
+			if (ei != null)
+				rv.put(e.getKey(), new ExpressionInterval(em.modifyExpression(ei.getExpression()),
+						ei.getInterval()));
+			else
+				rv.put(e.getKey(), null);
 		}
 
 		return rv;
 	}
 
 	/**
-	 * Modify expressions in the initial and forbidden states in this
-	 * configuration
+	 * Modify expressions in the initial and forbidden states in this configuration
 	 * 
 	 * @param c
 	 *            the configuration
@@ -41,7 +44,8 @@ public abstract class ExpressionModifier
 		for (Entry<String, Expression> e : c.init.entrySet())
 		{
 			Expression exp = e.getValue();
-			newInit.put(e.getKey(), em.modifyExpression(exp));
+			Expression newExp = em.modifyExpression(exp);
+			newInit.put(e.getKey(), newExp);
 		}
 
 		c.init = newInit;
@@ -55,8 +59,8 @@ public abstract class ExpressionModifier
 	}
 
 	/**
-	 * Enumerate over all the expressions in this base component and modify them
-	 * with the passed-in object
+	 * Enumerate over all the expressions in this base component and modify them with the passed-in
+	 * object
 	 * 
 	 * @param ha
 	 *            the automaton to enumerate over

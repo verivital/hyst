@@ -15,21 +15,19 @@ import com.verivital.hyst.ir.network.ComponentMapping;
 import com.verivital.hyst.ir.network.NetworkComponent;
 
 /**
- * A component is a base component (single hybrid automaton with labels and
- * I/O), or a network component (composition). This is the base class for both
- * of these.
+ * A component is a base component (single hybrid automaton with labels and I/O), or a network
+ * component (composition). This is the base class for both of these.
  * 
- * the variableNames, constants, and labels, are only those visible at this
- * level (not locals of subcomponents)
+ * the variableNames, constants, and labels, are only those visible at this level (not locals of
+ * subcomponents)
  * 
- * Validation guarantees: variablesNames, and labels are not null and unique,
- * and are valid C variable names constants are valid c variable names, may be
- * null (if inferred from parent, but must be definable) for most printers,
- * constants will map to single values, and you can use Interval.asConstant() to
- * get the value instance name should only be null for root (if parent == null)
- * and, if valid, is a valid C variable name names should not repeat between the
- * components template may be null (for example, if it was a code-constructed
- * automaton). It also may be this (circular), if this is a template automaton
+ * Validation guarantees: variablesNames, and labels are not null and unique, and are valid C
+ * variable names constants are valid c variable names, may be null (if inferred from parent, but
+ * must be definable) for most printers, constants will map to single values, and you can use
+ * Interval.asConstant() to get the value instance name should only be null for root (if parent ==
+ * null) and, if valid, is a valid C variable name names should not repeat between the components
+ * template may be null (for example, if it was a code-constructed automaton). It also may be this
+ * (circular), if this is a template automaton
  *
  */
 public abstract class Component
@@ -145,8 +143,8 @@ public abstract class Component
 	}
 
 	/**
-	 * Check if a name is valid. C identifier names are allowed (first letter is
-	 * '_' or letter, remaining letters can be alphanumeric or '_')
+	 * Check if a name is valid. C identifier names are allowed (first letter is '_' or letter,
+	 * remaining letters can be alphanumeric or '_')
 	 * 
 	 * @param s
 	 *            the String to check
@@ -178,9 +176,8 @@ public abstract class Component
 	}
 
 	/**
-	 * Check for name conflicts (and valid names) in variables, constants,
-	 * labels. This accumulates names into allNames as it goes, and reports
-	 * conflicts as they come up
+	 * Check for name conflicts (and valid names) in variables, constants, labels. This accumulates
+	 * names into allNames as it goes, and reports conflicts as they come up
 	 * 
 	 * @param allNames
 	 *            the accumulator which checks for collisions
@@ -203,14 +200,13 @@ public abstract class Component
 	}
 
 	/**
-	 * get the names of all the variables (include locals in subcomponents) in
-	 * this component
+	 * get the names of all the variables (include locals in subcomponents) in this component
 	 */
 	public abstract Collection<String> getAllVariables();
 
 	/**
-	 * get the names and values of all the constants (include locals in
-	 * subcomponents) in this component
+	 * get the names and values of all the constants (include locals in subcomponents) in this
+	 * component
 	 */
 	public Map<String, Interval> getAllConstants()
 	{
@@ -277,8 +273,7 @@ public abstract class Component
 	 * Set the value of an existing constant
 	 * 
 	 * @param name
-	 *            the name of the constant (can be dotted for local
-	 *            subcomponents)
+	 *            the name of the constant (can be dotted for local subcomponents)
 	 * @param val
 	 *            the value to assign it
 	 */
@@ -317,8 +312,8 @@ public abstract class Component
 	}
 
 	/**
-	 * Get the fully-qualified instance name (with dots). For root component
-	 * this is the empty string
+	 * Get the fully-qualified instance name (with dots). For root component this is the empty
+	 * string
 	 * 
 	 * @return the instance name (may have dots)
 	 */
@@ -333,9 +328,8 @@ public abstract class Component
 	}
 
 	/**
-	 * Get the fully-qualified variable name (with dots). For root component
-	 * this is just the variable name. If there's a parent the name may be
-	 * remapped.
+	 * Get the fully-qualified variable name (with dots). For root component this is just the
+	 * variable name. If there's a parent the name may be remapped.
 	 * 
 	 * @param var
 	 *            the variable name in this component that we're interested in
@@ -350,6 +344,10 @@ public abstract class Component
 			// check if there's a remapping from the parent
 			boolean found = false;
 			ComponentInstance ci = parent.children.get(instanceName);
+
+			if (ci == null)
+				throw new AutomatonExportException(
+						"Error getting instance named '" + instanceName + "' in parent automaton.");
 
 			for (ComponentMapping mapping : ci.varMapping)
 			{

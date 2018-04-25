@@ -127,8 +127,8 @@ public class ContinuizationPass extends TransformationPass
 	}
 
 	/**
-	 * Is the given automaton a two-mode, one urgent initialization? This also
-	 * populates the class variables related to the urgent mode
+	 * Is the given automaton a two-mode, one urgent initialization? This also populates the class
+	 * variables related to the urgent mode
 	 * 
 	 * @param c
 	 *            the configuration
@@ -247,8 +247,8 @@ public class ContinuizationPass extends TransformationPass
 	 * @param omega
 	 *            the omega interval to add
 	 * @param range
-	 *            the ranges encountered for the variables, used when intervals
-	 *            are multiplied by variables
+	 *            the ranges encountered for the variables, used when intervals are multiplied by
+	 *            variables
 	 */
 	private void substituteCyberVariableInMode(AutomatonMode am, String cyberVar, Interval omega)
 	{
@@ -298,11 +298,9 @@ public class ContinuizationPass extends TransformationPass
 	}
 
 	/**
-	 * Simplify an expression which may contain IntervalTerms to an
-	 * ExpressionInterval.
+	 * Simplify an expression which may contain IntervalTerms to an ExpressionInterval.
 	 * 
-	 * Possible added functionality is to substitute ranges for nonlinear
-	 * multiplication.
+	 * Possible added functionality is to substitute ranges for nonlinear multiplication.
 	 * 
 	 * @param e
 	 *            the expression which may contain IntervalTerms
@@ -505,27 +503,24 @@ public class ContinuizationPass extends TransformationPass
 
 			// adjust invariant
 			/*
-			 * Expression belowTop = new Operation(Operator.LESSEQUAL,
-			 * maxDerivative, new Constant(dv.range.max)); Expression
-			 * aboveBottom = new Operation(Operator.GREATEREQUAL, minDerivative,
-			 * new Constant(dv.range.min));
+			 * Expression belowTop = new Operation(Operator.LESSEQUAL, maxDerivative, new
+			 * Constant(dv.range.max)); Expression aboveBottom = new
+			 * Operation(Operator.GREATEREQUAL, minDerivative, new Constant(dv.range.min));
 			 * 
-			 * am.invariant = Expression.and(am.invariant,
-			 * Expression.and(belowTop, aboveBottom));
+			 * am.invariant = Expression.and(am.invariant, Expression.and(belowTop, aboveBottom));
 			 * 
-			 * // add checks for incoming transitions ArrayList
-			 * <AutomatonTransition> allTransitions = new ArrayList
-			 * <AutomatonTransition>(); allTransitions.addAll(ha.transitions);
-			 * // avoid concurrent modifications
+			 * // add checks for incoming transitions ArrayList <AutomatonTransition> allTransitions
+			 * = new ArrayList <AutomatonTransition>(); allTransitions.addAll(ha.transitions); //
+			 * avoid concurrent modifications
 			 * 
-			 * for (AutomatonTransition at : allTransitions) { if (at.to == am)
-			 * { AutomatonTransition t3 = ha.createTransition(at.from,
-			 * getErrorMode(ha, "error_" + am.name + "_initially_above"));
-			 * t3.guard = Expression.and(at.guard.copy(), t1.guard.copy());
+			 * for (AutomatonTransition at : allTransitions) { if (at.to == am) {
+			 * AutomatonTransition t3 = ha.createTransition(at.from, getErrorMode(ha, "error_" +
+			 * am.name + "_initially_above")); t3.guard = Expression.and(at.guard.copy(),
+			 * t1.guard.copy());
 			 * 
-			 * AutomatonTransition t4 = ha.createTransition(at.from,
-			 * getErrorMode(ha, "error_" + am.name + "_initially_below"));
-			 * t4.guard = Expression.and(at.guard.copy(), t2.guard.copy()); } }
+			 * AutomatonTransition t4 = ha.createTransition(at.from, getErrorMode(ha, "error_" +
+			 * am.name + "_initially_below")); t4.guard = Expression.and(at.guard.copy(),
+			 * t2.guard.copy()); } }
 			 */
 		}
 	}
@@ -614,14 +609,12 @@ public class ContinuizationPass extends TransformationPass
 	}
 
 	/**
-	 * Estimate ranges of the cyber variable derivative in each region and store
-	 * in domains.ranges
+	 * Estimate ranges of the cyber variable derivative in each region and store in domains.ranges
 	 * 
 	 * @param ha
 	 *            the two-mode automaton
 	 * @param params
-	 *            <in/out> the time divisions and where the resultant ranges are
-	 *            stored
+	 *            <in/out> the time divisions and where the resultant ranges are stored
 	 */
 	private void estimateRanges()
 	{
@@ -833,12 +826,11 @@ public class ContinuizationPass extends TransformationPass
 	}
 
 	/**
-	 * An interval as part of the expression. This can be temporarily part of an
-	 * expression when, for example, we substitute 'c' to 'c + [-1, 1]' in an
-	 * expression. For example '5 * c + 2' -> '5 * (c + [-1, 1]) + 2'
+	 * An interval as part of the expression. This can be temporarily part of an expression when,
+	 * for example, we substitute 'c' to 'c + [-1, 1]' in an expression. For example '5 * c + 2' ->
+	 * '5 * (c + [-1, 1]) + 2'
 	 * 
-	 * Eventually this would get simplified to Expression('5 * c + 2') +
-	 * Interval(-5, 5)
+	 * Eventually this would get simplified to Expression('5 * c + 2') + Interval(-5, 5)
 	 */
 	public static class IntervalTerm extends Expression
 	{

@@ -95,10 +95,28 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 		return visit(child);
 	}
 
+	private Expression balancedFlow(List<Expression> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = children.get(0);
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, balancedFlow(children.subList(0, middleIndex)),
+					balancedFlow(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
 	@Override
 	public Expression visitFlow(@NotNull HystExpressionParser.FlowContext ctx)
 	{
 		Expression rv = null;
+		List<Expression> terms = new ArrayList<Expression>();
 
 		for (int i = 0; i < ctx.VAR().size(); ++i)
 		{
@@ -106,13 +124,12 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 			Expression rhs = visit(ctx.addSub(i));
 			Expression term = new Operation(Operator.EQUAL, v, rhs);
 
-			if (rv == null)
-				rv = term;
-			else
-				rv = new Operation(Operator.AND, rv, term);
+			terms.add(term);
 		}
 
-		return rv;
+		Expression flow = balancedFlow(terms);
+
+		return flow;
 	}
 
 	@Override
@@ -124,7 +141,9 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 	@Override
 	public Expression visitLocExp(@NotNull HystExpressionParser.LocExpContext ctx)
 	{
-		return visit(ctx.or());
+		Expression rv = visit(ctx.or());
+
+		return rv;
 	}
 
 	@Override
@@ -142,13 +161,34 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 		return new Operation(Operator.OR, visit(left), visit(right));
 	}
 
+	private Expression balancedAnd(List<NotContext> children)
+	{
+		Expression rv;
+
+		if (children.size() == 1)
+			rv = visit(children.get(0));
+		else
+		{
+			int middleIndex = children.size() / 2;
+
+			rv = new Operation(Operator.AND, balancedAnd(children.subList(0, middleIndex)),
+					balancedAnd(children.subList(middleIndex, children.size())));
+		}
+
+		return rv;
+	}
+
 	@Override
 	public Expression visitAndExpression(@NotNull HystExpressionParser.AndExpressionContext ctx)
 	{
-		NotContext left = ctx.not();
-		AndContext right = ctx.and();
+		// (not AND)* not # AndExpression
 
-		return new Operation(Operator.AND, visit(left), visit(right));
+		List<NotContext> children = ctx.not();
+
+		// construct a balanced tree of expressions
+		Expression root = balancedAnd(children);
+
+		return root;
 	}
 
 	@Override
@@ -426,15 +466,15 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 				throw new AutomatonExportException(
 						"width arguments in function 'reshape' must be integer constants");
 
-			vals[a - 1] = Integer.parseInt(e.toDefaultString());
+			vals[a - 1] = (int) Math.round(Double.parseDouble(e.toDefaultString()));
 		}
 
 		return new MatrixExpression(expressions, vals);
 	}
 
 	/**
-	 * Create a lookup table expression from a function context. Luts expect
-	 * three arguments: 1. var list, 2. table, and 3. breakpoints
+	 * Create a lookup table expression from a function context. Luts expect three arguments: 1. var
+	 * list, 2. table, and 3. breakpoints
 	 * 
 	 * @param ctx
 	 *            the function context
@@ -472,7 +512,20 @@ public class ExpVisitor extends HystExpressionBaseVisitor<Expression>
 	}
 
 	@Override
-	public Expression visitMatrix(@NotNull HystExpressionParser.MatrixContext ctx)
+	public Expression visitMatrixRangeExp(@NotNull HystExpressionParser.MatrixRangeExpContext ctx)
+	{
+		return MatrixExpression.fromRange(visit(ctx.addSub(0)), visit(ctx.addSub(1)),
+				visit(ctx.addSub(2)));
+	}
+
+	@Override
+	public Expression visitMatrixGenerated(@NotNull HystExpressionParser.MatrixGeneratedContext ctx)
+	{
+		return visit(ctx.matrixRange());
+	}
+
+	@Override
+	public Expression visitMatrixExplicit(@NotNull HystExpressionParser.MatrixExplicitContext ctx)
 	{
 		int len = ctx.matrixRow().size();
 

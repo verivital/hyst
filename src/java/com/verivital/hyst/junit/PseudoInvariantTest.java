@@ -20,9 +20,7 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
-import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
-import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantInitPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantPass;
 import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
@@ -57,7 +55,7 @@ public class PseudoInvariantTest
 		// 0.0 * y >= 1.5
 		HyperPoint point = new HyperPoint(1.5, 1.5);
 		HyperPoint dir = new HyperPoint(-1.0, 0);
-		String expectedResult = "-1 * x <= -1.5";
+		String expectedResult = "-1.0 * x <= -1.5";
 
 		ArrayList<String> vars = new ArrayList<String>(2);
 		vars.add("x");
@@ -75,7 +73,7 @@ public class PseudoInvariantTest
 		// * y >= 0.0
 		HyperPoint point = new HyperPoint(0, 0);
 		HyperPoint dir = new HyperPoint(0, -1);
-		String expectedResult = "-1 * y <= 0";
+		String expectedResult = "-1.0 * y <= 0.0";
 
 		ArrayList<String> vars = new ArrayList<String>(2);
 		vars.add("x");
@@ -116,8 +114,7 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass)
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass)
 	 */
 	@Test
 	public void testPseudoInvariantSimulatePass()
@@ -147,22 +144,24 @@ public class PseudoInvariantTest
 		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
 
 		Assert.assertEquals("first mode's invariant is x <= 2", pi0.invariant.toDefaultString(),
-				"1 * x <= 2");
+				"1.0 * x <= 2.0");
 		Assert.assertEquals("second mode's invariant is x <= 5", pi1.invariant.toDefaultString(),
-				"1 * x <= 5");
+				"1.0 * x <= 5.0");
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
 
 		// the initial state for final should contain both pi guards
 		Expression e = c.init.get("on");
 		Assert.assertNotNull("on is one of the initial states", e);
 
-		Assert.assertTrue("init(on) contains x >= 2", e.toDefaultString().contains("1 * x >= 2"));
-		Assert.assertTrue("init(on) contains x >= 5", e.toDefaultString().contains("1 * x >= 5"));
+		Assert.assertTrue("init(on) contains x >= 2",
+				e.toDefaultString().contains("1.0 * x >= 2.0"));
+		Assert.assertTrue("init(on) contains x >= 5",
+				e.toDefaultString().contains("1.0 * x >= 5.0"));
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time
 	 */
 	@Test
 	public void testPseudoInvariantSimulateOnePass()
@@ -191,19 +190,20 @@ public class PseudoInvariantTest
 		Assert.assertTrue("first mode has an invariant", pi0.invariant != null);
 
 		Assert.assertTrue("first mode's invariant is x <= 2",
-				pi0.invariant.toDefaultString().equals("1 * x <= 2"));
+				pi0.invariant.toDefaultString().equals("1.0 * x <= 2.0"));
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
 
 		// the initial state for final should contain both pi guards
 		Expression e = c.init.get("on");
 		Assert.assertNotNull("on is one of the initial states", e);
 
-		Assert.assertTrue("init(on) contains x >= 2", e.toDefaultString().contains("1 * x >= 2"));
+		Assert.assertTrue("init(on) contains x >= 2",
+				e.toDefaultString().contains("1.0 * x >= 2.0"));
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time, printing to Flow*
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time, printing to Flow*
 	 */
 	@Test
 	public void testPIVanderpolFlowstar()
@@ -239,7 +239,7 @@ public class PseudoInvariantTest
 		Assert.assertNotNull(on2);
 		Assert.assertNotNull(ha.modes.get("on"));
 
-		Assert.assertEquals("-1 * x <= -0.75", on2.invariant.toDefaultString());
+		Assert.assertEquals("-1.0 * x <= -0.75", on2.invariant.toDefaultString());
 
 		// try to print to Flow*
 		FlowstarPrinter fp = new FlowstarPrinter();
@@ -249,8 +249,8 @@ public class PseudoInvariantTest
 	}
 
 	/**
-	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant
-	 * pass), with a single time, printing to Flow*
+	 * Test pseudo-invariant simulate pass (which in turn uses pseudo-invariant pass), with a single
+	 * time, printing to Flow*
 	 */
 	@Test
 	public void testInitPIVanderpol()
@@ -258,24 +258,17 @@ public class PseudoInvariantTest
 		if (!PythonBridge.hasPython())
 			return;
 
-		// make a trivial automation with x' == 1
-		String[][] dynamics = { { "x", "y", "1" }, { "y", "(1-x*x)*y-x", "0" } };
+		String[][] dynamics = { { "barrier_clock", "1", "0" }, { "x", "-y", "0" },
+				{ "y", "-((1-x*x)*y-x)", "0" } };
 		Configuration c = AutomatonUtil.makeDebugConfiguration(dynamics);
 
 		BaseComponent ha = (BaseComponent) c.root;
 
 		AutomatonMode on = ha.modes.get("on");
-		AutomatonMode error = ha.createMode("error");
-		error.invariant = FormulaParser.parseInvariant("true");
-		error.flowDynamics.put("x", new ExpressionInterval("0"));
-		error.flowDynamics.put("y", new ExpressionInterval("0"));
-
-		AutomatonTransition at = ha.createTransition(on, error);
-
-		at.guard = FormulaParser.parseGuard("x >= 2");
+		on.invariant = FormulaParser.parseInvariant("x ^ 2 + y ^ 2 - 9 <= 0.0001");
 
 		// manually set initial state
-		String initialInitCond = "x = 1 & -0.5 <= y & y <= 0.5";
+		String initialInitCond = "barrier_clock == 0 & -3.0001 <= y <= -2.82831491699 & -1.0001 <= x <= 1.0001";
 		c.init.put("on", FormulaParser.parseInitialForbidden(initialInitCond));
 
 		c.validate();
@@ -286,9 +279,9 @@ public class PseudoInvariantTest
 		// there should be 3 modes
 		// and running_final
 
-		Assert.assertEquals("3 modes after pass", 3, ha.modes.size());
+		Assert.assertEquals("2 modes after pass", 2, ha.modes.size());
 
-		Assert.assertEquals("3 transitions after pass", 3, ha.transitions.size());
+		Assert.assertEquals("1 transitions after pass", 1, ha.transitions.size());
 
 		AutomatonMode on2 = ha.modes.get("on_2");
 		Assert.assertNotNull(on2);
@@ -296,8 +289,6 @@ public class PseudoInvariantTest
 
 		Assert.assertEquals("one initial state", 1, c.init.size());
 		Assert.assertEquals("initial state is 'on_2'", "on_2", c.init.keySet().iterator().next());
-		Assert.assertEquals("initial condition is the same as beore", initialInitCond,
-				c.init.values().iterator().next().toDefaultString());
 
 		// try to print to Flow*
 		FlowstarPrinter fp = new FlowstarPrinter();

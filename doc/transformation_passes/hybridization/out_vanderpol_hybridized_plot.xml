@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
 <sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" math="SpaceEx" version="0.2">
   <component id="vanderpol_althoff_sys">
-    <note>Created by Hyst v1.3
+    <note>Created by Hyst v1.4
 Hybrid Automaton in SpaceEx
 Converted from file: vanderpol_althoff.xml
 Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S starcorners -delta_tt 0.05 -n_pi 31 -delta_pi 1 -epsilon 0.05 -opt basinhopping -noerror" -o out_vanderpol_hybridized_plot.xml -tool spaceex ""</note>
@@ -15,38 +15,38 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.0446199584971207 &amp;
  y &lt;= 2.3699999999999997 &amp;
  2.14717243966 * x + -4.095571019203355 * y &lt;= -5.5987319024338085 &amp;
- _y_interval &lt;= 0.026320233280319627 &amp;
+ _y_interval &lt;= 0.02632023328031785 &amp;
  _y_interval &gt;= -0.22575768674928653</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == -7.2948237230305 * x + -1.0332018720817682 * y + 8.97581356414588 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="2" name="_2_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.3378405109856004 &amp;
  x &lt;= 1.75564715891 &amp;
  y &gt;= 1.86543002773 &amp;
  y &lt;= 2.2567959099154913 &amp;
  _y_interval &lt;= 0.049109301645057 &amp;
  _y_interval &gt;= -0.22494604063847312</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -7.376027555315081 * x + -1.3924164909490278 * y + 9.862081312640894 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="3" name="_3_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.43819282518 &amp;
  x &lt;= 1.84599962603 &amp;
  y &gt;= 1.61954137866 &amp;
  y &lt;= 1.99381656081 &amp;
- _y_interval &lt;= 0.058307876686089166 &amp;
+ _y_interval &lt;= 0.05830787668608828 &amp;
  _y_interval &gt;= -0.20821429359806398</invariant>
       <flow>x' == 0.9999999999999994 * y &amp;
  y' == -6.933481434163548 * x + -1.696480014146184 * y + 9.7433474677373 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="4" name="_4_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.52904136676 &amp;
  x &lt;= 1.9226213676500001 &amp;
  y &gt;= 1.3465416909499999 &amp;
@@ -55,19 +55,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.21078065723644457</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == -6.371406919107095 * x + -1.9784939080286805 * y + 9.270142547016995 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="5" name="_5_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.60957175469 &amp;
  x &lt;= 1.98584769367 &amp;
  y &gt;= 1.08521366282 &amp;
  y &lt;= 1.55412950145 &amp;
  _y_interval &lt;= 0.12018341312723191 &amp;
  _y_interval &gt;= -0.213605328126814</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -5.744772871856188 * x + -2.2317602524113305 * y + 8.529724330761333 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="6" name="_6_space_trig">
       <invariant>x &gt;= 1.6793901841799999 &amp;
@@ -77,24 +77,24 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  1.04201379411 * x + -4.471701607711787 * y &lt;= -2.7110308021690264 &amp;
  _y_interval &lt;= 0.08230141796419232 &amp;
  _y_interval &gt;= -0.14257080696771585</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -5.260819719136558 * x + -2.3883660414088084 * y + 7.843110239066286 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="7" name="_7_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.751413566738496 &amp;
  x &lt;= 2.04918607449 &amp;
  y &gt;= 0.775649462291 &amp;
  y &lt;= 1.1111529291652897 &amp;
  _y_interval &lt;= 0.07772958778558703 &amp;
  _y_interval &gt;= -0.11955455638524093</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -4.585490246018922 * x + -2.6111394082265416 * y + 6.81350647132389 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="8" name="_8_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.79768416351 &amp;
  x &lt;= 2.0850855190899997 &amp;
  y &gt;= 0.5645750940759999 &amp;
@@ -103,10 +103,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.10526840267316118</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == -3.798643476657168 * x + -2.7689751020294247 * y + 5.433244021785356 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="9" name="_9_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.83435742398 &amp;
  x &lt;= 2.1110710425 &amp;
  y &gt;= 0.37911698123800003 &amp;
@@ -115,10 +115,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.09882762589302452</invariant>
       <flow>x' == 1.0000000000000002 * y &amp;
  y' == -3.1142446200752736 * x + -2.8916014460276833 * y + 4.170800454573589 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="10" name="_10_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.86222790078 &amp;
  x &lt;= 2.1284138922099998 &amp;
  y &gt;= 0.21864491089800003 &amp;
@@ -127,7 +127,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.09068874959995377</invariant>
       <flow>x' == 0.9999999999999998 * y &amp;
  y' == -2.484038337494848 * x + -2.9813054799896093 * y + 2.961132706003168 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="11" name="_11_space_trig">
       <invariant>x &gt;= 1.88216317344 &amp;
@@ -139,10 +139,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.06463331762349789</invariant>
       <flow>x' == 0.9999999999999999 * y &amp;
  y' == -2.0404016294860807 * x + -3.0319129428106155 * y + 2.0890873381390342 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="12" name="_12_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.8950110762164205 &amp;
  x &lt;= 2.14065665388 &amp;
  y &gt;= 0.0258768960837 &amp;
@@ -151,31 +151,31 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.06021285057221304</invariant>
       <flow>x' == 1.0000000000000002 * y &amp;
  y' == -1.5635481061149354 * x + -3.0716535069353994 * y + 1.137146453102499 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="13" name="_13_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.90168710101 &amp;
  x &lt;= 2.1416744419 &amp;
  y &gt;= -0.082136847264 &amp;
  y &lt;= 0.12677943082760001 &amp;
- _y_interval &lt;= 0.051863415138124536 &amp;
+ _y_interval &lt;= 0.05186341513812476 &amp;
  _y_interval &gt;= -0.05250620052698318</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -1.0902530527786047 * x + -3.0871931416708827 * y + 0.18246286136761825 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="14" name="_14_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.89947134632 &amp;
  x &lt;= 2.1416744419 &amp;
  y &gt;= -0.173337054677 &amp;
  y &lt;= 0.025625285814500003 &amp;
  _y_interval &lt;= 0.05122708068787962 &amp;
  _y_interval &gt;= -0.04906080120427525</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.7015376036953908 * x + -3.0827148204120602 * y - 0.60306502788421 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="15" name="_15_space_trig">
       <invariant>x &gt;= 1.8918470287315097 &amp;
@@ -185,36 +185,36 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -0.197474927355 * x + -1.4083792544541538 * y &lt;= -0.11758872206266696 &amp;
  _y_interval &lt;= 0.05237553186795485 &amp;
  _y_interval &gt;= -0.047536765785878954</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.3549535484886422 * x + -3.0593587503590953 * y - 1.2996299394818247 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="16" name="_16_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.88071405361 &amp;
  x &lt;= 2.128443665704493 &amp;
  y &gt;= -0.32189913975199996 &amp;
  y &lt;= -0.1387825158101017 &amp;
  _y_interval &lt;= 0.050406000951327856 &amp;
  _y_interval &gt;= -0.04333799717608611</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.07652729222830937 * x + -3.0183364045847485 * y - 1.8511738674695655 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="17" name="_17_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.86648718537 &amp;
  x &lt;= 2.11640382961 &amp;
  y &gt;= -0.37629830202299996 &amp;
  y &lt;= -0.205003638035 &amp;
  _y_interval &lt;= 0.04850202210119536 &amp;
  _y_interval &gt;= -0.03942523513616725</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.15763113702372586 * x + -2.965855209302103 * y - 2.305359327156439 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="18" name="_18_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.84955381519 &amp;
  x &lt;= 2.10141286 &amp;
  y &gt;= -0.42289370076 &amp;
@@ -223,19 +223,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.03566465321607026</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == 0.3545360042132436 * x + -2.902534417115479 * y - 2.675863306495773 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="19" name="_19_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.83023700119 &amp;
  x &lt;= 2.0839037650499996 &amp;
  y &gt;= -0.463173361975 &amp;
  y &lt;= -0.313477414969 &amp;
  _y_interval &lt;= 0.04460873976522328 &amp;
  _y_interval &gt;= -0.03211498645243349</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.5199602335842393 * x + -2.830124484485462 * y - 2.974669156667871 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="20" name="_20_space_trig">
       <invariant>x &gt;= 1.7913059599122643 &amp;
@@ -245,12 +245,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -0.506382733519 * x + -0.5990414872089687 * y &lt;= -0.6472988380374848 &amp;
  _y_interval &lt;= 0.07119613784444634 &amp;
  _y_interval &gt;= -0.05358618494934797</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.8230314963807289 * x + -2.7162863659492675 * y - 3.514380317877348 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="21" name="_21_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.7666554428099999 &amp;
  x &lt;= 1.9639741314173527 &amp;
  y &gt;= -0.610690703769 &amp;
@@ -259,10 +259,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.029854205030740877</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == 0.9336391607981416 * x + -2.479399255024939 * y - 3.606845719578853 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="22" name="_22_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.74039107093 &amp;
  x &lt;= 1.93651612729 &amp;
  y &gt;= -0.632682703097 &amp;
@@ -271,10 +271,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.026787462271406604</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == 1.0080805173031904 * x + -2.379911636080512 * y - 3.6917628543387204 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="23" name="_23_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.71262920088 &amp;
  x &lt;= 1.90792700176 &amp;
  y &gt;= -0.653735847742 &amp;
@@ -283,7 +283,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.024159968960297595</invariant>
       <flow>x' == 0.9999999999999997 * y &amp;
  y' == 1.0715642276498305 * x + -2.277106804118744 * y - 3.7501073567923675 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="24" name="_24_space_trig">
       <invariant>x &gt;= 1.6403889746963387 &amp;
@@ -295,10 +295,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.035305967087321255</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == 1.186844525473207 * x + -2.0952283798118096 * y - 3.8473726836634388 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="25" name="_25_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.6080681747499999 &amp;
  x &lt;= 1.7680814285556457 &amp;
  y &gt;= -0.7437647574430001 &amp;
@@ -307,10 +307,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.017887252641947793</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.240792284766684 * x + -1.8495965359752178 * y - 3.782624991652696 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="26" name="_26_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.57448317009 &amp;
  x &lt;= 1.73390295772 &amp;
  y &gt;= -0.764536236454 &amp;
@@ -319,10 +319,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.016625339780911075</invariant>
       <flow>x' == 0.9999999999999993 * y &amp;
  y' == 1.2722568121617825 * x + -1.7363546926714095 * y - 3.7587514580889057 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="27" name="_27_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.53963955448 &amp;
  x &lt;= 1.69869751764 &amp;
  y &gt;= -0.7859212787790001 &amp;
@@ -331,10 +331,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.015515428373229945</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.2995429799013438 * x + -1.6217067481666847 * y - 3.72334764037391 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="28" name="_28_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.50352917229 &amp;
  x &lt;= 1.66243889339 &amp;
  y &gt;= -0.8080926627120001 &amp;
@@ -343,7 +343,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.014527403965708396</invariant>
       <flow>x' == 0.9999999999999992 * y &amp;
  y' == 1.3231575424486322 * x + -1.5058384482263885 * y - 3.677521295467998 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="29" name="_29_space_trig">
       <invariant>x &gt;= 1.4315040138857806 &amp;
@@ -353,24 +353,24 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -0.796572935559 * x + -0.5194203105768086 * y &lt;= -0.7723723104082267 &amp;
  _y_interval &lt;= 0.033380714656731536 &amp;
  _y_interval &gt;= -0.018939256548963446</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3557109330372066 * x + -1.3356948970440399 * y - 3.600228400207595 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="30" name="_30_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.39156499854 &amp;
  x &lt;= 1.5454495840329356 &amp;
  y &gt;= -0.882008093924 &amp;
  y &lt;= -0.7350168402587234 &amp;
  _y_interval &lt;= 0.021830179074423972 &amp;
  _y_interval &gt;= -0.012257203221204493</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3746129060393502 * x + -1.156513664561519 * y - 3.487136366501734 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="31" name="_31_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.35021161685 &amp;
  x &lt;= 1.50449497983 &amp;
  y &gt;= -0.909099865861 &amp;
@@ -379,19 +379,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.011578805536084924</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.386277947226221 * x + -1.0373374382820777 * y - 3.4060616987293515 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="32" name="_32_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.30737788543 &amp;
  x &lt;= 1.4622237307100001 &amp;
  y &gt;= -0.9378693708760001 &amp;
  y &lt;= -0.7916291211359999 &amp;
  _y_interval &lt;= 0.021301074789953134 &amp;
  _y_interval &gt;= -0.010933926500066637</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3950109092940632 * x + -0.917673278031325 * y - 3.3166130425268845 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="33" name="_33_space_trig">
       <invariant>x &gt;= 1.238682563592621 &amp;
@@ -403,22 +403,22 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.012917474288444364</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.401731371162786 * x + -0.7652302044096961 * y - 3.1909875209030423 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="34" name="_34_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.19172536462 &amp;
  x &lt;= 1.348674140584234 &amp;
  y &gt;= -1.019679367675 &amp;
  y &lt;= -0.871797005209934 &amp;
  _y_interval &lt;= 0.021020059675117886 &amp;
  _y_interval &gt;= -0.009371913946235155</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.4025528208911917 * x + -0.6134074115104793 * y - 3.0517219987095103 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="35" name="_35_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.14295893954 &amp;
  x &lt;= 1.3010488205900002 &amp;
  y &gt;= -1.05610795769 &amp;
@@ -427,10 +427,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.008751516685327254</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.3987386616624689 * x + -0.49329348289391567 * y - 2.931267951813463 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="36" name="_36_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.0922606369099999 &amp;
  x &lt;= 1.2516647652500001 &amp;
  y &gt;= -1.0952670447800001 &amp;
@@ -439,10 +439,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.008111794586489363</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.3901922136083993 * x + -0.37349657272272974 * y - 2.8012161227608843 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="37" name="_37_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.03949329996 &amp;
  x &lt;= 1.2003921504800001 &amp;
  y &gt;= -1.13744254504 &amp;
@@ -451,7 +451,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.007440010809327657</invariant>
       <flow>x' == 0.9999999999999992 * y &amp;
  y' == 1.3760845026827184 * x + -0.25427170777320024 * y - 2.6610785532874917 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="38" name="_38_space_trig">
       <invariant>x &gt;= 0.9781434410830754 &amp;
@@ -463,22 +463,22 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.007095873384870721</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.3533967408712262 * x + -0.12915152427933366 * y - 2.5007556589826665 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="39" name="_39_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.9204822325059999 &amp;
  x &lt;= 1.0859046283407001 &amp;
  y &gt;= -1.2372357705700001 &amp;
  y &lt;= -1.0785130732102313 &amp;
  _y_interval &lt;= 0.021634174167913578 &amp;
- _y_interval &gt;= -0.0058770857109966546</invariant>
+ _y_interval &gt;= -0.0058770857109965435</invariant>
       <flow>x' == 1.0000000000000013 * y &amp;
  y' == 1.3231440265907963 * x + -0.006397058844569523 * y - 2.330562825403136 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="40" name="_40_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.8602218908929999 &amp;
  x &lt;= 1.027797122338 &amp;
  y &gt;= -1.29081115325 &amp;
@@ -487,19 +487,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.00519738980638218</invariant>
       <flow>x' == 1.0000000000000013 * y &amp;
  y' == 1.2839025224025193 * x + 0.10884605141956102 * y - 2.1560256933310975 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="41" name="_41_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.7971559627529999 &amp;
  x &lt;= 0.967113253694 &amp;
  y &gt;= -1.3487877158200001 &amp;
  y &lt;= -1.18253814566 &amp;
  _y_interval &lt;= 0.02220259611286779 &amp;
  _y_interval &gt;= -0.004546902416013854</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.2329701471026746 * x + 0.22183853297437264 * y - 1.9697802458891887 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="42" name="_42_space_trig">
       <invariant>x &gt;= 0.7386958864069693 &amp;
@@ -511,55 +511,55 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.0035969020102515348</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.1714881544496283 * x + 0.32568148509880324 * y - 1.783158740884734 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="43" name="_43_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.66970849262 &amp;
  x &lt;= 0.8455021408204371 &amp;
  y &gt;= -1.4707772845 &amp;
  y &lt;= -1.296451452164713 &amp;
  _y_interval &lt;= 0.022971556317988195 &amp;
- _y_interval &gt;= -0.003363514255457556</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.003363514255457334</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == 1.0964672034781588 * x + 0.42603418407725735 * y - 1.5882946996846212 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="44" name="_44_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.5972166474549999 &amp;
  x &lt;= 0.776165573652 &amp;
  y &gt;= -1.54343008781 &amp;
  y &lt;= -1.3638945401 &amp;
  _y_interval &lt;= 0.023387107442427668 &amp;
- _y_interval &gt;= -0.0027860119211611245</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.0027860119211613465</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == 0.996433977479058 * x + 0.5284553186868007 * y - 1.3709334651418357 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="45" name="_45_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.52094587994 &amp;
  x &lt;= 0.703333272117 &amp;
  y &gt;= -1.62179005833 &amp;
  y &lt;= -1.4366808186 &amp;
  _y_interval &lt;= 0.023820679932843536 &amp;
  _y_interval &gt;= -0.00223427602967341</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.8722110658994457 * x + 0.6252851394596493 * y - 1.1460544881155512 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="46" name="_46_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.440609950721 &amp;
  x &lt;= 0.626726638237 &amp;
  y &gt;= -1.70604476839 &amp;
  y &lt;= -1.51509041597 &amp;
  _y_interval &lt;= 0.024257330871333638 &amp;
  _y_interval &gt;= -0.001713576055178745</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.7190177201237007 * x + 0.7151981514678739 * y - 0.9173852548775969 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="47" name="_47_space_trig">
       <invariant>x &gt;= 0.38703392496956573 &amp;
@@ -569,24 +569,24 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -1.70931775193 * x + -1.8181971501128436 * y &lt;= 2.3551109399356336 &amp;
  _y_interval &lt;= 0.017172991691313033 &amp;
  _y_interval &gt;= -0.0009002433343381355</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.5681845661627197 * x + 0.7823361939394005 * y - 0.731627944125778 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="48" name="_48_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.299406236614 &amp;
  x &lt;= 0.4932085964614078 &amp;
  y &gt;= -1.85579967402 &amp;
  y &lt;= -1.6561630450191975 &amp;
  _y_interval &lt;= 0.025092236387432187 &amp;
  _y_interval &gt;= -0.0009448911349525524</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.3918168721591548 * x + 0.8429404315972111 * y - 0.5515873488989818 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="49" name="_49_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.206957055785 &amp;
  x &lt;= 0.405287869185 &amp;
  y &gt;= -1.95509986086 &amp;
@@ -595,22 +595,22 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.0005639270471866631</invariant>
       <flow>x' == 0.9999999999999989 * y &amp;
  y' == 0.1341733217870787 * x + 0.9062890379621197 * y - 0.3471959301502532 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="50" name="_50_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.10943588969399999 &amp;
  x &lt;= 0.312536596111 &amp;
  y &gt;= -2.05909760713 &amp;
  y &lt;= -1.8489314237299999 &amp;
  _y_interval &lt;= 0.02573735439743219 &amp;
  _y_interval &gt;= -0.0002658600960583346</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.175459637624951 * x + 0.955484805305886 * y - 0.17396667317898018 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="51" name="_51_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.0066437362235000005 &amp;
  x &lt;= 0.21469875612599998 &amp;
  y &gt;= -2.16649456622 &amp;
@@ -619,7 +619,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.00007176014857757096</invariant>
       <flow>x' == 0.999999999999999 * y &amp;
  y' == -0.5441369322218279 * x + 0.9877518752701272 * y - 0.050450933796056585 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="52" name="_52_space_trig">
       <invariant>x &gt;= -0.047338532918223986 &amp;
@@ -631,43 +631,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.000003232028040311974</invariant>
       <flow>x' == 1.0000000000000027 * y &amp;
  y' == -0.8625560930522121 * x + 0.9989685975928316 * y - 0.004414073517259087 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="53" name="_53_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.158250338815 &amp;
  x &lt;= 0.05867659882464344 &amp;
  y &gt;= -2.3287194855099997 &amp;
  y &lt;= -2.1141767270404728 &amp;
  _y_interval &lt;= 0.02855435373544113 &amp;
- _y_interval &gt;= -0.000013491371123386386</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.000013491371123830476</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -1.2211978961363186 * x + 0.9975212675760826 * y - 0.011012750898147239 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="54" name="_54_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.274489489763 &amp;
  x &lt;= -0.052551280980999995 &amp;
  y &gt;= -2.43414308338 &amp;
  y &lt;= -2.2220483529800004 &amp;
  _y_interval &lt;= 0.03382299351377949 &amp;
  _y_interval &gt;= -0.00013532874807675732</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -1.761382218039392 * x + 0.9732610835677913 * y - 0.12450151370919249 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="55" name="_55_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.39578973457399996 &amp;
  x &lt;= -0.16914408352299998 &amp;
  y &gt;= -2.53217153769 &amp;
  y &lt;= -2.3266423188600003 &amp;
  _y_interval &lt;= 0.03909728552839642 &amp;
  _y_interval &gt;= -0.0003621534976470109</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -2.3724541317017 * x + 0.9202124452925874 * y - 0.3876728763926196 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="56" name="_56_space_trig">
       <invariant>x &gt;= -0.4652211524832704 &amp;
@@ -677,12 +677,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -2.52707056389 * x + -1.6856538312519 * y &lt;= 5.30129770755049 &amp;
  _y_interval &lt;= 0.024801966512480123 &amp;
  _y_interval &gt;= -0.00036437073966100186</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -2.8919036888067247 * x + 0.8570916726879364 * y - 0.7152004713167686 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="57" name="_57_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.593288141378 &amp;
  x &lt;= -0.35958481378532686 &amp;
  y &gt;= -2.65672531809 &amp;
@@ -691,43 +691,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.0007792528193970583</invariant>
       <flow>x' == 1.0000000000000024 * y &amp;
  y' == -3.443733866621458 * x + 0.7730082828295796 * y - 1.1642839555601396 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="58" name="_58_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.7245451044400001 &amp;
  x &lt;= -0.48810585298000003 &amp;
  y &gt;= -2.71004772959 &amp;
  y &lt;= -2.54699427114 &amp;
  _y_interval &lt;= 0.04956290359144411 &amp;
- _y_interval &gt;= -0.0009593646391079513</invariant>
+ _y_interval &gt;= -0.0009593646391081734</invariant>
       <flow>x' == 0.9999999999999972 * y &amp;
  y' == -4.1874785076911945 * x + 0.6323694138670868 * y - 1.9326494320537064 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="59" name="_59_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.857697354351 &amp;
  x &lt;= -0.619883176506 &amp;
  y &gt;= -2.734158877 &amp;
  y &lt;= -2.5989583948600004 &amp;
  _y_interval &lt;= 0.05053499825754004 &amp;
- _y_interval &gt;= -0.0009597088306619872</invariant>
+ _y_interval &gt;= -0.0009597088306618762</invariant>
       <flow>x' == 1.0000000000000033 * y &amp;
  y' == -4.940055124838767 * x + 0.45418894370808854 * y - 2.910874371482549 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="60" name="_60_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.991128840713 &amp;
  x &lt;= -0.753623794217 &amp;
  y &gt;= -2.734158877 &amp;
  y &lt;= -2.60921140566 &amp;
  _y_interval &lt;= 0.04973969066435224 &amp;
- _y_interval &gt;= -0.0011383961480828653</invariant>
+ _y_interval &gt;= -0.0011383961480834204</invariant>
       <flow>x' == 1.0000000000000036 * y &amp;
  y' == -5.661429690038847 * x + 0.23895956072620644 * y - 4.066520867118103 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="61" name="_61_space_trig">
       <invariant>x &gt;= -1.0650692030048177 &amp;
@@ -736,25 +736,25 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= -2.5868220281409537 &amp;
  -2.64297594449 * x + 1.0823673817341999 * y &lt;= -0.18325174930281163 &amp;
  _y_interval &lt;= 0.03319232372145886 &amp;
- _y_interval &gt;= -0.001705068822695166</invariant>
+ _y_interval &gt;= -0.001705068822694944</invariant>
       <flow>x' == 1.0000000000000033 * y &amp;
  y' == -6.184313844456332 * x + 0.04666514295619591 * y - 5.06190535822799 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="62" name="_62_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.19574269761 &amp;
  x &lt;= -0.9605118099781027 &amp;
  y &gt;= -2.697950486317414 &amp;
  y &lt;= -2.51241991972 &amp;
  _y_interval &lt;= 0.060847903401976655 &amp;
- _y_interval &gt;= -0.0039812437844790605</invariant>
+ _y_interval &gt;= -0.003981243784478838</invariant>
       <flow>x' == 1.0000000000000024 * y &amp;
  y' == -6.617442337110914 * x + -0.16235837537350245 * y - 6.056317680255826 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="63" name="_63_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.32154497638 &amp;
  x &lt;= -1.0906691309 &amp;
  y &gt;= -2.62186739129 &amp;
@@ -763,19 +763,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.0077519001008719</invariant>
       <flow>x' == 0.999999999999998 * y &amp;
  y' == -7.051942593193854 * x + -0.45469422484016225 * y - 7.299290649875463 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="64" name="_64_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.44040340104 &amp;
  x &lt;= -1.21604917751 &amp;
  y &gt;= -2.50327009998 &amp;
  y &lt;= -2.2397645075300003 &amp;
  _y_interval &lt;= 0.0707618454128065 &amp;
- _y_interval &gt;= -0.013672926137632935</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.013672926137633379</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -7.299823256635904 * x + -0.7641850755212336 * y - 8.367590867249847 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="65" name="_65_space_trig">
       <invariant>x &gt;= -1.4851658047440168 &amp;
@@ -785,12 +785,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -2.22062485708 * x + 3.7680323426340303 * y &lt;= -5.186549279937355 &amp;
  _y_interval &lt;= 0.03199750591525152 &amp;
  _y_interval &gt;= -0.007117966111213292</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -7.363426553460576 * x + -0.9877629257775653 * y - 8.971670788612752 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="66" name="_66_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.59130061931 &amp;
  x &lt;= -1.3789759994137183 &amp;
  y &gt;= -2.272251132305744 &amp;
@@ -799,43 +799,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.02586756131578838</invariant>
       <flow>x' == 0.9999999999999992 * y &amp;
  y' == -7.296675381736304 * x + -1.205635797934202 * y - 9.351433831032296 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="67" name="_67_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.68668105458 &amp;
  x &lt;= -1.4849896139999998 &amp;
  y &gt;= -2.06875851123 &amp;
  y &lt;= -1.7437425081 &amp;
  _y_interval &lt;= 0.07301707191046525 &amp;
  _y_interval &gt;= -0.03424447295969202</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -7.045998828470162 * x + -1.5148737074826764 * y - 9.587958573263927 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="68" name="_68_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.77048433638 &amp;
  x &lt;= -1.58036605639 &amp;
  y &gt;= -1.84475535471 &amp;
  y &lt;= -1.50738834888 &amp;
  _y_interval &lt;= 0.07040023248185712 &amp;
- _y_interval &gt;= -0.04010945713794811</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.03706092787260218</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -6.616266022898019 * x + -1.8070495886817164 * y - 9.409633604364316 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="69" name="_69_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.84239369665 &amp;
  x &lt;= -1.6642689742499999 &amp;
  y &gt;= -1.6102950521800001 &amp;
  y &lt;= -1.2695467698 &amp;
  _y_interval &lt;= 0.06598285853202057 &amp;
- _y_interval &gt;= -0.04313965317089874</invariant>
+ _y_interval &gt;= -0.04043680229504609</invariant>
       <flow>x' == 0.9999999999999993 * y &amp;
  y' == -6.049316907616955 * x + -2.0741707718708797 * y - 8.853125556742299 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="70" name="_70_space_trig">
       <invariant>x &gt;= -1.865431310751273 &amp;
@@ -845,24 +845,24 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  -1.23453857963 * x + 4.639048199352093 * y &lt;= -3.4882576789002973 &amp;
  _y_interval &lt;= 0.02780731776069434 &amp;
  _y_interval &gt;= -0.017154767944481897</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -5.6063661846757755 * x + -2.2432293113380206 * y - 8.295590156253619 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="71" name="_71_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.9214641754700001 &amp;
  x &lt;= -1.7610693273973121 &amp;
  y &gt;= -1.285054568195951 &amp;
  y &lt;= -0.9584354073199999 &amp;
  _y_interval &lt;= 0.05649516096653606 &amp;
- _y_interval &gt;= -0.03996517810928424</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.042065870664973026</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -5.130863499092221 * x + -2.3902632499350513 * y - 7.606021615589402 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="72" name="_72_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.9665291546900001 &amp;
  x &lt;= -1.81707499701 &amp;
  y &gt;= -1.05846128626 &amp;
@@ -871,19 +871,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.03984632467749538</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == -4.415745946472112 * x + -2.578915094190371 * y - 6.461915272112165 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="73" name="_73_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.00148677287 &amp;
  x &lt;= -1.86216496747 &amp;
  y &gt;= -0.848017042181 &amp;
  y &lt;= -0.5545484294659999 &amp;
  _y_interval &lt;= 0.043607996126076465 &amp;
  _y_interval &gt;= -0.035377750971888666</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -3.7095122627348625 * x + -2.7319511926580793 * y - 5.234305884694063 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="74" name="_74_space_trig">
       <invariant>x &gt;= -2.0116780221521027 &amp;
@@ -895,10 +895,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.01694750919014343</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == -3.240513555246448 * x + -2.819803979935891 * y - 4.378931123600192 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="75" name="_75_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.03451646196 &amp;
  x &lt;= -1.9077662405017386 &amp;
  y &gt;= -0.590875539170808 &amp;
@@ -907,43 +907,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.031766718171472696</invariant>
       <flow>x' == 1.0000000000000002 * y &amp;
  y' == -2.807482857008112 * x + -2.885398226532259 * y - 3.5628042010896026 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="76" name="_76_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.04962720676 &amp;
  x &lt;= -1.93059006443 &amp;
  y &gt;= -0.42611109085099996 &amp;
  y &lt;= -0.181623091746 &amp;
  _y_interval &lt;= 0.03046869943135011 &amp;
  _y_interval &gt;= -0.02831582520832976</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -2.2094570449325577 * x + -2.960532381469793 * y - 2.406950909501493 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="77" name="_77_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.0579960486399997 &amp;
  x &lt;= -1.94571088698 &amp;
  y &gt;= -0.28201142770800003 &amp;
  y &lt;= -0.056172075083 &amp;
  _y_interval &lt;= 0.026270805741170022 &amp;
  _y_interval &gt;= -0.02520485493112057</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -1.6769938178182977 * x + -3.0074173065829224 * y - 1.3552424218854906 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="78" name="_78_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.06053204504 &amp;
  x &lt;= -1.9541059057399999 &amp;
  y &gt;= -0.156807886043 &amp;
  y &lt;= 0.052015844280700003 &amp;
- _y_interval &lt;= 0.022749655014357106 &amp;
- _y_interval &gt;= -0.021861610940530962</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &lt;= 0.022158343311648787 &amp;
+ _y_interval &gt;= -0.02245292264323906</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -1.2103510538993243 * x + -3.0293294689607597 * y - 0.42224166198539814 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="79" name="_79_space_trig">
       <invariant>x &gt;= -2.06053204504 &amp;
@@ -952,46 +952,46 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &lt;= 0.11217816553915178 &amp;
  0.0621200091589 * x + 1.8194956211836666 * y &lt;= -0.011697268808319602 &amp;
  _y_interval &lt;= 0.01708113399513067 &amp;
- _y_interval &gt;= -0.016813001030432595</invariant>
-      <flow>x' == 1 * y &amp;
+ _y_interval &gt;= -0.01725559114503694</invariant>
+      <flow>x' == 1.0 * y &amp;
  y' == -0.8726228369165289 * x + -3.0324203889928354 * y + 0.25578464696159653 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="80" name="_80_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.0595001663752144 &amp;
  x &lt;= -1.9503816847799997 &amp;
  y &gt;= 0.012046559885093532 &amp;
  y &lt;= 0.196575642045 &amp;
  _y_interval &lt;= 0.020149418216700354 &amp;
  _y_interval &gt;= -0.020770426169211875</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.581724809366241 * x + -3.019788115055992 * y + 0.8386170478553988 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="81" name="_81_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.05422741213 &amp;
  x &lt;= -1.94120719675 &amp;
  y &gt;= 0.09636003221400001 &amp;
  y &lt;= 0.26902802658 &amp;
  _y_interval &lt;= 0.019184985158207546 &amp;
  _y_interval &gt;= -0.020351812561125504</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.270057952111487 * x + -2.99087442845902 * y + 1.4582178603052536 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="82" name="_82_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.04504148224 &amp;
  x &lt;= -1.92866916895 &amp;
  y &gt;= 0.168795481353 &amp;
  y &lt;= 0.331394378773 &amp;
  _y_interval &lt;= 0.01822616915479136 &amp;
  _y_interval &gt;= -0.01991962636326461</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -0.006195112600037341 * x + -2.9475940848452127 * y + 1.9745465331329548 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="83" name="_83_space_trig">
       <invariant>x &gt;= -2.03249245258 &amp;
@@ -1001,24 +1001,24 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  0.352313580934 * x + 0.9590968323520812 * y &lt;= -0.35241799449917516 &amp;
  _y_interval &lt;= 0.02023344233851554 &amp;
  _y_interval &gt;= -0.022710192123526873</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.24908650962519965 * x + -2.880871897591278 * y + 2.46069151472226 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="84" name="_84_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -2.010888022328891 &amp;
  x &lt;= -1.88876154662 &amp;
  y &gt;= 0.3016156680282058 &amp;
  y &lt;= 0.447682916163 &amp;
  _y_interval &lt;= 0.016266508391444612 &amp;
  _y_interval &gt;= -0.019060432271931216</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.46100095042762457 * x + -2.8018166901508184 * y + 2.8486958632845036 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="85" name="_85_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.99209988412 &amp;
  x &lt;= -1.86791417372 &amp;
  y &gt;= 0.346671934342 &amp;
@@ -1027,10 +1027,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.018720522234583425</invariant>
       <flow>x' == 0.9999999999999996 * y &amp;
  y' == 0.6093986321067586 * x + -2.724927131680604 * y + 3.1061506723002763 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="86" name="_86_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.97120760971 &amp;
  x &lt;= -1.84519042457 &amp;
  y &gt;= 0.38642307556600003 &amp;
@@ -1039,19 +1039,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.018430099738978356</invariant>
       <flow>x' == 0.9999999999999996 * y &amp;
  y' == 0.734326283970457 * x + -2.6412234890140605 * y + 3.309439710472494 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="87" name="_87_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.9484498160600001 &amp;
  x &lt;= -1.8207829252499999 &amp;
  y &gt;= 0.421881403551 &amp;
  y &lt;= 0.554282933138 &amp;
  _y_interval &lt;= 0.0142090662058445 &amp;
  _y_interval &gt;= -0.018186651572207557</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.8396952893736701 * x + -2.5517788645408235 * y + 3.4671198593705057 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="88" name="_88_space_trig">
       <invariant>x &gt;= -1.92401846819 &amp;
@@ -1063,43 +1063,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.02642601243193332</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == 0.966850016298516 * x + -2.407738644817428 * y + 3.6308171937071947 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="89" name="_89_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.8695037662913048 &amp;
  x &lt;= -1.73934969336 &amp;
  y &gt;= 0.5099434487693507 &amp;
  y &lt;= 0.636957231753 &amp;
  _y_interval &lt;= 0.012755193942448395 &amp;
  _y_interval &gt;= -0.017612342036806172</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.069498244389759 * x + -2.2559558233092973 * y + 3.734257949504141 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="90" name="_90_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.84078521451 &amp;
  x &lt;= -1.70945386215 &amp;
  y &gt;= 0.535588752735 &amp;
  y &lt;= 0.6612346960100001 &amp;
  _y_interval &lt;= 0.012336398563692619 &amp;
  _y_interval &gt;= -0.01749707856875715</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.124504687798744 * x + -2.1510493753609135 * y + 3.7712497805852276 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="91" name="_91_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.81082644461 &amp;
  x &lt;= -1.67835427162 &amp;
  y &gt;= 0.560080630395 &amp;
  y &lt;= 0.684764892538 &amp;
  _y_interval &lt;= 0.011950673225883612 &amp;
  _y_interval &gt;= -0.01741208334808264</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.1717454966515348 * x + -2.0435955176278244 * y + 3.78880625373794 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="92" name="_92_space_trig">
       <invariant>x &gt;= -1.77967393313 &amp;
@@ -1111,34 +1111,34 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.02372942677364076</invariant>
       <flow>x' == 1.0000000000000009 * y &amp;
  y' == 1.2263897296558026 * x + -1.8908796436326092 * y + 3.7854385052818778 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="93" name="_93_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.721560979673849 &amp;
  x &lt;= -1.58653514948 &amp;
  y &gt;= 0.6245920310389482 &amp;
  y &lt;= 0.74868612554 &amp;
  _y_interval &lt;= 0.011010652162516399 &amp;
  _y_interval &gt;= -0.017270045355258334</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.2714680770151747 * x + -1.7358749999306702 * y + 3.757117376535218 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="94" name="_94_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.68720339383 &amp;
  x &lt;= -1.55106207927 &amp;
  y &gt;= 0.647763932335 &amp;
  y &lt;= 0.772030873839 &amp;
  _y_interval &lt;= 0.010694646069653313 &amp;
  _y_interval &gt;= -0.017273427703785593</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.2988362498599837 * x + -1.6215908185678922 * y + 3.7221210281161357 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="95" name="_95_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.65168708495 &amp;
  x &lt;= -1.51440433463 &amp;
  y &gt;= 0.671220822657 &amp;
@@ -1147,19 +1147,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.017297910278361917</invariant>
       <flow>x' == 1.0000000000000009 * y &amp;
  y' == 1.3225189659262209 * x + -1.5060337192845263 * y + 3.6766536849154123 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="96" name="_96_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.61499132857 &amp;
  x &lt;= -1.47653109036 &amp;
  y &gt;= 0.695187070028 &amp;
  y &lt;= 0.8205033284690001 &amp;
  _y_interval &lt;= 0.01007859880007933 &amp;
  _y_interval &gt;= -0.017343013976287347</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3428954235552104 * x + -1.3893777166866998 * y + 3.6215568635647157 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="97" name="_97_space_trig">
       <invariant>x &gt;= -1.57708461784 &amp;
@@ -1169,12 +1169,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  0.810613107639 * x + 0.5355743928002454 * y &lt;= -0.75356997106875 &amp;
  _y_interval &lt;= 0.012367439530901247 &amp;
  _y_interval &gt;= -0.022751772383288404</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3648508246213027 * x + -1.238116735890294 * y + 3.5378964535106703 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="98" name="_98_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.5153748358893464 &amp;
  x &lt;= -1.37378752118 &amp;
  y &gt;= 0.7602781399274433 &amp;
@@ -1183,34 +1183,34 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.01754286796805582</invariant>
       <flow>x' == 0.9999999999999991 * y &amp;
  y' == 1.3814847857692847 * x + -1.0868147813766247 * y + 3.4402480984889867 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="99" name="_99_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.47415141887 &amp;
  x &lt;= -1.33118323789 &amp;
  y &gt;= 0.7877493517949999 &amp;
  y &lt;= 0.9171641306870001 &amp;
  _y_interval &lt;= 0.008950832940579745 &amp;
  _y_interval &gt;= -0.017662898542584404</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3914264395920672 * x + -0.9674756341046862 * y + 3.3543757350398997 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="100" name="_100_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.43152156051 &amp;
  x &lt;= -1.28709169442 &amp;
  y &gt;= 0.816676627935 &amp;
  y &lt;= 0.947721175669 &amp;
  _y_interval &lt;= 0.008604660163038513 &amp;
  _y_interval &gt;= -0.01780598862994187</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3983576279236083 * x + -0.8477145074702723 * y + 3.2601034186677973 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="101" name="_101_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.3874067325000001 &amp;
  x &lt;= -1.2414236498 &amp;
  y &gt;= 0.847276265412 &amp;
@@ -1219,7 +1219,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.017973435940717764</invariant>
       <flow>x' == 0.9999999999999991 * y &amp;
  y' == 1.4020404893097416 * x + -0.7276872947258907 * y + 3.157278508906103 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="102" name="_102_space_trig">
       <invariant>x &gt;= -1.34171738616 &amp;
@@ -1231,10 +1231,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.021949876198707252</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == 1.4019821522377456 * x + -0.587693269381493 * y + 3.0265864118590065 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="103" name="_103_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.2786290579796067 &amp;
  x &lt;= -1.12861363491 &amp;
  y &gt;= 0.9261402045541048 &amp;
@@ -1243,10 +1243,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.018465544334215434</invariant>
       <flow>x' == 0.9999999999999992 * y &amp;
  y' == 1.3957920074535655 * x + -0.4487043456176013 * y + 2.8836264018129585 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="104" name="_104_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.2288685455400001 &amp;
  x &lt;= -1.07690931588 &amp;
  y &gt;= 0.9640088384099998 &amp;
@@ -1255,19 +1255,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.018725193791985673</invariant>
       <flow>x' == 1.0000000000000009 * y &amp;
  y' == 1.385286359534602 * x + -0.3291528865536483 * y + 2.749970240480997 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="105" name="_105_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.17714793179 &amp;
  x &lt;= -1.02309808185 &amp;
  y &gt;= 1.00464077377 &amp;
  y &lt;= 1.14863257681 &amp;
  _y_interval &lt;= 0.006241045840892578 &amp;
  _y_interval &gt;= -0.019016070096356197</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3688655529454423 * x + -0.21027063013467792 * y + 2.606043494858662 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="106" name="_106_space_trig">
       <invariant>x &gt;= -1.1233214388900001 &amp;
@@ -1277,36 +1277,36 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  1.15069873374 * x + 0.9853546636656506 * y &lt;= -0.02967546109545416 &amp;
  _y_interval &lt;= 0.006021751520010277 &amp;
  _y_interval &gt;= -0.020803880776262273</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3439943896601287 * x + -0.08611617708080399 * y + 2.442838235682665 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="107" name="_107_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.0612419295774833 &amp;
  x &lt;= -0.902224754339 &amp;
  y &gt;= 1.1005501571604406 &amp;
  y &lt;= 1.2520159046300001 &amp;
  _y_interval &lt;= 0.005022802654712222 &amp;
  _y_interval &gt;= -0.019737608594859957</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.3095925420190682 * x + 0.03619964528750246 * y + 2.26740400483821 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="108" name="_108_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -1.00243736486 &amp;
  x &lt;= -0.840770651665 &amp;
  y &gt;= 1.15176654967 &amp;
  y &lt;= 1.30734196734 &amp;
- _y_interval &lt;= 0.00446217099009294 &amp;
+ _y_interval &lt;= 0.004462170990093162 &amp;
  _y_interval &gt;= -0.02013201370358131</invariant>
       <flow>x' == 0.9999999999999986 * y &amp;
  y' == 1.2663242660288687 * x + 0.15064605195449407 * y + 2.0886535275947735 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="109" name="_109_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.940971086431 &amp;
  x &lt;= -0.776438962477 &amp;
  y &gt;= 1.20710386103 &amp;
@@ -1315,19 +1315,19 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.020559295089916496</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.2105336320938982 * x + 0.26262568097745437 * y + 1.8981963366035814 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="110" name="_110_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.8766277203280001 &amp;
  x &lt;= -0.7089959421459999 &amp;
  y &gt;= 1.2669309854 &amp;
  y &lt;= 1.4318400553400001 &amp;
  _y_interval &lt;= 0.003373000306400309 &amp;
  _y_interval &gt;= -0.021017069628497254</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 1.1396176108984641 * x + 0.37144940025063466 * y + 1.6963141562433464 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="111" name="_111_space_trig">
       <invariant>x &gt;= -0.80917339698 &amp;
@@ -1339,34 +1339,34 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.01923362209926749</invariant>
       <flow>x' == 0.9999999999999987 * y &amp;
  y' == 1.056800586676744 * x + 0.4695699344264179 * y + 1.4979808236432186 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="112" name="_112_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.7476327089682224 &amp;
  x &lt;= -0.5734809186619999 &amp;
  y &gt;= 1.392276328921817 &amp;
  y &lt;= 1.5671691433500001 &amp;
- _y_interval &lt;= 0.002396507850492391 &amp;
+ _y_interval &lt;= 0.002396507850492613 &amp;
  _y_interval &gt;= -0.021942193541832467</invariant>
       <flow>x' == 1.0000000000000013 * y &amp;
  y' == 0.9548818718234277 * x + 0.5636646957224283 * y + 1.2913105406366043 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="113" name="_113_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.673664822125 &amp;
  x &lt;= -0.49564480251400006 &amp;
  y &gt;= 1.4669786641 &amp;
  y &lt;= 1.64761239659 &amp;
  _y_interval &lt;= 0.0019006973999553534 &amp;
  _y_interval &gt;= -0.022453876609709322</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.8209606520397066 * x + 0.6581787504316512 * y + 1.0646334082594677 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="114" name="_114_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.595819220595 &amp;
  x &lt;= -0.413639708677 &amp;
  y &gt;= 1.54742303759 &amp;
@@ -1375,7 +1375,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.022962322254318712</invariant>
       <flow>x' == 0.9999999999999988 * y &amp;
  y' == 0.6562004357283114 * x + 0.7452481675282568 * y + 0.8359331592550607 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="115" name="_115_space_trig">
       <invariant>x &gt;= -0.513804632549 &amp;
@@ -1385,36 +1385,36 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  1.74096938086 * x + 1.858286000891212 * y &lt;= 2.5213140105864373 &amp;
  _y_interval &lt;= 0.0007226203608079462 &amp;
  _y_interval &gt;= -0.015883778660736203</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.4962304601695314 * x + 0.8091340027775332 * y + 0.6536763533364522 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="116" name="_116_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.4601406548145411 &amp;
  x &lt;= -0.270545873304 &amp;
  y &gt;= 1.6908736731734362 &amp;
  y &lt;= 1.88675621111 &amp;
  _y_interval &lt;= 0.0007572207390516006 &amp;
  _y_interval &gt;= -0.023739535297075287</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.3070629795201023 * x + 0.8665242994065163 * y + 0.477526655268913 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="117" name="_117_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.370718312007 &amp;
  x &lt;= -0.176214006323 &amp;
  y &gt;= 1.7865819033299999 &amp;
  y &lt;= 1.9876660804500002 &amp;
  _y_interval &lt;= 0.00042313607824784327 &amp;
  _y_interval &gt;= -0.02414717690458046</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == 0.03212909986056051 * x + 0.925216259791543 * y + 0.282252380701296 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="118" name="_118_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.2763775448 &amp;
  x &lt;= -0.076725842107 &amp;
  y &gt;= 1.88748382393 &amp;
@@ -1423,10 +1423,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.02447459980923483</invariant>
       <flow>x' == 0.9999999999999989 * y &amp;
  y' == -0.2972687185430679 * x + 0.9688294995387003 * y + 0.12406839778397138 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="119" name="_119_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.17687999672299998 &amp;
  x &lt;= 0.028095956010500002 &amp;
  y &gt;= 1.9926370776699998 &amp;
@@ -1435,7 +1435,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.024702572660513233</invariant>
       <flow>x' == 0.9999999999999989 * y &amp;
  y' == -0.6880468814580623 * x + 0.9944658273073141 * y + 0.02320682274477015 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="120" name="_120_space_trig">
       <invariant>x &gt;= -0.0720481521758 &amp;
@@ -1445,12 +1445,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  2.20628363358 * x + 2.169936190969114 * y &lt;= 4.862118727001252 &amp;
  _y_interval &lt;= 0.00000010190572208301774 &amp;
  _y_interval &gt;= -0.013794870055539477</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -1.0258696350669145 * x + 0.9999647443623932 * y + 0.00015360472991687857 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="121" name="_121_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= -0.016253706884214375 &amp;
  x &lt;= 0.196930172314 &amp;
  y &gt;= 2.1561819182249544 &amp;
@@ -1459,31 +1459,31 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.028857328652259095</invariant>
       <flow>x' == 0.9999999999999979 * y &amp;
  y' == -1.4083314175353525 * x + 0.9918390037099487 * y + 0.03688793862211348 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="122" name="_122_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.096762546382 &amp;
  x &lt;= 0.315211671408 &amp;
  y &gt;= 2.2636452461300003 &amp;
  y &lt;= 2.4667115583999997 &amp;
- _y_interval &lt;= 0.0001932357561356124 &amp;
+ _y_interval &lt;= 0.00019323575613605648 &amp;
  _y_interval &gt;= -0.03399664023976223</invariant>
       <flow>x' == 1.0000000000000022 * y &amp;
  y' == -1.974392522206925 * x + 0.9575693109690827 * y + 0.20071229857830364 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="123" name="_123_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.215054766826 &amp;
  x &lt;= 0.43842503833 &amp;
  y &gt;= 2.3664836241800002 &amp;
  y &lt;= 2.5603170119299996 &amp;
- _y_interval &lt;= 0.00042373860070976654 &amp;
- _y_interval &gt;= -0.039009658433219796</invariant>
+ _y_interval &lt;= 0.0004237386007095445 &amp;
+ _y_interval &gt;= -0.03659186419040772</invariant>
       <flow>x' == 0.9999999999999977 * y &amp;
  y' == -2.6097823598638117 * x + 0.8932410360633161 * y + 0.5259801314336923 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="124" name="_124_space_trig">
       <invariant>x &gt;= 0.338280276686 &amp;
@@ -1493,12 +1493,12 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  2.55604412129 * x + 1.5601334614068012 * y &lt;= 5.159772231451693 &amp;
  _y_interval &lt;= 0.0003889472922791182 &amp;
  _y_interval &gt;= -0.02417201937799285</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -3.145271467933035 * x + 0.8206931243421698 * y + 0.9084075358090218 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="125" name="_125_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.408452181551437 &amp;
  x &lt;= 0.638191125374 &amp;
  y &gt;= 2.505895603304568 &amp;
@@ -1507,43 +1507,43 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.04538429483191453</invariant>
       <flow>x' == 1.0000000000000027 * y &amp;
  y' == -3.7107194254218525 * x + 0.7261344470170478 * y + 1.4185781717852706 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="126" name="_126_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.538044826358 &amp;
  x &lt;= 0.7705607313530001 &amp;
  y &gt;= 2.57363721799 &amp;
  y &lt;= 2.71676124115 &amp;
- _y_interval &lt;= 0.0008518738384242219 &amp;
+ _y_interval &lt;= 0.0008518738384241109 &amp;
  _y_interval &gt;= -0.047606648632687154</invariant>
       <flow>x' == 1.000000000000003 * y &amp;
  y' == -4.461522413068158 * x + 0.5718878735819728 * y + 2.264883733941086 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="127" name="_127_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.670430503842 &amp;
  x &lt;= 0.9043072347400001 &amp;
  y &gt;= 2.6164198168 &amp;
  y &lt;= 2.7280452171 &amp;
  _y_interval &lt;= 0.0007380998500907676 &amp;
- _y_interval &gt;= -0.047582631796536934</invariant>
+ _y_interval &gt;= -0.04605620118344045</invariant>
       <flow>x' == 0.999999999999996 * y &amp;
  y' == -5.208065390707131 * x + 0.38005026367141054 * y + 3.3132996885836685 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="128" name="_128_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 0.804195051823 &amp;
  x &lt;= 1.037705254992 &amp;
  y &gt;= 2.6016523031800003 &amp;
  y &lt;= 2.7280452171 &amp;
- _y_interval &lt;= 0.0013019924192401167 &amp;
+ _y_interval &lt;= 0.0013019924192403387 &amp;
  _y_interval &gt;= -0.050778518141892715</invariant>
       <flow>x' == 1.0000000000000036 * y &amp;
  y' == -5.908385748917441 * x + 0.15185081493870164 * y + 4.520378608448706 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="129" name="_129_space_trig">
       <invariant>x &gt;= 0.937612921019 &amp;
@@ -1551,26 +1551,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  y &gt;= 2.569483681739218 &amp;
  y &lt;= 2.70206527462 &amp;
  2.6196570268 * x + -1.391428137602362 * y &lt;= -0.8651761711967518 &amp;
- _y_interval &lt;= 0.0017948128361084947 &amp;
+ _y_interval &lt;= 0.0017948128361080506 &amp;
  _y_interval &gt;= -0.032153188434868474</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -6.40029547466432 * x + -0.04944228010385938 * y + 5.532186356440744 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="130" name="_130_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.0110729195191095 &amp;
  x &lt;= 1.24012650232 &amp;
  y &gt;= 2.4786258782100004 &amp;
  y &lt;= 2.6697848429587245 &amp;
  _y_interval &lt;= 0.004669671332727887 &amp;
  _y_interval &gt;= -0.05966048350470787</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -6.795049619442654 * x + -0.2669747092221852 * y + 6.522906176409128 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="131" name="_131_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.13995294518 &amp;
  x &lt;= 1.3634211173100002 &amp;
  y &gt;= 2.34602072727 &amp;
@@ -1579,10 +1579,10 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.06476079534532797</invariant>
       <flow>x' == 1.000000000000002 * y &amp;
  y' == -7.164417619778721 * x + -0.5667204241869234 * y + 7.7159215898552 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="132" name="_132_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.26323724259 &amp;
  x &lt;= 1.47911137334 &amp;
  y &gt;= 2.17551489034 &amp;
@@ -1591,7 +1591,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.06855941139843136</invariant>
       <flow>x' == 1.0000000000000016 * y &amp;
  y' == -7.337165021435849 * x + -0.8801189828232988 * y + 8.68935786272731 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="133" name="_133_space_trig">
       <invariant>x &gt;= 1.3789208204599999 &amp;
@@ -1601,48 +1601,48 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  2.15088798395 * x + -3.9766564562312507 * y &lt;= -5.3886923035296075 &amp;
  _y_interval &lt;= 0.0076445815953718466 &amp;
  _y_interval &gt;= -0.02960432987889483</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -7.346540488084869 * x + -1.1029618075256988 * y + 9.203494300563598 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="134" name="_134_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.4212208467536864 &amp;
  x &lt;= 1.62375947676 &amp;
  y &gt;= 1.88969877632 &amp;
  y &lt;= 2.200928530707779 &amp;
  _y_interval &lt;= 0.028606124538971045 &amp;
  _y_interval &gt;= -0.07055744718933177</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -7.227939830363674 * x + -1.3179762926463792 * y + 9.481977119742277 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="135" name="_135_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.52357962448 &amp;
  x &lt;= 1.71506798993 &amp;
  y &gt;= 1.66049338645 &amp;
  y &lt;= 1.9897258656 &amp;
- _y_interval &lt;= 0.03280476371779528 &amp;
+ _y_interval &lt;= 0.03582282090714628 &amp;
  _y_interval &gt;= -0.06928419289812737</invariant>
       <flow>x' == 0.9999999999999993 * y &amp;
  y' == -6.910886936362595 * x + -1.6222095925808941 * y + 9.571639937748973 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="136" name="_136_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.6148883649999999 &amp;
  x &lt;= 1.7946759031600001 &amp;
  y &gt;= 1.42337625736 &amp;
  y &lt;= 1.76052808 &amp;
  _y_interval &lt;= 0.0401661313801025 &amp;
  _y_interval &gt;= -0.06589491120745095</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -6.427863230951153 * x + -1.9062821246783601 * y + 9.253324262355271 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="137" name="_137_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.69449934701 &amp;
  x &lt;= 1.8624300014500001 &amp;
  y &gt;= 1.1878022692099999 &amp;
@@ -1651,7 +1651,7 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  _y_interval &gt;= -0.060864586064495185</invariant>
       <flow>x' == 1.0000000000000007 * y &amp;
  y' == -5.821888350778024 * x + -2.162936597484022 * y + 8.575558094939874 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="138" name="_138_space_trig">
       <invariant>x &gt;= 1.76225878005 &amp;
@@ -1661,45 +1661,45 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
  1.17876368713 * x + -4.587267061854515 * y &lt;= -3.2527252126647976 &amp;
  _y_interval &lt;= 0.01297698269141101 &amp;
  _y_interval &gt;= -0.02105406012409805</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -5.3985146733086005 * x + -2.312657765192282 * y + 8.005608178477726 + _y_interval &amp;
- _tt' == 0</flow>
+ _tt' == 0.0</flow>
     </location>
     <location id="139" name="_139_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.7777558225749948 &amp;
  x &lt;= 1.93119193308 &amp;
  y &gt;= 0.9059531372909999 &amp;
  y &lt;= 1.2287774863423775 &amp;
- _y_interval &lt;= 0.03869657965473117 &amp;
+ _y_interval &lt;= 0.04059661401352521 &amp;
  _y_interval &gt;= -0.05126087830070958</invariant>
       <flow>x' == 1.0000000000000004 * y &amp;
  y' == -4.9588021777265 * x + -2.4390733635445563 * y + 7.341495226080404 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="140" name="_140_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.8310641472 &amp;
  x &lt;= 1.9737476975800001 &amp;
  y &gt;= 0.699309472108 &amp;
  y &lt;= 1.005953923149 &amp;
  _y_interval &lt;= 0.038058856657641194 &amp;
  _y_interval &gt;= -0.0467380485997948</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -4.244103182371797 * x + -2.6191482935445456 * y + 6.1716011069883505 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <location id="141" name="_141_time_trig">
-      <invariant>_tt &gt;= 0 &amp;
+      <invariant>_tt &gt;= 0.0 &amp;
  x &gt;= 1.87362061387 &amp;
  x &lt;= 2.00644356571 &amp;
  y &gt;= 0.511892100406 &amp;
  y &lt;= 0.7993354292920001 &amp;
- _y_interval &lt;= 0.03350885563713124 &amp;
+ _y_interval &lt;= 0.03477661987857106 &amp;
  _y_interval &gt;= -0.04055976809419981</invariant>
-      <flow>x' == 1 * y &amp;
+      <flow>x' == 1.0 * y &amp;
  y' == -3.543823484630193 * x + -2.763724509414956 * y + 4.935099190943994 + _y_interval &amp;
- _tt' == -1</flow>
+ _tt' == -1.0</flow>
     </location>
     <transition asap="false" bezier="false" source="1" target="2" timedriven="false">
       <guard>2.14717243966 * x + -4.095571019203355 * y &gt;= -5.5987319024338085</guard>
@@ -1708,26 +1708,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="2" target="3" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="3" target="4" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="4" target="5" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="5" target="6" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1738,26 +1738,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="7" target="8" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="8" target="9" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="9" target="10" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="10" target="11" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1768,20 +1768,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="12" target="13" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="13" target="14" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="14" target="15" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1792,26 +1792,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="16" target="17" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="17" target="18" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="18" target="19" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="19" target="20" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1822,20 +1822,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="21" target="22" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="22" target="23" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="23" target="24" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1846,26 +1846,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="25" target="26" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="26" target="27" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="27" target="28" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="28" target="29" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1876,20 +1876,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="30" target="31" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="31" target="32" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="32" target="33" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1900,26 +1900,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="34" target="35" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="35" target="36" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="36" target="37" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="37" target="38" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1930,20 +1930,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="39" target="40" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="40" target="41" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="41" target="42" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1954,26 +1954,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="43" target="44" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="44" target="45" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="45" target="46" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="46" target="47" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -1984,26 +1984,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="48" target="49" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="49" target="50" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="50" target="51" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="51" target="52" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2014,20 +2014,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="53" target="54" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="54" target="55" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="55" target="56" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2038,26 +2038,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="57" target="58" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="58" target="59" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="59" target="60" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="60" target="61" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2068,20 +2068,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="62" target="63" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="63" target="64" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="64" target="65" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2092,26 +2092,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="66" target="67" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="67" target="68" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="68" target="69" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="69" target="70" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2122,20 +2122,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="71" target="72" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="72" target="73" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="73" target="74" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2146,26 +2146,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="75" target="76" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="76" target="77" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="77" target="78" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="78" target="79" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2176,20 +2176,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="80" target="81" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="81" target="82" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="82" target="83" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2200,26 +2200,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="84" target="85" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="85" target="86" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="86" target="87" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="87" target="88" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2230,20 +2230,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="89" target="90" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="90" target="91" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="91" target="92" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2254,26 +2254,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="93" target="94" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="94" target="95" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="95" target="96" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="96" target="97" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2284,26 +2284,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="98" target="99" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="99" target="100" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="100" target="101" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="101" target="102" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2314,20 +2314,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="103" target="104" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="104" target="105" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="105" target="106" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2338,26 +2338,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="107" target="108" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="108" target="109" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="109" target="110" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="110" target="111" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2368,20 +2368,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="112" target="113" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="113" target="114" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="114" target="115" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2392,26 +2392,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="116" target="117" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="117" target="118" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="118" target="119" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="119" target="120" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2422,20 +2422,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="121" target="122" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="122" target="123" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="123" target="124" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2446,26 +2446,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="125" target="126" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="126" target="127" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="127" target="128" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="128" target="129" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2476,20 +2476,20 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="130" target="131" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="131" target="132" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="132" target="133" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2500,26 +2500,26 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="134" target="135" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="135" target="136" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="136" target="137" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="137" target="138" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
-      <assignment>_tt' == 0</assignment>
+      <guard>_tt &lt;= 0.0</guard>
+      <assignment>_tt' == 0.0</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
@@ -2530,13 +2530,13 @@ Command Line arguments: -i vanderpol_althoff.xml -passes hybridizemt "-T 5.5 -S 
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="139" target="140" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>
     </transition>
     <transition asap="false" bezier="false" source="140" target="141" timedriven="false">
-      <guard>_tt &lt;= 0</guard>
+      <guard>_tt &lt;= 0.0</guard>
       <assignment>_tt' == 0.05</assignment>
       <labelposition/>
       <middlepoint/>

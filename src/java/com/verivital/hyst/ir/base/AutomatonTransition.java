@@ -14,8 +14,8 @@ import com.verivital.hyst.util.AutomatonUtil;
 /**
  * A transition in a hybrid automaton.
  * 
- * automaton, from and to, and guard are nonnull reset is nonnull as well, but
- * may be empty Label may be null (if no label), but not blank ("")
+ * automaton, from and to, and guard are nonnull reset is nonnull as well, but may be empty Label
+ * may be null (if no label), but not blank ("")
  * 
  * @author Stanley Bak (stanleybak@gmail.com)
  *
@@ -36,9 +36,8 @@ public class AutomatonTransition
 
 	/**
 	 * The way to create a new transition in a hybrid automaton is to do
-	 * HybridAutomaton.createTransition(from, to), which will manage the
-	 * internal state of the automaton Guard is initially null, be sure to set
-	 * it
+	 * HybridAutomaton.createTransition(from, to), which will manage the internal state of the
+	 * automaton Guard is initially null, be sure to set it
 	 * 
 	 * @param parent
 	 *            the hybrid automaton
@@ -63,8 +62,7 @@ public class AutomatonTransition
 	}
 
 	/**
-	 * Deep copy. This also updates the transitions in the passed-in parent
-	 * HybridAutomaton
+	 * Deep copy. This also updates the transitions in the passed-in parent HybridAutomaton
 	 */
 	public AutomatonTransition copy(BaseComponent parent)
 	{
@@ -102,8 +100,8 @@ public class AutomatonTransition
 	}
 
 	/**
-	 * Check if the guarantees expected of this class are met. This is run prior
-	 * to any printing procedures.
+	 * Check if the guarantees expected of this class are met. This is run prior to any printing
+	 * procedures.
 	 * 
 	 * @throws AutomatonValidationException
 	 *             if guarantees are violated

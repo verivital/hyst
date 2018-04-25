@@ -27,8 +27,16 @@ from sympy.functions.elementary.trigonometric import sin, cos, tan
 from sympy.core import symbols
 from sympy.polys import PolynomialError
 from sympy.polys.polyfuncs import horner
-from sympy.mpmath import mpi as interval, mpf
-from sympy.mpmath import iv
+
+try:
+    # windows
+    from mpmath import mpi as interval, mpf
+    from mpmath import iv
+except:
+    # linux/other
+    from sympy.mpmath import mpi as interval, mpf
+    from sympy.mpmath import iv
+
 from multiprocessing import Pool
 import copy
 import scipy_optimize
@@ -65,7 +73,7 @@ def eval_eqs(e_list, subs_list):
 
     return eval_eqs_bounded(e_list, subs_list)
 
-def eval_eqs_bounded(e_list, subs_list, bound=None, use_basinhopping=False, use_corners=True):
+def eval_eqs_bounded(e_list, subs_list, bound=None, use_basinhopping=False, use_corners=True, multithreaded=True):
     """returns the interval evaluation of a list of sympy equations,
     over a set of domains, passed in as a list of substitutions
     each element of subList is a
@@ -85,9 +93,12 @@ def eval_eqs_bounded(e_list, subs_list, bound=None, use_basinhopping=False, use_
 
         param_list.append((e, subs, bound, use_basinhopping, use_corners))
 
-    p = Pool()
-    rv = p.map(_optimize_single, param_list)
-    p.close()
+    if multithreaded:
+        p = Pool()
+        rv = p.map(_optimize_single, param_list)
+        p.close()
+    else:
+        rv = [_optimize_single(p) for p in param_list]
 
     return rv
 

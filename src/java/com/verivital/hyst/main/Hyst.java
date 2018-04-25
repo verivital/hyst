@@ -19,9 +19,12 @@ import org.kohsuke.args4j.Localizable;
 import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.generators.BuildGenerator;
+import com.verivital.hyst.generators.DrivetrainGenerator;
 import com.verivital.hyst.generators.IntegralChainGenerator;
 import com.verivital.hyst.generators.ModelGenerator;
+import com.verivital.hyst.generators.NamedNavigationGenerator;
 import com.verivital.hyst.generators.NavigationGenerator;
+import com.verivital.hyst.generators.SwitchedOscillatorGenerator;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.importer.ConfigurationMaker;
 import com.verivital.hyst.importer.SpaceExImporter;
@@ -31,6 +34,8 @@ import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.passes.TransformationPass;
 import com.verivital.hyst.passes.basic.AddIdentityResetPass;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
+import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.RemoveSimpleUnsatInvariantsPass;
 import com.verivital.hyst.passes.basic.ShortenModeNamesPass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
@@ -49,6 +54,7 @@ import com.verivital.hyst.passes.complex.pi.PseudoInvariantSimulatePass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
+import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -66,15 +72,16 @@ import com.verivital.hyst.util.StringWithSpacesArrayOptionHandler;
 import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 
 /**
- * Main start class for Hyst If run without args, a GUI will be used. If run
- * with args, the command-line version is assumed.
+ * Main start class for Hyst If run without args, a GUI will be used. If run with args, the
+ * command-line version is assumed.
  */
 public class Hyst
 {
 	// list of supported tool printers (add new ones here)
 	private final ToolPrinter[] printers = { new FlowstarPrinter(), new DReachPrinter(),
 			new HyCreate2Printer(), new HyCompPrinter(), new PythonQBMCPrinter(),
-			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(), };
+			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(),
+			new HylaaPrinter() };
 
 	// list of supported model transformation passes (add new ones here)
 	private final TransformationPass[] passes = { new AddIdentityResetPass(),
@@ -83,13 +90,15 @@ public class Hyst
 			new SimplifyExpressionsPass(), new SplitDisjunctionGuardsPass(),
 			new RemoveSimpleUnsatInvariantsPass(), new ShortenModeNamesPass(),
 			new ContinuizationPass(), new HybridizeMixedTriggeredPass(), new HybridizeMTRawPass(),
-			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(), };
+			new FlattenAutomatonPass(), new OrderReductionPass(), new ConvertLutFlowsPass(),
+			new CopyInstancePass(), new ConvertHavocFlows() };
 
 	// list of supported model generators (add new ones here)
 	private final ModelGenerator[] generators = { new IntegralChainGenerator(),
-			new NavigationGenerator(), new BuildGenerator() };
+			new NavigationGenerator(), new NamedNavigationGenerator(),
+			new SwitchedOscillatorGenerator(), new BuildGenerator(), new DrivetrainGenerator() };
 
-	public static String TOOL_NAME = "Hyst v1.3";
+	public static String TOOL_NAME = "Hyst v1.5";
 
 	// all program arguments as a single string
 	public static String programArguments;
@@ -403,7 +412,8 @@ public class Hyst
 		}
 
 		if (toolPrinter == null)
-			throw new AutomatonExportException("Tool printer must be set using " + FLAG_TOOL);
+			throw new CmdLineException(parser, hystLocalizable,
+					"Tool printer must be set using '" + FLAG_TOOL + "' flag.");
 
 		for (String xmlFilename : xmlFilenames)
 			if (xmlFilename != null && !new File(xmlFilename).exists())
@@ -766,8 +776,7 @@ public class Hyst
 	}
 
 	/**
-	 * Print an info message to stderr, if the -v flag has been set (verbose
-	 * mode is enabled)
+	 * Print an info message to stderr, if the -v flag has been set (verbose mode is enabled)
 	 * 
 	 * @param message
 	 *            the message to print
@@ -798,8 +807,8 @@ public class Hyst
 	}
 
 	/**
-	 * Print an info message to stderr, if the -d flag has been set (debug mode
-	 * is enabled). This is even more verbose
+	 * Print an info message to stderr, if the -d flag has been set (debug mode is enabled). This is
+	 * even more verbose
 	 * 
 	 * @param message
 	 *            the message to print

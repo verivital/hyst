@@ -8,9 +8,9 @@ import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
-import com.verivital.hyst.internalpasses.ConvertHavocFlows;
 import com.verivital.hyst.internalpasses.ConvertIntervalConstants;
 import com.verivital.hyst.internalpasses.ConvertToStandardForm;
+import com.verivital.hyst.ir.AutomatonExportException;
 import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.Configuration;
 import com.verivital.hyst.ir.base.AutomatonMode;
@@ -20,21 +20,20 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
 
 /**
- * This class contains the checks that should be done before running a printer
- * or pass. For example, some may explicitly reject models with urgent
- * transitions, or require flat automata. Checks can be selectively skipped or
- * enabled by assigning to ToolPrinter.preconditions.skip in your printer or
- * pass. Use the PreconditionsFlag enum to index into the skip array
+ * This class contains the checks that should be done before running a printer or pass. For example,
+ * some may explicitly reject models with urgent transitions, or require flat automata. Checks can
+ * be selectively skipped or enabled by assigning to ToolPrinter.preconditions.skip in your printer
+ * or pass. Use the PreconditionsFlag enum to index into the skip array
  * (PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()).
  * 
- * Upon detecting an error, checks may either convert the model, or raise a
- * PreconditionException.
+ * Upon detecting an error, checks may either convert the model, or raise a PreconditionException.
  */
 public class Preconditions
 {
@@ -47,8 +46,7 @@ public class Preconditions
 	}
 
 	/**
-	 * Make a default Preconditions object, where every check is either enabled
-	 * or disabled
+	 * Make a default Preconditions object, where every check is either enabled or disabled
 	 * 
 	 * @param skipAll
 	 *            the default state of the checks
@@ -63,8 +61,7 @@ public class Preconditions
 	}
 
 	/**
-	 * Checks if indicated preconditions are met. Raises
-	 * PrinterPreconditionException if not.
+	 * Checks if indicated preconditions are met. Raises PrinterPreconditionException if not.
 	 * 
 	 * @param c
 	 *            the configuration to check
@@ -132,8 +129,8 @@ public class Preconditions
 	}
 
 	/**
-	 * Checks if all flows are assigned in the flat automaton. If not runs the
-	 * havoc transformation pass to ensure this.
+	 * Checks if all flows are assigned in the flat automaton. If not runs the havoc transformation
+	 * pass to ensure this.
 	 * 
 	 * @param c
 	 */
@@ -152,7 +149,7 @@ public class Preconditions
 				if (!am.flowDynamics.containsKey(v))
 				{
 					Hyst.log("Variable " + v + " didn't have dynamics defined in mode " + am.name
-							+ " as required in the preconditions. Attempting to convert using ConverHavocFlowsPass.");
+							+ " as required in the preconditions. Attempting to convert using ConvertHavocFlowsPass.");
 					convert = true;
 					break;
 				}
@@ -165,14 +162,13 @@ public class Preconditions
 		if (convert)
 		{
 			Hyst.log("Converting Havoc Flows");
-			ConvertHavocFlows.run(c);
+			new ConvertHavocFlows().runVanillaPass(c, "");
 		}
 	}
 
 	/**
-	 * Checks if a model has guards that contain a top-level disjunction (or).
-	 * If so, it will split the transitions into two, each with one of the
-	 * conditions
+	 * Checks if a model has guards that contain a top-level disjunction (or). If so, it will split
+	 * the transitions into two, each with one of the conditions
 	 * 
 	 * @param c
 	 *            the configuration to check and modify
@@ -183,8 +179,8 @@ public class Preconditions
 	}
 
 	/**
-	 * Checks if a model has initital / forbidden states with a disjunction (or)
-	 * in the expression. If so, it will convert it to 'standard' form.
+	 * Checks if a model has initital / forbidden states with a disjunction (or) in the expression.
+	 * If so, it will convert it to 'standard' form.
 	 * 
 	 * @param c
 	 *            the configuration to check and modify
@@ -222,11 +218,23 @@ public class Preconditions
 						"forbidden states has unsupported disjunction; "
 								+ "automatic convertion requires flat automaton.");
 		}
+
+		// check
+		byte classification = 0;
+
+		for (Expression e : c.init.values())
+			classification |= AutomatonUtil.classifyExpressionOps(e);
+
+		for (Expression e : c.forbidden.values())
+			classification |= AutomatonUtil.classifyExpressionOps(e);
+
+		if ((classification & AutomatonUtil.OPS_DISJUNCTION) != 0)
+			throw new AutomatonExportException(
+					"Conversion of disjunctive initial / forbidden failed");
 	}
 
 	/**
-	 * Checks if the model has at least one variable. Raises
-	 * PrinterPreconditionException if not.
+	 * Checks if the model has at least one variable. Raises PrinterPreconditionException if not.
 	 * 
 	 * @param c
 	 *            the configuration to check
@@ -239,8 +247,8 @@ public class Preconditions
 	}
 
 	/**
-	 * Checks if the model is flat. If not, prints a log message and runs the
-	 * flattening pass to conver it
+	 * Checks if the model is flat. If not, prints a log message and runs the flattening pass to
+	 * conver it
 	 * 
 	 * @param c
 	 *            the configuration to check
@@ -256,8 +264,8 @@ public class Preconditions
 	}
 
 	/**
-	 * Checks if the model has intervals as constants. If so, will print a log
-	 * message and run the conversion pass to convert constants to variables
+	 * Checks if the model has intervals as constants. If so, will print a log message and run the
+	 * conversion pass to convert constants to variables
 	 * 
 	 * @param c
 	 *            the configuration to check
@@ -277,15 +285,12 @@ public class Preconditions
 	}
 
 	/*
-	 * private static void printComponentConstants(Component c) {
-	 * System.out.println( c.instanceName + " has " + c.constants.size() +
-	 * " constants: " + c.constants);
+	 * private static void printComponentConstants(Component c) { System.out.println( c.instanceName
+	 * + " has " + c.constants.size() + " constants: " + c.constants);
 	 * 
-	 * if (c instanceof NetworkComponent) { NetworkComponent nc =
-	 * (NetworkComponent) c;
+	 * if (c instanceof NetworkComponent) { NetworkComponent nc = (NetworkComponent) c;
 	 * 
-	 * for (ComponentInstance ci : nc.children.values()) {
-	 * printComponentConstants(ci.child); } } }
+	 * for (ComponentInstance ci : nc.children.values()) { printComponentConstants(ci.child); } } }
 	 */
 
 	private static boolean hasConstants(Component c)
@@ -329,8 +334,7 @@ public class Preconditions
 	 * 
 	 * @param c
 	 *            the component to check
-	 * @return true iff c or any of its children contains interval-valued
-	 *         constants
+	 * @return true iff c or any of its children contains interval-valued constants
 	 */
 	private static boolean containsIntervalConstants(Component c)
 	{
@@ -412,8 +416,8 @@ public class Preconditions
 	}
 
 	/**
-	 * Check if there are non-deterministic dynamics (interval-expressions with
-	 * nonnull intervals) in the model
+	 * Check if there are non-deterministic dynamics (interval-expressions with nonnull intervals)
+	 * in the model
 	 * 
 	 * @param c
 	 *            the component to check
@@ -486,11 +490,11 @@ public class Preconditions
 	}
 
 	/**
-	 * Check that there are no non-basic operators in the given component's
-	 * expressions. This will try to convert, if such a conversion is supported.
+	 * Check that there are no non-basic operators in the given component's expressions. This will
+	 * try to convert, if such a conversion is supported.
 	 * 
-	 * basic operators are things like +, *, ^, sine, ln non-basic are things
-	 * like matrices, lookup-tables
+	 * basic operators are things like +, *, ^, sine, ln non-basic are things like matrices,
+	 * lookup-tables
 	 * 
 	 * @param c
 	 *            the configuration to check
@@ -532,17 +536,14 @@ public class Preconditions
 	}
 
 	/**
-	 * Recursive part of convertBasicOperators(config). This returns true if
-	 * there are look-up-table dynamics that should be attempted to be
-	 * converted. It may also raise a PreconditionsFailedException if, for
-	 * example, there are look-up-table dynamics in other parts of the
-	 * automaton.
+	 * Recursive part of convertBasicOperators(config). This returns true if there are look-up-table
+	 * dynamics that should be attempted to be converted. It may also raise a
+	 * PreconditionsFailedException if, for example, there are look-up-table dynamics in other parts
+	 * of the automaton.
 	 * 
 	 * @param comp
-	 *            the component to check for basic operation (linear and simple
-	 *            nonlinear)
-	 * @return false if no conversion is needed, true if we should try to
-	 *         convert
+	 *            the component to check for basic operation (linear and simple nonlinear)
+	 * @return false if no conversion is needed, true if we should try to convert
 	 */
 	private static boolean checkBasicOperatorsInComponents(Component c)
 	{

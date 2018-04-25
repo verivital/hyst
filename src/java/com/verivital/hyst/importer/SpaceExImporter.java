@@ -15,14 +15,13 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.SpaceExDocument;
 /**
  * Reads in a SpaceEx model into the internal automaton format
  * 
- * Based on Boogie converter by Christopher Dillo
- * (dilloc@informatik.uni-freiburg.de) Stanley Bak (8-2014)
+ * Based on Boogie converter by Christopher Dillo (dilloc@informatik.uni-freiburg.de) Stanley Bak
+ * (8-2014)
  */
 public class SpaceExImporter
 {
 	/**
-	 * Read a file in the SpaceEx format and produce the internal
-	 * HybridAutomaton representation
+	 * Read a file in the SpaceEx format and produce the internal HybridAutomaton representation
 	 * 
 	 * @param xmlFilename
 	 * @param cfgFilename

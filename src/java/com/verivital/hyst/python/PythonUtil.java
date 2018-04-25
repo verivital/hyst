@@ -31,17 +31,15 @@ public class PythonUtil
 	public static PythonSympyPrinter pySympyPrinter = new PythonSympyPrinter();
 
 	/**
-	 * Optimize a function in a hyper-rectangle using
-	 * scipy.optimize.basinhopping
+	 * Optimize a function in a hyper-rectangle using scipy.optimize.basinhopping
 	 *
-	 * This is a a parallel version the call above. It will use the number of
-	 * cores available in the system.
+	 * This is a a parallel version the call above. It will use the number of cores available in the
+	 * system.
 	 *
 	 * @param exp_list
 	 *            a list of expression to minimize and maximize
 	 * @param bounds_list
-	 *            a list of interval bounds for each variable used in the
-	 *            expression
+	 *            a list of interval bounds for each variable used in the expression
 	 * @return an list of interval bounds on exp (the results)
 	 */
 	public static List<Interval> scipyOptimize(List<Expression> expList,
@@ -113,8 +111,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Make a variable list string from a set of variables. For example:
-	 * "x, y, z"
+	 * Make a variable list string from a set of variables. For example: "x, y, z"
 	 * 
 	 * @param vars
 	 *            the set of variables
@@ -136,8 +133,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Return an expression which declares sympy variables for each symbol in a
-	 * Hyst Expression
+	 * Return an expression which declares sympy variables for each symbol in a Hyst Expression
 	 * 
 	 * @param exp
 	 *            the input expression
@@ -181,8 +177,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Converts a set of bounds to an interval list in python of the form:
-	 * [(0,2), (4,5)]
+	 * Converts a set of bounds to an interval list in python of the form: [(0,2), (4,5)]
 	 * 
 	 * @param bounds
 	 *            the bounds for all the variables
@@ -202,8 +197,8 @@ public class PythonUtil
 	}
 
 	/**
-	 * Converts a set of bounds to an interval map in python of the form:
-	 * {'x':interval(2,4), 'y':interval(4,5)}
+	 * Converts a set of bounds to an interval map in python of the form: {'x':interval(2,4),
+	 * 'y':interval(4,5)}
 	 * 
 	 * @param bounds
 	 *            the bounds for all the variables
@@ -274,26 +269,22 @@ public class PythonUtil
 	}
 
 	/**
-	 * Optimize a function in a hyper-rectangle using interval arithmetic over
-	 * multiple domains.
+	 * Optimize a function in a hyper-rectangle using interval arithmetic over multiple domains.
 	 *
-	 * This is a more optimized call than intervalOptimize if you're planning on
-	 * optimizing the same function but just changing the variable bounds.
+	 * This is a more optimized call than intervalOptimize if you're planning on optimizing the same
+	 * function but just changing the variable bounds.
 	 *
-	 * In performance tests, using a fairly simple expression (2*x + y - x) with
-	 * bounds x in [0, 1], y in [-0.2, -0.1], I measured 600 interval
-	 * evaluations per second (300x faster than using intervalOptimize), versus
-	 * 1000 calls in native python (10x faster than single evaluations). The
-	 * slowdown is primarily in Java (the python execution time through the
-	 * bridge matches).
+	 * In performance tests, using a fairly simple expression (2*x + y - x) with bounds x in [0, 1],
+	 * y in [-0.2, -0.1], I measured 600 interval evaluations per second (300x faster than using
+	 * intervalOptimize), versus 1000 calls in native python (10x faster than single evaluations).
+	 * The slowdown is primarily in Java (the python execution time through the bridge matches).
 	 *
 	 * @param pb
 	 *            the PythonBridge interface to use
 	 * @param exp
 	 *            the expression to minimize and maximize
 	 * @param boundsList
-	 *            a list of interval bounds for each variable used in the
-	 *            expression
+	 *            a list of interval bounds for each variable used in the expression
 	 * @return a list of resultant interval bounds
 	 */
 	public static List<Interval> intervalOptimize(List<Expression> exps,
@@ -303,8 +294,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Simpliy an expression using python, chopping values to zero smaller than
-	 * some tolerance
+	 * Simpliy an expression using python, chopping values to zero smaller than some tolerance
 	 * 
 	 * @param e
 	 *            the expression to simplify
@@ -330,8 +320,7 @@ public class PythonUtil
 	 * @param e
 	 *            the original expression
 	 * @param tol
-	 *            the tolerance (how close to zero should we chop), for example
-	 *            1e-8
+	 *            the tolerance (how close to zero should we chop), for example 1e-8
 	 * @return the chopped expression (not simplified!)
 	 */
 	private static Expression chop(Expression e, double tol)
@@ -359,9 +348,59 @@ public class PythonUtil
 		return rv;
 	}
 
+	public static Expression pythonSimplifyNumber(Expression e)
+	{
+		PythonBridge pb = PythonBridge.getInstance();
+		StringBuilder s = new StringBuilder();
+
+		String symbols = makeExpressionVariableSymbols(e);
+
+		if (symbols.length() > 0)
+			s.append(symbols);
+
+		s.append("from sympy import S;");
+		s.append("sympy.simplify(sympy.factor(");
+		s.append(pySympyPrinter.print(e));
+		s.append("))");
+
+		String result = pb.send(s.toString());
+
+		// substitute back
+		result = result.replace("**", "^");
+		return FormulaParser.parseValue(result);
+	}
+
+	public static Expression pythonSimplifyRecursively(Expression e)
+	{
+		Expression rv = e;
+
+		if (e instanceof Operation)
+		{
+			Operation o = e.asOperation();
+
+			if (Operator.isBooleanOperator(o.op))
+			{
+				// split!
+				Operation rvOp = new Operation(o.op);
+				rv = rvOp;
+
+				for (Expression child : o.children)
+				{
+					Expression newE = pythonSimplifyRecursively(child);
+					rvOp.children.add(newE);
+				}
+			}
+			else if (o.op == Operator.LOC)
+				; // skip
+			else
+				rv = pythonSimplifyNumber(e);
+		}
+
+		return rv;
+	}
+
 	/**
-	 * Use python-sympy to simplify an expression. If python doesn't exist on
-	 * the system, this does nothing.
+	 * Use python-sympy to simplify an expression.
 	 * 
 	 * @param e
 	 *            the input expression
@@ -378,35 +417,19 @@ public class PythonUtil
 
 		// optimization: only simplify if it's an operation
 		if (e instanceof Operation && AutomatonUtil.expressionContainsOnlyAllowedOps(e,
-				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR))
+				AutomatonUtil.OPS_LINEAR, AutomatonUtil.OPS_NONLINEAR, AutomatonUtil.OPS_BOOLEAN,
+				AutomatonUtil.OPS_LOC))
 		{
-			PythonBridge pb = PythonBridge.getInstance();
-			StringBuilder s = new StringBuilder();
-
-			String symbols = makeExpressionVariableSymbols(e);
-
-			if (symbols.length() > 0)
-				s.append(symbols);
-
-			s.append("from sympy import S;");
-			s.append("sympy.simplify(sympy.factor(");
-			s.append(pySympyPrinter.print(e));
-			s.append("))");
-
-			String result = pb.send(s.toString());
-
-			// substitute back
-			result = result.replace("**", "^");
-			rv = FormulaParser.parseValue(result);
+			// split conjunctions recursively
+			rv = pythonSimplifyRecursively(e);
 		}
 
 		return rv;
 	}
 
 	/**
-	 * Optimize a function in a hyper-rectangle using interval arithmetic over
-	 * possibly multiple domains. This uses smaller domains to have a guaranteed
-	 * overapproximation error.
+	 * Optimize a function in a hyper-rectangle using interval arithmetic over possibly multiple
+	 * domains. This uses smaller domains to have a guaranteed overapproximation error.
 	 *
 	 * @param pb
 	 *            the PythonBridge interface to use
@@ -415,8 +438,7 @@ public class PythonUtil
 	 * @param boundsList
 	 *            a list of interval bounds for each variable in each expression
 	 * @param maxError
-	 *            the maximum error, use 0 or negative if you don't want an
-	 *            error bound
+	 *            the maximum error, use 0 or negative if you don't want an error bound
 	 * @return a list of resultant interval bounds
 	 */
 	public static List<Interval> intervalOptimizeBounded(List<Expression> expList,
@@ -470,8 +492,7 @@ public class PythonUtil
 	}
 
 	/**
-	 * Used for printing expressions that can be evaluated in Python (like
-	 * math.sin(10))
+	 * Used for printing expressions that can be evaluated in Python (like math.sin(10))
 	 * 
 	 * @author Stanley Bak
 	 *
