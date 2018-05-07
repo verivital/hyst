@@ -66,7 +66,7 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-scenario", usage = "spaceex solver scenario", metaVar = "VAL")
 	public String scenario = "auto";
 
-	@Option(name = "-output-format", usage = "spaceex output format", metaVar = "VAL")
+	@Option(name = "-output-format", usage = "spaceex output format (none = skip)", metaVar = "VAL")
 	String outputFormat = "auto";
 
 	@Option(name = "-iter-max", usage = "maximum number of jumps", metaVar = "VAL")
@@ -76,7 +76,10 @@ public class SpaceExPrinter extends ToolPrinter
 	String directions = "auto";
 
 	@Option(name = "-aggregation", usage = "aggregation parameter", metaVar = "VAL")
-	String aggregation = "auto";
+	String aggregation = "chull";
+
+	@Option(name = "-forbidden", usage = "forbidden parameter", metaVar = "VAL")
+	String forbidden = "none";
 
 	@Option(name = "-flowpipe_tol", usage = "flowpipe-tolerance parameter (0 = skip)", metaVar = "VAL")
 	String flowpipeTol = "auto";
@@ -218,6 +221,9 @@ public class SpaceExPrinter extends ToolPrinter
 
 		String agg = getParam(aggregation, config.settings.spaceExConfig.aggregation);
 		sed.setAggregation(agg);
+
+		String f = getParam(forbidden, config.settings.spaceExConfig.forbidden);
+		sed.setForbiddenOverride(f);
 
 		String scenario = getParam(this.scenario, config.settings.spaceExConfig.scenario);
 		sed.setScenario(scenario);

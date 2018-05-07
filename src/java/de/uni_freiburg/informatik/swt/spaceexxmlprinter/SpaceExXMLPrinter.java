@@ -656,7 +656,9 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "system", config.systemID);
 		appendCfgString(rv, "scenario", config.scenario); // was supp
 		appendCfgString(rv, "directions", config.directions);
-		appendCfgString(rv, "set-aggregation", config.aggregation);
+
+		if (!config.aggregation.toLowerCase().equals("none"))
+			appendCfgString(rv, "set-aggregation", config.aggregation);
 
 		if (config.flowpipeTol > 0)
 			appendCfgString(rv, "flowpipe-tolerance", Double.toString(config.flowpipeTol));
@@ -664,7 +666,9 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "sampling-time", Double.toString(config.samplingTime).toString());
 		appendCfgString(rv, "time-horizon", Double.toString(config.timeHorizon));
 		appendCfgString(rv, "iter-max", Integer.toString(config.maxIterations));
-		appendCfgString(rv, "output-format", config.outputFormat);
+
+		if (!config.outputFormat.toLowerCase().equals("none"))
+			appendCfgString(rv, "output-format", config.outputFormat);
 
 		if (!skipTol)
 		{
@@ -679,10 +683,18 @@ public class SpaceExXMLPrinter
 		if (e != null)
 			appendCfgString(rv, "initially",
 					"\"" + expressionToString(e, FormulaType.DEFAULT, "initial states") + "\"");
-		e = mSXDocument.getForbiddenStateConditions();
-		if (e != null)
-			appendCfgString(rv, "forbidden",
-					"\"" + expressionToString(e, FormulaType.DEFAULT, "forbidden states") + "\"");
+
+		if (!config.forbidden.toLowerCase().equals("none"))
+		{
+			appendCfgString(rv, "forbidden", "\"" + config.forbidden + "\"");
+		}
+		else
+		{
+			e = mSXDocument.getForbiddenStateConditions();
+			if (e != null)
+				appendCfgString(rv, "forbidden", "\""
+						+ expressionToString(e, FormulaType.DEFAULT, "forbidden states") + "\"");
+		}
 
 		// output-variables
 

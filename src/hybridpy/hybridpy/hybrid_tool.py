@@ -178,7 +178,7 @@ def get_tool_path(filename, print_errors=True):
 
     returns the full path to the tool, or None 
     '''
-    
+
     rv = None
     errors = []
 
@@ -198,7 +198,7 @@ def get_tool_path(filename, print_errors=True):
 
                 try_path = os.path.join(dir_name, filename)
 
-                if os.path.exists(try_path):
+                if os.path.exists(try_path) and os.path.isfile(try_path):
                     rv = try_path
                     break
 
