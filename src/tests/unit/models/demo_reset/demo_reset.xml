@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="top">
+    <param name="x" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="y" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    
+    <location id="1" name="m1">
+      <invariant>x &lt;= 9.9</invariant>
+      <flow>x' == 2 &amp; y' == 1</flow>
+    </location>
+    <location id="2" name="m2">
+      <invariant></invariant>
+      <flow>x' == 1 &amp; y' == 1</flow>
+    </location>
+    
+    <transition source="1" target="2">
+      <guard>x &gt;= 9.9</guard>
+      <assignment>0 &lt;= x' &lt;= 1  &amp; y' == y - 10</assignment>
+    </transition>
+    
+  </component>
+</sspaceex>
+
