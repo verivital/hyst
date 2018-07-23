@@ -1,18 +1,25 @@
 package com.verivital.hyst.passes.basic;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import org.kohsuke.args4j.Option;
 
+import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
 import com.verivital.hyst.ir.AutomatonExportException;
+import com.verivital.hyst.ir.Component;
 import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.BaseComponent;
+import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.ir.network.ComponentInstance;
+import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.passes.TransformationPass;
+import com.verivital.hyst.util.DynamicsUtil;
 
 /**
  * Adds an new constant affine variable which is equal to 1 always, and changes constant terms from
@@ -40,15 +47,121 @@ public class AffineTransformationPass extends TransformationPass
 
 		for (Entry<String, Expression> e : config.init.entrySet())
 		{
-			Operation eq = new Operation(Operator.EQUAL, new Variable(varName), 1);
+			Operation eq = new Operation(Operator.EQUAL, new Variable(varName), new Constant(1));
 			Operation o = new Operation(Operator.AND, e.getValue(), eq);
 			newInit.put(e.getKey(), o);
 		}
 
+		config.init = newInit;
+
+		/////// convert flows ////////
+		AutomatonMode anyMode = ha.modes.values().iterator().next();
+		ArrayList<String> nonInputVars = getNonInputVariables(anyMode, ha.variables);
+
+		ArrayList<String> inputVars = new ArrayList<String>();
+
+		for (String var : ha.variables)
+		{
+			if (!nonInputVars.contains(var))
+				inputVars.add(var);
+		}
+
 		for (AutomatonMode m : ha.modes.values())
 		{
+			m.flowDynamics.put(varName, new ExpressionInterval("0"));
 
+			// rename all dynamics with an affine term to refer to the new variable
+			ArrayList<ArrayList<Double>> bMat = DynamicsUtil.extractDynamicsMatrixB(m);
+			ArrayList<Double> cVec = DynamicsUtil.extractDynamicsVectorC(m);
+
+			for (int index = 0; index < nonInputVars.size(); ++index)
+			{
+				double c = cVec.get(index);
+
+				if (c != 0)
+				{
+					ArrayList<Double> aRow = DynamicsUtil.extractDynamicsMatrixARow(m, index);
+					ArrayList<Double> bRow = bMat.get(index);
+
+					// create new dynamics for this variable
+					StringBuilder exp = new StringBuilder("");
+
+					for (int aIndex = 0; aIndex < nonInputVars.size(); ++aIndex)
+					{
+						double val = aRow.get(aIndex);
+
+						if (val != 0)
+						{
+							if (exp.length() > 0)
+								exp.append("+");
+
+							exp.append(val + "*" + nonInputVars.get(aIndex));
+						}
+					}
+
+					// add affine term
+					exp.append(cVec.get(index) + "*" + varName);
+
+					for (int aIndex = 0; aIndex < nonInputVars.size(); ++aIndex)
+					{
+						double val = aRow.get(aIndex);
+
+						if (val != 0)
+						{
+							if (exp.length() > 0)
+								exp.append("+");
+
+							exp.append(val + "*" + nonInputVars.get(aIndex));
+						}
+					}
+
+					System.out.println(".affinetransformation, exp = " + exp.toDefaaultString());
+				}
+			}
 		}
+	}
+
+	/**
+	 * Does the passed-in component have affine terms
+	 * 
+	 * @param c
+	 *            a component to check
+	 * @return are there affine terms used in c?
+	 */
+	public static boolean hasAffineTerms(Component c)
+	{
+		boolean rv = false;
+
+		if (c instanceof NetworkComponent)
+		{
+			for (ComponentInstance ci : ((NetworkComponent) c).children.values())
+			{
+				if (hasAffineTerms(ci.child))
+				{
+					rv = true;
+					break;
+				}
+			}
+		}
+		else
+		{
+			BaseComponent ha = (BaseComponent) c;
+
+			for (AutomatonMode am : ha.modes.values())
+			{
+				ArrayList<Double> vals = DynamicsUtil.extractDynamicsVectorC(am);
+
+				for (double v : vals)
+				{
+					if (v != 0)
+					{
+						rv = true;
+						break;
+					}
+				}
+			}
+		}
+		return rv;
 	}
 
 	@Override
