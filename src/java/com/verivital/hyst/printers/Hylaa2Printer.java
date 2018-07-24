@@ -111,7 +111,11 @@ public class Hylaa2Printer extends ToolPrinter
 			// trans.set_guard([[-1, 0, 0]], [-9.9])
 			// trans.set_reset(reset_csr, minkowski_csr, constraints_csr, constraints_rhs)
 
-			rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
+			if (at.label != null && at.label.length() > 0)
+				rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ", '"
+						+ at.label + "')");
+			else
+				rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 
 			if (at.guard != Constant.TRUE)
 			{
@@ -812,7 +816,16 @@ public class Hylaa2Printer extends ToolPrinter
 					String[] extracted = extractMatrixConstraintStrings(exp, ha);
 					rv.add(Hylaa2Printer.COMMENT_CHAR + " " + exp.toDefaultString());
 					rv.add("mode = ha.modes['" + modeName + "']");
-					rv.add("mat = " + extracted[0]);
+
+					String[] parts = extracted[0].split("\\], \\[");
+
+					rv.add("mat = " + parts[0] + "], \\");
+
+					for (int i = 1; i < parts.length - 1; ++i)
+						rv.add("    [" + parts[i] + "], \\");
+
+					rv.add("    [" + parts[parts.length - 1]);
+
 					rv.add("rhs = " + extracted[1]);
 					rv.add("rv.append(StateSet(lputil.from_constraints(mat, rhs, mode), mode))");
 					rv.add("");
