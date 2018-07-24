@@ -20,6 +20,7 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.passes.basic.AffineTransformationPass;
 import com.verivital.hyst.passes.basic.ConvertHavocFlows;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
@@ -43,6 +44,12 @@ public class Preconditions
 	{
 		for (PreconditionsFlag f : flags)
 			skip[f.ordinal()] = true;
+	}
+
+	public void unskip(PreconditionsFlag... flags)
+	{
+		for (PreconditionsFlag f : flags)
+			skip[f.ordinal()] = false;
 	}
 
 	/**
@@ -103,6 +110,10 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
 			Preconditions.convertBasicOperators(c);
 
+		// check if we need to do an affine transformation
+		if (!skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()])
+			Preconditions.doAffineTransformation(c);
+
 		// conversions should be done before checks
 
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
@@ -116,6 +127,18 @@ public class Preconditions
 
 		if (!skip[PreconditionsFlag.ALL_CONSTANTS_DEFINED.ordinal()])
 			Preconditions.allConstantsDefined(c.root);
+	}
+
+	private static void doAffineTransformation(Configuration c)
+	{
+		if (AffineTransformationPass.hasAffineTerms(c.root))
+		{
+			Hyst.log("Automaton has affine terms, converting...");
+
+			new AffineTransformationPass().runVanillaPass(c, "");
+		}
+		else
+			Hyst.log("Automaton doesn't affine terms, skipping affine conversion");
 	}
 
 	private static void allConstantsDefined(Component root)

@@ -327,7 +327,15 @@ public class PySimPrinter extends ToolPrinter
 
 		public ArrayList<String> getExtraDeclarationPrintLines(BaseComponent ha)
 		{
-			return new ArrayList<String>();
+			ArrayList<String> rv = new ArrayList<String>();
+
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			rv.add("ha.variables = " + quotedVarList(nonInputVars));
+
+			return rv;
 		}
 
 		public ArrayList<String> getImportLines(BaseComponent ha)
@@ -464,9 +472,6 @@ public class PySimPrinter extends ToolPrinter
 
 		BaseComponent ha = (BaseComponent) config.root;
 
-		AutomatonMode someMode = ha.modes.values().iterator().next();
-		ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode, ha.variables);
-
 		if (custom != null)
 			for (String line : custom.getImportLines(ha))
 				appendLine(rv, line);
@@ -477,7 +482,6 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendNewline(rv);
 		appendIndentedLine(rv, "ha = " + custom.automatonObjectName + "()");
-		appendIndentedLine(rv, "ha.variables = " + quotedVarList(nonInputVars));
 		appendNewline(rv);
 
 		for (String line : custom.getExtraDeclarationPrintLines(ha))

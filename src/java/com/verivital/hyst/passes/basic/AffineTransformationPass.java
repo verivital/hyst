@@ -8,6 +8,7 @@ import org.kohsuke.args4j.Option;
 
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
+import com.verivital.hyst.grammar.formula.FormulaParser;
 import com.verivital.hyst.grammar.formula.Operation;
 import com.verivital.hyst.grammar.formula.Operator;
 import com.verivital.hyst.grammar.formula.Variable;
@@ -37,6 +38,16 @@ public class AffineTransformationPass extends TransformationPass
 	{
 		BaseComponent ha = (BaseComponent) config.root;
 
+		AutomatonMode anyMode = ha.modes.values().iterator().next();
+		ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(anyMode, ha.variables);
+		ArrayList<String> inputVars = new ArrayList<String>();
+
+		for (String var : ha.variables)
+		{
+			if (!nonInputVars.contains(var))
+				inputVars.add(var);
+		}
+
 		if (ha.variables.contains(varName))
 			throw new AutomatonExportException(
 					"Affine Transformation variable '" + varName + "' already exists in automaton");
@@ -55,16 +66,6 @@ public class AffineTransformationPass extends TransformationPass
 		config.init = newInit;
 
 		/////// convert flows ////////
-		AutomatonMode anyMode = ha.modes.values().iterator().next();
-		ArrayList<String> nonInputVars = getNonInputVariables(anyMode, ha.variables);
-
-		ArrayList<String> inputVars = new ArrayList<String>();
-
-		for (String var : ha.variables)
-		{
-			if (!nonInputVars.contains(var))
-				inputVars.add(var);
-		}
 
 		for (AutomatonMode m : ha.modes.values())
 		{
@@ -84,7 +85,7 @@ public class AffineTransformationPass extends TransformationPass
 					ArrayList<Double> bRow = bMat.get(index);
 
 					// create new dynamics for this variable
-					StringBuilder exp = new StringBuilder("");
+					StringBuilder expStr = new StringBuilder("");
 
 					for (int aIndex = 0; aIndex < nonInputVars.size(); ++aIndex)
 					{
@@ -92,30 +93,35 @@ public class AffineTransformationPass extends TransformationPass
 
 						if (val != 0)
 						{
-							if (exp.length() > 0)
-								exp.append("+");
+							if (expStr.length() > 0)
+								expStr.append("+");
 
-							exp.append(val + "*" + nonInputVars.get(aIndex));
+							expStr.append(val + "*" + nonInputVars.get(aIndex));
 						}
 					}
 
 					// add affine term
-					exp.append(cVec.get(index) + "*" + varName);
+					if (expStr.length() > 0)
+						expStr.append("+");
 
-					for (int aIndex = 0; aIndex < nonInputVars.size(); ++aIndex)
+					expStr.append(cVec.get(index) + "*" + varName);
+
+					for (int bIndex = 0; bIndex < inputVars.size(); ++bIndex)
 					{
-						double val = aRow.get(aIndex);
+						double val = bRow.get(bIndex);
 
 						if (val != 0)
 						{
-							if (exp.length() > 0)
-								exp.append("+");
+							if (expStr.length() > 0)
+								expStr.append("+");
 
-							exp.append(val + "*" + nonInputVars.get(aIndex));
+							expStr.append(val + "*" + inputVars.get(bIndex));
 						}
 					}
 
-					System.out.println(".affinetransformation, exp = " + exp.toDefaaultString());
+					Expression exp = FormulaParser.parseValue(expStr.toString());
+					String var = nonInputVars.get(index);
+					m.flowDynamics.put(var, new ExpressionInterval(exp));
 				}
 			}
 		}

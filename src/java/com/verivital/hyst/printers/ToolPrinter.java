@@ -22,6 +22,7 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.PreconditionsFlag;
 
 /**
  * A generic tool printer class. Printers for individual tools will override this abstract class.
@@ -67,6 +68,9 @@ public abstract class ToolPrinter
 		if (flag.startsWith("-"))
 			throw new RuntimeException(
 					"tool printer's command-line flag shouldn't start with a hyphen: " + flag);
+
+		// skip the affine transformation conversion by default
+		preconditions.skip(PreconditionsFlag.CONVERT_AFFINE_TERMS);
 	}
 
 	public void setConfig(Configuration c)
