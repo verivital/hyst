@@ -8,7 +8,7 @@ from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import RunCode
 from hybridpy.hybrid_tool import tool_main
 
-class HylaaTool(HybridTool):
+class Hylaa2Tool(HybridTool):
     '''container class for running pysim'''
     
     def __init__(self):
@@ -16,8 +16,9 @@ class HylaaTool(HybridTool):
         self._run_hylaa = None
         self._result = None
     
-        python_path = sys.executable
-        HybridTool.__init__(self, 'hylaa', '.py', python_path)
+        python_path = sys.executable + "3" # path to python3... not 100% correct but should work for now
+        
+        HybridTool.__init__(self, 'hylaa2', '.py', python_path)
 
     def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''

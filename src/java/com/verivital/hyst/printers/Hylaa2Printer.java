@@ -117,7 +117,11 @@ public class Hylaa2Printer extends ToolPrinter
 			else
 				rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 
-			if (at.guard != Constant.TRUE)
+			if (at.guard == Constant.TRUE)
+			{
+				rv.add("trans.set_guard_true()");
+			}
+			else
 			{
 				String[] extracted = extractMatrixConstraintStrings(at.guard, at.parent);
 				String matrix = extracted[0];
