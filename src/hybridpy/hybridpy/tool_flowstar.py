@@ -63,7 +63,22 @@ class FlowstarTool(HybridTool):
 
             params = ["gimp", "-i", "-b", script_fu, "-b", exit_script_fu]
 
-            if not run_check_stderr(params):
+            # gimp prints to stderr upon startup... ignore them they aren't real errors
+            def should_ignore_stderr_func(s):
+                'function that returns True if the stderr line should be ignored'
+
+                ignore = False
+
+                s = s.strip()
+
+                if len(s) == 0:
+                    ignore = True
+                elif '(gimp:' in s:
+                    ignore = True
+
+                return ignore
+
+            if not run_check_stderr(params, should_ignore_stderr_func=should_ignore_stderr_func):
                 print "Gimp errored"
                 rv = False
 

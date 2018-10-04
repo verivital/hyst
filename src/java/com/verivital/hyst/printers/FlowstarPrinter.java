@@ -406,7 +406,9 @@ public class FlowstarPrinter extends ToolPrinter
 			printLine("{");
 
 			// From Xin Chen e-mail:
-			// linear ode - linear time-invariant, can also have uncertain input
+			// lti ode - linear time-invariant, can also have uncertain input
+			// note: this used to be called "linear ode" in version 2.0.0 and earlier
+
 			// "poly ode 1" works more efficient than the others on low degree
 			// and low dimension (<=3) ODEs.
 			// "poly ode 2" works more efficient than the others on low degree
@@ -428,7 +430,7 @@ public class FlowstarPrinter extends ToolPrinter
 				if (isNonLinearDynamics(mode.flowDynamics))
 					printLine("nonpoly ode");
 				else if (Classification.isLinearDynamics(mode.flowDynamics))
-					printLine("linear ode");
+					printLine("lti ode");
 				else if (ha.variables.size() <= 3)
 					printLine("poly ode 1");
 				else if (ha.variables.size() <= 6)

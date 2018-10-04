@@ -47,10 +47,7 @@ public abstract class ToolPrinter
 
 	// checks to do before printing (assign to the preconditions.skip in your
 	// ToolPrinter constructor to omit checks)
-	protected Preconditions preconditions = new Preconditions(false); // run all
-																		// checks
-																		// by
-																		// default
+	protected Preconditions preconditions = new Preconditions(false);
 
 	// command line parser for tools
 	private CmdLineParser parser = new CmdLineParser(this);

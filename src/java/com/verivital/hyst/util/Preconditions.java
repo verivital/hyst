@@ -56,15 +56,21 @@ public class Preconditions
 	 * Make a default Preconditions object, where every check is either enabled or disabled
 	 * 
 	 * @param skipAll
-	 *            the default state of the checks
+	 *            should we skip all checks, or use the default settings?
 	 */
 	public Preconditions(boolean skipAll)
 	{
 		skip = new boolean[PreconditionsFlag.values().length]; // all false by
 																// default
 
-		for (int i = 0; i < PreconditionsFlag.values().length; ++i)
-			skip[i] = skipAll;
+		// some checks skipped by default
+		skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()] = true;
+
+		if (skipAll)
+		{
+			for (int i = 0; i < PreconditionsFlag.values().length; ++i)
+				skip[i] = true;
+		}
 	}
 
 	/**
