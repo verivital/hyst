@@ -86,6 +86,9 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
 	String aggregation = "parallelotope";
 
+	@Option(name = "-unsafe", usage = "unsafe condition (single mode models only)", metaVar = "COND")
+	String unsafe = "auto";
+
 	FlowstarExpressionPrinter flowstarExpressionPrinter;
 
 	@SuppressWarnings("deprecation")
@@ -170,10 +173,28 @@ public class FlowstarPrinter extends ToolPrinter
 
 	private void printForbidden()
 	{
-		if (config.forbidden.size() > 0)
+		if (!unsafe.equals("auto"))
+		{
+			BaseComponent base = (BaseComponent) this.config.root;
+
+			if (base.modes.size() != 1)
+				throw new AutomatonExportException(
+						"Expeceted single automaton mode with explicit unsafe condition.");
+
+			printLine("");
+			printLine("unsafe");
+			printLine("{");
+
+			String name = base.modes.values().iterator().next().name;
+
+			printLine(name + " {" + this.unsafe + "}");
+
+			printLine("}");
+		}
+		else if (config.forbidden.size() > 0)
 		{
 			printLine("");
-			printLine("unsafe set");
+			printLine("unsafe");
 			printLine("{");
 
 			for (Entry<String, Expression> e : config.forbidden.entrySet())
