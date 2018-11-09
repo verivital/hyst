@@ -80,8 +80,11 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-jumps", usage = "maximum jumps", metaVar = "VAL")
 	String jumps = "" + DEFAULT_MAX_JUMPS;
 
-	@Option(name = "-print", usage = "print stdout output", metaVar = "VAL")
-	String print = "on";
+	@Option(name = "-printoff", usage = "suppress step by step stdout output")
+	boolean noPrint = false;
+
+	@Option(name = "-nooutput", usage = "suppress output folder for plotting")
+	boolean noOutput = false;
 
 	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
 	String aggregation = "parallelotope";
@@ -286,17 +289,24 @@ public class FlowstarPrinter extends ToolPrinter
 
 		printLine("cutoff " + cutoff);
 		printLine("precision " + precision);
-		printLine("output out");
+
+		if (noOutput)
+			printLine("no output");
+		else
+			printLine("output out");
 
 		int jumps = Integer.parseInt(this.jumps);
 
 		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
 			jumps = config.settings.spaceExConfig.maxIterations - 1;
 
-		if (!this.isContinuous)
+		if (!isContinuous)
 			printLine("max jumps " + jumps);
 
-		printLine("print on");
+		if (noPrint)
+			printLine("print off");
+		else
+			printLine("print on");
 		printLine("}");
 	}
 

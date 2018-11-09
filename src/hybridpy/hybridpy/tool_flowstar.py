@@ -128,7 +128,7 @@ class FlowstarTool(HybridTool):
         # force result to None if the tool was terminated early
         if rv['terminated'] is True:
             rv['result'] = None
-        else:
+        elif os.listdir(os.path.join(directory, 'outputs')): # if directory is not empty
             rv['gnuplot_oct_data'] = parse_gnuplot_data(os.path.join(directory, 'outputs', 'out.plt'))
             rv['reachable_taylor_models'] = parse_taylor_model_data(os.path.join(directory, 'outputs', 'out.flow'))
             
