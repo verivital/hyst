@@ -177,7 +177,7 @@ public abstract class ToolPrinter
 		}
 	}
 
-	private void setBaseName(String originalFilename)
+	protected void setBaseName(String originalFilename)
 	{
 		if (originalFilename == null || originalFilename.length() == 0)
 			baseName = "root";
