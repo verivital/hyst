@@ -3,6 +3,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN sed 's@archive.ubuntu.com@ftp.fau.de@' -i /etc/apt/sources.list
 RUN apt-get update && apt-get -qy install ant python2.7 python-scipy python-matplotlib git libglpk-dev build-essential python-cvxopt python-sympy gimp
 
+# Bug in sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
+# -> we use sympy 1.2
+RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
+
 ##################
 # Install Hylaa
 ##################
@@ -81,17 +85,30 @@ ENV PATH=$PATH:/tools/spaceex/spaceex_exe/
 
 COPY . /hyst
 WORKDIR /hyst/src
-# Bug in sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
-# -> we use sympy 1.2
-RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
 RUN ant build
-
-##################
-# Run tests
-##################
+ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
+ENV HYPYPATH=/hyst/src
+ENV PATH=$PATH:/hyst
 
 # BUG (TODO report)  Hyst integration tests fail if not Hylaa, SpaceEx and Flowstar are installed.
 
-ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
-ENV HYPYPATH=/hyst/src
-RUN ant test
+
+
+##################
+# As default command: run the tests
+##################
+
+CMD ant test
+
+# # USAGE:
+# # Build container:
+# docker build . -t hyst
+# # run tests
+# docker run hyst
+# # get a shell:
+# docker run hyst -it bash
+# -> Hyst is available in /hyst/src, tools are in /tools, everything is on the path (try 'hyst -help', 'spaceex --help')
+# # run Hyst:
+# docker run hyst hyst -help
+# # run Hyst via java path:
+# docker run hyst java -jar /hyst/src/Hyst.jar -help
