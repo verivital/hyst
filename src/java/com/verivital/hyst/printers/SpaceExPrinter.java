@@ -90,7 +90,7 @@ public class SpaceExPrinter extends ToolPrinter
 	@Option(name = "-time_triggered", usage = "sets map-zero-duration-jump-sets=true")
 	boolean isTimeTriggered = false;
 
-	@Option(name = "-output_vars", usage = "comma-separated output variables", metaVar = "VAL")
+	@Option(name = "-output_vars", usage = "comma-separated output variables, or '*' to select all variables", metaVar = "VAL")
 	String outputVars = "auto";
 
 	private String cfgFilename = null;
@@ -409,6 +409,13 @@ public class SpaceExPrinter extends ToolPrinter
 		{
 			for (String v : config.settings.plotVariableNames)
 				sed.addOutputVar(v);
+		}
+		else if (outputVars.equals("*"))
+		{
+			for (String v : ha.variables)
+			{
+				sed.addOutputVar(v);
+			}
 		}
 		else
 		{
