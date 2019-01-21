@@ -43,11 +43,9 @@ ENV FLOWSTAR_FILE_SHA512SUM '641179b88a2eb965266f3ec0d8adca6726d5b2a172a5686ae59
 RUN mkdir -p /tools/flowstar
 WORKDIR /tools/flowstar
 RUN apt-get install -qy curl flex bison libgmp-dev libmpfr-dev libgsl-dev gnuplot 
-RUN curl https://www.cs.colorado.edu/~xich8622/src/flowstar-${FLOWSTAR_VERSION}.tar.gz > flowstar.tar.gz
-# print hash
-RUN sha512sum flowstar.tar.gz 
-# check hash
-RUN sha512sum flowstar.tar.gz | grep -q "${FLOWSTAR_FILE_SHA512SUM}"
+RUN curl -fL https://www.cs.colorado.edu/~xich8622/src/flowstar-${FLOWSTAR_VERSION}.tar.gz > flowstar.tar.gz
+# print and check hash
+RUN sha512sum flowstar.tar.gz | tee flowstar.sha512sum && grep -q "${FLOWSTAR_FILE_SHA512SUM}" flowstar.sha512sum
 RUN tar xzf flowstar.tar.gz
 # TODO check hash of download
 WORKDIR /tools/flowstar/flowstar-${FLOWSTAR_VERSION}/
@@ -70,6 +68,50 @@ RUN apt-get install -qy plotutils
 RUN ./spaceex_exe/spaceex --version
 ENV PATH=$PATH:/tools/spaceex/spaceex_exe/
 
+
+##################
+# Install dReach (included in dReal3)
+##################
+# version and SHA512 hash (set hash to ' ' to disable hash checking)
+# see https://github.com/dreal/dreal3/releases for available versions
+# It seems that dReal4 does no longer include dReach, so we're stuck wich dReal3.
+ENV DREAL_VERSION 3.16.06.02
+ENV DREAL_FILE_SHA512SUM '199c02d90d3d448dff6b9d2d1b99257d4ae4efcf22fa4d66d30eeb0cb6215b06ff8824c4256bf1b89ebaf01b872655ab3105d298c3db0a28d6c0c71a24fa0712'
+
+
+WORKDIR /tools/dreach
+
+RUN curl -fL https://github.com/dreal/dreal3/releases/download/v3.16.06.02/dReal-3.16.06.02-linux.tar.gz > dreach.tar.gz
+# print and check hash
+RUN sha512sum dreach.tar.gz | tee dreach.sha512sum && grep -q "${DREAL_FILE_SHA512SUM}" dreach.sha512sum
+RUN tar xzf dreach.tar.gz
+WORKDIR /tools/dreach/dReal-${DREAL_VERSION}-linux/
+RUN ls -l
+ENV PATH=$PATH:/tools/dreach/dReal-${DREAL_VERSION}-linux/bin
+RUN dReach -h
+
+##################
+# Install HyCreate
+##################
+# version and SHA512 hash (set hash to ' ' to disable hash checking)
+# see http://stanleybak.com/projects/hycreate/hycreate.html for available versions
+ENV HYCREATE_VERSION 2.81
+ENV HYCREATE_FILE_SHA512SUM 'e801d1fb01e112803f83a37d5339c802a638c2cd253d1a5b3794477f69d123ee243206561a51d99502d039f5cc5df859b14dc2c9fd236f58b67b83033d220ca9'
+
+RUN apt-get -qy install unzip
+RUN mkdir /tools/hycreate
+WORKDIR /tools/hycreate
+
+RUN curl -fL http://stanleybak.com/projects/hycreate/HyCreate2.81.zip > hycreate.zip
+# print and check hash
+RUN sha512sum hycreate.zip | tee hycreate.sha512sum && grep -q "${HYCREATE_FILE_SHA512SUM}" hycreate.sha512sum
+RUN unzip hycreate.zip
+WORKDIR /tools/hycreate/HyCreate${HYCREATE_VERSION}/
+RUN ls -l
+ENV HYPYPATH=$PATH:/tools/hycreate/HyCreate${HYCREATE_VERSION}/
+# BUG (TODO report): hypy expects HyCreate2.8.jar, not HyCreate 2.81.jar.
+RUN test -f HyCreate2.8.jar || ln -s HyCreate*.jar HyCreate2.8.jar
+
 ##################
 # Install Hyst
 ##################
@@ -78,7 +120,7 @@ COPY . /hyst
 WORKDIR /hyst/src
 RUN ant build
 ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
-ENV HYPYPATH=/hyst/src
+ENV HYPYPATH=$HYPYPATH:/hyst/src
 ENV PATH=$PATH:/hyst
 
 # BUG (TODO report)  Hyst integration tests fail if not Hylaa, SpaceEx and Flowstar are installed.
