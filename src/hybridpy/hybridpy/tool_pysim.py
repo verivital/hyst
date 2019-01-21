@@ -10,6 +10,8 @@ from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import RunCode
 from hybridpy.hybrid_tool import tool_main
 
+import hybridpy.pysim.simulate
+
 class PySimTool(HybridTool):
     '''container class for running pysim'''
     
@@ -40,12 +42,17 @@ class PySimTool(HybridTool):
 
         self._settings = define_settings()
 
-        self._init_states = define_init_states(define_ha())
+        automaton = define_ha()
+        self._init_states = define_init_states(automaton)
         self._result = sim(self._init_states, self._settings)
+
+        output = {'variables': automaton.variables,
+                  'simulations': self._result,
+                  'interval_bounds': hybridpy.pysim.simulate.interval_bounds_from_sim_result_multi(self._result)}
         # We need to pass the result via stdout (see note in parse_output()).
         # To do that, we serialize and write it to a file and print the filename.
         with tempfile.NamedTemporaryFile(prefix='pysim_result',suffix='.pickle', delete=False) as filehandle:
-            pickle.dump(self._result, filehandle)
+            pickle.dump(output, filehandle)
             print "PYSIM_RESULT_FILE=" + filehandle.name
         return rv
 
@@ -63,7 +70,12 @@ class PySimTool(HybridTool):
     def parse_output(self, dummy_directory, lines, dummy_hypy_out):
         '''returns the parsed output object
 
-        For pysim, this is the result of running simulate()
+        For pysim, this returns a dictionary created by run_tool():
+        { 'simulations': <the result of running simulate()>,
+          'variables': <list of state variable names>,
+          'interval_bounds': interval bounds [x_min, x_max] of the state variables, as np.array with shape (n, 2)
+        }
+        Further entries may be added in the future.
         '''
         # NOTE: This function is not called on the same tool object as _run_tool and _make_image because these are run in a subprocess,
         # whereas parse_output is run in the main python process that called hypy.Engine.run().
