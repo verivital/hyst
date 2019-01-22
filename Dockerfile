@@ -1,6 +1,16 @@
+# Dockerfile building a docker container with Hyst and all related tools
+# This file is also helpful as a machine-readable and automatically tested instruction on how to build Hyst.
+
 FROM ubuntu:18.04
+# apt should not ask any questions:
 ENV DEBIAN_FRONTEND=noninteractive
-RUN sed 's@archive.ubuntu.com@ftp.fau.de@' -i /etc/apt/sources.list
+
+# add the following line to use a mirror which is nearer to you than the default archive.ubuntu.com (example: ftp.fau.de):
+# RUN sed 's@archive.ubuntu.com@ftp.fau.de@' -i /etc/apt/sources.list
+
+##################
+# Install Hyst dependencies
+##################
 RUN apt-get update && apt-get -qy install ant python2.7 python-scipy python-matplotlib git libglpk-dev build-essential python-cvxopt python-sympy gimp
 
 # Bug in sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
@@ -10,7 +20,7 @@ RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
 ##################
 # Install Hylaa
 ##################
-# NOTE: we use a fixed hylaa version for reproducible build results
+# branch or tag of hylaa to use
 ENV HYLAA_VERSION v1.1
 ENV PYTHONPATH=$PYTHONPATH:/tools/hylaa:/tools/hylaa/hylaa/
 RUN mkdir -p /tools/hylaa && git clone https://github.com/stanleybak/hylaa /tools/hylaa --branch $HYLAA_VERSION  --depth 1
@@ -47,7 +57,6 @@ RUN curl -fL https://www.cs.colorado.edu/~xich8622/src/flowstar-${FLOWSTAR_VERSI
 # print and check hash
 RUN sha512sum flowstar.tar.gz | tee flowstar.sha512sum && grep -q "${FLOWSTAR_FILE_SHA512SUM}" flowstar.sha512sum
 RUN tar xzf flowstar.tar.gz
-# TODO check hash of download
 WORKDIR /tools/flowstar/flowstar-${FLOWSTAR_VERSION}/
 RUN make
 ENV PATH=$PATH:/tools/flowstar/flowstar-${FLOWSTAR_VERSION}/
@@ -56,18 +65,19 @@ ENV PATH=$PATH:/tools/flowstar/flowstar-${FLOWSTAR_VERSION}/
 ##################
 # Install SpaceEx
 ##################
-
+# SHA512 hash of the downloaded file (set hash to ' ' to disable hash checking)
+ENV SPACEEX_FILE_SHA512SUM '30eab345ca8cbc5722df38e7ed6009c728e197184eca7c49558eeb73055ef340177315aa72f0809acca1dbde4a969779729ea1cb2529ed0b6a3e221ffd0c82b3'
 RUN mkdir -p /tools/spaceex
 WORKDIR /tools/spaceex
 # We use the SpaceEx 64bit executable file.
-# TODO: SpaceEx doesn't provide a publicly available download URL, you need to fill out the registration form first :-( -> Needs to be uploaded somewhere else (which is okay, it's open source).
-# RUN curl http://spaceex.imag.fr/sites/default/files/downloads/private/spaceex_exe-0.9.8f.tar.gz?h=l4cbff53sbjufvn3joktspoea5 | tar xz
-COPY ./spaceex_exe-0.9.8f.tar.gz .
-RUN tar xzf ./spaceex_exe-0.9.8f.tar.gz
+# TODO: SpaceEx doesn't provide a publicly available download URL, you need to fill out the registration form first :-( -> As a workaround, we use the following Github link.
+RUN curl -fL https://github.com/MaxGaukler/hyst/raw/1b50946bc01051626ff0fc3c90f5d5a6e625a89a/spaceex_exe-0.9.8f.tar.gz > spaceex.tar.gz
+# print and check hash
+RUN sha512sum spaceex.tar.gz | tee spaceex.sha512sum && grep -q "${SPACEEX_FILE_SHA512SUM}" spaceex.sha512sum
+RUN tar xzf ./spaceex.tar.gz
 RUN apt-get install -qy plotutils
-RUN ./spaceex_exe/spaceex --version
 ENV PATH=$PATH:/tools/spaceex/spaceex_exe/
-
+RUN spaceex --version
 
 ##################
 # Install dReach (included in dReal3)
@@ -109,7 +119,7 @@ RUN unzip hycreate.zip
 WORKDIR /tools/hycreate/HyCreate${HYCREATE_VERSION}/
 RUN ls -l
 ENV HYPYPATH=$PATH:/tools/hycreate/HyCreate${HYCREATE_VERSION}/
-# BUG (TODO report): hypy expects HyCreate2.8.jar, not HyCreate 2.81.jar.
+# BUG (reported at https://github.com/verivital/hyst/issues/47 ): hypy expects HyCreate2.8.jar, not HyCreate 2.81.jar.
 RUN test -f HyCreate2.8.jar || ln -s HyCreate*.jar HyCreate2.8.jar
 
 ##################
@@ -123,10 +133,6 @@ ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
 ENV HYPYPATH=$HYPYPATH:/hyst/src
 ENV PATH=$PATH:/hyst
 
-# BUG (TODO report)  Hyst integration tests fail if not Hylaa, SpaceEx and Flowstar are installed.
-
-
-
 ##################
 # As default command: run the tests
 ##################
@@ -134,9 +140,9 @@ ENV PATH=$PATH:/hyst
 CMD ant test
 
 # # USAGE:
-# # Build container:
+# # Build container and name it 'hyst':
 # docker build . -t hyst
-# # run tests
+# # run tests (default command)
 # docker run hyst
 # # get a shell:
 # docker run hyst -it bash
@@ -145,3 +151,6 @@ CMD ant test
 # docker run hyst hyst -help
 # # run Hyst via java path:
 # docker run hyst java -jar /hyst/src/Hyst.jar -help
+# # NOTE: like for a VM, the host system's folders need to be explicitly shared with the guest container.
+# # To map /path_on_host to /data in the container:
+# docker run -v /path_on_host:/data hyst hyst -t pysim '' -i /data/foo.xml -o /data/bar.xml
