@@ -600,7 +600,7 @@ public class HybridizePassTests
 	 * soundness argument ppt. x' == x^2, x(0) = [.24, .26] time-triggered split at 0.5 domain
 	 * contraction (DC) #1 using x = [0.2, 0.336], then DC #2 using [0.236, 0.383]
 	 * 
-	 * expected affine dynamics: x'_1 = .536*x – 0.0718 + [0, 0.0046] x'_2 = .619*x – 0.0958+ [0,
+	 * expected affine dynamics: x'_1 = .536*x - 0.0718 + [0, 0.0046] x'_2 = .619*x - 0.0958+ [0,
 	 * 0.0055]
 	 */
 	@Test
