@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 import random
 from scipy.integrate import ode # pylint false positive
+import numpy as np
 
 class PySimSettings(object):
     'A pysim settings containts'
@@ -653,7 +654,21 @@ def _plot_sim_result_one(result, dim_x, dim_y, draw_events=True, mode_to_color=N
 
             plt.plot(x, y, 'xr')
 
-
+def interval_bounds_from_sim_result_multi(result_list):
+    '''
+    return the componentwise interval bounds [min(x_i), max(x_i)] 
+    as np.array with shape (n, 2), where n is the number of states
+    '''
+    assert len(result_list) > 0, 'empty list of simulations; cannot compute maximum'
+    num_states = len(result_list[0]['traces'][0].points[0])
+    state_max = np.zeros((num_states, 1));
+    state_min = np.zeros((num_states, 1));
+    for result in result_list:
+        for mode_sim in result['traces']:
+            for dim in range(num_states):
+                state_max[dim] = max(state_max[dim], max([val[dim] for val in mode_sim.points]))
+                state_min[dim] = min(state_min[dim], min([val[dim] for val in mode_sim.points]))
+    return np.block([state_min, state_max])
 
 
 
