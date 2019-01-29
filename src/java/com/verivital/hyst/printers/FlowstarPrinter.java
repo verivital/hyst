@@ -210,7 +210,7 @@ public class FlowstarPrinter extends ToolPrinter
 
 			if (base.modes.size() != 1)
 				throw new AutomatonExportException(
-						"Expeceted single automaton mode with explicit unsafe condition.");
+						"Expected single automaton mode with explicit unsafe condition.");
 
 			printLine("");
 			printLine("unsafe");
@@ -792,10 +792,11 @@ public class FlowstarPrinter extends ToolPrinter
 		@Override
 		protected String printOperation(Operation o)
 		{
-			String rv = "";
+			String rv = null;
 
 			if (Operator.isComparison(o.op))
 			{
+				rv = "";
 				Operator op = o.op;
 
 				// print nothing if the expression contains an input variable
@@ -824,7 +825,48 @@ public class FlowstarPrinter extends ToolPrinter
 					}
 				}
 			}
-			else
+			else if (o.op == Operator.MULTIPLY && o.children.size() == 2)
+			{
+				// special handling for the case of constant * input interval
+				Expression num = o.children.get(0);
+				Expression inputVar = o.children.get(1);
+
+				// swap order if necessary
+				if (inputVar instanceof Constant && num instanceof Variable)
+				{
+					Expression temp = inputVar;
+					inputVar = num;
+					num = temp;
+				}
+
+				// check if it's the special case
+				if (inputVar instanceof Variable && num instanceof Constant)
+				{
+					Variable v = (Variable) inputVar;
+					double d = ((Constant) num).getVal();
+
+					if (this.inputVariables.contains(v.name))
+					{
+						Interval range = inputVariableRanges.get(v.name);
+
+						if (range.isConstant())
+							rv = this.printConstantValue(range.min * d);
+						else
+						{
+							// negative constant flips interval range
+
+							if (d >= 0)
+								rv = "[" + this.printConstantValue(range.min * d) + ", "
+										+ this.printConstantValue(range.max * d) + "]";
+							else
+								rv = "[" + this.printConstantValue(range.max * d) + ", "
+										+ this.printConstantValue(range.min * d) + "]";
+						}
+					}
+				}
+			}
+
+			if (rv == null)
 				rv = super.printOperation(o);
 
 			return rv;
