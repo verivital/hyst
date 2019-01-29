@@ -316,6 +316,12 @@ Hypy can be used to run Hyst (including its transformation passes), as well as v
 
 #### Setup
 
+First, install the dependencies:
+
+* see above at "Python Interface within Hyst"
+* GIMP (for flowstar support): https://www.gimp.org/
+* GNU plotutils (for SpaceEx support): https://www.gnu.org/software/plotutils/
+
 For easy usage, you need to point your PYTHONPATH environment variable to the hypy (hybridpy) directory. To setup hypy to run the tools, you'll need to define the environment variables HYPYPPATH to include the folders of the tool libraries. At a minimum (for conversion), you must include the folder where the Hyst jar file resides. On Ubuntu, in your ~/.profile file you can do something like:
 
 ```

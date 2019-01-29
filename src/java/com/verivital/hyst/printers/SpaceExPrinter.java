@@ -107,7 +107,10 @@ public class SpaceExPrinter extends ToolPrinter
 	 */
 	public void setBaseName(String name)
 	{
-		baseName = name;
+		super.setBaseName(name);
+		// Replace all special characters because SpaceEx' configuration parser doesn't like
+		// dashes in automata names.
+		baseName = baseName.replaceAll("[^0-9a-zA-Z]", "_");
 	}
 
 	/**

@@ -223,6 +223,7 @@ public class PySimPrinter extends ToolPrinter
 	 */
 	private void printProcedure()
 	{
+		printLine("import math");
 		printLine("import hybridpy.pysim.simulate as sim");
 		printLine("from hybridpy.pysim.simulate import init_list_to_q_list, PySimSettings");
 
