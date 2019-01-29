@@ -62,8 +62,12 @@ class FlowstarTool(HybridTool):
             # gimp -i -b <script>
 
             params = ["gimp", "-i", "-b", script_fu, "-b", exit_script_fu]
+            
+            # ignore internal warnings -- some GIMP versions always output some warnings, e.g.:
+            # (gimp:16102): GLib-GObject-WARNING **: g_object_set_valist: object class 'GeglConfig' has no property named 'cache-size'
+            stderr_ignore_regexp='.*WARNING \*\*:'
 
-            if not run_check_stderr(params):
+            if not run_check_stderr(params, stdin=None, stderr_ignore_regexp=stderr_ignore_regexp): 
                 print "Gimp errored"
                 rv = False
 

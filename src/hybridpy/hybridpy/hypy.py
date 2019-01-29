@@ -77,7 +77,7 @@ class Engine(object):
     # run() error codes
     SUCCESS = 'Success'
     ERROR_TOOL = 'Error (Tool)'
-    ERROR_UNSUPPORTED = 'Error (Unsupported Dynamics)'
+    ERROR_UNSUPPORTED = 'Error (Unsupported Dynamics or tool not found)'
     ERROR_CONVERSION = 'Error (Conversion)'
     TIMEOUT_CONVERSION = 'Timeout (Conversion)'
     TIMEOUT_TOOL = 'Timeout (Tool)'

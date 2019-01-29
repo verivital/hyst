@@ -14,6 +14,7 @@ import threading
 import subprocess
 import inspect
 import argparse
+import re
 
 class RunCode(object):
     '''return value of HybridTool.run()'''
@@ -131,9 +132,12 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
 
     return rv
 
-def run_check_stderr(params, stdin=None):
+def run_check_stderr(params, stdin=None, stderr_ignore_regexp=None):
     '''run a process with a list of params
-    returning True if success and False if error or stderr is used
+    returning True if success and False if error or stderr is used.
+    
+    stderr_ignore_regexp (optional): If the beginning of a stderr line matches this regular expression, that line is ignored.
+    e.g. '(Debug|Warning)'.
     '''
 
     process_name = params[0]
@@ -151,6 +155,13 @@ def run_check_stderr(params, stdin=None):
             output_line = line.rstrip()
 
             print "stderr: " + output_line
+            # ignore empty lines on stderr.
+            if output_line == "":
+                    continue
+            
+            # ignore stderr lines matching stderr_ignore_regexp
+            if stderr_ignore_regexp is not None and re.match(stderr_ignore_regexp, output_line):
+                continue
 
             # if anything is printed to stderr, it's an error
             if rv:
