@@ -18,6 +18,23 @@ HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to 
 THIS SOFTWARE WAS DEVELOPED WITH FUNDING BY AIR FORCE RESEARCH LABORATORY (AFRL) AND IS APPROVED FOR PUBLIC RELEASE. DISTRIBUTION A. Approved for public release; Distribution unlimited. (Approval AFRL PA case number 88ABW-2016-1014, 08 MAR 2016.)
 
 ***********************************
+### References
+***********************************
+The primary HyST paper is this one:
+
+* Stanley Bak, Sergiy Bogomolov, Taylor T. Johnson, "HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models", In 18th International Conference on Hybrid Systems: Computation and Control (HSCC 2015), ACM, Seattle, Washington, 2015, April. [http://www.taylortjohnson.com/research/bak2015hscc.pdf]
+
+Other related papers that extend and/or make use of HyST are these. Some of these papers describe new translations (e.g., to Simulink/Stateflow) or model transformations, the latter of which are typically sound abstractions.
+
+* Stanley Bak, Omar Ali Beg, Sergiy Bogomolov, Taylor T. Johnson, Luan Viet Nguyen, Christian Schilling, "Hybrid automata: from verification to implementation", In Software Tools for Technology Transfer (STTT), Springer, 2017, August. [http://www.taylortjohnson.com/research/bak2017sttt.pdf]
+* Hoang-Dung Tran, Luan Viet Nguyen, Weiming Xiang, Taylor T. Johnson, "Order-reduction abstractions for safety verification of high-dimensional linear systems", In Discrete Event Dynamic Systems (DEDS), 2017. [http://rdcu.be/q8Xd]
+* Stanley Bak, Sergiy Bogomolov, Thomas A. Henzinger, Taylor T. Johnson, Pradyot Prakash, "Scalable Static Hybridization Methods for Analysis of Nonlinear Systems", In 19th Intl. Conf. on Hybrid Systems: Computation and Control (HSCC 2016), ACM, 2016, April. [http://www.taylortjohnson.com/research/bak2016hscc.pdf]
+* Andrew Sogokon, Khalil Ghorbal, Taylor T. Johnson, "Decoupled simulating abstractions of non-linear ordinary differential equations", Chapter in Proceedings of the 21st International Symposium on Formal Methods (FM 2016), Limassol, Cyprus, 2016, December. [http://www.taylortjohnson.com/research/sogokon2016fm.pdf]
+* Stanley Bak, Taylor T. Johnson, "Periodically-Scheduled Controller Analysis using Hybrid Systems Reachability and Continuization", In 36th IEEE Real-Time Systems Symposium (RTSS 2015), IEEE Computer Society, San Antonio, Texas, 2015, December. [http://www.taylortjohnson.com/research/bak2015rtss.pdf]
+
+There are several benchmark description papers that provide models in the format of HyST. Please refer to the ARCH workshop where most of these were presented here: [https://cps-vo.org/group/ARCH/benchmarks]
+
+***********************************
 ### Repeatability Evaluation Virtual Machine (REVM) with Tools Installed
 ***********************************
 
@@ -298,6 +315,12 @@ The integration tests (run each tool on each generated model) make use of hypy, 
 Hypy can be used to run Hyst (including its transformation passes), as well as various reachability and simulation tools, and then interpret their output. This can then be looped in a python script, enabling high-level hybrid systems analysis which involves running tools multiple times.
 
 #### Setup
+
+First, install the dependencies:
+
+* see above at "Python Interface within Hyst"
+* GIMP (for flowstar support): https://www.gimp.org/
+* GNU plotutils (for SpaceEx support): https://www.gnu.org/software/plotutils/
 
 For easy usage, you need to point your PYTHONPATH environment variable to the hypy (hybridpy) directory. To setup hypy to run the tools, you'll need to define the environment variables HYPYPPATH to include the folders of the tool libraries. At a minimum (for conversion), you must include the folder where the Hyst jar file resides. On Ubuntu, in your ~/.profile file you can do something like:
 
