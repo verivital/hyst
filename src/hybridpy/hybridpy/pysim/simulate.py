@@ -226,6 +226,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
     '''
 
     rv = []
+    random.seed(0) # ensure repeatable random results
 
     for init in init_states:
         mode = init[0]
@@ -243,8 +244,6 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
                 rv.append((mode, point))
 
         if rand > 0:
-            random.seed()
-
             max_rand_attempts = 100 * rand
             num_added = 0
 
