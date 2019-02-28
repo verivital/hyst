@@ -552,7 +552,8 @@ public class Hylaa2Printer extends ToolPrinter
 						+ ", dtype=float)");
 			}
 
-			rv.add(am.name + ".set_inputs(b_matrix, u_constraints_a, u_constraints_b)");
+			rv.add(am.name
+					+ ".set_inputs(b_matrix, u_constraints_a, u_constraints_b, allow_constants=True)");
 		}
 
 		private ArrayList<String> getSparseInputLines(AutomatonMode am,
