@@ -147,14 +147,21 @@ public class Preconditions
 
 	private static void doAffineTransformation(Configuration c)
 	{
-		if (AffineTransformationPass.hasAffineTerms(c.root))
+		try
 		{
-			Hyst.log("Automaton has affine terms, converting...");
+			if (AffineTransformationPass.hasAffineTerms(c.root))
+			{
+				Hyst.log("Automaton has affine terms, converting...");
 
-			new AffineTransformationPass().runVanillaPass(c, "");
+				new AffineTransformationPass().runVanillaPass(c, "");
+			}
+			else
+				Hyst.log("Automaton doesn't affine terms, skipping affine conversion");
 		}
-		else
-			Hyst.log("Automaton doesn't affine terms, skipping affine conversion");
+		catch (AutomatonExportException e)
+		{
+			throw new PreconditionsFailedException("Affine conversion failed.", e);
+		}
 	}
 
 	private static void allConstantsDefined(Component root)
