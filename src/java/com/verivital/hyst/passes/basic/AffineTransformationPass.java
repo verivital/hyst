@@ -69,6 +69,9 @@ public class AffineTransformationPass extends TransformationPass
 
 		for (AutomatonMode m : ha.modes.values())
 		{
+			if (m.flowDynamics == null)
+				continue;
+
 			m.flowDynamics.put(varName, new ExpressionInterval("0"));
 
 			// rename all dynamics with an affine term to refer to the new variable

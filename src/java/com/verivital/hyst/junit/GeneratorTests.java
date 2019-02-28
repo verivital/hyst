@@ -24,7 +24,6 @@ import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
-import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.PySimPrinter;
@@ -393,13 +392,6 @@ public class GeneratorTests
 
 		// should have an error mode
 		Assert.assertEquals(c.forbidden.size(), 1);
-
-		// substitute constants
-		new SubstituteConstantsPass().runVanillaPass(c, "");
-
-		// simplify expressions first
-		String passParam = SimplifyExpressionsPass.makeParam(true);
-		new SimplifyExpressionsPass().runVanillaPass(c, passParam);
 
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
 		ToolPrinter printer = new Hylaa2Printer();

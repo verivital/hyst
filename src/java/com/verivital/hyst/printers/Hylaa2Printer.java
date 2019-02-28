@@ -56,12 +56,15 @@ public class Hylaa2Printer extends ToolPrinter
 
 	public Hylaa2Printer()
 	{
+		this.preconditions.skip(PreconditionsFlag.NO_URGENT);
+
 		this.preconditions.skip(PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN);
 		this.preconditions.skip(PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED);
 		this.preconditions.skip(PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS);
 
 		// do the affine transformation
 		this.preconditions.unskip(PreconditionsFlag.CONVERT_AFFINE_TERMS);
+		this.preconditions.unskip(PreconditionsFlag.SIMPLIFY_EXPRESSIONS);
 	}
 
 	@Override
@@ -852,6 +855,9 @@ public class Hylaa2Printer extends ToolPrinter
 	@Override
 	protected void printAutomaton()
 	{
+		// convert urgent transitions
+		AutomatonUtil.convertUrgentTransitions((BaseComponent) config.root, config);
+
 		if (config.forbidden.size() > 0)
 		{
 			ConvertToStandardForm.convertForbidden(config);

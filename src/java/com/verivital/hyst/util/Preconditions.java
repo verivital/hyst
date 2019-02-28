@@ -22,10 +22,12 @@ import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
 import com.verivital.hyst.passes.basic.AffineTransformationPass;
 import com.verivital.hyst.passes.basic.ConvertHavocFlows;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
+import com.verivital.hyst.python.PythonBridge;
 
 /**
  * This class contains the checks that should be done before running a printer or pass. For example,
@@ -66,6 +68,8 @@ public class Preconditions
 		// some checks skipped by default
 		skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()] = true;
 
+		skip[PreconditionsFlag.SIMPLIFY_EXPRESSIONS.ordinal()] = true;
+
 		if (skipAll)
 		{
 			for (int i = 0; i < PreconditionsFlag.values().length; ++i)
@@ -94,6 +98,11 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_CONSTANTS_TO_VALUES.ordinal()])
 		{
 			Preconditions.substituteConstants(c);
+		}
+
+		if (!skip[PreconditionsFlag.SIMPLIFY_EXPRESSIONS.ordinal()])
+		{
+			Preconditions.simplifyExpressions(c);
 		}
 
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
@@ -356,6 +365,14 @@ public class Preconditions
 		{
 			new SubstituteConstantsPass().runVanillaPass(c, "");
 		}
+	}
+
+	private static void simplifyExpressions(Configuration c)
+	{
+		// simplify expressions first
+		boolean hasPython = PythonBridge.hasPython();
+		String passParam = SimplifyExpressionsPass.makeParam(hasPython);
+		new SimplifyExpressionsPass().runVanillaPass(c, passParam);
 	}
 
 	/**
