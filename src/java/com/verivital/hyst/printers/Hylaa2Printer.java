@@ -91,6 +91,9 @@ public class Hylaa2Printer extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
+			rv.add("import sys");
+			rv.add("import numpy as np");
+			rv.add("");
 			rv.add("from hylaa.hybrid_automaton import HybridAutomaton");
 			rv.add("from hylaa.settings import HylaaSettings, PlotSettings");
 			rv.add("from hylaa.core import Core");
@@ -549,8 +552,7 @@ public class Hylaa2Printer extends ToolPrinter
 						+ ", dtype=float)");
 			}
 
-			// loc1.set_inputs(u_constraints_a, u_constraints_b, b_matrix)
-			rv.add(am.name + ".set_inputs(u_constraints_a, u_constraints_b, b_matrix)");
+			rv.add(am.name + ".set_inputs(b_matrix, u_constraints_a, u_constraints_b)");
 		}
 
 		private ArrayList<String> getSparseInputLines(AutomatonMode am,
@@ -869,18 +871,18 @@ public class Hylaa2Printer extends ToolPrinter
 
 		printLine(PySimPrinter.automatonToString(config, new HylaaExtraPrintFuncs()));
 
-		printLine("def define_settings():");
+		printLine("def define_settings(image_path):");
 		increaseIndentation();
 		printSettings();
 		decreaseIndentation();
 		printNewline();
 
-		printLine("def run_hylaa():");
+		printLine("def run_hylaa(image_path):");
 		increaseIndentation();
 		printLine("'runs hylaa, returning a HylaaResult object'");
 		printLine("ha = define_ha()");
 		printLine("init = define_init_states(ha)");
-		printLine("settings = define_settings()");
+		printLine("settings = define_settings(image_path)");
 		printNewline();
 		printLine("result = Core(ha, settings).run(init)");
 		printNewline();
@@ -890,7 +892,14 @@ public class Hylaa2Printer extends ToolPrinter
 
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("run_hylaa()");
+		printLine("image_path = None");
+		printLine("");
+		printLine("if len(sys.argv) > 1 and sys.argv[1].endswith('.png'):");
+		increaseIndentation();
+		printLine("image_path = sys.argv[1]");
+		decreaseIndentation();
+		printLine("");
+		printLine("run_hylaa(image_path)");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -957,11 +966,16 @@ public class Hylaa2Printer extends ToolPrinter
 				yDim = index;
 		}
 
-		String plotMode = "PLOT_IMAGE";
+		printLine("settings.plot.plot_mode = PlotSettings.PLOT_NONE");
+		printLine("");
 
-		printLine("settings.plot.plot_mode = PlotSettings." + plotMode);
+		printLine("if image_path is not None:");
+		increaseIndentation();
+		printLine("settings.plot.filename = image_path");
+		printLine("settings.plot.plot_mode = PlotSettings.PLOT_IMAGE");
 		printLine("settings.plot.xdim_dir = " + xDim);
 		printLine("settings.plot.ydim_dir = " + yDim);
+		decreaseIndentation();
 
 		if (settings.size() > 0)
 		{
@@ -984,7 +998,7 @@ public class Hylaa2Printer extends ToolPrinter
 	@Override
 	public String getCommandLineFlag()
 	{
-		return "hylaa2";
+		return "hylaa";
 	}
 
 	@Override

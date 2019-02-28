@@ -24,7 +24,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
@@ -462,8 +461,6 @@ public class PySimPrinter extends ToolPrinter
 
 		Expression.expressionPrinter = pySimExpressionPrinter;
 		pySimExpressionPrinter.ha = (BaseComponent) config.root;
-
-		new SubstituteConstantsPass().runTransformationPass(config, null);
 
 		StringBuilder rv = new StringBuilder();
 
