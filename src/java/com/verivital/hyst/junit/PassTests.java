@@ -153,6 +153,10 @@ public class PassTests
 	@Test
 	public void testCopyInstancePass()
 	{
+		// skip test if python is enabled... since simplification takes too long
+		if (PythonBridge.hasPython())
+			return;
+
 		String path = UNIT_BASEDIR + "heli_large/";
 		String spaceExFile = path + "heli_large.xml";
 		String configFile = path + "heli_large.cfg";
@@ -198,11 +202,6 @@ public class PassTests
 
 		ToolPrinter tp = new Hylaa2Printer();
 		tp.setOutputNone();
-
-		// simplify expressions first
-		new SubstituteConstantsPass().runVanillaPass(config, "");
-		String passParam = SimplifyExpressionsPass.makeParam(false);
-		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
 		tp.print(config, "", "out.xml");
 	}
