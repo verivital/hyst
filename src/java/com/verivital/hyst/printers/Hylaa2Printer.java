@@ -23,7 +23,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DynamicsUtil;
@@ -47,10 +46,6 @@ public class Hylaa2Printer extends ToolPrinter
 
 	@Option(name = "-step", usage = "step size")
 	public double step;
-
-	@Option(name = "-python_simplify", aliases = { "-simplify",
-			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
-	public boolean pythonSimplify = false;
 
 	@Option(name = "-settings", usage = "space-separated hylaa settings initialization. For example, "
 			+ "'-settings plot_settings.plot_mode=PlotSettings.PLOT_FULL "
@@ -851,10 +846,6 @@ public class Hylaa2Printer extends ToolPrinter
 	@Override
 	protected void printAutomaton()
 	{
-		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
-
-		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
-
 		if (config.forbidden.size() > 0)
 		{
 			ConvertToStandardForm.convertForbidden(config);

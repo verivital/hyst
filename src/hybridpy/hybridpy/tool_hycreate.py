@@ -14,7 +14,7 @@ class HyCreateTool(HybridTool):
     '''Container class for running Flow*'''
 
     def __init__(self):
-        HybridTool.__init__(self, 'hycreate', '.hyc2', 'HyCreate2.8.jar')
+        HybridTool.__init__(self, 'hycreate', '.hyc2', 'HyCreate2.81.jar')
 
     def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''

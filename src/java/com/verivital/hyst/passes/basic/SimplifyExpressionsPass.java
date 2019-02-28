@@ -40,7 +40,12 @@ public class SimplifyExpressionsPass extends TransformationPass
 			if (!pythonSimplify)
 				rv = simplifyExpression(e);
 			else
+			{
 				rv = PythonUtil.pythonSimplifyExpressionChop(e, 1e-9);
+
+				// System.out.println("simplified expression " + e.toDefaultString() + " to "
+				// + rv.toDefaultString());
+			}
 
 			return rv;
 		}

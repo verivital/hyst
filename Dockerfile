@@ -21,17 +21,20 @@ RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
 # Install Hylaa
 ##################
 # branch or tag of hylaa to use
-ENV HYLAA_VERSION v1.1
+ENV HYLAA_VERSION hylaa2_prerelease_v1.0
+ENV HYLAA_FILE_SHA512SUM 4ec480a8f825a0414db68ce0db3122436844c7a13f14a64d64eb93c0500a6c63220df7e7f302555f792fa97cca3090103bcafc09352cb1620e2c75baca9b5bbd
 ENV PYTHONPATH=$PYTHONPATH:/tools/hylaa:/tools/hylaa/hylaa/
-RUN mkdir -p /tools/hylaa && git clone https://github.com/stanleybak/hylaa /tools/hylaa --branch $HYLAA_VERSION  --depth 1
-RUN cd /tools/hylaa/hylaa/glpk_interface && make
-RUN ls -l /tools/hylaa
-RUN echo $HOME
-# BUG (TODO report???)  The hylaa unittests cannot be run noninteractive because matplotlib fails if no X server is running. Workaround by changing the default backend from TkAgg (interactive) to Agg (noninteractive).
-RUN sed -i 's/^backend *: *TkAgg$/backend: Agg/i' /etc/matplotlibrc
-RUN cd /tools/hylaa/tests && python -m unittest discover
 
-# TODO: performance warning because numpy is not compiled with OpenBLAS
+RUN apt-get update && apt-get -qy install curl unzip python3 python3-pip
+RUN pip3 install pytest numpy scipy sympy matplotlib termcolor swiglpk graphviz
+
+RUN mkdir -p /tools/hylaa
+WORKDIR /tools/hylaa
+RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/hylaa-${HYLAA_VERSION}.zip > hylaa.zip
+# print and check hash
+RUN sha512sum hylaa.zip | tee hylaa.sha512sum && grep -q "${HYLAA_FILE_SHA512SUM}" hylaa.sha512sum
+RUN unzip hylaa.zip && mv hylaa-${HYLAA_VERSION}/* .
+RUN cd /tools/hylaa/tests && python3 -m pytest
 
 ##################
 # Install flowstar
@@ -42,18 +45,13 @@ RUN cd /tools/hylaa/tests && python -m unittest discover
 # to disable the hash check, change the line to:
 # ENV FLOWSTAR_FILE_SHA512SUM ' '
 
-#ENV FLOWSTAR_VERSION 2.0.0
-#ENV FLOWSTAR_FILE_SHA512SUM '641179b88a2eb965266f3ec0d8adca6726d5b2a172a5686ae59c1b8fc6bb9dc662ef67d95eb8c158175fd1f411e5db7355a83e5dd12fd4d8fb196e27d4988f79'
-
-# We can't use 2.1.0 yet due to this bug: https://github.com/verivital/hyst/issues/44
 ENV FLOWSTAR_VERSION 2.1.0
 ENV FLOWSTAR_FILE_SHA512SUM 'd5243f3bbcdd6bffcaf2f1ae8559278f62567877021981e4443cd90fbf2918e0acb317a2d27724bc81d3a0e38ad7f7d48c59d680be1dd5345e80d2234dd3fe3b'
-
 
 RUN mkdir -p /tools/flowstar
 WORKDIR /tools/flowstar
 RUN apt-get install -qy curl flex bison libgmp-dev libmpfr-dev libgsl-dev gnuplot 
-RUN curl -fL https://www.cs.colorado.edu/~xich8622/src/flowstar-${FLOWSTAR_VERSION}.tar.gz > flowstar.tar.gz
+RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/flowstar-${FLOWSTAR_VERSION}.tar.gz > flowstar.tar.gz
 # print and check hash
 RUN sha512sum flowstar.tar.gz | tee flowstar.sha512sum && grep -q "${FLOWSTAR_FILE_SHA512SUM}" flowstar.sha512sum
 RUN tar xzf flowstar.tar.gz
@@ -70,8 +68,7 @@ ENV SPACEEX_FILE_SHA512SUM '30eab345ca8cbc5722df38e7ed6009c728e197184eca7c49558e
 RUN mkdir -p /tools/spaceex
 WORKDIR /tools/spaceex
 # We use the SpaceEx 64bit executable file.
-# TODO: SpaceEx doesn't provide a publicly available download URL, you need to fill out the registration form first :-( -> As a workaround, we use the following Github link.
-RUN curl -fL https://github.com/MaxGaukler/hyst/raw/1b50946bc01051626ff0fc3c90f5d5a6e625a89a/spaceex_exe-0.9.8f.tar.gz > spaceex.tar.gz
+RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/spaceex_exe-0.9.8f.tar.gz > spaceex.tar.gz
 # print and check hash
 RUN sha512sum spaceex.tar.gz | tee spaceex.sha512sum && grep -q "${SPACEEX_FILE_SHA512SUM}" spaceex.sha512sum
 RUN tar xzf ./spaceex.tar.gz
@@ -91,7 +88,7 @@ ENV DREAL_FILE_SHA512SUM '199c02d90d3d448dff6b9d2d1b99257d4ae4efcf22fa4d66d30eeb
 
 WORKDIR /tools/dreach
 
-RUN curl -fL https://github.com/dreal/dreal3/releases/download/v3.16.06.02/dReal-3.16.06.02-linux.tar.gz > dreach.tar.gz
+RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/dReal-3.16.06.02-linux.tar.gz > dreach.tar.gz
 # print and check hash
 RUN sha512sum dreach.tar.gz | tee dreach.sha512sum && grep -q "${DREAL_FILE_SHA512SUM}" dreach.sha512sum
 RUN tar xzf dreach.tar.gz
@@ -112,15 +109,13 @@ RUN apt-get -qy install unzip
 RUN mkdir /tools/hycreate
 WORKDIR /tools/hycreate
 
-RUN curl -fL http://stanleybak.com/projects/hycreate/HyCreate2.81.zip > hycreate.zip
+RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/HyCreate2.81.zip > hycreate.zip
 # print and check hash
 RUN sha512sum hycreate.zip | tee hycreate.sha512sum && grep -q "${HYCREATE_FILE_SHA512SUM}" hycreate.sha512sum
 RUN unzip hycreate.zip
 WORKDIR /tools/hycreate/HyCreate${HYCREATE_VERSION}/
 RUN ls -l
 ENV HYPYPATH=$PATH:/tools/hycreate/HyCreate${HYCREATE_VERSION}/
-# BUG (reported at https://github.com/verivital/hyst/issues/47 ): hypy expects HyCreate2.8.jar, not HyCreate 2.81.jar.
-RUN test -f HyCreate2.8.jar || ln -s HyCreate*.jar HyCreate2.8.jar
 
 ##################
 # Install Hyst
@@ -145,7 +140,7 @@ CMD ant test
 # # run tests (default command)
 # docker run hyst
 # # get a shell:
-# docker run hyst -it bash
+# docker run -it hyst bash
 # -> Hyst is available in /hyst/src, tools are in /tools, everything is on the path (try 'hyst -help', 'spaceex --help')
 # # run Hyst:
 # docker run hyst hyst -help
@@ -154,3 +149,4 @@ CMD ant test
 # # NOTE: like for a VM, the host system's folders need to be explicitly shared with the guest container.
 # # To map /path_on_host to /data in the container:
 # docker run -v /path_on_host:/data hyst hyst -t pysim '' -i /data/foo.xml -o /data/bar.xml
+# to delete docker container use: docker rm hyst

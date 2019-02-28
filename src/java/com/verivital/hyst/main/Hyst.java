@@ -55,7 +55,6 @@ import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
 import com.verivital.hyst.printers.HyCompPrinter;
 import com.verivital.hyst.printers.Hylaa2Printer;
-import com.verivital.hyst.printers.HylaaPrinter;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.PythonQBMCPrinter;
 import com.verivital.hyst.printers.SimulinkStateflowPrinter;
@@ -82,7 +81,7 @@ public class Hyst
 	private final ToolPrinter[] printers = { new FlowstarPrinter(), new DReachPrinter(),
 			new HyCreate2Printer(), new HyCompPrinter(), new PythonQBMCPrinter(),
 			new SpaceExPrinter(), new SimulinkStateflowPrinter(), new PySimPrinter(),
-			new HylaaPrinter(), new Hylaa2Printer() };
+			new Hylaa2Printer() };
 
 	// list of supported model transformation passes (add new ones here)
 	private final TransformationPass[] passes = { new AddIdentityResetPass(),
