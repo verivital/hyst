@@ -32,7 +32,7 @@ import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
@@ -196,8 +196,13 @@ public class PassTests
 					+ mapping.childParam + " were not equal", range1.equals(range2, 1e-9));
 		}
 
-		ToolPrinter tp = new HylaaPrinter();
+		ToolPrinter tp = new Hylaa2Printer();
 		tp.setOutputNone();
+
+		// simplify expressions first
+		new SubstituteConstantsPass().runVanillaPass(config, "");
+		String passParam = SimplifyExpressionsPass.makeParam(false);
+		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
 
 		tp.print(config, "", "out.xml");
 	}

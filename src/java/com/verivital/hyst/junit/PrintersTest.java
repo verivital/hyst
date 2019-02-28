@@ -29,10 +29,11 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -64,40 +65,44 @@ public class PrintersTest
 	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
-	
+
 	private String UNIT_BASEDIR;
 
 	public PrintersTest(boolean block) throws Exception
 	{
 		PythonBridge.setBlockPython(block);
-		
+
 		UNIT_BASEDIR = "tests/unit/models/";
-		
+
 		File f;
-		try {
+		try
+		{
 			f = new File(UNIT_BASEDIR);
-			
-			if (!f.exists()) {
+
+			if (!f.exists())
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
 			}
 		}
-		catch (Exception ex0) {
-			try {
+		catch (Exception ex0)
+		{
+			try
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
-				f = new File(UNIT_BASEDIR); 
+				f = new File(UNIT_BASEDIR);
 			}
-			catch (Exception ex1) {
-				
-				//if (!f.exists()) {
-				//	throw new Exception("Bad unit test base directory: " +
-				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
-				//}
+			catch (Exception ex1)
+			{
+
+				// if (!f.exists()) {
+				// throw new Exception("Bad unit test base directory: " +
+				// UNIT_BASEDIR + " not found; full path tried: " + new
+				// File(UNIT_BASEDIR).getAbsolutePath());
+				// }
 			}
 		}
 
 	}
-
-	
 
 	// tools to test here. Each test will run all of these
 	private static final ArrayList<ToolPrinter> printers;
@@ -113,7 +118,7 @@ public class PrintersTest
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
 		addPrinter(new PySimPrinter());
-		addPrinter(new HylaaPrinter());
+		addPrinter(new Hylaa2Printer());
 	};
 
 	private static void addPrinter(ToolPrinter p)
@@ -767,9 +772,13 @@ public class PrintersTest
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("12 variables", 12, c.root.variables.size());
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
-		printer.print(c, "-python_simplify", "model.xml");
+
+		// simplify expressions first
+		String passParam = SimplifyExpressionsPass.makeParam(true);
+		new SimplifyExpressionsPass().runVanillaPass(c, passParam);
+		printer.print(c, "", "model.xml");
 
 		String out = printer.outputString.toString();
 
@@ -787,7 +796,7 @@ public class PrintersTest
 		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
 		Configuration c = ModelParserTest.flatten(sd);
 
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 
@@ -814,7 +823,7 @@ public class PrintersTest
 		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
 		Configuration c = ModelParserTest.flatten(sd);
 
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 

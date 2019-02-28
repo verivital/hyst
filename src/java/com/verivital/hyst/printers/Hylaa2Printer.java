@@ -466,13 +466,18 @@ public class Hylaa2Printer extends ToolPrinter
 					nonInputInvariant = new Operation(Operator.AND, nonInputInvariant, o);
 			}
 
-			// m1.set_invariant([[1, 0, 0]], [9.9])
-			String[] extracted = extractMatrixConstraintStrings(nonInputInvariant, am.automaton);
-			String matrix = extracted[0];
-			String rhs = extracted[1];
+			// if there was an invariant
+			if (nonInputInvariant != null)
+			{
+				// m1.set_invariant([[1, 0, 0]], [9.9])
+				String[] extracted = extractMatrixConstraintStrings(nonInputInvariant,
+						am.automaton);
+				String matrix = extracted[0];
+				String rhs = extracted[1];
 
-			rv.add("# " + nonInputInvariant.toDefaultString());
-			rv.add(am.name + ".set_invariant(" + matrix + ", " + rhs + ")");
+				rv.add("# " + nonInputInvariant.toDefaultString());
+				rv.add(am.name + ".set_invariant(" + matrix + ", " + rhs + ")");
+			}
 		}
 
 		private void printInputs(AutomatonMode am, ArrayList<String> rv, BaseComponent ha,
@@ -652,6 +657,7 @@ public class Hylaa2Printer extends ToolPrinter
 		 */
 		private static String[] extractMatrixConstraintStrings(Expression exp, BaseComponent ha)
 		{
+			assert exp != null;
 			ArrayList<Operation> parts = DynamicsUtil.splitConjunction(exp);
 
 			StringBuilder mat = new StringBuilder("[");
