@@ -125,6 +125,10 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
 			Preconditions.convertBasicOperators(c);
 
+		// nondeterministic dynamics check before converting affine terms
+		if (!skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()])
+			Preconditions.noNondeterministicDynamics(c.root);
+
 		// check if we need to do an affine transformation
 		if (!skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()])
 			Preconditions.doAffineTransformation(c);
@@ -133,9 +137,6 @@ public class Preconditions
 
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
-
-		if (!skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()])
-			Preconditions.noNondeterministicDynamics(c.root);
 
 		if (!skip[PreconditionsFlag.NO_URGENT.ordinal()])
 			Preconditions.noUrgentDynamics(c.root);

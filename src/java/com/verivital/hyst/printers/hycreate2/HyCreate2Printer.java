@@ -65,7 +65,7 @@ public class HyCreate2Printer extends ToolPrinter
 	public HyCreate2Printer()
 	{
 		preconditions.skip(PreconditionsFlag.NO_URGENT);
-		preconditions.skip(PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS);
+		// preconditions.skip(PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS);
 		preconditions.skip(PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS);
 	}
 
