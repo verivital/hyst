@@ -35,11 +35,11 @@ class Hylaa2Tool(HybridTool):
             proc.wait()
 
             if proc.returncode != 0:
-                print "Error Running Hylaa (java return code was " + str(proc.returncode) + ")"
+                print "Error Running Hylaa (return code was " + str(proc.returncode) + ")"
                     
                 rv = RunCode.ERROR
         except OSError as e:
-            print "Exception while trying to run HyCreate2: " + str(e)
+            print "Exception while trying to run Hylaa: " + str(e)
             rv = RunCode.ERROR
 
         return rv

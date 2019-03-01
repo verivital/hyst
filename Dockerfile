@@ -98,26 +98,6 @@ ENV PATH=$PATH:/tools/dreach/dReal-${DREAL_VERSION}-linux/bin
 RUN dReach -h
 
 ##################
-# Install HyCreate
-##################
-# version and SHA512 hash (set hash to ' ' to disable hash checking)
-# see http://stanleybak.com/projects/hycreate/hycreate.html for available versions
-ENV HYCREATE_VERSION 2.81
-ENV HYCREATE_FILE_SHA512SUM 'e801d1fb01e112803f83a37d5339c802a638c2cd253d1a5b3794477f69d123ee243206561a51d99502d039f5cc5df859b14dc2c9fd236f58b67b83033d220ca9'
-
-RUN apt-get -qy install unzip
-RUN mkdir /tools/hycreate
-WORKDIR /tools/hycreate
-
-RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/HyCreate2.81.zip > hycreate.zip
-# print and check hash
-RUN sha512sum hycreate.zip | tee hycreate.sha512sum && grep -q "${HYCREATE_FILE_SHA512SUM}" hycreate.sha512sum
-RUN unzip hycreate.zip
-WORKDIR /tools/hycreate/HyCreate${HYCREATE_VERSION}/
-RUN ls -l
-ENV HYPYPATH=$PATH:/tools/hycreate/HyCreate${HYCREATE_VERSION}/
-
-##################
 # Install Hyst
 ##################
 
