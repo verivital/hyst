@@ -1,9 +1,12 @@
 package com.verivital.hyst.junit;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -861,6 +864,58 @@ public class PrintersTest
 		Assert.assertFalse("inputs in invariants were not removed",
 				out.contains("-0.5 - (u1) <= 0"));
 		Assert.assertTrue("correctly converted inputs", out.contains("x' = y + [-0.5, 0.5]"));
+	}
+
+	/**
+	 * Flow* printing with german locale
+	 */
+	@Test
+	public void testFlowstarGerman()
+	{
+		Locale.setDefault(new Locale("de", "DE"));
+		ToolPrinter.initDecimalPrinter();
+
+		String path = UNIT_BASEDIR + "simple_inputs/simple_inputs";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("used en-US decimal point", out.contains("fixed steps 0.01"));
+	}
+
+	static public void displayNumber(Locale currentLocale)
+	{
+		Locale.setDefault(currentLocale);
+
+		DecimalFormat df = new DecimalFormat("0.#");
+		df.setMaximumFractionDigits(50);
+		System.out.println(df.format(3.1415));
+
+		Double amount = new Double(3.14);
+		NumberFormat numberFormatter;
+		String amountOut;
+
+		numberFormatter = NumberFormat.getNumberInstance();
+		amountOut = numberFormatter.format(amount);
+		System.out.println(amountOut + "   " + currentLocale.toString());
+	}
+
+	@Test
+	public void testLocales()
+	{
+		Locale[] locales = { new Locale("de", "DE"), new Locale("en", "US") };
+
+		for (int i = 0; i < locales.length; i++)
+		{
+			System.out.println();
+			displayNumber(locales[i]);
+		}
 	}
 
 	@Test

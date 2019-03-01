@@ -392,7 +392,7 @@ public class PySimPrinter extends ToolPrinter
 			return rv;
 		}
 
-		public static String initToHyperRectangle(Expression exp, List<String> variableOrder)
+		public String initToHyperRectangle(Expression exp, List<String> variableOrder)
 		{
 			// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
 			StringBuilder sb = new StringBuilder("HyperRectangle([");
