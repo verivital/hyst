@@ -128,6 +128,9 @@ ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
 ENV HYPYPATH=$HYPYPATH:/hyst/src
 ENV PATH=$PATH:/hyst
 
+# Switch matplotlib backend to from TkAgg (interactive) to Agg (noninteractive).
+RUN sed -i 's/^backend *: *TkAgg$/backend: Agg/i' /etc/matplotlibrc
+
 ##################
 # As default command: run the tests
 ##################
