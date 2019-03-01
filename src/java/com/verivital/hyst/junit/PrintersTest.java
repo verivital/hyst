@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Map;
 
 import org.junit.Assert;
@@ -29,10 +30,11 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.complex.hybridize.HybridizeMixedTriggeredPass;
 import com.verivital.hyst.printers.DReachPrinter;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.SpaceExPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
@@ -64,40 +66,44 @@ public class PrintersTest
 	{
 		return Arrays.asList(new Object[][] { { false }, { true } });
 	}
-	
+
 	private String UNIT_BASEDIR;
 
 	public PrintersTest(boolean block) throws Exception
 	{
 		PythonBridge.setBlockPython(block);
-		
+
 		UNIT_BASEDIR = "tests/unit/models/";
-		
+
 		File f;
-		try {
+		try
+		{
 			f = new File(UNIT_BASEDIR);
-			
-			if (!f.exists()) {
+
+			if (!f.exists())
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
 			}
 		}
-		catch (Exception ex0) {
-			try {
+		catch (Exception ex0)
+		{
+			try
+			{
 				UNIT_BASEDIR = "src" + File.separator + UNIT_BASEDIR;
-				f = new File(UNIT_BASEDIR); 
+				f = new File(UNIT_BASEDIR);
 			}
-			catch (Exception ex1) {
-				
-				//if (!f.exists()) {
-				//	throw new Exception("Bad unit test base directory: " +
-				//			UNIT_BASEDIR + " not found; full path tried: " + new File(UNIT_BASEDIR).getAbsolutePath());
-				//}
+			catch (Exception ex1)
+			{
+
+				// if (!f.exists()) {
+				// throw new Exception("Bad unit test base directory: " +
+				// UNIT_BASEDIR + " not found; full path tried: " + new
+				// File(UNIT_BASEDIR).getAbsolutePath());
+				// }
 			}
 		}
 
 	}
-
-	
 
 	// tools to test here. Each test will run all of these
 	private static final ArrayList<ToolPrinter> printers;
@@ -113,7 +119,7 @@ public class PrintersTest
 		addPrinter(new DReachPrinter());
 		addPrinter(new SpaceExPrinter());
 		addPrinter(new PySimPrinter());
-		addPrinter(new HylaaPrinter());
+		addPrinter(new Hylaa2Printer());
 	};
 
 	private static void addPrinter(ToolPrinter p)
@@ -154,7 +160,7 @@ public class PrintersTest
 		for (ToolPrinter tp : printers)
 		{
 			// clear expression printer since no assumptions can be made about
-			// it. If null pointer exceptinons are thrown, this means
+			// it. If null pointer exceptions are thrown, this means
 			// it should have been assigned on printAutomaton()
 			Expression.expressionPrinter = null;
 
@@ -749,6 +755,10 @@ public class PrintersTest
 	@Test
 	public void testPrintHeli()
 	{
+		// this takes to long with python simplify, so skip that
+		if (PythonBridge.hasPython())
+			return;
+
 		runAllPrintersOnModel("heli_large");
 	}
 
@@ -767,9 +777,13 @@ public class PrintersTest
 		Configuration c = gen.generate(param);
 
 		Assert.assertEquals("12 variables", 12, c.root.variables.size());
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
-		printer.print(c, "-python_simplify", "model.xml");
+
+		// simplify expressions first
+		String passParam = SimplifyExpressionsPass.makeParam(true);
+		new SimplifyExpressionsPass().runVanillaPass(c, passParam);
+		printer.print(c, "", "model.xml");
 
 		String out = printer.outputString.toString();
 
@@ -787,7 +801,7 @@ public class PrintersTest
 		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
 		Configuration c = ModelParserTest.flatten(sd);
 
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 
@@ -796,8 +810,8 @@ public class PrintersTest
 		Assert.assertTrue("some output exists", out.length() > 10);
 
 		// two error conditions
-		String cond1 = "trans.condition_list.append(LinearConstraint([-1, -0], -6.5)) # x >= 6.5";
-		String cond2 = "trans.condition_list.append(LinearConstraint([1, 0], -10)) # x <= -10.0";
+		String cond1 = "trans.set_guard([[-1, -0], ], [-6.5, ])";
+		String cond2 = "trans.set_guard([[1, 0], ], [-10, ])";
 
 		Assert.assertTrue("first error condition exists", out.contains(cond1));
 		Assert.assertTrue("second error condition exists", out.contains(cond2));
@@ -814,7 +828,7 @@ public class PrintersTest
 		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
 		Configuration c = ModelParserTest.flatten(sd);
 
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
 		printer.print(c, "", "model.xml");
 
@@ -848,6 +862,50 @@ public class PrintersTest
 		Assert.assertFalse("inputs in invariants were not removed",
 				out.contains("-0.5 - (u1) <= 0"));
 		Assert.assertTrue("correctly converted inputs", out.contains("x' = y + [-0.5, 0.5]"));
+	}
+
+	/**
+	 * Flow* printing with german locale
+	 */
+	@Test
+	public void testFlowstarGerman()
+	{
+		Locale.setDefault(new Locale("de", "DE"));
+		ToolPrinter.initDecimalPrinter();
+
+		String path = UNIT_BASEDIR + "simple_inputs/simple_inputs";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new FlowstarPrinter();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue("used en-US decimal point", out.contains("fixed steps 0.01"));
+	}
+
+	/**
+	 * HyCreate reset missing '$' bug reported by Max Gaukler
+	 */
+	@Test
+	public void testResetMissingDollarHyCreate()
+	{
+		String path = UNIT_BASEDIR + "reset/reset";
+
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new HyCreate2Printer();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue(out.contains("<string>$x2.set"));
+		Assert.assertFalse(out.contains("<string>x2.set"));
 	}
 
 	@Test

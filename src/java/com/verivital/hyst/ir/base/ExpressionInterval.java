@@ -121,7 +121,7 @@ public class ExpressionInterval
 			else
 				throw new AutomatonExportException(
 						"ExpressionInterval.asExpression called, but interval is nonnull and"
-								+ " not convertable: " + this
+								+ " not convertable: " + this.toDefaultString()
 								+ " (is there explicit support for ExpressionIntervals?)");
 		}
 		return e;

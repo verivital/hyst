@@ -10,6 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Locale;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -22,6 +24,7 @@ import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.CmdLineRuntimeException;
 import com.verivital.hyst.util.Preconditions;
 import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
+import com.verivital.hyst.util.PreconditionsFlag;
 
 /**
  * A generic tool printer class. Printers for individual tools will override this abstract class.
@@ -46,10 +49,7 @@ public abstract class ToolPrinter
 
 	// checks to do before printing (assign to the preconditions.skip in your
 	// ToolPrinter constructor to omit checks)
-	protected Preconditions preconditions = new Preconditions(false); // run all
-																		// checks
-																		// by
-																		// default
+	protected Preconditions preconditions = new Preconditions(false);
 
 	// command line parser for tools
 	private CmdLineParser parser = new CmdLineParser(this);
@@ -67,6 +67,9 @@ public abstract class ToolPrinter
 		if (flag.startsWith("-"))
 			throw new RuntimeException(
 					"tool printer's command-line flag shouldn't start with a hyphen: " + flag);
+
+		// skip the affine transformation conversion by default
+		preconditions.skip(PreconditionsFlag.CONVERT_AFFINE_TERMS);
 	}
 
 	public void setConfig(Configuration c)
@@ -80,7 +83,7 @@ public abstract class ToolPrinter
 	public StringBuffer outputString; // used if printType = STRING
 
 	// static
-	private static DecimalFormat df = new DecimalFormat("0.#");
+	private static DecimalFormat df;
 
 	public void setOutputFile(String filename)
 	{
@@ -355,9 +358,15 @@ public abstract class ToolPrinter
 		return false;
 	}
 
+	public static void initDecimalPrinter()
+	{
+		df = new DecimalFormat("0.#", new DecimalFormatSymbols(Locale.ENGLISH));
+		df.setMaximumFractionDigits(50);
+	}
+
 	static
 	{
-		df.setMaximumFractionDigits(50);
+		initDecimalPrinter();
 	}
 
 	public static String doubleToString(double n)

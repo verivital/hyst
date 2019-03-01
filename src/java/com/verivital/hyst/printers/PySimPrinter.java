@@ -24,7 +24,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.util.DynamicsUtil;
 import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.RangeExtractor;
@@ -328,7 +327,15 @@ public class PySimPrinter extends ToolPrinter
 
 		public ArrayList<String> getExtraDeclarationPrintLines(BaseComponent ha)
 		{
-			return new ArrayList<String>();
+			ArrayList<String> rv = new ArrayList<String>();
+
+			AutomatonMode someMode = ha.modes.values().iterator().next();
+			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
+					ha.variables);
+
+			rv.add("ha.variables = " + quotedVarList(nonInputVars));
+
+			return rv;
 		}
 
 		public ArrayList<String> getImportLines(BaseComponent ha)
@@ -385,7 +392,7 @@ public class PySimPrinter extends ToolPrinter
 			return rv;
 		}
 
-		public static String initToHyperRectangle(Expression exp, List<String> variableOrder)
+		public String initToHyperRectangle(Expression exp, List<String> variableOrder)
 		{
 			// r = HyperRectangle([(4.5, 5.5), (0.0, 0.0), (0.0, 0.0)])
 			StringBuilder sb = new StringBuilder("HyperRectangle([");
@@ -455,8 +462,6 @@ public class PySimPrinter extends ToolPrinter
 		Expression.expressionPrinter = pySimExpressionPrinter;
 		pySimExpressionPrinter.ha = (BaseComponent) config.root;
 
-		new SubstituteConstantsPass().runTransformationPass(config, null);
-
 		StringBuilder rv = new StringBuilder();
 
 		if (!(config.root instanceof BaseComponent))
@@ -464,9 +469,6 @@ public class PySimPrinter extends ToolPrinter
 					"PySimPrinter.automatonToString expected flat automaton");
 
 		BaseComponent ha = (BaseComponent) config.root;
-
-		AutomatonMode someMode = ha.modes.values().iterator().next();
-		ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode, ha.variables);
 
 		if (custom != null)
 			for (String line : custom.getImportLines(ha))
@@ -478,7 +480,6 @@ public class PySimPrinter extends ToolPrinter
 		appendIndentedLine(rv, "'''make the hybrid automaton and return it'''");
 		appendNewline(rv);
 		appendIndentedLine(rv, "ha = " + custom.automatonObjectName + "()");
-		appendIndentedLine(rv, "ha.variables = " + quotedVarList(nonInputVars));
 		appendNewline(rv);
 
 		for (String line : custom.getExtraDeclarationPrintLines(ha))

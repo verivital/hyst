@@ -89,7 +89,7 @@ public class DynamicsUtil
 		for (String row : allVars)
 		{
 			// skip urgent variables
-			if (am.flowDynamics.get(row) == null)
+			if (am.flowDynamics == null || am.flowDynamics.get(row) == null)
 				continue;
 
 			Expression der = am.flowDynamics.get(row).asExpression();

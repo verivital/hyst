@@ -26,12 +26,7 @@ import com.verivital.hyst.util.Preconditions.PreconditionsFailedException;
  */
 public abstract class TransformationPass
 {
-	protected Preconditions preconditions = new Preconditions(false); // run all
-																		// checks
-																		// /
-																		// conversions
-																		// by
-																		// default
+	protected Preconditions preconditions = new Preconditions(false);
 	protected Configuration config = null; // is assigned before runPass is
 											// called
 	private CmdLineParser parser = new CmdLineParser(this);

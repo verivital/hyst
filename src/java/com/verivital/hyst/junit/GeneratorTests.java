@@ -23,8 +23,9 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.PySimPrinter;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
@@ -149,8 +150,11 @@ public class GeneratorTests
 		if (PythonBridge.hasPython())
 		{
 			// test printing to Hylaa
-			HylaaPrinter printer = new HylaaPrinter();
-			printer.pythonSimplify = true;
+			// simplify expressions first
+			String passParam = SimplifyExpressionsPass.makeParam(true);
+			new SimplifyExpressionsPass().runVanillaPass(c, passParam);
+
+			Hylaa2Printer printer = new Hylaa2Printer();
 			printer.setOutputString();
 			printer.print(c, "", "model.xml");
 
@@ -390,9 +394,9 @@ public class GeneratorTests
 		Assert.assertEquals(c.forbidden.size(), 1);
 
 		Assert.assertEquals("9 variables", 9, c.root.variables.size());
-		ToolPrinter printer = new HylaaPrinter();
+		ToolPrinter printer = new Hylaa2Printer();
 		printer.setOutputString();
-		printer.print(c, "-s", "in.xml");
+		printer.print(c, "", "in.xml");
 
 		String out = printer.outputString.toString();
 

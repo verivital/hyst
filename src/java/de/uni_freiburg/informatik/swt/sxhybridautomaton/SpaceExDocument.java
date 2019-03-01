@@ -166,6 +166,11 @@ public class SpaceExDocument
 		mConfig.aggregation = agg;
 	}
 
+	public void setForbiddenOverride(String f)
+	{
+		mConfig.forbidden = f;
+	}
+
 	public void setFlowpipeTolerance(double tol)
 	{
 		mConfig.flowpipeTol = tol;

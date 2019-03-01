@@ -3,12 +3,13 @@
 import imp
 import os
 import sys
+import subprocess
 
 from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import RunCode
 from hybridpy.hybrid_tool import tool_main
 
-class HylaaTool(HybridTool):
+class Hylaa2Tool(HybridTool):
     '''container class for running pysim'''
     
     def __init__(self):
@@ -16,35 +17,31 @@ class HylaaTool(HybridTool):
         self._run_hylaa = None
         self._result = None
     
-        python_path = sys.executable
-        HybridTool.__init__(self, 'pysim', '.py', python_path)
+        python_path = sys.executable + "3" # path to python3... not 100% correct but should work for now
+        
+        HybridTool.__init__(self, 'hylaa2', '.py', python_path)
 
     def _run_tool(self, image_requested):
         '''runs the tool, returns a value in RunCode'''
         rv = RunCode.SUCCESS
 
-        filepath = self.model_path
-        mod_name, _ = os.path.splitext(os.path.split(filepath)[-1])
-        loaded_module = imp.load_source(mod_name, filepath)
-
-        self._run_hylaa = getattr(loaded_module, 'run_hylaa')
-        define_settings = getattr(loaded_module, 'define_settings')
-
-        self._settings = define_settings()
-        
-        if image_requested:
-            from hylaa.plotutil import PlotSettings
-            self._settings.plot.plot_mode = PlotSettings.PLOT_IMAGE
-            self._settings.plot.filename = self.image_path
-        
         try:
-            self._result = self._run_hylaa(self._settings)
-        except AssertionError as e:
-            if "not yet supported" in str(e):
-                rv = RunCode.SKIP
-            else:
+            params = [self.tool_path, self.model_path]
+            
+            if image_requested:
+                params.append('image.png')
+
+            proc = subprocess.Popen(params)
+            proc.wait()
+
+            if proc.returncode != 0:
+                print "Error Running Hylaa (return code was " + str(proc.returncode) + ")"
+                    
                 rv = RunCode.ERROR
-                
+        except OSError as e:
+            print "Exception while trying to run Hylaa: " + str(e)
+            rv = RunCode.ERROR
+
         return rv
 
     def _make_image(self):
@@ -68,7 +65,7 @@ class HylaaTool(HybridTool):
         return rv
 
 if __name__ == "__main__":
-    tool_main(HylaaTool())
+    tool_main(Hylaa2Tool())
 
 
 

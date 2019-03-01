@@ -13,6 +13,6 @@ script:
 # build Docker container
 - docker build -t hyst .
 # show help
-- docker run hyst hyst -help
+- docker run hyst java -jar /hyst/src/Hyst.jar -help
 # run tests
 - docker run hyst

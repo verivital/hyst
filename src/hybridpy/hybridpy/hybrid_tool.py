@@ -132,12 +132,13 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
 
     return rv
 
+
 def run_check_stderr(params, stdin=None, stderr_ignore_regexp=None):
     '''run a process with a list of params
     returning True if success and False if error or stderr is used.
     
-    stderr_ignore_regexp (optional): If the beginning of a stderr line matches this regular expression, that line is ignored.
-    e.g. '(Debug|Warning)'.
+    stderr_ignore_regexp (optional): If the beginning of a stderr line matches this regular expression,
+                                     that line is ignored. e.g. '(Debug|Warning)'.
     '''
 
     process_name = params[0]
@@ -154,19 +155,17 @@ def run_check_stderr(params, stdin=None, stderr_ignore_regexp=None):
         for line in iter(proc.stderr.readline, ''):
             output_line = line.rstrip()
 
-            print "stderr: " + output_line
             # ignore empty lines on stderr.
             if output_line == "":
-                    continue
+                continue
             
             # ignore stderr lines matching stderr_ignore_regexp
             if stderr_ignore_regexp is not None and re.match(stderr_ignore_regexp, output_line):
                 continue
 
             # if anything is printed to stderr, it's an error
-            if rv:
-                rv = False
-                print "Stderr output detected. Assuming tool errored."
+            rv = False
+            print "Stderr output detected. Assuming tool errored. Text: {}".format(output_line)
 
         proc.wait()
 
@@ -189,7 +188,7 @@ def get_tool_path(filename, print_errors=True):
 
     returns the full path to the tool, or None 
     '''
-    
+
     rv = None
     errors = []
 
@@ -209,7 +208,7 @@ def get_tool_path(filename, print_errors=True):
 
                 try_path = os.path.join(dir_name, filename)
 
-                if os.path.exists(try_path):
+                if os.path.exists(try_path) and os.path.isfile(try_path):
                     rv = try_path
                     break
 

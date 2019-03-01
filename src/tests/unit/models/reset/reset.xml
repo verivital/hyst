@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<sspaceex xmlns="http://www-verimag.imag.fr/xml-namespaces/sspaceex" version="0.2" math="SpaceEx">
+  <component id="a">
+    <param name="x1" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <param name="x2" type="real" local="false" d1="1" d2="1" dynamics="any" />
+    <location id="1" name="loc1" x="182.0" y="156.0" width="174.0" height="80.0">
+      <flow>x1'==0 &amp; x2'==0</flow>
+    </location>
+    <transition source="1" target="1">
+      <assignment>x2 := x1</assignment>
+      <labelposition x="18.0" y="-42.0" width="86.0" height="52.0" />
+    </transition>
+  </component>
+</sspaceex>
+

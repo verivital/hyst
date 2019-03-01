@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stanleybak/hyst.svg?branch=master)](https://travis-ci.org/stanleybak/hyst)
+
 # HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models: http://www.verivital.com/hyst/
 ## HyST Source Code: https://github.com/verivital/hyst
 ## HyST Benchmarks: https://github.com/verivital/hyst-benchmark
@@ -6,11 +8,11 @@
 ### Contributors
 ***********************************
 
-* Christian Schilling (2014-present), http://swt.informatik.uni-freiburg.de/staff/christian_schilling
-* Luan Viet Nguyen (2014-present)
 * Stanley Bak (2014-present), http://stanleybak.com
-* Sergiy Bogomolov (2013-present), http://swt.informatik.uni-freiburg.de/staff/bogom
 * Taylor T. Johnson (2014-present), http://www.taylortjohnson.com/
+* Christian Schilling (2014-2016), http://swt.informatik.uni-freiburg.de/staff/christian_schilling
+* Luan Viet Nguyen (2014-2017)
+* Sergiy Bogomolov (2013-2016), http://swt.informatik.uni-freiburg.de/staff/bogom
 * Christopher Dillo (2013-2014)
 
 HyST started during a 2014 Visiting Faculty Research Program visit by Taylor to AFRL, and is based on an initial project that provided a SpaceEx parser by Christopher Dillo and Sergiy Bogomolov.
@@ -33,6 +35,18 @@ Other related papers that extend and/or make use of HyST are these. Some of thes
 * Stanley Bak, Taylor T. Johnson, "Periodically-Scheduled Controller Analysis using Hybrid Systems Reachability and Continuization", In 36th IEEE Real-Time Systems Symposium (RTSS 2015), IEEE Computer Society, San Antonio, Texas, 2015, December. [http://www.taylortjohnson.com/research/bak2015rtss.pdf]
 
 There are several benchmark description papers that provide models in the format of HyST. Please refer to the ARCH workshop where most of these were presented here: [https://cps-vo.org/group/ARCH/benchmarks]
+
+***********************************
+### Docker
+***********************************
+There is a `Dockerfile` included (many thanks Max Gaukler) that you can use to setup Hyst, hypy, several of the tools, and run all the tests automatically. This can also serve as a sort of documentation on how to setup each of the tools and the environment variables and such to use Hyst and hypy (see the contents of `Dockerfile`). To use this, install docker and run from the top-level directory:
+
+```
+docker build -t hyst .
+docker run hyst
+```
+
+The install takes about 10 minutes and the execution of all the tests takes about 10 minutes.
 
 ***********************************
 ### Repeatability Evaluation Virtual Machine (REVM) with Tools Installed

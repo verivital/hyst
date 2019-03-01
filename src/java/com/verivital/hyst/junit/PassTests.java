@@ -32,7 +32,7 @@ import com.verivital.hyst.passes.basic.CopyInstancePass;
 import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.printers.FlowstarPrinter;
-import com.verivital.hyst.printers.HylaaPrinter;
+import com.verivital.hyst.printers.Hylaa2Printer;
 import com.verivital.hyst.printers.ToolPrinter;
 import com.verivital.hyst.python.PythonBridge;
 
@@ -153,6 +153,10 @@ public class PassTests
 	@Test
 	public void testCopyInstancePass()
 	{
+		// skip test if python is enabled... since simplification takes too long
+		if (PythonBridge.hasPython())
+			return;
+
 		String path = UNIT_BASEDIR + "heli_large/";
 		String spaceExFile = path + "heli_large.xml";
 		String configFile = path + "heli_large.cfg";
@@ -196,7 +200,7 @@ public class PassTests
 					+ mapping.childParam + " were not equal", range1.equals(range2, 1e-9));
 		}
 
-		ToolPrinter tp = new HylaaPrinter();
+		ToolPrinter tp = new Hylaa2Printer();
 		tp.setOutputNone();
 
 		tp.print(config, "", "out.xml");

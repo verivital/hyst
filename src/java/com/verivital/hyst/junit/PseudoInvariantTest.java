@@ -145,8 +145,8 @@ public class PseudoInvariantTest
 
 		Assert.assertEquals("first mode's invariant is x <= 2", pi0.invariant.toDefaultString(),
 				"1.0 * x <= 2.0");
-		Assert.assertEquals("second mode's invariant is x <= 5", pi1.invariant.toDefaultString(),
-				"1.0 * x <= 5.0");
+		Assert.assertTrue("second mode's invariant is x <= 5",
+				pi1.invariant.toDefaultString().contains("1.0 * x <= 5.0"));
 		Assert.assertTrue("final mode's invariant is true", piFinal.invariant == Constant.TRUE);
 
 		// the initial state for final should contain both pi guards

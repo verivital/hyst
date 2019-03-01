@@ -20,11 +20,14 @@ import com.verivital.hyst.ir.base.ExpressionInterval;
 import com.verivital.hyst.ir.network.ComponentInstance;
 import com.verivital.hyst.ir.network.NetworkComponent;
 import com.verivital.hyst.main.Hyst;
+import com.verivital.hyst.passes.basic.AffineTransformationPass;
 import com.verivital.hyst.passes.basic.ConvertHavocFlows;
+import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.passes.basic.SplitDisjunctionGuardsPass;
 import com.verivital.hyst.passes.basic.SubstituteConstantsPass;
 import com.verivital.hyst.passes.complex.ConvertLutFlowsPass;
 import com.verivital.hyst.passes.complex.FlattenAutomatonPass;
+import com.verivital.hyst.python.PythonBridge;
 
 /**
  * This class contains the checks that should be done before running a printer or pass. For example,
@@ -45,19 +48,33 @@ public class Preconditions
 			skip[f.ordinal()] = true;
 	}
 
+	public void unskip(PreconditionsFlag... flags)
+	{
+		for (PreconditionsFlag f : flags)
+			skip[f.ordinal()] = false;
+	}
+
 	/**
 	 * Make a default Preconditions object, where every check is either enabled or disabled
 	 * 
 	 * @param skipAll
-	 *            the default state of the checks
+	 *            should we skip all checks, or use the default settings?
 	 */
 	public Preconditions(boolean skipAll)
 	{
 		skip = new boolean[PreconditionsFlag.values().length]; // all false by
 																// default
 
-		for (int i = 0; i < PreconditionsFlag.values().length; ++i)
-			skip[i] = skipAll;
+		// some checks skipped by default
+		skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()] = true;
+
+		skip[PreconditionsFlag.SIMPLIFY_EXPRESSIONS.ordinal()] = true;
+
+		if (skipAll)
+		{
+			for (int i = 0; i < PreconditionsFlag.values().length; ++i)
+				skip[i] = true;
+		}
 	}
 
 	/**
@@ -83,6 +100,11 @@ public class Preconditions
 			Preconditions.substituteConstants(c);
 		}
 
+		if (!skip[PreconditionsFlag.SIMPLIFY_EXPRESSIONS.ordinal()])
+		{
+			Preconditions.simplifyExpressions(c);
+		}
+
 		if (!skip[PreconditionsFlag.CONVERT_TO_FLAT_AUTOMATON.ordinal()])
 		{
 			Preconditions.convertToFlat(c);
@@ -103,19 +125,43 @@ public class Preconditions
 		if (!skip[PreconditionsFlag.CONVERT_BASIC_OPERATORS.ordinal()])
 			Preconditions.convertBasicOperators(c);
 
+		// nondeterministic dynamics check before converting affine terms
+		if (!skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()])
+			Preconditions.noNondeterministicDynamics(c.root);
+
+		// check if we need to do an affine transformation
+		if (!skip[PreconditionsFlag.CONVERT_AFFINE_TERMS.ordinal()])
+			Preconditions.doAffineTransformation(c);
+
 		// conversions should be done before checks
 
 		if (!skip[PreconditionsFlag.NEEDS_ONE_VARIABLE.ordinal()])
 			Preconditions.hasAtLeastOneVariable(c);
-
-		if (!skip[PreconditionsFlag.NO_NONDETERMINISTIC_DYNAMICS.ordinal()])
-			Preconditions.noNondeterministicDynamics(c.root);
 
 		if (!skip[PreconditionsFlag.NO_URGENT.ordinal()])
 			Preconditions.noUrgentDynamics(c.root);
 
 		if (!skip[PreconditionsFlag.ALL_CONSTANTS_DEFINED.ordinal()])
 			Preconditions.allConstantsDefined(c.root);
+	}
+
+	private static void doAffineTransformation(Configuration c)
+	{
+		try
+		{
+			if (AffineTransformationPass.hasAffineTerms(c.root))
+			{
+				Hyst.log("Automaton has affine terms, converting...");
+
+				new AffineTransformationPass().runVanillaPass(c, "");
+			}
+			else
+				Hyst.log("Automaton doesn't affine terms, skipping affine conversion");
+		}
+		catch (AutomatonExportException e)
+		{
+			throw new PreconditionsFailedException("Affine conversion failed.", e);
+		}
 	}
 
 	private static void allConstantsDefined(Component root)
@@ -327,6 +373,14 @@ public class Preconditions
 		{
 			new SubstituteConstantsPass().runVanillaPass(c, "");
 		}
+	}
+
+	private static void simplifyExpressions(Configuration c)
+	{
+		// simplify expressions first
+		boolean hasPython = PythonBridge.hasPython();
+		String passParam = SimplifyExpressionsPass.makeParam(hasPython);
+		new SimplifyExpressionsPass().runVanillaPass(c, passParam);
 	}
 
 	/**

@@ -44,7 +44,7 @@ def plot(plot_param):
         e.add_pass(pass_name, pass_param)
 
     print 'Running ' + name
-    code = e.run(image_path=name + ".png", print_stdout=True)['code']
+    code = e.run(image_path=name + ".png", print_stdout=False)['code']
     print 'Finished ' + name
 
     if code != hypy.Engine.SUCCESS:

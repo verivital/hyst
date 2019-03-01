@@ -8,6 +8,16 @@ from hybridpy.hybrid_tool import run_check_stderr
 from hybridpy.hybrid_tool import RunCode
 from hybridpy.hybrid_tool import tool_main
 
+def escape_ansi(line):
+    '''remove color and other ANSI sequences from a line: 
+    https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+    '''
+
+    # note this is internally automatically cached
+    regexp = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+    
+    return regexp.sub('', line)
+
 class FlowstarTool(HybridTool):
     '''container class for running Flow*'''
     def __init__(self):
@@ -35,21 +45,22 @@ class FlowstarTool(HybridTool):
     def _make_image(self):
         '''makes the image after the tool runs, returns True on success'''
         rv = True
+        gnuplot_error = False
         print "Plotting with gnuplot..."
 
         try:
-            exit_code = subprocess.call(["gnuplot", "outputs/out.plt"])
+            exit_code = subprocess.call(["gnuplot", "outputs/out.plt"], stderr=subprocess.STDOUT)
 
             if exit_code != 0:
-                print "Gnuplot errored; exit code: " + str(exit_code)
-                rv = False
+                print "Gnuplot had an error... probably no plot data because flow* exited prematurely"
+                gnuplot_error = True # gnuplot error... probably no plot data
 
         except OSError as e:
             print "Exception while trying to run gnuplot: " + str(e)
             rv = False
 
         # run gimp to convert eps to png
-        if rv:
+        if rv and not gnuplot_error:
             print "Converting output using GIMP..."
 
             script_fu = '(gimp-file-load RUN-NONINTERACTIVE "images/out.eps" "images/out.eps")'
@@ -81,7 +92,7 @@ class FlowstarTool(HybridTool):
         'terminated' -> True/False   <-- did errors occur during computation (was 'terminated' printed?)
         'mode_times' -> [(mode1, time1), ...]  <-- list of reach-tmes computed in each mode, in order
         'result' -> 'UNKNOWN'/'SAFE'/None  <-- if unsafe set is used and 'terminated' is false, this stores 
-                                              the text after "Result: " in stdout
+                                              the text after "Result of the safety verification..." in stdout
         'safe' -> True iff 'result' == 'SAFE'
         'gnuplot_oct_data' -> the octogon data in the tool's gnuplot output
         'reachable_taylor_models' -> a list of TaylorModel objects parsed from out.flow
@@ -93,17 +104,20 @@ class FlowstarTool(HybridTool):
         rv['terminated'] = False
         
         for line in reversed(lines):
-            if 'terminated' in line.lower():
+            line = escape_ansi(line)
+            
+            if 'Computation not completed' in line:
                 rv['terminated'] = True
 
-            if line.startswith('Result: '):
-                rest = line[8:]
+            if "Result of the safety verification" in line:
+                i = line.index(':')
+                rest = line[i+2:]
                 rv['result'] = rest
 
         # force result to None if the tool was terminated early
         if rv['terminated'] is True:
             rv['result'] = None
-        else:
+        elif os.listdir(os.path.join(directory, 'outputs')): # if directory is not empty
             rv['gnuplot_oct_data'] = parse_gnuplot_data(os.path.join(directory, 'outputs', 'out.plt'))
             rv['reachable_taylor_models'] = parse_taylor_model_data(os.path.join(directory, 'outputs', 'out.flow'))
             

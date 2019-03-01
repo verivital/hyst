@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.StringArrayOptionHandler;
 
+import com.verivital.hyst.geometry.Interval;
 import com.verivital.hyst.grammar.formula.Constant;
 import com.verivital.hyst.grammar.formula.Expression;
 import com.verivital.hyst.grammar.formula.Operation;
@@ -22,7 +23,6 @@ import com.verivital.hyst.ir.base.AutomatonMode;
 import com.verivital.hyst.ir.base.AutomatonTransition;
 import com.verivital.hyst.ir.base.BaseComponent;
 import com.verivital.hyst.ir.base.ExpressionInterval;
-import com.verivital.hyst.passes.basic.SimplifyExpressionsPass;
 import com.verivital.hyst.printers.PySimPrinter.PythonPrinterCustomization;
 import com.verivital.hyst.util.AutomatonUtil;
 import com.verivital.hyst.util.DynamicsUtil;
@@ -31,12 +31,12 @@ import com.verivital.hyst.util.PreconditionsFlag;
 import com.verivital.hyst.util.StringOperations;
 
 /**
- * Printer for Python-based Hylaa.
+ * Printer for Python-based Hylaa. This is made for version 2 of the Hylaa tool (hybrid branch)
  * 
- * @author Stanley Bak (8-2016)
+ * @author Stanley Bak (7-2018)
  *
  */
-public class HylaaPrinter extends ToolPrinter
+public class Hylaa2Printer extends ToolPrinter
 {
 	@Option(name = "-xdim", usage = "x axis variable name")
 	public String xdim;
@@ -47,10 +47,6 @@ public class HylaaPrinter extends ToolPrinter
 	@Option(name = "-step", usage = "step size")
 	public double step;
 
-	@Option(name = "-python_simplify", aliases = { "-simplify",
-			"-s" }, usage = "simplify all expressions using python's sympy (slow for large models)")
-	public boolean pythonSimplify = false;
-
 	@Option(name = "-settings", usage = "space-separated hylaa settings initialization. For example, "
 			+ "'-settings plot_settings.plot_mode=PlotSettings.PLOT_FULL "
 			+ "settings.deaggregation=False'", handler = StringArrayOptionHandler.class)
@@ -58,10 +54,17 @@ public class HylaaPrinter extends ToolPrinter
 
 	private static final String COMMENT_CHAR = "#";
 
-	public HylaaPrinter()
+	public Hylaa2Printer()
 	{
+		this.preconditions.skip(PreconditionsFlag.NO_URGENT);
+
 		this.preconditions.skip(PreconditionsFlag.CONVERT_DISJUNCTIVE_INIT_FORBIDDEN);
 		this.preconditions.skip(PreconditionsFlag.CONVERT_ALL_FLOWS_ASSIGNED);
+		this.preconditions.skip(PreconditionsFlag.CONVERT_NONDETERMINISTIC_RESETS);
+
+		// do the affine transformation
+		this.preconditions.unskip(PreconditionsFlag.CONVERT_AFFINE_TERMS);
+		this.preconditions.unskip(PreconditionsFlag.SIMPLIFY_EXPRESSIONS);
 	}
 
 	@Override
@@ -80,7 +83,7 @@ public class HylaaPrinter extends ToolPrinter
 	{
 		public HylaaExtraPrintFuncs()
 		{
-			this.automatonObjectName = "LinearHybridAutomaton";
+			this.automatonObjectName = "HybridAutomaton";
 		}
 
 		@Override
@@ -88,12 +91,14 @@ public class HylaaPrinter extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
+			rv.add("import sys");
 			rv.add("import numpy as np");
-
-			rv.add("from hylaa.hybrid_automaton import LinearHybridAutomaton, LinearConstraint");
-			rv.add("from hylaa.engine import HylaaSettings");
-			rv.add("from hylaa.engine import HylaaEngine");
-			rv.add("from hylaa.containers import PlotSettings, SimulationSettings");
+			rv.add("");
+			rv.add("from hylaa.hybrid_automaton import HybridAutomaton");
+			rv.add("from hylaa.settings import HylaaSettings, PlotSettings");
+			rv.add("from hylaa.core import Core");
+			rv.add("from hylaa.stateset import StateSet");
+			rv.add("from hylaa import lputil");
 
 			return rv;
 		}
@@ -103,31 +108,206 @@ public class HylaaPrinter extends ToolPrinter
 			ArrayList<String> rv = new ArrayList<String>();
 
 			// guard
-			// trans = ha.new_transition(loc1, loc2)
-			// trans.condition_list = [guard]
+			// trans = ha.new_transition(m1, m2, 'transition_name')
+			// trans.set_guard([[-1, 0, 0]], [-9.9])
+			// trans.set_reset(reset_csr, minkowski_csr, constraints_csr, constraints_rhs)
 
-			rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
+			if (at.label != null && at.label.length() > 0)
+				rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ", '"
+						+ at.label + "')");
+			else
+				rv.add("trans = ha.new_transition(" + at.from.name + ", " + at.to.name + ")");
 
-			if (at.guard != Constant.TRUE)
+			if (at.guard == Constant.TRUE)
 			{
-				ArrayList<Operation> parts = DynamicsUtil.splitConjunction(at.guard);
+				rv.add("trans.set_guard_true()");
+			}
+			else
+			{
+				String[] extracted = extractMatrixConstraintStrings(at.guard, at.parent);
+				String matrix = extracted[0];
+				String rhs = extracted[1];
 
-				for (Operation o : parts)
-				{
-					ArrayList<String> conds = toLinearConstraintStrings(o, at.parent);
+				rv.add(Hylaa2Printer.COMMENT_CHAR + " " + at.guard.toDefaultString());
 
-					for (int i = 0; i < conds.size(); ++i)
-					{
-						rv.add("trans.condition_list.append(" + conds.get(i) + ") # "
-								+ o.toDefaultString());
-					}
-				}
+				rv.add("trans.set_guard(" + matrix + ", " + rhs + ")");
 			}
 
 			if (at.reset.size() > 0)
-				throw new PreconditionsFailedException(
-						"Resets not currently supported in hylaa printer: " + at);
+			{
+				rv.add("");
+				rv.add(Hylaa2Printer.COMMENT_CHAR + " Reset:");
 
+				for (Entry<String, ExpressionInterval> e : at.reset.entrySet())
+				{
+					String left = e.getKey();
+					String right = e.getValue().toDefaultString();
+					rv.add(Hylaa2Printer.COMMENT_CHAR + " " + left + " := " + right);
+				}
+
+				rv.addAll(getResetString(at.reset, at.parent));
+			}
+
+			return rv;
+		}
+
+		/**
+		 * Get the arguments for the set_reset call
+		 * 
+		 * @param reset
+		 *            the reset assignment
+		 * @param ha
+		 *            the automaton
+		 * @return the python string in the set_reset call
+		 */
+		public ArrayList<String> getResetString(Map<String, ExpressionInterval> reset,
+				BaseComponent ha)
+		{
+			ArrayList<String> nonInputVars = DynamicsUtil
+					.getNonInputVariables(ha.modes.values().iterator().next(), ha.variables);
+
+			ArrayList<String> resetMat = new ArrayList<String>();
+			ArrayList<String> minkowVariables = new ArrayList<String>();
+			ArrayList<ArrayList<Double>> minkowskiBounds = new ArrayList<ArrayList<Double>>();
+
+			for (String var : nonInputVars)
+			{
+				StringBuilder resetMatLine = new StringBuilder("[");
+				ExpressionInterval ei = reset.get(var);
+
+				if (ei == null)
+				{
+					// identity reset for this variable
+					for (String other : nonInputVars)
+						resetMatLine.append(other == var ? "1, " : "0, ");
+				}
+				else
+				{
+					// non-identity reset for this variable
+					ArrayList<Double> row = DynamicsUtil.extractLinearVector(ei.getExpression(),
+							nonInputVars);
+
+					for (Double val : row)
+						resetMatLine.append(val.toString() + ", ");
+
+					double val = DynamicsUtil.extractLinearValue(ei.getExpression());
+					Interval interval = ei.getInterval();
+
+					if (val != 0 || interval != null)
+					{
+						// there is a minkowski sum term
+						minkowVariables.add(var);
+
+						double min = val + (interval == null ? 0 : interval.min);
+						double max = val + (interval == null ? 0 : interval.max);
+
+						ArrayList<Double> pair = new ArrayList<Double>();
+						pair.add(min);
+						pair.add(max);
+
+						minkowskiBounds.add(pair);
+					}
+				}
+
+				resetMatLine.append("], \\");
+				resetMat.add(resetMatLine.toString());
+			}
+
+			// create return values from extracted values
+
+			ArrayList<String> rv = new ArrayList<String>();
+
+			rv.add("reset_mat = [ \\");
+
+			for (String line : resetMat)
+				rv.add("    " + line);
+
+			rv.add("    ]");
+
+			if (minkowVariables.size() == 0)
+			{
+				// reset without minkowski sum
+				rv.add("trans.set_reset(reset_mat)");
+			}
+			else
+			{
+				// reset with minkowski sum
+
+				rv.add("reset_minkowski = [ \\");
+
+				for (String var : nonInputVars)
+				{
+					StringBuilder line = new StringBuilder("    [");
+
+					for (String minVar : minkowVariables)
+					{
+						if (var != minVar)
+							line.append("0, ");
+						else
+							line.append("1, ");
+					}
+
+					line.append("], \\");
+					rv.add(line.toString());
+				}
+
+				rv.add("    ]");
+
+				rv.add("minkowski_constraints = [ \\");
+
+				for (String minVar : minkowVariables)
+				{
+					StringBuilder line = new StringBuilder("    [");
+
+					/////////////// upper bound
+					for (String other : minkowVariables)
+					{
+						if (other != minVar)
+							line.append("0, ");
+						else
+							line.append("1, ");
+					}
+
+					line.append("], \\");
+					rv.add(line.toString());
+
+					////////////////// lower bound
+					line = new StringBuilder("    [");
+
+					for (String other : minkowVariables)
+					{
+						if (other != minVar)
+							line.append("0, ");
+						else
+							line.append("-1, ");
+					}
+
+					line.append("], \\");
+					rv.add(line.toString());
+				}
+
+				rv.add("    ]");
+
+				StringBuilder line = new StringBuilder("minkowski_rhs = [ ");
+
+				for (ArrayList<Double> bounds : minkowskiBounds)
+				{
+					String max = Expression.expressionPrinter
+							.print(new Constant(bounds.get(1).doubleValue()));
+					String negMin = Expression.expressionPrinter
+							.print(new Constant(-1 * bounds.get(0).doubleValue()));
+
+					line.append(max + ", ");
+					line.append(negMin + ", ");
+				}
+
+				line.append("]");
+				rv.add(line.toString());
+
+				rv.add("trans.set_reset(reset_mat, reset_minkowski, minkowski_constraints, minkowski_rhs)");
+			}
+
+			// trans.set_reset()
 			return rv;
 		}
 
@@ -140,11 +320,7 @@ public class HylaaPrinter extends ToolPrinter
 
 			rv.add(am.name + " = ha.new_mode('" + am.name + "')");
 
-			if (ConvertToStandardForm.getErrorMode(am.automaton) == am)
-			{
-				rv.add(am.name + ".is_error = True");
-			}
-			else
+			if (am != ConvertToStandardForm.getErrorMode(am.automaton))
 			{
 				try
 				{
@@ -153,7 +329,7 @@ public class HylaaPrinter extends ToolPrinter
 					else
 						rv.addAll(getDenseDynamicsLines(am, nonInputVars));
 
-					rv.add(am.name + ".set_dynamics(a_matrix, c_vector)");
+					rv.add(am.name + ".set_dynamics(a_matrix)");
 
 					// invariant
 					// loc1.inv_list = [inv1]
@@ -207,39 +383,15 @@ public class HylaaPrinter extends ToolPrinter
 				}
 			}
 
-			rv.add("a_inds = np.array(" + toPythonListInt(indices) + ")");
-			rv.add("a_data = np.array(" + toPythonList(data) + ")");
+			rv.add("a_inds = " + toPythonListInt(indices));
+			rv.add("a_data = " + toPythonList(data));
 
-			ArrayList<Double> row = DynamicsUtil.extractDynamicsVectorC(am);
-			data.clear();
-			indices.clear();
-
-			for (int x = 0; x < row.size(); ++x)
-			{
-				double val = row.get(x);
-
-				if (val != 0) // exact comparison here is okay since it never changes
-				{
-					indices.add(x);
-					data.add(val);
-				}
-			}
-
+			rv.add("a_matrix = [[0 for _ in range(size)] for _ in range size]");
 			rv.add("");
-			rv.add("c_inds = np.array(" + toPythonListInt(indices) + ")");
-			rv.add("c_data = np.array(" + toPythonList(data) + ")");
-			rv.add("");
-			rv.add("a_matrix = np.zeros([" + size + ", " + size + "])");
-			rv.add("c_vector = np.zeros([" + size + "])");
-			rv.add("");
-			rv.add("for i in xrange(len(a_inds)):");
+			rv.add("for i in range(len(a_inds)):");
 			rv.add("    row = a_inds[i] / " + size);
 			rv.add("    col = a_inds[i] % " + size);
-			rv.add("    a_matrix[row, col] = a_data[i]");
-			rv.add("");
-			rv.add("for i in xrange(len(c_inds)):");
-			rv.add("    c_vector[c_inds[i]] = c_data[i]");
-			rv.add("");
+			rv.add("    a_matrix[row][col] = a_data[i]");
 
 			return rv;
 		}
@@ -249,16 +401,13 @@ public class HylaaPrinter extends ToolPrinter
 		{
 			ArrayList<String> rv = new ArrayList<String>();
 
-			rv.add("a_matrix = np.array([ \\");
+			rv.add("a_matrix = [ \\");
 
 			for (int i = 0; i < nonInputVars.size(); ++i)
 				rv.add("    " + toPythonList(DynamicsUtil.extractDynamicsMatrixARow(am, i))
 						+ ", \\");
 
-			rv.add("    ], dtype=float)");
-
-			rv.add("c_vector = np.array(" + toPythonList(DynamicsUtil.extractDynamicsVectorC(am))
-					+ ", dtype=float)");
+			rv.add("    ]");
 
 			return rv;
 		}
@@ -270,6 +419,8 @@ public class HylaaPrinter extends ToolPrinter
 			AutomatonMode someMode = ha.modes.values().iterator().next();
 			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
 					ha.variables);
+
+			rv.add("# dynamics variable order: " + nonInputVars);
 
 			if (nonInputVars.size() != ha.variables.size())
 			{
@@ -295,9 +446,11 @@ public class HylaaPrinter extends ToolPrinter
 			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(someMode,
 					ha.variables);
 
+			Expression nonInputInvariant = null;
+
 			for (Operation o : parts)
 			{
-				// only consider invariant constraints which contain input variables
+				// only consider invariant constraints which do not contain input variables
 				boolean containsInputVariables = false;
 
 				for (String var : AutomatonUtil.getVariablesInExpression(o))
@@ -313,13 +466,23 @@ public class HylaaPrinter extends ToolPrinter
 					continue;
 
 				// ok, Operation 'o' was an non-input constraint
-				ArrayList<String> invs = toLinearConstraintStrings(o, ha);
+				if (nonInputInvariant == null)
+					nonInputInvariant = o;
+				else
+					nonInputInvariant = new Operation(Operator.AND, nonInputInvariant, o);
+			}
 
-				for (int i = 0; i < invs.size(); ++i)
-				{
-					rv.add(am.name + ".inv_list.append(" + invs.get(i) + ") # "
-							+ o.toDefaultString());
-				}
+			// if there was an invariant
+			if (nonInputInvariant != null)
+			{
+				// m1.set_invariant([[1, 0, 0]], [9.9])
+				String[] extracted = extractMatrixConstraintStrings(nonInputInvariant,
+						am.automaton);
+				String matrix = extracted[0];
+				String rhs = extracted[1];
+
+				rv.add("# " + nonInputInvariant.toDefaultString());
+				rv.add(am.name + ".set_invariant(" + matrix + ", " + rhs + ")");
 			}
 		}
 
@@ -389,8 +552,8 @@ public class HylaaPrinter extends ToolPrinter
 						+ ", dtype=float)");
 			}
 
-			// loc1.set_inputs(u_constraints_a, u_constraints_b, b_matrix)
-			rv.add(am.name + ".set_inputs(u_constraints_a, u_constraints_b, b_matrix)");
+			rv.add(am.name
+					+ ".set_inputs(b_matrix, u_constraints_a, u_constraints_b, allow_constants=True)");
 		}
 
 		private ArrayList<String> getSparseInputLines(AutomatonMode am,
@@ -446,7 +609,7 @@ public class HylaaPrinter extends ToolPrinter
 		 * @param vars
 		 *            the automaton where to extract the the list of variables 'x' in a * x <= b
 		 */
-		private void extractLinearConstraints(ArrayList<ArrayList<Double>> storeConditions,
+		private static void extractLinearConstraints(ArrayList<ArrayList<Double>> storeConditions,
 				ArrayList<Double> storeVals, Operation o, ArrayList<String> vars)
 		{
 			Operator op = o.op;
@@ -489,21 +652,54 @@ public class HylaaPrinter extends ToolPrinter
 		}
 
 		/**
-		 * Convert a conditions to a list of 'LinearConstraint()' initialization strings, for use
-		 * when printing invariants.
+		 * Convert a top-level Operation, which is a conjunction of constraints, to matrix and rhs
+		 * form
 		 * 
-		 * @param condition
-		 *            a basic condition
-		 * @param vars
-		 *            the variables
-		 * 
-		 * @return a list of 'LinearConstraint()' strings (one operation may produce multiple linear
-		 *         constraints)
+		 * @param exp
+		 *            the Expression to extract from
+		 * @param ha
+		 *            the automaton
+		 * @return a 2-tuple, matrix string and rhs string
 		 */
-		private ArrayList<String> toLinearConstraintStrings(Operation o, BaseComponent ha)
+		private static String[] extractMatrixConstraintStrings(Expression exp, BaseComponent ha)
 		{
-			ArrayList<String> rv = new ArrayList<String>();
+			assert exp != null;
+			ArrayList<Operation> parts = DynamicsUtil.splitConjunction(exp);
 
+			StringBuilder mat = new StringBuilder("[");
+			StringBuilder matRhs = new StringBuilder("[");
+
+			for (Operation part : parts)
+			{
+				String[] extracted = toLinearConstraintStrings(part, ha);
+
+				String submatrix = extracted[0];
+				String subRhs = extracted[1];
+
+				mat.append(submatrix);
+				matRhs.append(subRhs);
+			}
+
+			mat.append("]");
+			matRhs.append("]");
+
+			return new String[] { mat.toString(), matRhs.toString() };
+		}
+
+		/**
+		 * Convert a SINGLE operation (not conjunction) to PART of a string for describing the
+		 * constraints in "Ax <= rhs" form
+		 * 
+		 * This function returns two Strings, the first describing A, the second describing rhs
+		 * 
+		 * @param o
+		 *            the root of the operation
+		 * @param ha
+		 *            the automaton object
+		 * @return a 2-tuple of Strings
+		 */
+		private static String[] toLinearConstraintStrings(Operation o, BaseComponent ha)
+		{
 			AutomatonMode anyMode = ha.modes.values().iterator().next();
 			ArrayList<String> nonInputVars = DynamicsUtil.getNonInputVariables(anyMode,
 					ha.variables);
@@ -513,27 +709,28 @@ public class HylaaPrinter extends ToolPrinter
 
 			extractLinearConstraints(conditions, vals, o, nonInputVars);
 
+			StringBuilder mat = new StringBuilder("");
+			StringBuilder rhs = new StringBuilder("");
+
 			for (int i = 0; i < vals.size(); ++i)
 			{
 				ArrayList<Double> leftVec = conditions.get(i);
 				double rightVal = vals.get(i);
 
-				StringBuilder str = new StringBuilder("LinearConstraint(");
-
 				if (nonInputVars.size() <= 100)
-					str.append(toPythonList(leftVec));
+					mat.append(toPythonList(leftVec));
 				else
-					str.append(toSparsePythonList(leftVec));
+					mat.append(toSparsePythonList(leftVec));
 
-				str.append(", " + ToolPrinter.doubleToString(rightVal));
-				str.append(")");
-				rv.add(str.toString());
+				mat.append(", ");
+
+				rhs.append(ToolPrinter.doubleToString(rightVal) + ", ");
 			}
 
-			return rv;
+			return new String[] { mat.toString(), rhs.toString() };
 		}
 
-		private String toSparsePythonList(ArrayList<Double> list)
+		private static String toSparsePythonList(ArrayList<Double> list)
 		{
 			String rv = null;
 			int size = list.size();
@@ -563,19 +760,19 @@ public class HylaaPrinter extends ToolPrinter
 						sb.append(ToolPrinter.doubleToString(d) + " if i == " + i + " else ");
 				}
 
-				sb.append("0.0 for i in xrange(" + size + ")]");
+				sb.append("0.0 for i in range(" + size + ")]");
 				rv = sb.toString();
 			}
 
 			return rv;
 		}
 
-		private String toPythonList(ArrayList<Double> list)
+		private static String toPythonList(ArrayList<Double> list)
 		{
 			return "[" + StringOperations.join(", ", list.toArray(new Double[] {})) + "]";
 		}
 
-		private String toPythonListInt(ArrayList<Integer> list)
+		private static String toPythonListInt(ArrayList<Integer> list)
 		{
 			return "[" + StringOperations.join(", ", list.toArray(new Integer[] {})) + "]";
 		}
@@ -608,7 +805,7 @@ public class HylaaPrinter extends ToolPrinter
 			// Hylaa initial states can be linear constraint stars
 
 			ArrayList<String> rv = new ArrayList<String>();
-			rv.add("'''returns a list of (mode, list(LinearConstraint])'''");
+			rv.add("'''returns a list of StateSet objects'''");
 
 			BaseComponent ha = (BaseComponent) c.root;
 
@@ -625,48 +822,44 @@ public class HylaaPrinter extends ToolPrinter
 				String modeName = e.getKey();
 				Expression exp = e.getValue();
 
-				rv.add("constraints = []");
-
 				try
 				{
-					ArrayList<Operation> parts = DynamicsUtil.splitConjunction(exp);
+					String[] extracted = extractMatrixConstraintStrings(exp, ha);
+					rv.add(Hylaa2Printer.COMMENT_CHAR + " " + exp.toDefaultString());
+					rv.add("mode = ha.modes['" + modeName + "']");
 
-					for (Operation o : parts)
-					{
-						ArrayList<String> conds = toLinearConstraintStrings(o, ha);
+					String[] parts = extracted[0].split("\\], \\[");
 
-						for (int i = 0; i < conds.size(); ++i)
-						{
-							String line = "constraints.append(" + conds.get(i) + ") # "
-									+ o.toDefaultString();
-							rv.add(line);
-						}
-					}
+					rv.add("mat = " + parts[0] + "], \\");
+
+					for (int i = 1; i < parts.length - 1; ++i)
+						rv.add("    [" + parts[i] + "], \\");
+
+					rv.add("    [" + parts[parts.length - 1]);
+
+					rv.add("rhs = " + extracted[1]);
+					rv.add("rv.append(StateSet(lputil.from_constraints(mat, rhs, mode), mode))");
+					rv.add("");
 				}
 				catch (AutomatonExportException exception)
 				{
 					throw new AutomatonExportException("Error printing initial states in mode "
 							+ modeName + ":" + exception.getLocalizedMessage(), exception);
 				}
-
-				// rv.add(initToHyperRectangle(exp, ha.variables));
-
-				rv.add("rv.append((ha.modes['" + modeName + "'], constraints))");
-				rv.add("");
 			}
 
 			rv.add("return rv");
 
 			return rv;
 		}
+
 	}
 
 	@Override
 	protected void printAutomaton()
 	{
-		String passParam = SimplifyExpressionsPass.makeParam(pythonSimplify);
-
-		new SimplifyExpressionsPass().runVanillaPass(config, passParam);
+		// convert urgent transitions
+		AutomatonUtil.convertUrgentTransitions((BaseComponent) config.root, config);
 
 		if (config.forbidden.size() > 0)
 		{
@@ -679,28 +872,35 @@ public class HylaaPrinter extends ToolPrinter
 
 		printLine(PySimPrinter.automatonToString(config, new HylaaExtraPrintFuncs()));
 
-		printLine("def define_settings():");
+		printLine("def define_settings(image_path):");
 		increaseIndentation();
 		printSettings();
 		decreaseIndentation();
 		printNewline();
 
-		printLine("def run_hylaa(settings):");
+		printLine("def run_hylaa(image_path):");
 		increaseIndentation();
-		printLine("'Runs hylaa with the given settings, returning the HylaaResult object.'");
+		printLine("'runs hylaa, returning a HylaaResult object'");
 		printLine("ha = define_ha()");
 		printLine("init = define_init_states(ha)");
+		printLine("settings = define_settings(image_path)");
 		printNewline();
-		printLine("engine = HylaaEngine(ha, settings)");
-		printLine("engine.run(init)");
+		printLine("result = Core(ha, settings).run(init)");
 		printNewline();
-		printLine("return engine.result");
+		printLine("return result");
 		decreaseIndentation();
 		printNewline();
 
 		printLine("if __name__ == '__main__':");
 		increaseIndentation();
-		printLine("run_hylaa(define_settings())");
+		printLine("image_path = None");
+		printLine("");
+		printLine("if len(sys.argv) > 1 and sys.argv[1].endswith('.png'):");
+		increaseIndentation();
+		printLine("image_path = sys.argv[1]");
+		decreaseIndentation();
+		printLine("");
+		printLine("run_hylaa(image_path)");
 		decreaseIndentation();
 		printNewline();
 	}
@@ -732,6 +932,19 @@ public class HylaaPrinter extends ToolPrinter
 
 	private void printSettings()
 	{
+		printLine("'''get the hylaa settings object");
+		printLine("see hylaa/settings.py for a complete list of reachability settings'''");
+		printNewline();
+
+		double step = config.settings.spaceExConfig.samplingTime;
+		double maxTime = config.settings.spaceExConfig.timeHorizon;
+
+		if (this.step > 0)
+			step = this.step;
+
+		printLine(Hylaa2Printer.COMMENT_CHAR + " step_size = " + step + ", max_time = " + maxTime);
+		printLine("settings = HylaaSettings(" + step + ", " + maxTime + ")");
+
 		int xDim = getVariableIndex(config.settings.plotVariableNames[0]);
 		int yDim = getVariableIndex(config.settings.plotVariableNames[1]);
 
@@ -754,25 +967,16 @@ public class HylaaPrinter extends ToolPrinter
 				yDim = index;
 		}
 
-		printLine("'get the hylaa settings object'");
-		printLine("plot_settings = PlotSettings()");
+		printLine("settings.plot.plot_mode = PlotSettings.PLOT_NONE");
+		printLine("");
 
-		String plotMode = "PLOT_NONE";
-
-		printLine("plot_settings.plot_mode = PlotSettings." + plotMode);
-		printLine("plot_settings.xdim = " + xDim);
-		printLine("plot_settings.ydim = " + yDim);
-
-		printNewline();
-
-		double step = config.settings.spaceExConfig.samplingTime;
-		double maxTime = config.settings.spaceExConfig.timeHorizon;
-
-		if (this.step > 0)
-			step = this.step;
-
-		printLine("settings = HylaaSettings(step=" + step + ", max_time=" + maxTime
-				+ ", plot_settings=plot_settings)");
+		printLine("if image_path is not None:");
+		increaseIndentation();
+		printLine("settings.plot.filename = image_path");
+		printLine("settings.plot.plot_mode = PlotSettings.PLOT_IMAGE");
+		printLine("settings.plot.xdim_dir = " + xDim);
+		printLine("settings.plot.ydim_dir = " + yDim);
+		decreaseIndentation();
 
 		if (settings.size() > 0)
 		{
@@ -789,7 +993,7 @@ public class HylaaPrinter extends ToolPrinter
 	@Override
 	public String getToolName()
 	{
-		return "Hylaa";
+		return "Hylaa2";
 	}
 
 	@Override

@@ -15,13 +15,12 @@ from hybridpy.hybrid_tool import random_string
 from hybridpy.tool_flowstar import FlowstarTool
 from hybridpy.tool_dreach import DReachTool
 from hybridpy.tool_spaceex import SpaceExTool
-from hybridpy.tool_hycreate import HyCreateTool
 from hybridpy.tool_pysim import PySimTool
-from hybridpy.tool_hylaa import HylaaTool
+from hybridpy.tool_hylaa2 import Hylaa2Tool
 
 # tools for which models can be generated
-TOOLS = {'flowstar':FlowstarTool(), 'hycreate':HyCreateTool(), 'spaceex':SpaceExTool(), 
-         'dreach':DReachTool(), 'pysim':PySimTool(), 'hylaa':HylaaTool()}
+TOOLS = {'flowstar':FlowstarTool(), 'spaceex':SpaceExTool(), 
+         'dreach':DReachTool(), 'pysim':PySimTool(), 'hylaa':Hylaa2Tool()}
 
 EXIT_CODE_TERM = 143
 

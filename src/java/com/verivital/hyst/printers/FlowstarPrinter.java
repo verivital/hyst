@@ -80,11 +80,17 @@ public class FlowstarPrinter extends ToolPrinter
 	@Option(name = "-jumps", usage = "maximum jumps", metaVar = "VAL")
 	String jumps = "" + DEFAULT_MAX_JUMPS;
 
-	@Option(name = "-print", usage = "print stdout output", metaVar = "VAL")
-	String print = "on";
+	@Option(name = "-printoff", usage = "suppress step by step stdout output")
+	boolean noPrint = false;
+
+	@Option(name = "-nooutput", usage = "suppress output folder for plotting")
+	boolean noOutput = false;
 
 	@Option(name = "-aggregation", usage = "discrete jump successor aggregation method", metaVar = "VAL")
 	String aggregation = "parallelotope";
+
+	@Option(name = "-unsafe", usage = "unsafe condition (single mode models only)", metaVar = "COND")
+	String unsafe = "auto";
 
 	FlowstarExpressionPrinter flowstarExpressionPrinter;
 
@@ -102,6 +108,8 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	List<String> taylorInit = null;
+
+	boolean isContinuous = false;
 
 	private BaseComponent ha;
 
@@ -148,11 +156,37 @@ public class FlowstarPrinter extends ToolPrinter
 	}
 
 	/**
+	 * Checks if the model is a continuous one (or hybrid) and assigns this.isContinuous
+	 */
+	private void checkIfContinuous()
+	{
+		this.isContinuous = false;
+
+		if (ha.modes.values().size() == 1)
+		{
+			AutomatonMode mode = ha.modes.values().iterator().next();
+			Expression inv = simplifyExpression(mode.invariant);
+
+			if (inv.equals(Constant.TRUE))
+			{
+				if (ha.transitions.size() == 0)
+					this.isContinuous = true;
+			}
+		}
+	}
+
+	/**
 	 * Print the actual Flow* code
 	 */
 	private void printProcedure()
 	{
-		printLine("hybrid reachability");
+		checkIfContinuous();
+
+		if (this.isContinuous)
+			printLine("continuous reachability");
+		else
+			printLine("hybrid reachability");
+
 		printLine("{");
 		printVars();
 
@@ -170,14 +204,41 @@ public class FlowstarPrinter extends ToolPrinter
 
 	private void printForbidden()
 	{
-		if (config.forbidden.size() > 0)
+		if (!unsafe.equals("auto"))
+		{
+			BaseComponent base = (BaseComponent) this.config.root;
+
+			if (base.modes.size() != 1)
+				throw new AutomatonExportException(
+						"Expected single automaton mode with explicit unsafe condition.");
+
+			printLine("");
+			printLine("unsafe");
+			printLine("{");
+
+			if (isContinuous)
+				printLine(this.unsafe);
+			else
+			{
+				String name = base.modes.values().iterator().next().name;
+				printLine(name + " {" + this.unsafe + "}");
+			}
+
+			printLine("}");
+		}
+		else if (config.forbidden.size() > 0)
 		{
 			printLine("");
-			printLine("unsafe set");
+			printLine("unsafe");
 			printLine("{");
 
 			for (Entry<String, Expression> e : config.forbidden.entrySet())
-				printLine(e.getKey() + " {" + e.getValue() + "}");
+			{
+				if (isContinuous)
+					printLine(e.getValue().toString());
+				else
+					printLine(e.getKey() + " {" + e.getValue() + "}");
+			}
 
 			printLine("}");
 		}
@@ -228,15 +289,24 @@ public class FlowstarPrinter extends ToolPrinter
 
 		printLine("cutoff " + cutoff);
 		printLine("precision " + precision);
-		printLine("output out");
+
+		if (noOutput)
+			printLine("no output");
+		else
+			printLine("output out");
 
 		int jumps = Integer.parseInt(this.jumps);
 
 		if (jumps == DEFAULT_MAX_JUMPS && config.settings.spaceExConfig.maxIterations > 0)
 			jumps = config.settings.spaceExConfig.maxIterations - 1;
 
-		printLine("max jumps " + jumps);
-		printLine("print on");
+		if (!isContinuous)
+			printLine("max jumps " + jumps);
+
+		if (noPrint)
+			printLine("print off");
+		else
+			printLine("print on");
 		printLine("}");
 	}
 
@@ -324,23 +394,33 @@ public class FlowstarPrinter extends ToolPrinter
 			String modeName = taylorInit.get(0);
 			String tm = taylorInit.get(1).replace(":", "\n");
 
-			printLine(modeName);
-			printLine("{");
+			if (!this.isContinuous)
+			{
+				printLine(modeName);
+				printLine("{");
+			}
 
 			for (String line : tm.split("\n"))
 				printLine(line);
 
-			printLine("}"); // end mode
+			if (!this.isContinuous)
+				printLine("}"); // end mode
 		}
 		else
 		{
 			for (Entry<String, Expression> e : config.init.entrySet())
 			{
-				printLine(e.getKey());
-				printLine("{");
+				if (!this.isContinuous)
+				{
+					printLine(e.getKey());
+					printLine("{");
+				}
+
 				printFlowRangeConditions(removeConstants(e.getValue(), ha.constants.keySet()),
 						true);
-				printLine("}"); // end mode
+
+				if (!this.isContinuous)
+					printLine("}"); // end mode
 			}
 		}
 
@@ -382,8 +462,12 @@ public class FlowstarPrinter extends ToolPrinter
 	private void printModes()
 	{
 		printNewline();
-		printLine("modes");
-		printLine("{");
+
+		if (!this.isContinuous)
+		{
+			printLine("modes");
+			printLine("{");
+		}
 
 		// modename
 		boolean first = true;
@@ -401,12 +485,17 @@ public class FlowstarPrinter extends ToolPrinter
 			else
 				printNewline();
 
-			String locName = e.getKey();
-			printLine(locName);
-			printLine("{");
+			if (!this.isContinuous)
+			{
+				String locName = e.getKey();
+				printLine(locName);
+				printLine("{");
+			}
 
 			// From Xin Chen e-mail:
-			// linear ode - linear time-invariant, can also have uncertain input
+			// lti ode - linear time-invariant, can also have uncertain input
+			// note: this used to be called "linear ode" in version 2.0.0 and earlier
+
 			// "poly ode 1" works more efficient than the others on low degree
 			// and low dimension (<=3) ODEs.
 			// "poly ode 2" works more efficient than the others on low degree
@@ -428,7 +517,7 @@ public class FlowstarPrinter extends ToolPrinter
 				if (isNonLinearDynamics(mode.flowDynamics))
 					printLine("nonpoly ode");
 				else if (Classification.isLinearDynamics(mode.flowDynamics))
-					printLine("linear ode");
+					printLine("lti ode");
 				else if (ha.variables.size() <= 3)
 					printLine("poly ode 1");
 				else if (ha.variables.size() <= 6)
@@ -454,25 +543,28 @@ public class FlowstarPrinter extends ToolPrinter
 			printLine("}");
 
 			// invariant
-			printLine("inv");
-			printLine("{");
-
-			String originalInvariant = mode.invariant.toDefaultString();
-			Expression inv = simplifyExpression(mode.invariant);
-
-			if (!inv.equals(Constant.TRUE))
+			if (!this.isContinuous)
 			{
-				printCommentBlock("Original invariant: " + originalInvariant);
+				printLine("inv");
+				printLine("{");
 
-				printLine(inv.toString());
+				String originalInvariant = mode.invariant.toDefaultString();
+				Expression inv = simplifyExpression(mode.invariant);
+
+				if (!inv.equals(Constant.TRUE))
+				{
+					printCommentBlock("Original invariant: " + originalInvariant);
+
+					printLine(inv.toString());
+				}
+
+				printLine("}"); // end invariant
+				printLine("}"); // end individual mode
 			}
-
-			printLine("}"); // end invariant
-
-			printLine("}"); // end individual mode
 		}
 
-		printLine("}"); // end all modes
+		if (!this.isContinuous)
+			printLine("}"); // end all modes
 	}
 
 	private boolean isNonLinearDynamics(LinkedHashMap<String, ExpressionInterval> flowDynamics)
@@ -551,60 +643,64 @@ public class FlowstarPrinter extends ToolPrinter
 
 	private void printJumps()
 	{
-		printNewline();
-		printLine("jumps");
-		printLine("{");
-
-		boolean first = true;
-
-		for (AutomatonTransition t : ha.transitions)
+		if (!isContinuous)
 		{
-			Expression guard = simplifyExpression(t.guard);
-
-			if (guard == Constant.FALSE)
-				continue;
-
-			if (first)
-				first = false;
-			else
-				printNewline();
-
-			String fromName = t.from.name;
-			String toName = t.to.name;
-
-			printLine(fromName + " -> " + toName);
-			printLine("guard");
+			printNewline();
+			printLine("jumps");
 			printLine("{");
 
-			if (!guard.equals(Constant.TRUE))
+			boolean first = true;
+
+			for (AutomatonTransition t : ha.transitions)
 			{
-				printCommentBlock("Original guard: " + t.guard.toDefaultString());
-				printLine(guard.toString());
+				Expression guard = simplifyExpression(t.guard);
+
+				if (guard == Constant.FALSE)
+					continue;
+
+				if (first)
+					first = false;
+				else
+					printNewline();
+
+				String fromName = t.from.name;
+				String toName = t.to.name;
+
+				printLine(fromName + " -> " + toName);
+				printLine("guard");
+				printLine("{");
+
+				if (!guard.equals(Constant.TRUE))
+				{
+					printCommentBlock("Original guard: " + t.guard.toDefaultString());
+					printLine(guard.toString());
+				}
+
+				printLine("}");
+
+				printLine("reset");
+				printLine("{");
+
+				for (Entry<String, ExpressionInterval> e : t.reset.entrySet())
+				{
+					ExpressionInterval ei = e.getValue();
+					ei.setExpression(simplifyExpression(ei.getExpression()));
+					printLine(e.getKey() + "' := " + ei);
+				}
+
+				printLine("}");
+
+				if (aggregation.equals("parallelotope"))
+					printLine("parallelotope aggregation {}");
+				else if (aggregation.equals("interval"))
+					printLine("interval aggregation");
+				else
+					throw new AutomatonExportException(
+							"Unknown aggregation method: " + aggregation);
 			}
 
 			printLine("}");
-
-			printLine("reset");
-			printLine("{");
-
-			for (Entry<String, ExpressionInterval> e : t.reset.entrySet())
-			{
-				ExpressionInterval ei = e.getValue();
-				ei.setExpression(simplifyExpression(ei.getExpression()));
-				printLine(e.getKey() + "' := " + ei);
-			}
-
-			printLine("}");
-
-			if (aggregation.equals("parallelotope"))
-				printLine("parallelotope aggregation {}");
-			else if (aggregation.equals("interval"))
-				printLine("interval aggregation");
-			else
-				throw new AutomatonExportException("Unknown aggregation method: " + aggregation);
 		}
-
-		printLine("}");
 	}
 
 	public static class FlowstarExpressionPrinter extends DefaultExpressionPrinter
@@ -696,10 +792,11 @@ public class FlowstarPrinter extends ToolPrinter
 		@Override
 		protected String printOperation(Operation o)
 		{
-			String rv = "";
+			String rv = null;
 
 			if (Operator.isComparison(o.op))
 			{
+				rv = "";
 				Operator op = o.op;
 
 				// print nothing if the expression contains an input variable
@@ -728,7 +825,48 @@ public class FlowstarPrinter extends ToolPrinter
 					}
 				}
 			}
-			else
+			else if (o.op == Operator.MULTIPLY && o.children.size() == 2)
+			{
+				// special handling for the case of constant * input interval
+				Expression num = o.children.get(0);
+				Expression inputVar = o.children.get(1);
+
+				// swap order if necessary
+				if (inputVar instanceof Constant && num instanceof Variable)
+				{
+					Expression temp = inputVar;
+					inputVar = num;
+					num = temp;
+				}
+
+				// check if it's the special case
+				if (inputVar instanceof Variable && num instanceof Constant)
+				{
+					Variable v = (Variable) inputVar;
+					double d = ((Constant) num).getVal();
+
+					if (this.inputVariables.contains(v.name))
+					{
+						Interval range = inputVariableRanges.get(v.name);
+
+						if (range.isConstant())
+							rv = this.printConstantValue(range.min * d);
+						else
+						{
+							// negative constant flips interval range
+
+							if (d >= 0)
+								rv = "[" + this.printConstantValue(range.min * d) + ", "
+										+ this.printConstantValue(range.max * d) + "]";
+							else
+								rv = "[" + this.printConstantValue(range.max * d) + ", "
+										+ this.printConstantValue(range.min * d) + "]";
+						}
+					}
+				}
+			}
+
+			if (rv == null)
 				rv = super.printOperation(o);
 
 			return rv;
