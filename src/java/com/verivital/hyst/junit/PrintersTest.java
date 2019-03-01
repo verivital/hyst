@@ -1,8 +1,6 @@
 package com.verivital.hyst.junit;
 
 import java.io.File;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -889,33 +887,25 @@ public class PrintersTest
 		Assert.assertTrue("used en-US decimal point", out.contains("fixed steps 0.01"));
 	}
 
-	static public void displayNumber(Locale currentLocale)
-	{
-		Locale.setDefault(currentLocale);
-
-		DecimalFormat df = new DecimalFormat("0.#");
-		df.setMaximumFractionDigits(50);
-		System.out.println(df.format(3.1415));
-
-		Double amount = new Double(3.14);
-		NumberFormat numberFormatter;
-		String amountOut;
-
-		numberFormatter = NumberFormat.getNumberInstance();
-		amountOut = numberFormatter.format(amount);
-		System.out.println(amountOut + "   " + currentLocale.toString());
-	}
-
+	/**
+	 * HyCreate reset missing '$' bug reported by Max Gaukler
+	 */
 	@Test
-	public void testLocales()
+	public void testResetMissingDollarHyCreate()
 	{
-		Locale[] locales = { new Locale("de", "DE"), new Locale("en", "US") };
+		String path = UNIT_BASEDIR + "reset/reset";
 
-		for (int i = 0; i < locales.length; i++)
-		{
-			System.out.println();
-			displayNumber(locales[i]);
-		}
+		SpaceExDocument sd = SpaceExImporter.importModels(path + ".cfg", path + ".xml");
+		Configuration c = ModelParserTest.flatten(sd);
+
+		ToolPrinter printer = new HyCreate2Printer();
+		printer.setOutputString();
+		printer.print(c, "", "model.xml");
+
+		String out = printer.outputString.toString();
+
+		Assert.assertTrue(out.contains("<string>$x2.set"));
+		Assert.assertFalse(out.contains("<string>x2.set"));
 	}
 
 	@Test

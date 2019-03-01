@@ -464,7 +464,7 @@ public class HyCreate2Printer extends ToolPrinter
 				// x := y + [min, max]
 
 				if (i == null)
-					rv = variableName + ".set($" + rhsName + ".min, $" + rhsName + ".max);";
+					rv = "$" + variableName + ".set($" + rhsName + ".min, $" + rhsName + ".max);";
 				else
 				{
 					String min = "$" + rhsName + ".min + " + i.min;
