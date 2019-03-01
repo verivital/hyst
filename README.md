@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/stanleybak/hyst.svg?branch=master)](https://travis-ci.org/stanleybak/hyst)
+
 # HyST: A Source Transformation and Translation Tool for Hybrid Automaton Models: http://www.verivital.com/hyst/
 ## HyST Source Code: https://github.com/verivital/hyst
 ## HyST Benchmarks: https://github.com/verivital/hyst-benchmark
