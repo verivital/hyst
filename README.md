@@ -39,7 +39,7 @@ There are several benchmark description papers that provide models in the format
 ***********************************
 ### Docker
 ***********************************
-There is a Dockerfile included (many thanks Max Gaukler) that you can use to setup Hyst, hypy, several of the tools, and run all the tests automatically. This can also serve as a sort of documentation on how to setup the environment variables and such to use Hyst (see Dockerfile). To use this, install docker and run from the top-level directory:
+There is a `Dockerfile` included (many thanks Max Gaukler) that you can use to setup Hyst, hypy, several of the tools, and run all the tests automatically. This can also serve as a sort of documentation on how to setup each of the tools and the environment variables and such to use Hyst and hypy (see the contents of `Dockerfile`). To use this, install docker and run from the top-level directory:
 
 ```
 docker build -t hyst .
