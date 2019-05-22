@@ -124,12 +124,10 @@ CMD ant test
 # docker run hyst
 # # get a shell:
 # docker run -it hyst bash
-# -> Hyst is available in /hyst/src, tools are in /tools, everything is on the path (try 'hyst -help', 'spaceex --help')
+# -> Hyst is available in /hyst/src (run via 'java -jar Hyst.jar'), tools are in /tools, all tools are on the path (e.g. 'spaceex --help')
 # # run Hyst:
-# docker run hyst hyst -help
-# # run Hyst via java path:
-# docker run hyst java -jar /hyst/src/Hyst.jar -help
+# docker run hyst java -jar Hyst.jar -help
 # # NOTE: like for a VM, the host system's folders need to be explicitly shared with the guest container.
 # # To map /path_on_host to /data in the container:
-# docker run -v /path_on_host:/data hyst hyst -t pysim '' -i /data/foo.xml -o /data/bar.xml
+# docker run -v /path_on_host:/data hyst java -jar Hyst.jar -t pysim '' -i /data/foo.xml -o /data/bar.xml
 # to delete docker container use: docker rm hyst
