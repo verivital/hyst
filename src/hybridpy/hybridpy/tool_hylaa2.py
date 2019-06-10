@@ -29,7 +29,7 @@ class Hylaa2Tool(HybridTool):
             params = [self.tool_path, self.model_path]
             
             if image_requested:
-                params.append('image.png')
+                params.append(self.image_path)
 
             proc = subprocess.Popen(params)
             proc.wait()
