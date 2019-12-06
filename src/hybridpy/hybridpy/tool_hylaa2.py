@@ -1,7 +1,5 @@
 '''Uses pysim to simulate a hybrid automaton'''
 
-import imp
-import os
 import sys
 import subprocess
 

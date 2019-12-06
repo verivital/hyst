@@ -238,6 +238,8 @@ There are many tests included with Hyst. There are unit tests (Java JUnit tests)
 
 Before the tools can run, however, you'll need to setup your HYPYPATH to the proper executables, see the hypy section below.
 
+Test coverage of the tests using Python code (mainly for the hypy library) can be generated with src/python_test_coverage.sh .
+
 *******************************
 #### ADDING A NEW PRINTER:
 *******************************
@@ -308,6 +310,8 @@ Currently, Python 2.7 needs to be installed, as well as the following packages:
 * scipy: http://www.scipy.org/install.html
 
 * matplotlib:  http://matplotlib.org/users/installing.html
+
+* coverage
 
 The python executable will be looked for on the paths given in the environment variable HYST_PYTHON_PATH, as well as PATH. It will look for binaries named python2.7 and python.
 

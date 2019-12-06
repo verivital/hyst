@@ -15,6 +15,7 @@ import subprocess
 import inspect
 import argparse
 import re
+import coverage
 
 class RunCode(object):
     '''return value of HybridTool.run()'''
@@ -55,7 +56,9 @@ def tool_main(tool_obj, extra_args=None):
     extra_args is a list of (flag, help_text)
     returns a value in RunCode.*
     '''
-
+    # collect test coverage data if invoked as subprocess of coverage.py
+    cov = coverage.Coverage()
+    cov.start()
     parser = argparse.ArgumentParser(description='Run ' + tool_obj.tool_name)
     parser.add_argument('model', help='input model file')
     parser.add_argument('image', nargs='?', help='output image file (use "-" to skip)', type=valid_image)
@@ -74,8 +77,9 @@ def tool_main(tool_obj, extra_args=None):
     tool_obj.load_args(args)
 
     code = tool_obj.run()
-
     print "Tool script exit code: " + str(code)
+    cov.stop()
+    cov.save()
     sys.exit(code)
 
 def _kill_pg(p):
@@ -96,7 +100,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
 
     rv = RunCode.SUCCESS
 
-    script_file = inspect.getfile(tool_obj.__class__)
+    script_file = inspect.getsourcefile(tool_obj.__class__)
 
     if image is None:
         image = "-" # no image indicator
@@ -107,6 +111,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
     if explicit_temp_dir is not None:
         params.append("--explicit_temp_dir")
         params.append(explicit_temp_dir)
+    # print("Running: " + " ".join(params))
 
     try:
         proc = subprocess.Popen(params, stdout=subprocess.PIPE)
