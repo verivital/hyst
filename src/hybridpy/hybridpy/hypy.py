@@ -1,4 +1,7 @@
 '''HybridPy (hypy), python module for running Hybrid Systems Analysis Tools'''
+from __future__ import print_function
+from builtins import str
+from builtins import object
 
 import tempfile
 import subprocess
@@ -64,11 +67,11 @@ class OutputHandler(object):
 
     def stdout_handler(self, pipe):
         '''printer handler for subprocesses'''
-        line = pipe.readline()
+        line = pipe.readline().decode('utf-8')
 
         while line:
             self.add_line(line)
-            line = pipe.readline()
+            line = pipe.readline().decode('utf-8')
 
 class Engine(object):
     '''HyPy engine. Runs a hybrid systems tool'''
@@ -205,6 +208,10 @@ class Engine(object):
         except OSError as e:
             hypy_out.add_line('Error while running Hyst: {}\n'.format(e))
             rv = Engine.ERROR_CONVERSION
+        try:
+            proc.stdout.close()
+        except:
+            pass
 
         return rv
 
@@ -258,7 +265,7 @@ class Engine(object):
                 stdout_func(line, secs, tool)
 
             if print_stdout:
-                print line
+                print(line)
                 sys.stdout.flush() # flush after each line
 
         hypy_out = OutputHandler(save_stdout, 'hypy', user_func=stdout_wrapper)
@@ -339,7 +346,7 @@ def main():
     tool_param = " ".join(args.tool_param)
 
     if image_path is not None and not image_path.endswith('.png'):
-        print "Expected image path to end in .png. Instead got: " + image_path
+        print("Expected image path to end in .png. Instead got: " + image_path)
         sys.exit(1)
 
     # run hypy with the given parameters
@@ -359,10 +366,10 @@ def main():
         params.append(image_path)
         
         if subprocess.call(params) != 0:
-            print "Hypy: Error running image tool (nonzero exit code): " + str(params)
+            print("Hypy: Error running image tool (nonzero exit code): " + str(params))
 
     if result['code'] == Engine.SUCCESS and parse_output:
-        print "Parsed output:", result['output']
+        print("Parsed output:", result['output'])
 
     return result['code']
 

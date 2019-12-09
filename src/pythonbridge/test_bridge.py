@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 # Stanley Bak
 # pythonbridge example module
 # May 2015
@@ -6,6 +8,6 @@
 # The function takes in two params, x and y, and outputs the string (x+1):(y+1)
 
 def get_bounds(x, y):
-	print str(x + 1) + ":" + str(y + 1)
+	print(str(x + 1) + ":" + str(y + 1))
 
 

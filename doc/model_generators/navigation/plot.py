@@ -1,4 +1,5 @@
 '''Script for generating NAV benchmark and running with pysim'''
+from __future__ import print_function
 
 # make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
@@ -39,9 +40,9 @@ def gen_nav(name, a_matrix, i_list, width, start_point, time, noise):
     e.set_generator('nav', gen_param)
     e.set_output(name + '.py')
     
-    print 'Running ' + name
+    print('Running ' + name)
     e.run(print_stdout=True, image_path=name + '.png')
-    print 'Finished ' + name
+    print('Finished ' + name)
     res = e.run()
 
     if res['code'] != hypy.Engine.SUCCESS:

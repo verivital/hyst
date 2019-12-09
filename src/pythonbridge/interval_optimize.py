@@ -19,6 +19,10 @@ which would print out:
 [0.89500416527802562072, 1.1000000000000000888]
 
 '''
+from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import range
 # Stanley Bak
 # May 2015
 
@@ -39,7 +43,7 @@ except:
 
 from multiprocessing import Pool
 import copy
-import scipy_optimize
+from . import scipy_optimize
 from sympy import *
 
 def eval_eq(e, subs=None):
@@ -87,7 +91,7 @@ def eval_eqs_bounded(e_list, subs_list, bound=None, use_basinhopping=False, use_
 
     param_list = []
 
-    for i in xrange(len(e_list)):
+    for i in range(len(e_list)):
         e = e_list[i]
         subs = subs_list[i]
 
@@ -107,7 +111,7 @@ def _eval_at_middle(e, subs):
 
     new_subs = {}
 
-    for var, i in subs.items():
+    for var, i in list(subs.items()):
         new_subs[var] = (i[0] + i[1]) / 2.0
 
     return _eval_eq_direct(e, new_subs)
@@ -118,15 +122,15 @@ def _eval_at_corners(e, subs):
 
     max_iterator = 1
 
-    for _ in xrange(len(subs)):
+    for _ in range(len(subs)):
         max_iterator *= 2
 
-    for i in xrange(max_iterator):
+    for i in range(max_iterator):
         new_subs = {}
 
-        for var, item in subs.items():
+        for var, item in list(subs.items()):
             new_subs[var] = item[i % 2]
-            i /= 2
+            i //= 2
 
         val = _eval_eq_direct(e, new_subs)
 
@@ -150,7 +154,7 @@ def _basinhopping(e, subs):
     symbol_list = []
     limits = []
 
-    for var, lim in subs.items():
+    for var, lim in list(subs.items()):
         symbol_list.append(symbols(var))
         limits.append(lim)
 
@@ -158,7 +162,7 @@ def _basinhopping(e, subs):
         '''eval func used for optimization'''
 
         sub_list = {}
-        for i in xrange(len(var_list)):
+        for i in range(len(var_list)):
             sub_list[symbol_list[i]] = var_list[i]
 
         return float(e.evalf(subs=sub_list))
@@ -206,7 +210,7 @@ def _eval_eq_bounded(e, subs, error_bound, under_approx, split_dim=0):
     split_dim is the next dimension to split (this gets cycled)
     '''
     rv = _eval_eq_direct(e, subs)
-    variables = subs.keys()
+    variables = list(subs.keys())
 
     # adjust the under approximation
     if rv.b < under_approx[0].a:

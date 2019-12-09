@@ -1,6 +1,13 @@
 '''
 Simulation logic for Hybrid Automata
 '''
+from __future__ import print_function
+from __future__ import division
+from builtins import zip
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 
 import matplotlib.pyplot as plt
 from matplotlib import colors
@@ -86,7 +93,7 @@ def find_event_bisection(solver, event_func, init_value, init_time, cross_delta,
         solver.set_initial_value(cross_value, init_time + cross_delta)
     else:
         # check the middle
-        mid_delta = cross_delta / 2.0
+        mid_delta = old_div(cross_delta, 2.0)
         mid_time = init_time + mid_delta
         
         solver.set_initial_value(init_value, init_time)
@@ -112,11 +119,11 @@ def solver_over_max_time(solver, max_time, init_time, init_state):
 
     delta = solver.t - init_time
     desired_delta = max_time - init_time
-    frac = float(desired_delta) / delta
+    frac = old_div(float(desired_delta), delta)
 
     frac_state = []
 
-    for i in xrange(len(init_state)):
+    for i in range(len(init_state)):
         delta_state = solver.y[i] - init_state[i]
         frac_state.append(init_state[i] + frac * delta_state)
 
@@ -148,8 +155,8 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
             transition_names = ", ".join([str(t) for t in active_transitions])
 
             # todo: we want some way to programatically disable this printing
-            print 'Warning: Multiple active transitions in mode ' + str(mode.name) + \
-              ' at state ' + str(solver.y) + ': ' + transition_names
+            print('Warning: Multiple active transitions in mode ' + str(mode.name) + \
+              ' at state ' + str(solver.y) + ': ' + transition_names)
 
             events.append(SimulationEvent("Multiple Transitions", solver.y, "red"))
 
@@ -158,7 +165,7 @@ def simulate_step(mode, solver, max_time, events, jump_error_tol=1e-9):
         post_state = t.reset(solver.y)
 
         # resets to None are identity resets
-        for dim in xrange(len(post_state)):
+        for dim in range(len(post_state)):
             if post_state[dim] is None:
                 post_state[dim] = solver.y[dim]
 
@@ -208,7 +215,7 @@ def _dist(a, b):
     if len(a) != len(b):
         raise RuntimeError("hyperpoints have different length in _dist()")
 
-    for i in xrange(len(a)):
+    for i in range(len(a)):
         dist = abs(a[i] - b[i])
 
         if dist > rv:
@@ -247,7 +254,7 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
             max_rand_attempts = 100 * rand
             num_added = 0
 
-            for _ in xrange(max_rand_attempts):
+            for _ in range(max_rand_attempts):
                 point = []
 
                 for dim in rect.dims:
@@ -271,11 +278,11 @@ def init_list_to_q_list(init_states, center=True, star=True, corners=False, tol=
 
     if check_unique:
         # ensure elements are unique
-        for index_cur in xrange(len(rv)-1, -1, -1):
+        for index_cur in range(len(rv)-1, -1, -1):
             cur_mode = rv[index_cur][0]
             cur = rv[index_cur][1]
   
-            for index_other in xrange(0, index_cur):
+            for index_other in range(0, index_cur):
                 other_mode = rv[index_other][0]
                 other = rv[index_other][1]
 
@@ -298,11 +305,11 @@ def simulate_multi(q_list, end_time, max_jumps=500, max_step=None, solver_name='
     '''
     rv = []
 
-    for q_index in xrange(len(q_list)):
+    for q_index in range(len(q_list)):
         q = q_list[q_index]
 
         if print_log:
-            print "Simulation {}/{} starting in mode '{}': {}".format(q_index+1, len(q_list), q[0].name, q[1])
+            print("Simulation {}/{} starting in mode '{}': {}".format(q_index+1, len(q_list), q[0].name, q[1]))
         
         obj = simulate_one(q, end_time, max_jumps, solver_name=solver_name, max_step=max_step, print_log=print_log)
         rv.append(obj)
@@ -407,10 +414,10 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
     '''
 
     if jump_error_tol is None:
-        jump_error_tol = max(1e-10, float(end_time) / 1e10)
+        jump_error_tol = max(1e-10, old_div(float(end_time), 1e10))
 
     if max_step is None:
-        max_step = end_time / 100.0
+        max_step = old_div(end_time, 100.0)
 
     if max_jumps <= 0:
         raise RuntimeError("max_jumps should be greater than zero: " + str(max_jumps))
@@ -452,7 +459,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
                 traces.append(ModeSim(mode.name, points, times))
 
                 if print_log:
-                    print "{}: Jump to mode '{}' and state: {}".format(jump_time, mode.name, str(state))
+                    print("{}: Jump to mode '{}' and state: {}".format(jump_time, mode.name, str(state)))
                 
                 jumps_left -= 1
 
@@ -470,7 +477,7 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
         last_state = points[-1]
 
         if print_log:
-            print "{}: Last State: {}".format(end_time, str(last_state))
+            print("{}: Last State: {}".format(end_time, str(last_state)))
 
         events.append(SimulationEvent("End", last_state))   
     except SimulationException as e:
@@ -479,8 +486,8 @@ def simulate_one(q, end_time, max_jumps=500, solver_name='vode', jump_error_tol=
         if reraise_errors:
             raise e
         elif print_log:
-            print "Warning: {} (SimulationException) in mode {} at state {}".format(
-                str(e), mode.name, solver.y)
+            print("Warning: {} (SimulationException) in mode {} at state {}".format(
+                str(e), mode.name, solver.y))
 
     return {'traces':traces, 'events':events}
 
@@ -571,7 +578,7 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
     if axis_range is not None:
         plt.axis(axis_range)
 
-    for index in xrange(num_results):
+    for index in range(num_results):
         result = result_list[index]
         _plot_sim_result_one(result, dim_x, dim_y, draw_events, mode_to_color)
 
@@ -589,7 +596,7 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
         if len(new_handles) < 10:
             plt.legend(new_handles, new_labels, loc='best')
         else:
-            print "Warning: skipping legend (too many modes)"
+            print("Warning: skipping legend (too many modes)")
 
     if draw_func is not None:
         draw_func()

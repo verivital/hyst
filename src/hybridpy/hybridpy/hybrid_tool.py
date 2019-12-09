@@ -1,6 +1,9 @@
 '''Hybrid Systems Tool Base Class
 Contains general implementation for running tools in hypy
 '''
+from __future__ import print_function
+from builtins import str
+from builtins import object
 
 import os
 import shutil
@@ -16,6 +19,7 @@ import inspect
 import argparse
 import re
 import coverage
+from future.utils import with_metaclass
 
 class RunCode(object):
     '''return value of HybridTool.run()'''
@@ -28,8 +32,8 @@ class RunCode(object):
 def random_string():
     '''makes a short random string'''
     
-    time_part = str(long(time.clock() * 10000))
-    rand_part = str(long(random.random()*10000000))
+    time_part = str(int(time.clock() * 10000))
+    rand_part = str(int(random.random()*10000000))
     
     return time_part + "_" + rand_part
 
@@ -56,9 +60,11 @@ def tool_main(tool_obj, extra_args=None):
     extra_args is a list of (flag, help_text)
     returns a value in RunCode.*
     '''
-    # collect test coverage data if invoked as subprocess of coverage.py
+    # collect test coverage data if PYTHON_COVERAGE environment variable is present
+    # this is required because this file is invoked as subprocess of coverage.py, and coverage measurement does not trace across subprocesses
     cov = coverage.Coverage()
-    cov.start()
+    if os.environ.get("PYTHON_COVERAGE"):
+        cov.start()
     parser = argparse.ArgumentParser(description='Run ' + tool_obj.tool_name)
     parser.add_argument('model', help='input model file')
     parser.add_argument('image', nargs='?', help='output image file (use "-" to skip)', type=valid_image)
@@ -77,9 +83,10 @@ def tool_main(tool_obj, extra_args=None):
     tool_obj.load_args(args)
 
     code = tool_obj.run()
-    print "Tool script exit code: " + str(code)
-    cov.stop()
-    cov.save()
+    print("Tool script exit code: " + str(code))
+    if os.environ.get("PYTHON_COVERAGE"):
+        cov.stop()
+        cov.save()
     sys.exit(code)
 
 def _kill_pg(p):
@@ -95,7 +102,7 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
     '''
 
     if is_windows() and timeout is not None:
-        print "Timeouts not supported on windows... skipping"
+        print("Timeouts not supported on windows... skipping")
         timeout = None
 
     rv = RunCode.SUCCESS
@@ -132,8 +139,13 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
                 rv = RunCode.TIMEOUT
 
     except OSError as e:
-        print "Error running tool: " + str(e)
+        print("Error running tool: " + str(e))
         rv = RunCode.ERROR
+        
+    try:
+        proc.stdout.close()
+    except:
+        pass
 
     return rv
 
@@ -157,11 +169,12 @@ def run_check_stderr(params, stdin=None, stderr_ignore_regexp=None):
         else:
             proc = subprocess.Popen(params, stdin=stdin, stderr=subprocess.PIPE)
 
-        for line in iter(proc.stderr.readline, ''):
+        for line in proc.stderr.readlines():
+            line = line.decode('utf-8')
             output_line = line.rstrip()
 
             # ignore empty lines on stderr.
-            if output_line == "":
+            if not output_line:
                 continue
             
             # ignore stderr lines matching stderr_ignore_regexp
@@ -170,20 +183,20 @@ def run_check_stderr(params, stdin=None, stderr_ignore_regexp=None):
 
             # if anything is printed to stderr, it's an error
             rv = False
-            print "Stderr output detected. Assuming tool errored. Text: {}".format(output_line)
+            print("Stderr output detected. Assuming tool errored. Text: {}".format(output_line))
 
         proc.wait()
 
         if rv: # exit code wasn't set during output
             rv = proc.returncode == 0
     except OSError as e:
-        print "Exception while trying to run " + process_name + ": " + str(e)
+        print("Exception while trying to run " + process_name + ": " + str(e))
         rv = False
 
     if rv:
-        print "Program exited successfully."
+        print("Program exited successfully.")
     else:
-        print "Program exited with an error."
+        print("Program exited with an error.")
 
     return rv
 
@@ -223,16 +236,15 @@ def get_tool_path(filename, print_errors=True):
             errors.append("No file named '" + filename + "' was found in any of the directories in " + env_var_name)
 
     if rv is None and print_errors:
-        print "Warning: Could not find '" + filename + "' on your system:"
+        print("Warning: Could not find '" + filename + "' on your system:")
 
         for line in errors:
-            print " " + line
+            print(" " + line)
 
     return rv
 
-class HybridTool(object):
+class HybridTool(with_metaclass(abc.ABCMeta, object)):
     '''Base class for hybrid automaton analysis tool'''
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self, tool_name, default_ext, tool_executable):
         '''Initialize the tool for running.'''
@@ -242,7 +254,7 @@ class HybridTool(object):
         self.tool_path = get_tool_path(tool_executable)
 
         if self.tool_path is None:
-            print "Tool '" + tool_name + "' is not runnable."
+            print("Tool '" + tool_name + "' is not runnable.")
 
         self.original_model_path = None
         self.image_path = None
@@ -287,7 +299,7 @@ class HybridTool(object):
 
         if self.tool_path == None:
             var = self.tool_name.upper() + "_BIN"
-            print self.tool_name + ' cannot be run; skipping. Did you set ' + var + '?'
+            print(self.tool_name + ' cannot be run; skipping. Did you set ' + var + '?')
             return RunCode.SKIP
 
         if not is_windows() and os.getpid() != os.getpgid(os.getpid()):

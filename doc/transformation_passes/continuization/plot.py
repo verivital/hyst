@@ -1,4 +1,5 @@
 '''Script for running continuization for the double integrator example'''
+from __future__ import print_function
 
 # make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
@@ -6,10 +7,10 @@ import hybridpy.hypy as hypy
 def main():
     '''main entry point'''
 
-    print "Running discrete reacability in SpaceEx, making di_discrete_spaceex.png (~200 second)"
+    print("Running discrete reacability in SpaceEx, making di_discrete_spaceex.png (~200 second)")
     plot_discrete()
 
-    print "Running on continuized version using Flow* (~4 seconds)"
+    print("Running on continuized version using Flow* (~4 seconds)")
     plot_continuized()
 
 def plot_discrete():
@@ -43,12 +44,12 @@ def plot(plot_param):
     if pass_name is not None:
         e.add_pass(pass_name, pass_param)
 
-    print 'Running ' + name
+    print('Running ' + name)
     code = e.run(image_path=name + ".png", print_stdout=False)['code']
-    print 'Finished ' + name
+    print('Finished ' + name)
 
     if code != hypy.Engine.SUCCESS:
-        print '\n\n-------------------\nError in ' + name + ': ' + str(code)
+        print('\n\n-------------------\nError in ' + name + ': ' + str(code))
 
         raise RuntimeError('Error in ' + name + ': ' + str(code))
 

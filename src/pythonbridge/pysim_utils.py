@@ -2,6 +2,9 @@
 Pysim Utility Functions
 Stanley Bak (Feb 2016)
 '''
+from __future__ import division
+from builtins import str
+from builtins import range
 
 from hybridpy.pysim.simulate import simulate_one_time
 from hybridpy.pysim.simulate import simulate_one
@@ -29,7 +32,7 @@ def simulate_with_times(q, all_times, max_jumps=500, solver='vode'):
         traces = simulate_one(q, delta, max_jumps, solver, reraise_errors=True)['traces']
         
         for t in traces:
-            for x in xrange(len(t.times)):
+            for x in range(len(t.times)):
                 t.times[x] += last_time
 
         rv += traces
@@ -64,7 +67,7 @@ def simulate_der_range(ha, der_var_index, mode_name, point, time_ranges, max_jum
 
     state_list = simulate_with_times(q, all_times, max_jumps, solver)
 
-    ranges = [[float("inf"), float("-inf")] for _ in xrange(len(time_ranges))]
+    ranges = [[float("inf"), float("-inf")] for _ in range(len(time_ranges))]
 
     for mode_sim in state_list:
         mode = ha.modes[mode_sim.mode_name]
@@ -73,14 +76,14 @@ def simulate_der_range(ha, der_var_index, mode_name, point, time_ranges, max_jum
         if mode.der is None:
             continue
 
-        for i in xrange(len(mode_sim.times)):
+        for i in range(len(mode_sim.times)):
             time = mode_sim.times[i]
             pt = mode_sim.points[i]
         
             der_vector = mode.der(time, pt)
             der_val = der_vector[der_var_index]
 
-            for r_index in xrange(len(ranges)):
+            for r_index in range(len(ranges)):
                 time_range = time_ranges[r_index]
                 
                 if time < time_range[0] or time > time_range[1]:
@@ -89,7 +92,6 @@ def simulate_der_range(ha, der_var_index, mode_name, point, time_ranges, max_jum
                 r = ranges[r_index]
                 r[0] = min(r[0], der_val)
                 r[1] = max(r[1], der_val)
-
     return ranges_to_string(ranges)
 
 def ranges_to_string(ranges):
@@ -160,7 +162,7 @@ def simulate_multi_trajectory_time(ha, mode_names, points, time, min_steps=100, 
     
     q_list = []
 
-    for i in xrange(len(mode_names)):
+    for i in range(len(mode_names)):
         mode = mode_names[i]
         point = points[i]
 

@@ -2,6 +2,9 @@
 Test scripts for integration tests (run each tool on each example mode
 Stanley Bak
 '''
+from __future__ import print_function
+from builtins import str
+from builtins import range
 
 import os
 import sys
@@ -36,13 +39,13 @@ TOOLS = [(hypy_tool_name, None) for hypy_tool_name in hypy.TOOLS]
 # the path where to put results (plots/models/work dir), relative to this script
 RESULT_PATH = get_script_path(__file__) + "/result"
 
-def run_single((index, total, path, tool_tuple, quit_flag)):
+def run_single(xxx_todo_changeme):
     '''run a single model with a single tool.
 
     file is the path to the model file
     tool is an entry of the TOOLS list
     '''
-
+    (index, total, path, tool_tuple, quit_flag) = xxx_todo_changeme
     if not quit_flag.value == 0:
         return None
 
@@ -88,7 +91,7 @@ def run_single((index, total, path, tool_tuple, quit_flag)):
         # FIXME: is this really what we want?
         allowed_results += [Engine.TIMEOUT_TOOL]
     
-    print "{}/{} Running {} with {} and timeout {}".format(index, total, model, tool_name, current_timeout)
+    print("{}/{} Running {} with {} and timeout {}".format(index, total, model, tool_name, current_timeout))
     sys.stdout.flush()
 
     
@@ -108,7 +111,7 @@ def run_single((index, total, path, tool_tuple, quit_flag)):
     elif result['code'] != Engine.SUCCESS:
         print("Notice: Ignoring test result for {}/{} model {} with {}: {}".format(index, total, model, tool_name, result['code']))        
 
-    print "{}/{} Finished {} with {}".format(index, total, model, tool_name)
+    print("{}/{} Finished {} with {}".format(index, total, model, tool_name))
 
     return rv
 def file_tool_iter(file_list, quit_flag):
@@ -116,7 +119,7 @@ def file_tool_iter(file_list, quit_flag):
 
     speedup = False
     if os.environ.get('SKIP_MOST_TESTS'):
-        print "Skipping most tests because SKIP_MOST_TESTS is set"
+        print("Skipping most tests because SKIP_MOST_TESTS is set")
         speedup = True
     
     index = 0
@@ -134,7 +137,7 @@ def file_tool_iter(file_list, quit_flag):
         return
     # then run one tool on all models
     for tool in TOOLS:
-        for f_index in xrange(1, len(file_list)):
+        for f_index in range(1, len(file_list)):
             f = file_list[f_index]
             yield (index, total, f, tool, quit_flag)
             index = index + 1
@@ -147,14 +150,14 @@ def parallel_run(file_list):
     quit_flag = manager.Value('i', 0)
 
     if NUM_THREADS > 1:
-        print "Using " + str(NUM_THREADS) + " parallel processes."
+        print("Using " + str(NUM_THREADS) + " parallel processes.")
         pool = multiprocessing.Pool(processes=NUM_THREADS)
 
         # multi-threaded version
         results = pool.map(run_single, file_tool_iter(file_list, quit_flag), chunksize=1)
 
     else:
-        print "Using single-threaded tests"
+        print("Using single-threaded tests")
         results = [run_single(i) for i in file_tool_iter(file_list, quit_flag)]
 
     rv = True
@@ -163,10 +166,10 @@ def parallel_run(file_list):
         if not r is None:
             (message, log) = r
 
-            print message
+            print(message)
 
             if rv == True:
-                print "\nLog:\n" + log + "\n\n"
+                print("\nLog:\n" + log + "\n\n")
                 rv = False
 
     return rv
@@ -189,7 +192,7 @@ def get_files(filename):
 
 def setup_env():
     '''remove the results directory and create it if it doesn't exist'''
-    print "Script results (plots / model files / work dirs) will be saved to:", RESULT_PATH
+    print("Script results (plots / model files / work dirs) will be saved to:", RESULT_PATH)
 
     # Clear results path
     if os.path.exists(RESULT_PATH):
@@ -213,17 +216,17 @@ def main():
 
     for (name, _) in TOOLS:
         if hypy.TOOLS[name].tool_path is None:
-            print "Warning: {} is not runnable. Tool will be skipped.".format(name)
+            print("Warning: {} is not runnable. Tool will be skipped.".format(name))
             skipped_some_tool = True
 
     if parallel_run(files):
         if not skipped_some_tool:
-            print "Done running all integration tests, success."
+            print("Done running all integration tests, success.")
         else:
-            print "Integration test conversion passed, but some tools were not run."
+            print("Integration test conversion passed, but some tools were not run.")
         sys.exit(0)
     else:
-        print "Error detected running integration tests."
+        print("Error detected running integration tests.")
         sys.exit(1)
 
 if __name__ == "__main__":

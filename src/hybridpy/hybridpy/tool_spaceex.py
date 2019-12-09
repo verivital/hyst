@@ -1,5 +1,7 @@
 '''Run SpaceEx and make a plot module for HyPy
 '''
+from __future__ import print_function
+from builtins import str
 
 import sys
 import subprocess
@@ -32,15 +34,15 @@ class SpaceExTool(HybridTool):
         err_line = None
 
         while True:
-            line = pipe.readline()
+            line = pipe.readline().decode('utf-8')
 
             if line == '':
                 break
 
             if is_std_err:
-                print "[stderr] ",
+                print("[stderr] ", end=' ')
 
-            print line,
+            print(line, end=' ')
 
             if is_std_err:
                 sys.stderr.flush()
@@ -57,7 +59,7 @@ class SpaceExTool(HybridTool):
                 err_line = line
 
         if err_line != None:
-            print "stderr output detected: '" + err_line + "'"
+            print("stderr output detected: '" + err_line + "'")
 
     def _run_tool(self, image_requested):
         '''actually run the subprocess, parsing stdout and stderr appropriately
@@ -85,25 +87,25 @@ class SpaceExTool(HybridTool):
             p2.join()
 
             if self.not_affine:
-                print "SpaceEx exited due to non-affine dynamics."
+                print("SpaceEx exited due to non-affine dynamics.")
                 rv = RunCode.SKIP
             elif self.printed_error:
-                print "Error was printed to stdout or stderr"
+                print("Error was printed to stdout or stderr")
                 rv = RunCode.ERROR
 
             proc.wait()
 
-            print "SpaceEx return code was " + str(proc.returncode)
+            print("SpaceEx return code was " + str(proc.returncode))
 
             if rv == RunCode.SUCCESS: # exit code wasn't set during output
                 if proc.returncode != 0:
-                    print "Unknown return code"
+                    print("Unknown return code")
                     rv = RunCode.ERROR
                 else:
-                    print "SpaceEx successfully completed."
+                    print("SpaceEx successfully completed.")
 
         except OSError as e:
-            print "OSError while trying to run " + str(params) + "\nError: " + str(e)
+            print("OSError while trying to run " + str(params) + "\nError: " + str(e))
             rv = RunCode.ERROR
 
         return rv
@@ -121,7 +123,7 @@ class SpaceExTool(HybridTool):
         params = ["graph", "-T", "png", "-BC", "-q", "0.25", \
                   "-h", "0.9", "-w", "0.8", "-r", ".1", "-u", ".07", "--bitmap-size", "1000x1000", "plotdata.txt"]
 
-        print "Plotting with command 'graph' (plotutils), params: %s"%str(params)
+        print("Plotting with command 'graph' (plotutils), params: %s"%str(params))
 
         try:
             fout = open(self.image_path, "w")
@@ -129,16 +131,16 @@ class SpaceExTool(HybridTool):
 
             if code != 0:
                 rv = False
-                print "Error, return code from plot was:", code
+                print("Error, return code from plot was:", code)
 
         except OSError as e:
-            print "Exception while writing image path: " + str(e)
+            print("Exception while writing image path: " + str(e))
             rv = False
 
         if rv:
-            print "Plot succeeded"
+            print("Plot succeeded")
         else:
-            print "Plot errored"
+            print("Plot errored")
 
         return rv
 

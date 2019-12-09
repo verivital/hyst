@@ -1,4 +1,5 @@
 'Script for pseudo-invariant demo'
+from __future__ import print_function
 
 # make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
@@ -6,13 +7,13 @@ import hybridpy.hypy as hypy
 def main():
     'run both without and with pi'
 
-    print "Running original model to produce orignal.png (~12 seconds)"
+    print("Running original model to produce orignal.png (~12 seconds)")
     run_without_pi()
 
-    print "Running WITH pseudo-invariants to produce pi.png (~11 seconds)"
+    print("Running WITH pseudo-invariants to produce pi.png (~11 seconds)")
     run_with_pi()
 
-    print "Done."
+    print("Done.")
 
 def run_without_pi():
     'run without pi pass'

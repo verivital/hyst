@@ -1,4 +1,5 @@
 '''Unit tests for the pysim module'''
+from builtins import str
 
 import unittest
 from hybridpy.pysim.hybrid_automaton import HyperRectangle
