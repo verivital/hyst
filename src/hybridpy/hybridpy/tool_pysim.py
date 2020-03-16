@@ -54,6 +54,7 @@ class PySimTool(HybridTool):
         # To do that, we serialize and write it to a file and print the filename.
         with tempfile.NamedTemporaryFile(prefix='pysim_result',suffix='.pickle', delete=False) as filehandle:
             pickle.dump(output, filehandle)
+            filehandle.flush()
             print("PYSIM_RESULT_FILE=" + filehandle.name)
         return rv
 
