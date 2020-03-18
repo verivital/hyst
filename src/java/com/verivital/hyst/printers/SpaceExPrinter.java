@@ -57,6 +57,7 @@ import de.uni_freiburg.informatik.swt.sxhybridautomaton.VariableParam;
  */
 public class SpaceExPrinter extends ToolPrinter
 {
+	// NOTE: "auto" is a magic constant that means "unset, fall back to default". See convert().
 	@Option(name = "-time", usage = "reachability time", metaVar = "VAL")
 	String time = "auto";
 
@@ -76,7 +77,7 @@ public class SpaceExPrinter extends ToolPrinter
 	String directions = "auto";
 
 	@Option(name = "-aggregation", usage = "aggregation parameter", metaVar = "VAL")
-	String aggregation = "chull";
+	String aggregation = "auto";
 
 	@Option(name = "-forbidden", usage = "forbidden parameter", metaVar = "VAL")
 	String forbidden = "none";
