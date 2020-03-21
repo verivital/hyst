@@ -11,8 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ##################
 # Install Hyst dependencies
 ##################
-RUN apt-get update && apt-get -qy install ant python2.7 python-scipy python-matplotlib git libglpk-dev build-essential python-cvxopt python-sympy gimp
-
+RUN apt-get update && apt-get -qy install ant python2.7 python-scipy python-matplotlib git libglpk-dev build-essential python-cvxopt gimp # python-sympy 
 # Bug in sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
 # -> we use sympy 1.2
 RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
@@ -85,7 +84,7 @@ RUN spaceex --version
 ENV DREAL_VERSION 3.16.06.02
 ENV DREAL_FILE_SHA512SUM '199c02d90d3d448dff6b9d2d1b99257d4ae4efcf22fa4d66d30eeb0cb6215b06ff8824c4256bf1b89ebaf01b872655ab3105d298c3db0a28d6c0c71a24fa0712'
 
-
+RUN mkdir -p /tools/dreach
 WORKDIR /tools/dreach
 
 RUN curl -fL https://github.com/stanleybak/hybrid_tools/raw/master/dReal-3.16.06.02-linux.tar.gz > dreach.tar.gz
