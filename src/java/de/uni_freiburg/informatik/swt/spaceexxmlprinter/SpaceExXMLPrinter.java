@@ -656,9 +656,7 @@ public class SpaceExXMLPrinter
 		appendCfgString(rv, "system", config.systemID);
 		appendCfgString(rv, "scenario", config.scenario); // was supp
 		appendCfgString(rv, "directions", config.directions);
-
-		if (!config.aggregation.toLowerCase().equals("none"))
-			appendCfgString(rv, "set-aggregation", config.aggregation);
+		appendCfgString(rv, "set-aggregation", config.aggregation);
 
 		if (config.flowpipeTol > 0)
 			appendCfgString(rv, "flowpipe-tolerance", Double.toString(config.flowpipeTol));
