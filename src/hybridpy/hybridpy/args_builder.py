@@ -6,6 +6,8 @@ Hyst Args Builder
 These are python interface classes for constructing sub-arguments to Hyst printers/passes/generators for use in hypy, 
 as an alternative to doing it as a raw list.
 '''
+from builtins import str
+from builtins import object
 
 class BuildGenArgsBuilder(object):
     '''

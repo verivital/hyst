@@ -2,6 +2,9 @@
 Hybrid Automaton Simulation Library
 Stanley Bak (12-2015)
 '''
+from __future__ import division
+from builtins import range
+from builtins import object
 
 class HyperRectangle(object):
     'An n-dimensional box'
@@ -26,7 +29,7 @@ class HyperRectangle(object):
         num_dims = len(self.dims)
         rv = []
         
-        for index in xrange(num_dims):
+        for index in range(num_dims):
             # min edge in dimension d
             pt = list(center)
             pt[index] = self.dims[index][0]
@@ -48,24 +51,24 @@ class HyperRectangle(object):
         max_iterator = 1
         is_flat = []
 
-        for d in xrange(num_dims):
+        for d in range(num_dims):
             if abs(self.dims[d][0] - self.dims[d][1]) > tol:
                 is_flat.append(False)
                 max_iterator *= 2
             else:
                 is_flat.append(True)
 
-        for it in xrange(max_iterator):
+        for it in range(max_iterator):
             point = []
             
             # construct point
-            for d in xrange(num_dims):
+            for d in range(num_dims):
                 if is_flat[d]:
                     point.append(self.dims[d][0])
                 else:
                     min_max_index = it % 2
                     point.append(self.dims[d][min_max_index])
-                    it /= 2
+                    it //= 2
 
             # append constructed point
             rv.append(point)

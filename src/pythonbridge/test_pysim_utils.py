@@ -1,7 +1,8 @@
 '''Unit tests for the pysim utils in pythonbridge'''
+from __future__ import absolute_import
 
 import unittest
-import pysim_utils as util
+from pythonbridge import pysim_utils as util
 from hybridpy.pysim.hybrid_automaton import HybridAutomaton
 from hybridpy.pysim.hybrid_automaton import HyperRectangle
 
@@ -35,7 +36,7 @@ class TestPySimUtils(unittest.TestCase):
         # get the range between times 0-2 and times 1-3
         # t' == 1, y' == 2t
         res = util.simulate_der_range(ha, 1, 'on', [0.0, 0.0], [(0, 2), (1, 3)])
-        self.assertEqual(res, "0.0,4.0;2.0,6.0")
+        self.assertIn(res, ["0.0,4.0;2.0,6.0", "0.0,4.0;2.0,5.999999999999957"]) # note: the former result is in python2, the latter in python3
 
     def test_simulate_set_time(self):
         'test for simulating a set of states for a fixed time'
@@ -80,7 +81,7 @@ class TestPySimUtils(unittest.TestCase):
             for ss in traj.split(';'):
                 mode, x, y = ss.split(',')
 
-                self.assertEquals(mode, 'on')
+                self.assertEqual(mode, 'on')
 
                 # solution is y = x^2
                 self.assertAlmostEqual(float(x) * float(x), float(y), places=2)

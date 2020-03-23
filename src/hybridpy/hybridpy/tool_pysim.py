@@ -1,4 +1,5 @@
 '''Uses pysim to simulate a hybrid automaton'''
+from __future__ import print_function
 
 import imp
 import os
@@ -53,7 +54,8 @@ class PySimTool(HybridTool):
         # To do that, we serialize and write it to a file and print the filename.
         with tempfile.NamedTemporaryFile(prefix='pysim_result',suffix='.pickle', delete=False) as filehandle:
             pickle.dump(output, filehandle)
-            print "PYSIM_RESULT_FILE=" + filehandle.name
+            filehandle.flush()
+            print("PYSIM_RESULT_FILE=" + filehandle.name)
         return rv
 
     def _make_image(self):

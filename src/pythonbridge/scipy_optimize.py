@@ -1,4 +1,7 @@
 ''' optimization module using scipy.basinhopping'''
+from __future__ import print_function
+from __future__ import division
+from builtins import range
 
 from scipy import optimize
 from multiprocessing import Pool
@@ -51,8 +54,9 @@ def opt(func, bound, niter=30):
 
     return [minimum, maximum]
 
-def __func((x, y)):
+def __func(xxx_todo_changeme):
     '''test dynamics'''
+    (x, y) = xxx_todo_changeme
     return (1 - x * x) * y - x
 
 def __test_par(count):
@@ -60,27 +64,27 @@ def __test_par(count):
     start = time.time()
     func_lim = []
 
-    for i in xrange(count):
+    for i in range(count):
         lim = [(0, i), (-0.2, -0.1)]
         func_lim.append((__func, lim))
 
     opt_multi(func_lim)
 
     dif = time.time() - start
-    print count, "parallel optimizations, seconds elapsed:", dif
+    print(count, "parallel optimizations, seconds elapsed:", dif)
 
 def __test_seq(count):
     '''sequential execution test'''
     start = time.time()
 
-    for i in xrange(count):
+    for i in range(count):
         lim = [(0, i), (-0.2, -0.1)]
         fun = __func # lambda (x, y): ((1 - x * x) * y - x)
 
         opt(fun, lim)
 
     dif = time.time() - start
-    print count, "single optimizations, seconds elapsed:", dif
+    print(count, "single optimizations, seconds elapsed:", dif)
 
 def __test():
     '''test the optimization'''

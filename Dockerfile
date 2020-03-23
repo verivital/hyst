@@ -11,9 +11,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 ##################
 # Install Hyst dependencies
 ##################
-RUN apt-get update && apt-get -qy install ant python2.7 python-scipy python-matplotlib git libglpk-dev build-essential python-cvxopt python-coverage gimp # python-sympy
+RUN apt-get update && apt-get -qy install \
+    ant gimp git libglpk-dev build-essential \
+    python3 python3-scipy python3-cvxopt python3-matplotlib python3-sympy python3-coverage python3-future \
+    python2.7 python-scipy python-matplotlib python-cvxopt python-future python-coverage  # python-sympy
 
-# Bug in sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
+# FIXME: in the future, remove all python 2 dependencies as soon as we no longer test on python2 via ant -- see build.xml
+
+# Switch matplotlib backend to from TkAgg (interactive) to Agg (noninteractive).
+RUN sed -i 's/^backend *: *TkAgg$/backend: Agg/i' /etc/matplotlibrc
+
+# Bug in Python2 sympy < 1.2: "TypeError: argument is not an mpz" (probably https://github.com/sympy/sympy/issues/7457, was fixed Nov 2017)
 # -> we use sympy 1.2
 RUN apt-get -qy install python-pip python-sympy- && pip install sympy==1.2
 
@@ -108,8 +116,7 @@ ENV PYTHONPATH=$PYTHONPATH:/hyst/src/hybridpy
 ENV HYPYPATH=$HYPYPATH:/hyst/src
 ENV PATH=$PATH:/hyst
 
-# Switch matplotlib backend to from TkAgg (interactive) to Agg (noninteractive).
-RUN sed -i 's/^backend *: *TkAgg$/backend: Agg/i' /etc/matplotlibrc
+
 
 ##################
 # As default command: run the tests

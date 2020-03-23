@@ -1,4 +1,5 @@
 '''Uses dreach to run reachability for HyPy'''
+from __future__ import print_function
 
 import os
 import shutil
@@ -16,7 +17,7 @@ class DReachTool(HybridTool):
 
     def _make_image(self):
         '''makes the image after the tool runs, returns True when no error occurs'''
-        print "Skipping make image (generation of .png images is not supported in dReach)"
+        print("Skipping make image (generation of .png images is not supported in dReach)")
         return True
 
     def _run_tool(self, image_requested):
@@ -27,7 +28,7 @@ class DReachTool(HybridTool):
         # use --verbose for verbose printing
         params = [self.tool_path, "-k", "0", self.model_path, "--verbose", "--visualize"]
 
-        print "Calling dreach with params:", params
+        print("Calling dreach with params:", params)
 
         if not run_check_stderr(params):
             rv = RunCode.ERROR
@@ -47,7 +48,7 @@ class DReachTool(HybridTool):
         shutil.copyfile(self.original_model_path, self.model_path)
 
 if __name__ == "__main__":
-    print "Starting dReach. If you kill the tool early, be sure to kill any spawned " \
-      "subprocesses ('killall dReal')."
+    print("Starting dReach. If you kill the tool early, be sure to kill any spawned " \
+      "subprocesses ('killall dReal').")
 
     tool_main(DReachTool())

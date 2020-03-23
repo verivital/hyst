@@ -1,6 +1,7 @@
 '''Script for running time-triggered hybridization on the althoff's hscc 2013 vanderpol example
 Stanley Bak (05-2016)
 '''
+from __future__ import print_function
 
 import time
 
@@ -12,10 +13,10 @@ def main():
 
     pass_params = make_pass_params()
 
-    print "\nGenerating out_vanderpol_hybridized_plot.png (~13 seconds)..."
+    print("\nGenerating out_vanderpol_hybridized_plot.png (~13 seconds)...")
     plot(pass_params)
 
-    print "\nChecking if domain contraction error modes are reachable (~11 seconds)..."
+    print("\nChecking if domain contraction error modes are reachable (~11 seconds)...")
     check_dcem(pass_params)
 
 def make_pass_params():
@@ -49,16 +50,16 @@ def check_dcem(pass_params):
     e.add_pass('hybridizemt', pass_params)
         
     start = time.time()
-    print 'Running DCEM checking computation... ',
+    print('Running DCEM checking computation... ', end=' ')
     result = e.run(parse_output=True)
     dif = time.time() - start
 
-    print 'done. Finished in ' + str(dif) + ' seconds'
+    print('done. Finished in ' + str(dif) + ' seconds')
 
     if result['output']['safe'] != True:
         raise RuntimeError("Domain contraction error modes (DCEMs) were reachable.")
     else:
-        print "Success: DCEMs were not reachable."
+        print("Success: DCEMs were not reachable.")
 
     if result['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError("Hyst resturn code was: " + str(result['code']))
@@ -76,10 +77,10 @@ def plot(pass_params):
     e.add_pass('hybridizemt', pass_params)
         
     start = time.time()
-    print 'Running computation + plot... ',
+    print('Running computation + plot... ', end=' ')
     code = e.run(image_path='out_vanderpol_hybridized_plot.png')['code']
     dif = time.time() - start
-    print 'done. Finished in ' + str(dif) + ' seconds'
+    print('done. Finished in ' + str(dif) + ' seconds')
 
     if code != hypy.Engine.SUCCESS:
         raise RuntimeError('Error: ' + str(code))

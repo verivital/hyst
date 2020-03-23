@@ -208,7 +208,14 @@
 	</target>
 	
 	<target name ="integration_test" depends="build-config,build" description="Run Integration Tests">
+		<!-- FIXME begin:  Remove python2 at some time in the future. -->
+		<echo message="Integration tests with Python 2:" />
 		<exec dir="${integration.path}" executable="python" failonerror="true">
+		    <arg line="run_tests.py" />
+		</exec>
+		<!-- FIXME end:  Remove python2 at some time in the future. -->
+		<echo message="Integration tests with Python 3:" />
+		<exec dir="${integration.path}" executable="python3" failonerror="true">
 		    <arg line="run_tests.py" />
 		</exec>
 	</target>
@@ -216,14 +223,43 @@
 	<!-- run the python tests -->
 	<target name ="python_run_test" depends="check_python" if="pythonDetected" description="Run Python Tests">
 		<echo message="Python detected, running python unit tests." />
+		<echo message="Note: Assuming that Python3 is also present." />
+        <!-- FIXME: The python detection (check_python) currently only checks for Python version 2. -->
 		
+		<!-- FIXME begin:  Remove python2 at some time in the future. -->
+		
+		<echo message="Unit Tests with Python 2:" />
+	
+		<exec executable="python" failonerror="true">
+			 <arg line="--version" />
+		</exec>
+	
 		<!-- hypy with unit test discovery with the default settings (looks in test_*.py files) -->
 		<exec dir="${hypy.src.dir}" executable="python" failonerror="true">
 		    <arg line="-m unittest discover" />
 		</exec>
 		
 		<!-- pythonbridge with unit test discovery with the default settings -->
-		<exec dir="${pythonbridge.src.dir}" executable="python" failonerror="true">
+		<exec dir="${pythonbridge.src.dir}/.." executable="python" failonerror="true">
+		    <arg line="-m unittest discover" />
+		</exec>
+		
+		<!-- FIXME end:  Remove python2 at some time in the future. -->
+		
+		<echo message="Unit Tests with Python 3:" />
+		
+		<!-- Same as above, but for python3. -->
+		<exec executable="python3" failonerror="true">
+			 <arg line="--version" />
+		</exec>            
+		
+		<!-- hypy with unit test discovery with the default settings (looks in test_*.py files) -->
+		<exec dir="${hypy.src.dir}" executable="python3" failonerror="true">
+		    <arg line="-m unittest discover" />
+		</exec>
+		
+		<!-- pythonbridge with unit test discovery with the default settings -->
+		<exec dir="${pythonbridge.src.dir}/.." executable="python3" failonerror="true">
 		    <arg line="-m unittest discover" />
 		</exec>
 		
@@ -254,21 +290,21 @@
 	<target name ="test_gen_passes" depends="reformat" description="Run the Hyst Tests + extra generator and pass tests (may take a while)">
 		<echo message="Running generator and transformation pass tests..."/>
 
-		<exec dir="${doc.path}/model_generators/navigation" executable="python" failonerror="true">
+		<exec dir="${doc.path}/model_generators/navigation" executable="python3" failonerror="true">
 		    <arg line="plot.py" />
 		</exec>
-		<exec dir="${doc.path}/model_generators/drivetrain" executable="python" failonerror="true">
+		<exec dir="${doc.path}/model_generators/drivetrain" executable="python3" failonerror="true">
 		    <arg line="plot.py" />
 		</exec>
-		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python" failonerror="true">
+		<exec dir="${doc.path}/transformation_passes/pseudo-invariants" executable="python3" failonerror="true">
 			<arg line="plot.py" />
 		</exec>
-		<exec dir="${doc.path}/transformation_passes/hybridization" executable="python" failonerror="true">
+		<exec dir="${doc.path}/transformation_passes/hybridization" executable="python3" failonerror="true">
 			<arg line="plot.py" />
 		</exec>
 		
 		<echo message="Running test for continuization transformation pass (may take a while)..."/>
-		<exec dir="${doc.path}/transformation_passes/continuization" executable="python" failonerror="true">
+		<exec dir="${doc.path}/transformation_passes/continuization" executable="python3" failonerror="true">
 			<arg line="plot.py" />
 		</exec>
 	</target>

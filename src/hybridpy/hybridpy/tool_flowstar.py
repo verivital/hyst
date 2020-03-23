@@ -1,4 +1,9 @@
 '''Uses flow* to run reachability and gnuplot / gimp to make a plot'''
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from past.utils import old_div
+from builtins import object
 
 import subprocess
 import re
@@ -31,13 +36,13 @@ class FlowstarTool(HybridTool):
         try:
             f = open(self.model_path, 'r')
         except IOError as e:
-            print "Could not read from model file: " + self.model_path + " (" + e.strerror + ")"
+            print("Could not read from model file: " + self.model_path + " (" + e.strerror + ")")
             rv = RunCode.ERROR
 
         with f:
             # run through stdbuf to prevent flow* stdout i/o buffering
             if not run_check_stderr(["stdbuf", "-oL", self.tool_path], stdin=f):
-                print "Error running flowstar tool"
+                print("Error running flowstar tool")
                 rv = RunCode.ERROR
 
         return rv
@@ -46,22 +51,22 @@ class FlowstarTool(HybridTool):
         '''makes the image after the tool runs, returns True on success'''
         rv = True
         gnuplot_error = False
-        print "Plotting with gnuplot..."
+        print("Plotting with gnuplot...")
 
         try:
             exit_code = subprocess.call(["gnuplot", "outputs/out.plt"], stderr=subprocess.STDOUT)
 
             if exit_code != 0:
-                print "Gnuplot had an error... probably no plot data because flow* exited prematurely"
+                print("Gnuplot had an error... probably no plot data because flow* exited prematurely")
                 gnuplot_error = True # gnuplot error... probably no plot data
 
         except OSError as e:
-            print "Exception while trying to run gnuplot: " + str(e)
+            print("Exception while trying to run gnuplot: " + str(e))
             rv = False
 
         # run gimp to convert eps to png
         if rv and not gnuplot_error:
-            print "Converting output using GIMP..."
+            print("Converting output using GIMP...")
 
             script_fu = '(gimp-file-load RUN-NONINTERACTIVE "images/out.eps" "images/out.eps")'
             script_fu += '(gimp-image-rotate 1 ROTATE-90)'
@@ -79,7 +84,7 @@ class FlowstarTool(HybridTool):
             stderr_ignore_regexp='.*WARNING \*\*:'
 
             if not run_check_stderr(params, stdin=None, stderr_ignore_regexp=stderr_ignore_regexp): 
-                print "Gimp errored"
+                print("Gimp errored")
                 rv = False
 
         return rv
@@ -230,7 +235,7 @@ def remove_intervals_from_tm(string, tol=1e-9):
             b = float(string[comma + 1:end])
 
             if b - a < tol:
-                new_middle = str((a+b)/2)
+                new_middle = str(old_div((a+b),2))
                 before = string[:start]
                 after = string[end+1:]
 

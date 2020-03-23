@@ -1,4 +1,5 @@
 '''Script for generating drivetrain benchmark and running with pysim'''
+from __future__ import print_function
 
 # make sure hybridpy is on your PYTHONPATH: hyst/src/hybridpy
 import hybridpy.hypy as hypy
@@ -28,9 +29,9 @@ def gen_drivetrain_pysim(theta):
     #e.add_pass("sub_constants", "")
     #e.add_pass("simplify", "-p")
     
-    print 'Running ' + title
+    print('Running ' + title)
     res = e.run(print_stdout=True, image_path=image_path)
-    print 'Finished ' + title
+    print('Finished ' + title)
 
     if res['code'] != hypy.Engine.SUCCESS:
         raise RuntimeError('Error in ' + title + ': ' + str(res['code']))

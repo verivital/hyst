@@ -9,7 +9,7 @@ parallel = True
 concurrency = threading
 
 [report]
-omit = /usr/local/*,/tmp/*
+omit = /usr/local/*,/tmp/*,/usr/lib/*
 # ignore_errors = True
 
 [html]

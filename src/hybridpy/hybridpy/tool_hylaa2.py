@@ -1,4 +1,6 @@
 '''Uses pysim to simulate a hybrid automaton'''
+from __future__ import print_function
+from builtins import str
 
 import sys
 import subprocess
@@ -14,8 +16,9 @@ class Hylaa2Tool(HybridTool):
         self._settings = None
         self._run_hylaa = None
         self._result = None
-    
-        python_path = sys.executable + "3" # path to python3... not 100% correct but should work for now
+        python_path = sys.executable 
+        if not python_path.endswith("3"):
+            python_path += "3" # path to python3... not 100% correct but should work for now
         
         HybridTool.__init__(self, 'hylaa2', '.py', python_path)
 
@@ -33,11 +36,11 @@ class Hylaa2Tool(HybridTool):
             proc.wait()
 
             if proc.returncode != 0:
-                print "Error Running Hylaa (return code was " + str(proc.returncode) + ")"
+                print("Error Running Hylaa (return code was " + str(proc.returncode) + ")")
                     
                 rv = RunCode.ERROR
         except OSError as e:
-            print "Exception while trying to run Hylaa: " + str(e)
+            print("Exception while trying to run Hylaa: " + str(e))
             rv = RunCode.ERROR
 
         return rv
