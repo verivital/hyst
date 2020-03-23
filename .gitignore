@@ -22,7 +22,6 @@ TAGS
 
 \#*\#
 .\#*
-src/.gitignore
 *junitvmwatcher*
 *.orig
 Dockerfile.sh

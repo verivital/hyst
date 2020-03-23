@@ -1,0 +1,16 @@
+# configuration for python-coverage
+[run]
+branch = True
+parallel = True
+# unfortunately broken in python-coverage 4.5: 
+#   concurrency = multiprocessing
+#   (would allow running the integration tests in parallel)
+# threading is used for timeouts:
+concurrency = threading
+
+[report]
+omit = /usr/local/*,/tmp/*
+# ignore_errors = True
+
+[html]
+directory = python_coverage/

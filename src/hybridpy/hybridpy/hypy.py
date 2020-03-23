@@ -298,7 +298,7 @@ class Engine(object):
             elif parse_output:
                 rv['output'] = tool.parse_output(temp_dir, tool_out.lines, hypy_out)
              
-            if temp_dir is not None:   
+            if temp_dir is not None and os.path.exists(temp_dir):   
                 shutil.rmtree(temp_dir)
 
             if save_stdout:
