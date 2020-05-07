@@ -255,7 +255,11 @@ class SpaceExTool(HybridTool):
             parts = self.loc_re.findall(line)
 
             if len(parts) == 0:
-                raise RuntimeError("Error parsing location name in result line: " + line)
+                if line == "Location: true":
+                    # if there's only one location, then SpaceEx unfortunately merges it into "true"
+                    parts = ["TRUE"]
+                else:
+                    raise RuntimeError("Error parsing location name in result line: " + line)
 
             loc_name = ".".join(parts)
             self.loc_obj = collections.OrderedDict()
