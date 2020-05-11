@@ -282,8 +282,15 @@ class SpaceExTool(HybridTool):
                 raise RuntimeError("Variable regular expression result didn't match line: " + line)
 
             var = m.group(2)
-            imin = float(m.group(3))
-            imax = float(m.group(4))
+            def to_float(x):
+                if x == "neg_infty":
+                    return float("-inf")
+                elif x == "pos_infty":
+                    return float("inf")
+                else:
+                    return float(x)
+            imin = to_float(m.group(3))
+            imax = to_float(m.group(4))
 
             result[var] = (imin, imax)
 
