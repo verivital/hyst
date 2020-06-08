@@ -42,6 +42,11 @@ class PySimTool(HybridTool):
         sim = getattr(self._pysim_model, 'simulate')
 
         self._settings = define_settings()
+        if not self.xlim:
+            self.xlim = [None, None]
+        if not self.ylim:
+            self.ylim = [None, None]
+        self._settings.axis_range = self.xlim + self.ylim
 
         automaton = define_ha()
         self._init_states = define_init_states(automaton)

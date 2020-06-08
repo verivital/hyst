@@ -23,6 +23,8 @@ class PySimSettings(object):
         self.step = 1.0
         self.dim_x = 0
         self.dim_y = 1
+        self.axis_range = None # [xmin, xmax, ymin, ymax], or [None, None, ymin, ymax] or [xmin, xmax, None, None]
+        self.draw_events = None # None: only for single simulation
         self.filename = "plot.png"
 
 class SimulationException(Exception):
@@ -567,6 +569,9 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
                         show=False, title=None, init_states=None):
     '''plot mutliple simulations
     result_list - the result for simulate_multi
+    draw_events - should events (with labels) be drawn on the plot? (default True)
+                    use `None` to draw only if there is exactly one simulation
+    other arguments: see _plot_sim_result_one
     '''
     num_results = len(result_list)
 
@@ -576,8 +581,14 @@ def plot_sim_result_multi(result_list, dim_x, dim_y, filename=None,
         plt.title(title)
 
     if axis_range is not None:
-        plt.axis(axis_range)
+        # axis_range: [xmin, xmax, ymin, ymax]
+        if axis_range[0] is not None:
+            plt.xlim(axis_range[0:2])
+        if axis_range[2] is not None:
+            plt.ylim(axis_range[2:4])
 
+    if draw_events is None:
+        draw_events = len(result_list) <= 1
     for index in range(num_results):
         result = result_list[index]
         _plot_sim_result_one(result, dim_x, dim_y, draw_events, mode_to_color)
