@@ -255,7 +255,11 @@ class SpaceExTool(HybridTool):
             parts = self.loc_re.findall(line)
 
             if len(parts) == 0:
-                raise RuntimeError("Error parsing location name in result line: " + line)
+                if line == "Location: true":
+                    # if there's only one location, then SpaceEx unfortunately merges it into "true"
+                    parts = ["TRUE"]
+                else:
+                    raise RuntimeError("Error parsing location name in result line: " + line)
 
             loc_name = ".".join(parts)
             self.loc_obj = collections.OrderedDict()
@@ -278,8 +282,15 @@ class SpaceExTool(HybridTool):
                 raise RuntimeError("Variable regular expression result didn't match line: " + line)
 
             var = m.group(2)
-            imin = float(m.group(3))
-            imax = float(m.group(4))
+            def to_float(x):
+                if x == "neg_infty":
+                    return float("-inf")
+                elif x == "pos_infty":
+                    return float("inf")
+                else:
+                    return float(x)
+            imin = to_float(m.group(3))
+            imax = to_float(m.group(4))
 
             result[var] = (imin, imax)
 
