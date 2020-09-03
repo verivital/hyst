@@ -585,13 +585,12 @@ public class PySimPrinter extends ToolPrinter
 		 */
 
 		printNewline();
-		printLine("draw_events = len(result) == 1");
 		printLine("shouldShow = False");
 		printLine(
-				"sim.plot_sim_result_multi(result, settings.dim_x, settings.dim_y, image_path, draw_events, "
+				"sim.plot_sim_result_multi(result, settings.dim_x, settings.dim_y, image_path, settings.draw_events, "
 						+ "legend=" + legend + ", title="
 						+ (title == "None" ? "None" : "'" + title + "'")
-						+ ", show=shouldShow, init_states=init_states)");
+						+ ", show=shouldShow, init_states=init_states, axis_range=settings.axis_range)");
 	}
 
 	private String getTimeParam()

@@ -10,6 +10,7 @@ import os
 import shutil
 import re
 import collections
+import warnings
 
 from hybridpy.hybrid_tool import HybridTool
 from hybridpy.hybrid_tool import RunCode
@@ -121,8 +122,19 @@ class SpaceExTool(HybridTool):
         # -w, -h, -r, -u = width and height ratios of plot area, and right and uo offset ratios
         # bitmap-size = size of output file
         params = ["graph", "-T", "png", "-BC", "-q", "0.25", \
-                  "-h", "0.9", "-w", "0.8", "-r", ".1", "-u", ".07", "--bitmap-size", "1000x1000", "plotdata.txt"]
+                  "-h", "0.9", "-w", "0.8", "-r", ".1", "-u", ".07", "--bitmap-size", "1000x1000"]
+        if self.xlim or self.ylim:
+            # Also draw lines whose start and end are outside the plot area.
+            # This is important if a line goes across the plot area but starts
+            # and ends outside.
+            params += ["--clip-mode", "2"]
+        if self.xlim:
+            params += ["--x-limits", str(self.xlim[0]), str(self.xlim[1])]
+        if self.ylim:
+            params += ["--y-limits", str(self.ylim[0]), str(self.ylim[1])]
+            warnings.warn("Due to a bug in plotutils, the set may not be completely filled if the plot reaches the axis limit. The outline will always be drawn correctly.")
 
+        params += ["plotdata.txt"]
         print("Plotting with command 'graph' (plotutils), params: %s"%str(params))
 
         try:

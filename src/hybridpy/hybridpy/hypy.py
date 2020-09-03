@@ -215,8 +215,8 @@ class Engine(object):
 
         return rv
 
-    def run(self, run_hyst=True, run_tool=True, timeout=None, image_path=None, save_stdout=False, print_stdout=False, 
-            stdout_func=None, parse_output=False):
+    def run(self, run_hyst=True, run_tool=True, timeout=None, image_path=None, save_stdout=False, print_stdout=False,
+            stdout_func=None, parse_output=False, xlim=None, ylim=None):
         '''
         Converts the model in Hyst, runs it with the appropriate tool, 
         produces a plot image, and python results object.
@@ -225,6 +225,8 @@ class Engine(object):
         stdout_func - a 3-param user function for processing of stream stdout. Params are: line, time, tool_name
         parse_output - should tool's output be parsed into a python object? If True, 'output' in the result is set.
                        using this option forces save_stdout to True
+        xlim - X-axis limits [x_min, x_max] for plot image
+        ylim - Y-axis limits [y_min, y_max] for plot image
 
         returns a dictionary object with the following keys:
         'code' - exit code - engine.SUCCESS if successful, an engine.ERROR_* code otherwise
@@ -292,7 +294,7 @@ class Engine(object):
             tool_start_time = time.time()
 
             tool_out = OutputHandler(save_stdout, self.printer[0], user_func=stdout_wrapper)
-            code = hybrid_tool.run_tool(tool, self.output, image_path, timeout, tool_out.stdout_handler, temp_dir)
+            code = hybrid_tool.run_tool(tool, self.output, image_path, timeout, tool_out.stdout_handler, temp_dir, xlim, ylim)
 
             rv['tool_time'] = time.time() - tool_start_time
 

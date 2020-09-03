@@ -70,6 +70,9 @@ def tool_main(tool_obj, extra_args=None):
     parser.add_argument('image', nargs='?', help='output image file (use "-" to skip)', type=valid_image)
     parser.add_argument('--debug', '-d', action='store_true', help='save intermediate files directory')
     parser.add_argument('--explicit_temp_dir', '-e', nargs='?', help='specify explicitly the temp dir')
+    parser.add_argument('--xlim', nargs=2, type=float, help='X axis limits')
+    parser.add_argument('--ylim', nargs=2, type=float, help='Y axis limits')
+
 
     if extra_args is not None:
         for flag, help_text in extra_args:
@@ -91,10 +94,10 @@ def tool_main(tool_obj, extra_args=None):
 
 def _kill_pg(p):
     '''kill a process' processgroup'''
-    
+
     os.killpg(os.getpgid(p.pid), signal.SIGKILL)
 
-def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None):
+def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None, xlim=None, ylim=None):
     '''run a tool by creating a subprocess and directing output to print_pipe
     image may be None
 
@@ -118,6 +121,10 @@ def run_tool(tool_obj, model, image, timeout, print_pipe, explicit_temp_dir=None
     if explicit_temp_dir is not None:
         params.append("--explicit_temp_dir")
         params.append(explicit_temp_dir)
+    if xlim:
+        params += ["--xlim", str(xlim[0]), str(xlim[1])]
+    if ylim:
+        params += ["--ylim", str(ylim[0]), str(ylim[1])]
     # print("Running: " + " ".join(params))
 
     try:
@@ -265,6 +272,9 @@ class HybridTool(with_metaclass(abc.ABCMeta, object)):
         self.explicit_temp_dir = None
         self.start_timestamp = None
 
+        self.xlim = None
+        self.ylim = None
+
     def load_args(self, args):
         '''initialize the class from a namespace (result of ArgumentParser.parse_args())'''
 
@@ -281,6 +291,10 @@ class HybridTool(with_metaclass(abc.ABCMeta, object)):
 
         if args.explicit_temp_dir is not None:
             self.set_explicit_temp_dir(args.explicit_temp_dir)
+
+        self.xlim = args.xlim
+        self.ylim = args.ylim
+
 
     def set_debug(self, d):
         '''set the debug flag (will copy temp directory to current working directory)'''

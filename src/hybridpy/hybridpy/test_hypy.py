@@ -4,6 +4,8 @@ Unit tests for hypy.
 
 import unittest
 import os
+import tempfile
+import shutil
 
 # assumes hybridpy is on your PYTHONPATH
 import hybridpy.hypy as hypy
@@ -29,6 +31,24 @@ class TestHypy(unittest.TestCase):
         self.assertEqual(res['code'], hypy.Engine.SUCCESS)
         np.testing.assert_allclose(res['output']['interval_bounds'], np.array([[0, 9],[0, 20], [0, 20]]))
 
+    def test_plot_limits(self):
+        '''test plot creation with xlim and ylim arguments'''
+        model = get_script_dir() + "/../../../examples/toy/toy.xml"
+
+        e = hypy.Engine('pysim')
+        e.set_input(model) # sets input model path
+
+        tmpdir = None
+        try:
+            tmpdir = tempfile.mkdtemp()
+            image_path = tmpdir + "/myimage.png"
+            res = e.run(image_path=image_path, xlim=[1, 5], ylim=[3, 7])
+            self.assertEqual(res['code'], hypy.Engine.SUCCESS)
+            self.assertTrue(os.path.exists(image_path))
+            # Note: the resulting image contents are not tested
+        finally:
+            if tmpdir:
+                shutil.rmtree(tmpdir)
 
 if __name__ == '__main__':
     unittest.main()
